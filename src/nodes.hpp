@@ -41,7 +41,7 @@ public:
 
   std::string gi() const { return property<std::string>("gi"); }
 
-  PropertyValue operator[](const char* propName) const
+  PropertyValue operator[](const std::string& propName) const
   {
     auto i_find = mProperties.find(propName);
     if (i_find != mProperties.end()) {
@@ -51,13 +51,13 @@ public:
     return Undefined();
   }
 
-  PropertyValue& operator[](const char* propName)
+  PropertyValue& operator[](const std::string& propName)
   {
     return mProperties[propName];
   }
 
   template <typename T>
-  T property(const char* propName) const
+  T property(const std::string& propName) const
   {
     auto i_find = mProperties.find(propName);
     if (i_find != mProperties.end()) {
