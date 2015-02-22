@@ -10,6 +10,7 @@
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <string>
 #include <iostream>
@@ -144,14 +145,20 @@ int main(int argc, char** argv)
     }
 
 
+    using namespace boost::posix_time;
+    using namespace boost::gregorian;
+
     if (!sources.empty()) {
       eyestep::Node root("project");
+      root["start-time"] = to_iso_extended_string(microsec_clock::local_time());
+
       for (const auto& src : sources) {
         std::cout << "Scan " << src.mSrcfile << " ...";
         std::cout.flush();
 
         std::unique_ptr<eyestep::IScanner> scanner =
             make_scanner_for_file(src.mSrcfile);
+
         if (scanner) {
           eyestep::Node nd =
               scanner->scanFile(src.mSrcfile,
@@ -166,6 +173,8 @@ int main(int argc, char** argv)
           std::cout << " no scanner for filetype" << std::endl;
         }
       }
+
+      root["end-time"] = to_iso_extended_string(microsec_clock::local_time());
 
       std::cout << root << std::endl;
     }
