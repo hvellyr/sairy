@@ -27,10 +27,12 @@ using PropertyValue =
     boost::variant<Undefined, int, std::string,
                    boost::recursive_wrapper<std::shared_ptr<Node>>,
                    boost::recursive_wrapper<NodeList>>;
+using Properties = std::map<std::string, PropertyValue>;
 
+using PropertyFilterFunc = std::function<bool(const std::string&)>;
 
 class Node {
-  std::map<std::string, PropertyValue> mProperties;
+  Properties mProperties;
 
 public:
   Node() = default;
@@ -85,6 +87,8 @@ public:
   void addNode(const std::string& propName, const Node& child);
 
   NodeList children() const;
+  NodeList children(const PropertyFilterFunc& propFilter) const;
+  const Properties& properties() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Node& node);
 };
@@ -93,7 +97,20 @@ std::ostream& operator<<(std::ostream& os, const Undefined&);
 std::ostream& operator<<(std::ostream& os, const NodeList&);
 
 
-void nodeTraverse(const Node& root,
-                  const std::function<void(const Node&)>& functor);
+enum class TraverseRecursion {
+  kBreak,
+  kContinue,
+  kRecurse,
+};
+
+using TraverseNodeVisitor =
+    std::function<TraverseRecursion(const Node&, int depth)>;
+
+TraverseRecursion nodeTraverse(const Node& root,
+                               const TraverseNodeVisitor& functor,
+                               const PropertyFilterFunc& propFilter, int depth);
+
+TraverseRecursion nodeTraverse(const Node& root,
+                               const TraverseNodeVisitor& functor);
 
 } // ns eyestep

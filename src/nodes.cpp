@@ -101,24 +101,57 @@ namespace {
 } // ns anon
 
 
-NodeList Node::children() const
+NodeList Node::children(const PropertyFilterFunc& propFilter) const
 {
   NodeList result;
   for (const auto& prop : mProperties) {
-    extractChildren(result, prop.second);
+    if (propFilter(prop.first)) {
+      extractChildren(result, prop.second);
+    }
   }
   return result;
 }
 
 
-void nodeTraverse(const Node& root,
-                  const std::function<void(const Node&)>& functor)
+NodeList Node::children() const
 {
-  functor(root);
+  return children([](const std::string&) { return true; });
+}
 
-  for (const auto& nd : root.children()) {
-    nodeTraverse(*nd, functor);
+
+const Properties& Node::properties() const
+{
+  return mProperties;
+}
+
+
+TraverseRecursion nodeTraverse(const Node& root,
+                               const TraverseNodeVisitor& functor,
+                               const PropertyFilterFunc& propFilter, int depth)
+{
+  TraverseRecursion rec = functor(root, depth);
+
+  if (rec == TraverseRecursion::kRecurse) {
+    auto children = root.children(propFilter);
+
+    for (const auto& nd : children) {
+      TraverseRecursion rec2 =
+          nodeTraverse(*nd, functor, propFilter, depth + 1);
+      if (rec2 == TraverseRecursion::kBreak) {
+        return rec2;
+      }
+    }
   }
+
+  return rec;
+}
+
+
+TraverseRecursion nodeTraverse(const Node& root,
+                               const TraverseNodeVisitor& functor)
+{
+  return nodeTraverse(root, functor, [](const std::string&) { return true; },
+                      0);
 }
 
 } // ns eyestep

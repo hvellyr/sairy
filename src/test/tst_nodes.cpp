@@ -73,11 +73,67 @@ TEST_CASE("Traverse", "[nodes]")
   nd.addNode("kids", args);
   nd.addNode("types", type);
 
-  std::vector<std::string> gis;
-  eyestep::nodeTraverse(nd, [&gis](const eyestep::Node& nd) {
-    gis.emplace_back(nd.gi());
-  });
+  SECTION("Full recursion")
+  {
+    using ExpectedGiType = std::vector<std::tuple<std::string, int>>;
+    ExpectedGiType gis;
+    eyestep::nodeTraverse(nd, [&gis](const eyestep::Node& nd, int depth) {
+      gis.emplace_back(std::make_tuple(nd.gi(), depth));
+      return eyestep::TraverseRecursion::kRecurse;
+    });
 
-  REQUIRE(gis == (std::vector<std::string>{"foo", "title", "args", "p1", "p2",
-                                           "p3", "type"}));
+    REQUIRE(gis == (ExpectedGiType{{"foo", 0},
+                                   {"title", 1},
+                                   {"args", 1},
+                                   {"p1", 2},
+                                   {"p2", 2},
+                                   {"p3", 2},
+                                   {"type", 1}}));
+  }
+
+  SECTION("Only siblings")
+  {
+    std::vector<std::string> gis;
+    eyestep::nodeTraverse(nd, [&gis](const eyestep::Node& nd, int depth) {
+      gis.emplace_back(nd.gi());
+      return eyestep::TraverseRecursion::kContinue;
+    });
+
+    REQUIRE(gis == (std::vector<std::string>{"foo"}));
+  }
+
+  SECTION("Mixed recursion/siblings")
+  {
+    std::vector<std::string> gis;
+    eyestep::nodeTraverse(nd, [&gis](const eyestep::Node& nd, int depth) {
+      gis.emplace_back(nd.gi());
+      if (nd.gi() == "foo") {
+        return eyestep::TraverseRecursion::kRecurse;
+      }
+      else {
+        return eyestep::TraverseRecursion::kContinue;
+      }
+    });
+
+    REQUIRE(gis == (std::vector<std::string>{"foo", "title", "args", "type"}));
+  }
+
+  SECTION("breaks")
+  {
+    std::vector<std::string> gis;
+    eyestep::nodeTraverse(nd, [&gis](const eyestep::Node& nd, int depth) {
+      gis.emplace_back(nd.gi());
+      if (nd.gi() == "foo") {
+        return eyestep::TraverseRecursion::kRecurse;
+      }
+      else if (nd.gi() == "args") {
+        return eyestep::TraverseRecursion::kBreak;
+      }
+      else {
+        return eyestep::TraverseRecursion::kContinue;
+      }
+    });
+
+    REQUIRE(gis == (std::vector<std::string>{"foo", "title", "args"}));
+  }
 }
