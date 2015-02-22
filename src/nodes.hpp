@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <boost/variant/variant.hpp>
-#include <boost/variant/recursive_wrapper.hpp>
 #include <boost/variant/get.hpp>
+#include <boost/variant/recursive_wrapper.hpp>
+#include <boost/variant/variant.hpp>
 
 #include <iostream>
 #include <map>
@@ -77,10 +77,16 @@ public:
   void addChildNode(const Node& child);
   void addNode(const std::string& propName, const Node& child);
 
+  NodeList children() const;
+
   friend std::ostream& operator<<(std::ostream& os, const Node& node);
 };
 
 std::ostream& operator<<(std::ostream& os, const Undefined&);
 std::ostream& operator<<(std::ostream& os, const NodeList&);
+
+
+void nodeTraverse(const Node& root,
+                  const std::function<void(const Node&)>& functor);
 
 } // ns eyestep

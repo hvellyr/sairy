@@ -2,6 +2,7 @@
 // All rights reserved.
 
 #include <boost/variant/apply_visitor.hpp>
+#include <boost/variant/static_visitor.hpp>
 
 #include "nodes.hpp"
 #include <iostream>
@@ -61,6 +62,59 @@ void Node::addNode(const std::string& propName, const Node& child)
     else {
       assert(false);
     }
+  }
+}
+
+
+namespace {
+  class CollectChildrenVisitor : public boost::static_visitor<> {
+    NodeList& mResult;
+
+  public:
+    CollectChildrenVisitor(NodeList& result) : mResult(result) {}
+
+    void operator()(const Undefined&) {}
+
+    void operator()(const int&) {}
+
+    void operator()(const std::string&) {}
+
+    void operator()(const Node& nd) { mResult.emplace_back(nd); }
+
+    void operator()(const NodeList& nl)
+    {
+      for (const auto& nd : nl) {
+        mResult.emplace_back(nd);
+      }
+    }
+  };
+
+  void extractChildren(NodeList& result, PropertyValue value)
+  {
+    CollectChildrenVisitor visitor(result);
+    boost::apply_visitor(visitor, value);
+  }
+
+} // ns anon
+
+
+NodeList Node::children() const
+{
+  NodeList result;
+  for (const auto& prop : mProperties) {
+    extractChildren(result, prop.second);
+  }
+  return result;
+}
+
+
+void nodeTraverse(const Node& root,
+                  const std::function<void(const Node&)>& functor)
+{
+  functor(root);
+
+  for (const auto& nd : root.children()) {
+    nodeTraverse(nd, functor);
   }
 }
 
