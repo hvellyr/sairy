@@ -1,1 +1,31 @@
 Sairy is an experiment documentation extraction facility
+
+Requirements
+------------
+
+  - cmake >= 2.8.12
+  - boost >= 1.54
+  - libclang 3.5.0
+  - a decent c++11 enabled compiler, apple's clang "6.0" should do
+
+
+Build and Test
+--------------
+
+  mkdir build
+  cd build
+  cmake ..
+  cmake --build .
+
+The unit tests can be executed with ctest:
+
+  ctest -V
+
+
+You might set the following variables:
+
+- Boost_INCLUDE_DIR   to the folder, where Boost headers are found
+
+Example:
+
+  cmake .. -DBoost_INCLUDE_DIR=/opt/local/include/
