@@ -145,6 +145,7 @@ int main(int argc, char** argv)
 
 
     if (!sources.empty()) {
+      eyestep::Node root("project");
       for (const auto& src : sources) {
         std::cout << "Scan " << src.mSrcfile << " ...";
         std::cout.flush();
@@ -159,12 +160,14 @@ int main(int argc, char** argv)
                                 eyestep::utils::joinList(defs, src.mLocDefs));
           std::cout << " ok" << std::endl;
 
-          std::cout << nd << std::endl;
+          root.addChildNode(nd);
         }
         else {
           std::cout << " no scanner for filetype" << std::endl;
         }
       }
+
+      std::cout << root << std::endl;
     }
   }
   catch (const std::exception& e) {
