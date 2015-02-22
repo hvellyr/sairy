@@ -1,0 +1,17 @@
+*.a            binary
+*.cpp          text diff=cpp
+*.dylib        binary
+*.h            text diff=cpp
+*.hpp          text diff=cpp
+*.ipp          text diff=cpp
+*.png          binary
+*.txt          text
+*.vcproj       text
+LICENSE        text
+README         text
+.gitattributes text
+.gitignore     text
+.clang-format  text
+*.modulemap    text
+Makefile       text
+
