@@ -13,6 +13,7 @@
 
 #include <string>
 #include <iostream>
+#include <unordered_map>
 #include <memory>
 
 
@@ -36,12 +37,25 @@ std::pair<std::string, std::string> parseForISystem(const std::string& s)
 
 std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file)
 {
-  auto ext = file.extension().string();
+  static std::unordered_map<std::string, std::string> parser_map = {
+      {".c", eyestep::CppScanner::kId},
+      {".cpp", eyestep::CppScanner::kId},
+      {".cxx", eyestep::CppScanner::kId},
+      {".h", eyestep::CppScanner::kId},
+      {".hh", eyestep::CppScanner::kId},
+      {".hpp", eyestep::CppScanner::kId},
+      {".hxx", eyestep::CppScanner::kId},
+      {".ipp", eyestep::CppScanner::kId},
+      {".m", eyestep::CppScanner::kId},
+      {".mm", eyestep::CppScanner::kId},
+  };
 
-  if (ext == ".hpp" || ext == ".cpp" || ext == ".ipp") {
-    return estd::make_unique<eyestep::CppScanner>();
+  auto i_parser_type = parser_map.find(file.extension().string());
+  if (i_parser_type != parser_map.end()) {
+    if (i_parser_type->second == eyestep::CppScanner::kId) {
+      return estd::make_unique<eyestep::CppScanner>();
+    }
   }
-}
 
   return nullptr;
 }

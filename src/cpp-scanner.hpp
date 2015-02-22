@@ -17,6 +17,8 @@ class Node;
 
 class CppScanner : public IScanner {
 public:
+  static const std::string kId;
+
   Node scanFile(const fs::path& srfile, const std::vector<std::string>& incls,
                 const std::vector<std::string>& defs) override;
 };

@@ -173,6 +173,8 @@ namespace {
 
 //----------------------------------------------------------------------------------------
 
+const std::string CppScanner::kId = "cpp";
+
 Node CppScanner::scanFile(const fs::path& srcfile,
                           const std::vector<std::string>& incls,
                           const std::vector<std::string>& defs)
