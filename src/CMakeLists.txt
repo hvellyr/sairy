@@ -31,3 +31,6 @@ target_link_libraries(sairy
   cppscanner
   clang
   ${Boost_LIBRARIES})
+
+
+add_subdirectory(test)
