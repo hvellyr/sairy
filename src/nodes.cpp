@@ -154,4 +154,73 @@ TraverseRecursion nodeTraverse(const Node& root,
                       0);
 }
 
+
+namespace {
+  class SerializeVisitor : public boost::static_visitor<> {
+    std::ostream& mOs;
+    int mDepth;
+
+  public:
+    SerializeVisitor(std::ostream& os, int depth) : mOs(os), mDepth(depth) {}
+
+    void operator()(const Undefined&) {}
+
+    void operator()(const int& val) { mOs << val; }
+
+    void operator()(const std::string& val) { mOs << val; }
+
+    void operator()(const std::shared_ptr<Node>& nd)
+    {
+      mOs << std::endl;
+      serialize(mOs, *nd, mDepth);
+      mOs << std::string((mDepth - 1) * 2, ' ');
+    }
+
+    void operator()(const NodeList& nl)
+    {
+      mOs << std::endl;
+      for (const auto& nd : nl) {
+        serialize(mOs, *nd, mDepth);
+      }
+      mOs << std::string((mDepth - 1) * 2, ' ');
+    }
+  };
+
+} // ns anon
+
+void serialize(std::ostream& os, const Node& nd, int in_depth)
+{
+  int last_depth = in_depth - 1;
+
+  auto close_node = [&os](int lastd, int depth) {
+    for (int i = lastd; i >= depth; --i) {
+      os << std::string(i * 2, ' ') << "</node>" << std::endl;
+    }
+  };
+
+  nodeTraverse(nd, [&os, &last_depth, &close_node](const Node& nd, int depth) {
+                     close_node(last_depth, depth);
+                     last_depth = depth;
+
+                     os << std::string(depth * 2, ' ') << "<node gi='"
+                        << nd.gi() << "'>" << std::endl;
+                     for (const auto& prop : nd.properties()) {
+                       if (prop.first != "children" && prop.first != "gi") {
+                         os << std::string((depth + 1) * 2, ' ') << "<prop nm='"
+                            << prop.first << "'>";
+                         SerializeVisitor visitor(os, depth + 2);
+                         boost::apply_visitor(visitor, prop.second);
+                         os << "</prop>" << std::endl;
+                       }
+                     }
+                     return TraverseRecursion::kRecurse;
+                   },
+               [](const std::string& propName) {
+                 return propName == "children";
+               },
+               in_depth);
+
+  close_node(last_depth, in_depth);
+}
+
 } // ns eyestep

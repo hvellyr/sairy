@@ -6,6 +6,7 @@
 #include "../nodes.hpp"
 
 #include <string>
+#include <sstream>
 
 
 TEST_CASE("Base node creation", "[nodes]")
@@ -136,4 +137,51 @@ TEST_CASE("Traverse", "[nodes]")
 
     REQUIRE(gis == (std::vector<std::string>{"foo", "title", "args"}));
   }
+}
+
+
+TEST_CASE("Serialize", "[nodes]")
+{
+  eyestep::Node nd("foo");
+  nd["name"] = "bar";
+  nd["size"] = 42;
+
+  eyestep::Node type("type");
+  type["const?"] = true;
+
+  eyestep::Node args("args");
+  args.addNode("params", eyestep::Node("p1"));
+  args.addNode("params", eyestep::Node("p2"));
+  args.addNode("params", eyestep::Node("p3"));
+
+  nd.addChildNode(eyestep::Node("title"));
+  nd.addChildNode(args);
+  nd.addNode("types", type);
+
+  const std::string exptected_output =
+      "<node gi='foo'>\n"
+      "  <prop nm='name'>bar</prop>\n"
+      "  <prop nm='size'>42</prop>\n"
+      "  <prop nm='types'>\n"
+      "    <node gi='type'>\n"
+      "      <prop nm='const?'>1</prop>\n"
+      "    </node>\n"
+      "  </prop>\n"
+      "  <node gi='title'>\n"
+      "  </node>\n"
+      "  <node gi='args'>\n"
+      "    <prop nm='params'>\n"
+      "      <node gi='p1'>\n"
+      "      </node>\n"
+      "      <node gi='p2'>\n"
+      "      </node>\n"
+      "      <node gi='p3'>\n"
+      "      </node>\n"
+      "    </prop>\n"
+      "  </node>\n"
+      "</node>\n";
+
+  std::stringstream ss;
+  serialize(ss, nd);
+  REQUIRE(ss.str() == exptected_output);
 }

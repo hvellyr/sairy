@@ -113,4 +113,6 @@ TraverseRecursion nodeTraverse(const Node& root,
 TraverseRecursion nodeTraverse(const Node& root,
                                const TraverseNodeVisitor& functor);
 
+void serialize(std::ostream& os, const Node& nd, int depth = 0);
+
 } // ns eyestep
