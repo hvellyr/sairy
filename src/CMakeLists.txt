@@ -30,4 +30,4 @@ add_executable(sairy
 target_link_libraries(sairy
   cppscanner
   clang
-  ${Boost_PROGRAM_OPTIONS_LIBRARY})
+  ${Boost_LIBRARIES})

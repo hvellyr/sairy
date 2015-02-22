@@ -8,12 +8,15 @@
 
 #include "cpp-scanner.hpp"
 
-#include "boost/program_options.hpp"
+#include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 
 #include <string>
 #include <iostream>
 #include <memory>
 
+
+namespace fs = boost::filesystem;
 
 namespace {
 
@@ -30,14 +33,15 @@ std::pair<std::string, std::string> parseForISystem(const std::string& s)
   }
 }
 
-std::unique_ptr<eyestep::IScanner>
-make_scanner_for_file(const std::string& file)
+
+std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file)
 {
-  if (file.rfind(".hpp", file.length() - 4) != std::string::npos ||
-      file.rfind(".cpp", file.length() - 4) != std::string::npos ||
-      file.rfind(".ipp", file.length() - 4) != std::string::npos) {
+  auto ext = file.extension().string();
+
+  if (ext == ".hpp" || ext == ".cpp" || ext == ".ipp") {
     return estd::make_unique<eyestep::CppScanner>();
   }
+}
 
   return nullptr;
 }

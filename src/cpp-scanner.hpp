@@ -10,13 +10,14 @@
 
 namespace eyestep {
 
+namespace fs = boost::filesystem;
+
 class Node;
 
 
 class CppScanner : public IScanner {
 public:
-  Node scanFile(const std::string& srfile,
-                const std::vector<std::string>& incls,
+  Node scanFile(const fs::path& srfile, const std::vector<std::string>& incls,
                 const std::vector<std::string>& defs) override;
 };
 

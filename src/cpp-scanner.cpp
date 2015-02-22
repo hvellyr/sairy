@@ -7,6 +7,8 @@
 
 #include "clang-c/Index.h"
 
+#include <boost/filesystem.hpp>
+
 #include <algorithm>
 #include <cassert>
 #include <iostream>
@@ -18,6 +20,8 @@
 
 
 namespace eyestep {
+
+namespace fs = boost::filesystem;
 
 namespace {
 
@@ -169,7 +173,7 @@ namespace {
 
 //----------------------------------------------------------------------------------------
 
-Node CppScanner::scanFile(const std::string& srcfile,
+Node CppScanner::scanFile(const fs::path& srcfile,
                           const std::vector<std::string>& incls,
                           const std::vector<std::string>& defs)
 {
@@ -179,8 +183,8 @@ Node CppScanner::scanFile(const std::string& srcfile,
   ParseContext ctx;
 
   ctx.mDocumentNode["gi"] = "document";
-  ctx.mDocumentNode["source"] = srcfile;
-  ctx.mDocumentNode["scanner"] = "c++";
+  ctx.mDocumentNode["source"] = srcfile.string();
+  ctx.mDocumentNode["scanner"] = "cpp";
 
   // excludeDeclsFromPCH = 1, displayDiagnostics=1
   idx = clang_createIndex(1, 1);
@@ -207,7 +211,7 @@ Node CppScanner::scanFile(const std::string& srcfile,
                          CXTranslationUnit_IncludeBriefCommentsInCodeCompletion;
 
 
-  tu = clang_parseTranslationUnit(idx, srcfile.c_str(),
+  tu = clang_parseTranslationUnit(idx, srcfile.string().c_str(),
                                   (const char* const*)&args[0], argc,
                                   (struct CXUnsavedFile*)NULL,
                                   0, // num_unsaved_files,

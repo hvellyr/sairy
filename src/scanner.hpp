@@ -3,11 +3,15 @@
 
 #pragma once
 
+#include <boost/filesystem.hpp>
+
 #include <string>
 #include <vector>
 
 
 namespace eyestep {
+
+namespace fs = boost::filesystem;
 
 class Node;
 
@@ -16,7 +20,7 @@ class IScanner {
 public:
   virtual ~IScanner() {}
 
-  virtual Node scanFile(const std::string& srcfile,
+  virtual Node scanFile(const fs::path& srcfile,
                         const std::vector<std::string>& incls,
                         const std::vector<std::string>& defs) = 0;
 };

@@ -3,24 +3,30 @@
 
 #pragma once
 
+#include <boost/filesystem.hpp>
+
 #include <string>
 #include <vector>
 
+
 namespace eyestep {
+
+namespace fs = boost::filesystem;
 
 class Source {
 public:
-  Source(const std::string& srcfile, const std::vector<std::string>& locIncls,
+  Source(const boost::filesystem::path& srcfile,
+         const std::vector<std::string>& locIncls,
          const std::vector<std::string>& locDefines)
       : mSrcfile(srcfile), mLocIncls(locIncls), mLocDefs(locDefines)
   {
   }
 
-  std::string mSrcfile;
+  boost::filesystem::path mSrcfile;
   std::vector<std::string> mLocIncls;
   std::vector<std::string> mLocDefs;
 };
 
-std::vector<Source> readScanDb(const std::string& file);
+std::vector<Source> readScanDb(const fs::path& file);
 
 } // ns eyestep

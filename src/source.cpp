@@ -6,12 +6,15 @@
 #include "json_spirit/json_spirit_value.h"
 #include "json_spirit/json_spirit_reader_template.h"
 
-#include <fstream>
+#include <boost/filesystem/fstream.hpp>
+
 #include <string>
 #include <vector>
 
 
 namespace eyestep {
+
+namespace fs = boost::filesystem;
 
 namespace {
 
@@ -29,14 +32,14 @@ namespace {
 } // anon ns
 
 
-std::vector<Source> readScanDb(const std::string& file)
+std::vector<Source> readScanDb(const fs::path& file)
 {
   std::vector<Source> result;
 
   json_spirit::Array array;
   json_spirit::Value rootElt;
 
-  std::ifstream inf(file.c_str());
+  fs::ifstream inf(file);
 
   if (json_spirit::read_stream(inf, rootElt)) {
     // [ [ [ "projectA/includes/" ],          // include paths
@@ -75,7 +78,8 @@ std::vector<Source> readScanDb(const std::string& file)
 
               for (const auto& loc : locArray) {
                 if (loc.type() == json_spirit::str_type) {
-                  result.emplace_back(loc.get_str(), locIncls, locDefs);
+                  result.emplace_back(fs::path(loc.get_str()), locIncls,
+                                      locDefs);
                 }
               }
             }
