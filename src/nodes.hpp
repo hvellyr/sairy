@@ -69,6 +69,11 @@ public:
     return T();
   }
 
+  bool hasProperty(const std::string& propName) const
+  {
+    return mProperties.find(propName) != mProperties.end();
+  }
+
   void addChildNode(const Node& child);
   void addNode(const std::string& propName, const Node& child);
 
