@@ -1,0 +1,7 @@
+((nil . ((indent-tabs-mode . nil)
+         (fill-column . 80)))
+ (c-mode . ((compile-command . "cd ${PWD/%src*/build} && make -k")
+            (projectile-make-compile-cmd . "cd build && make -k")))
+ (c++-mode . ((compile-command . "cd ${PWD/%src*/build} && make -k")
+              (projectile-make-compile-cmd . "cd build && make -k")))
+ )
