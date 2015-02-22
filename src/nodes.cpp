@@ -44,10 +44,15 @@ std::ostream& operator<<(std::ostream& os, const Node& node)
 
 void Node::addChildNode(const Node& child)
 {
-  std::string key = "children";
-  auto i_find = mProperties.find(key);
+  addNode("children", child);
+}
+
+
+void Node::addNode(const std::string& propName, const Node& child)
+{
+  auto i_find = mProperties.find(propName);
   if (i_find == mProperties.end()) {
-    mProperties[key] = NodeList{child};
+    mProperties[propName] = NodeList{child};
   }
   else {
     if (NodeList* nl = boost::get<NodeList>(&i_find->second)) {

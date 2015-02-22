@@ -70,6 +70,7 @@ public:
   }
 
   void addChildNode(const Node& child);
+  void addNode(const std::string& propName, const Node& child);
 
   friend std::ostream& operator<<(std::ostream& os, const Node& node);
 };
