@@ -176,7 +176,7 @@ int main(int argc, char** argv)
 
       root["end-time"] = to_iso_extended_string(microsec_clock::local_time());
 
-      std::cout << root << std::endl;
+      eyestep::serialize(std::cout, root);
     }
   }
   catch (const std::exception& e) {
