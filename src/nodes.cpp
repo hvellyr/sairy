@@ -53,11 +53,11 @@ void Node::addNode(const std::string& propName, const Node& child)
 {
   auto i_find = mProperties.find(propName);
   if (i_find == mProperties.end()) {
-    mProperties[propName] = NodeList{child};
+    mProperties[propName] = NodeList{std::make_shared<Node>(child)};
   }
   else {
     if (NodeList* nl = boost::get<NodeList>(&i_find->second)) {
-      nl->emplace_back(child);
+      nl->emplace_back(std::make_shared<Node>(child));
     }
     else {
       assert(false);
@@ -79,7 +79,10 @@ namespace {
 
     void operator()(const std::string&) {}
 
-    void operator()(const Node& nd) { mResult.emplace_back(nd); }
+    void operator()(const std::shared_ptr<Node>& nd)
+    {
+      mResult.emplace_back(nd);
+    }
 
     void operator()(const NodeList& nl)
     {
@@ -114,7 +117,7 @@ void nodeTraverse(const Node& root,
   functor(root);
 
   for (const auto& nd : root.children()) {
-    nodeTraverse(nd, functor);
+    nodeTraverse(*nd, functor);
   }
 }
 

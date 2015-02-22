@@ -50,8 +50,8 @@ TEST_CASE("Add node", "[nodes]")
   nd.addNode("kids", eyestep::Node("bar"));
 
   REQUIRE(nd.property<eyestep::NodeList>("kids").size() == 2u);
-  REQUIRE(nd.property<eyestep::NodeList>("kids")[0].gi() == "foo");
-  REQUIRE(nd.property<eyestep::NodeList>("kids")[1].gi() == "bar");
+  REQUIRE(nd.property<eyestep::NodeList>("kids")[0]->gi() == "foo");
+  REQUIRE(nd.property<eyestep::NodeList>("kids")[1]->gi() == "bar");
 }
 
 

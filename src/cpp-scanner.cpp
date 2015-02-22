@@ -61,15 +61,15 @@ namespace {
     Node nd;
     nd["gi"] = "function";
     nd["name"] = nm;
-    nd["return-type"] = make_type_node(type.resultType());
+    nd.setProperty("return-type", make_type_node(type.resultType()));
     nd["source-location"] = ecursor.location().format();
 
     NodeList nl;
     for (int i = 0; i < type.numArgTypes(); i++) {
       Node param("parameter");
       param["name"] = std::get<0>(args_nm[i]);
-      param["type"] = make_type_node(std::get<1>(args_nm[i]));
-      nl.emplace_back(param);
+      param.setProperty("type", make_type_node(std::get<1>(args_nm[i])));
+      nl.emplace_back(std::make_shared<Node>(param));
     }
     nd["args"] = nl;
 

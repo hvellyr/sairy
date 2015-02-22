@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -17,13 +18,14 @@ namespace eyestep {
 
 class Node;
 
-using NodeList = std::vector<Node>;
+using NodeList = std::vector<std::shared_ptr<Node>>;
 
 struct Undefined {
 };
 
 using PropertyValue =
-    boost::variant<Undefined, int, std::string, boost::recursive_wrapper<Node>,
+    boost::variant<Undefined, int, std::string,
+                   boost::recursive_wrapper<std::shared_ptr<Node>>,
                    boost::recursive_wrapper<NodeList>>;
 
 
@@ -72,6 +74,11 @@ public:
   bool hasProperty(const std::string& propName) const
   {
     return mProperties.find(propName) != mProperties.end();
+  }
+
+  void setProperty(const std::string& propName, const Node& nd)
+  {
+    (*this)[propName] = std::make_shared<Node>(nd);
   }
 
   void addChildNode(const Node& child);
