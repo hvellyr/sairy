@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 2.8.12)
 
-project(Sairy CXX)
+project(Sairy C CXX)
 set(Sairy_VERSION_MAJOR 0)
 set(Sairy_VERSION_MINOR 1)
 
@@ -33,7 +33,7 @@ endif()
 if(CMAKE_CXX_COMPILER_ID STREQUAL Clang
     OR CMAKE_CXX_COMPILER_ID STREQUAL AppleClang)
   set(warning_options
-    -Wpedantic
+    -Wall
   )
 elseif(MSVC)
   set(warning_options /WX /W4 /wd4503 /wd4512)
@@ -53,4 +53,5 @@ find_package(Boost 1.54 REQUIRED COMPONENTS program_options system filesystem da
 include(FeatureSummary)
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
+add_subdirectory(third-party)
 add_subdirectory(src)
