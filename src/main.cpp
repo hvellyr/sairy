@@ -1,10 +1,11 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
+#include "estd/memory.hpp"
 #include "nodes.hpp"
+#include "scm-context.hpp"
 #include "source.hpp"
 #include "utils.hpp"
-#include "estd/memory.hpp"
 
 #include "cpp-scanner.hpp"
 
@@ -59,6 +60,21 @@ std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file)
   }
 
   return nullptr;
+}
+
+
+std::unique_ptr<eyestep::ISchemeContext> setup_scheme_context()
+{
+  auto ctx = eyestep::createSchemeContext();
+  ctx->initialize(fs::path("third-party/chibi-scheme/lib"));
+
+  auto init_path = fs::path("share/sairy/scm/init.scm");
+  if (!ctx->loadScript(init_path)) {
+    std::cerr << "Could not read " << init_path.string() << std::endl;
+    return nullptr;
+  }
+
+  return std::move(ctx);
 }
 
 } // anon namespace
@@ -144,6 +160,7 @@ int main(int argc, char** argv)
       }
     }
 
+    auto scheme_ctx = std::move(setup_scheme_context());
 
     using namespace boost::posix_time;
     using namespace boost::gregorian;

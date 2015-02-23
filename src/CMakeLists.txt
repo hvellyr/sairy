@@ -24,11 +24,16 @@ target_compile_options(cppscanner
 
 
 add_executable(sairy
+  scm-context.cpp
   main.cpp
 )
+target_include_directories(sairy PUBLIC
+  ../third-party/chibi-scheme/include
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../third-party;${Boost_INCLUDE_DIRS}>")
 
 target_link_libraries(sairy
   cppscanner
+  scheme
   clang
   ${Boost_LIBRARIES})
 
