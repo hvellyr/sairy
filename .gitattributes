@@ -1,17 +1,38 @@
-*.a            binary
-*.cpp          text diff=cpp
-*.dylib        binary
-*.h            text diff=cpp
-*.hpp          text diff=cpp
-*.ipp          text diff=cpp
-*.png          binary
-*.txt          text
-*.vcproj       text
-LICENSE        text
-README         text
-.gitattributes text
-.gitignore     text
-.clang-format  text
-*.modulemap    text
-Makefile       text
-
+*.1                text
+*.a                binary
+*.c                text diff=cpp
+*.chibi            text
+*.cpp              text diff=cpp
+*.dylib            binary
+*.h                text diff=cpp
+*.h                text diff=cpp
+*.hpp              text diff=cpp
+*.in               text
+*.ipp              text diff=cpp
+*.libs             text
+*.modulemap        text
+*.pl               text
+*.png              binary
+*.sch              text
+*.scm              text
+*.scrbl            text
+*.sh               text eol=lf
+*.sld              text
+*.spec             text
+*.txt              text
+*.vcproj           text
+.clang-format      text
+.gitattributes     text
+.gitignore         text
+AUTHORS            text
+COPYING            text
+LICENSE            text
+Makefile           text
+Makefile.*         text
+README             text
+README.*           text
+RELEASE            text
+TODO               text
+VERSION            text
+bash_completion    text
+mkfile             text

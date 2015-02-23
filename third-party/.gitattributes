@@ -1,0 +1,5 @@
+chibi-scheme/**/*.chibi         text
+chibi-scheme/**/*.stub          text
+chibi-scheme/**/*.res           text
+chibi-scheme/**/*.err-res       text
+chibi-scheme/tools/*            text eol=lf
