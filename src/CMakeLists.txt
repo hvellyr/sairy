@@ -18,7 +18,7 @@ add_library(cppscanner
   utils.cpp
 )
 target_include_directories(cppscanner PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include;${Boost_INCLUDE_DIRS}>")
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../third-party;${Boost_INCLUDE_DIRS}>")
 target_compile_options(cppscanner
   PUBLIC ${cxx11_options} ${warning_options})
 
