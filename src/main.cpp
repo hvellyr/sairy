@@ -10,6 +10,7 @@
 #include "cpp-scanner.hpp"
 
 #include <boost/program_options.hpp>
+#include <boost/program_options/parsers.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -17,6 +18,8 @@
 #include <iostream>
 #include <unordered_map>
 #include <memory>
+
+#define SAIRY_DEFAULT_PREFIX "/usr/local/share/sairy"
 
 
 namespace fs = boost::filesystem;
@@ -63,12 +66,13 @@ std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file)
 }
 
 
-std::unique_ptr<eyestep::ISchemeContext> setup_scheme_context()
+std::unique_ptr<eyestep::ISchemeContext>
+setup_scheme_context(const fs::path& prefix_path, const fs::path& module_path)
 {
   auto ctx = eyestep::createSchemeContext();
-  ctx->initialize(fs::path("third-party/chibi-scheme/lib"));
+  ctx->initialize(module_path / "lib");
 
-  auto init_path = fs::path("share/sairy/scm/init.scm");
+  auto init_path = prefix_path / "init.scm";
   if (!ctx->loadScript(init_path)) {
     std::cerr << "Could not read " << init_path.string() << std::endl;
     return nullptr;
@@ -82,6 +86,8 @@ std::unique_ptr<eyestep::ISchemeContext> setup_scheme_context()
 
 int main(int argc, char** argv)
 {
+  bool verbose = false;
+
   try {
     namespace po = boost::program_options;
 
@@ -91,6 +97,7 @@ int main(int argc, char** argv)
     // clang-format off
     desc.add_options()
       ("help,h",         "produce help message")
+      ("verbose,v",      "being verbose")
       ("file,f",         po::value<std::string>(),
                          "read files to scan from arg")
       ("output,o",       po::value<std::string>(),
@@ -104,24 +111,45 @@ int main(int argc, char** argv)
       ("isystem",        po::value<std::vector<std::string>>()->composing(),
                          "-isystem arg, like -I")
       ("input-file",     po::value<std::vector<std::string>>(),
-                         "input file");
+                         "input file")
+      ;
+
+    po::options_description hidden("Hidden options");
+    hidden.add_options()
+      ("sairy-prefix",   po::value<std::string>()->default_value(SAIRY_DEFAULT_PREFIX), "")
+      ("sairy-modules",  po::value<std::string>(), "")
+      ;
     // clang-format on
+
+    po::options_description options;
+    options.add(desc).add(hidden);
 
     po::positional_options_description p;
     p.add("input-file", -1);
 
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv)
-                  .options(desc)
+                  .options(options)
                   .positional(p)
                   .extra_parser(parseForISystem)
                   .run(),
+              vm);
+    po::store(po::parse_environment(options, [](const std::string& opt) {
+                if (opt == "SAIRY_PREFIX")
+                  return std::string("sairy-prefix");
+                else if (opt == "SAIRY_MODULES")
+                  return std::string("sairy-modules");
+                return std::string();
+              }),
               vm);
     po::notify(vm);
 
     if (vm.count("help")) {
       std::cout << desc << "\n";
       exit(1);
+    }
+    if (vm.count("verbose")) {
+      verbose = true;
     }
 
 
@@ -145,6 +173,24 @@ int main(int argc, char** argv)
       outf = vm["output"].as<std::string>();
     }
 
+    std::string prefix_path;
+    if (vm.count("sairy-prefix")) {
+      prefix_path = vm["sairy-prefix"].as<std::string>();
+    }
+    std::string module_path = prefix_path;
+    if (vm.count("sairy-modules")) {
+      module_path = vm["sairy-modules"].as<std::string>();
+    }
+
+    if (verbose) {
+      std::cout << "incl paths  : " << eyestep::utils::join(incl_paths, " ")
+                << std::endl;
+      std::cout << "defs        : " << eyestep::utils::join(defs, " ")
+                << std::endl;
+      std::cout << "outf        : " << outf << std::endl;
+      std::cout << "prefix path : " << prefix_path << std::endl;
+      std::cout << "module_path : " << module_path << std::endl;
+    }
 
     std::vector<eyestep::Source> sources;
 
@@ -160,7 +206,7 @@ int main(int argc, char** argv)
       }
     }
 
-    auto scheme_ctx = std::move(setup_scheme_context());
+    auto scheme_ctx = std::move(setup_scheme_context(prefix_path, module_path));
 
     using namespace boost::posix_time;
     using namespace boost::gregorian;
