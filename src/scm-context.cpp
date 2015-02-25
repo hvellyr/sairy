@@ -3,6 +3,7 @@
 
 #include "scm-context.hpp"
 #include "estd/memory.hpp"
+#include "nodes.hpp"
 
 #include "chibi/eval.h"
 
@@ -16,6 +17,11 @@ namespace eyestep {
 namespace fs = boost::filesystem;
 
 namespace {
+  static const eyestep::Node* sRootNode;
+
+  const eyestep::Node* rootNode() { return sRootNode; }
+
+
   bool check_exception_p(sexp ctx, sexp res)
   {
     sexp_gc_var3(err, sym, tmp);
@@ -90,7 +96,14 @@ namespace {
 
       return retv;
     }
+
+
+    void setupTemplateFunctions(const eyestep::Node& rootNode) override
+    {
+      sRootNode = &rootNode;
+    }
   };
+
 } // ns anon
 
 

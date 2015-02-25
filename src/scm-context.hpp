@@ -15,6 +15,8 @@ public:
 
   virtual void initialize(const boost::filesystem::path& modulePath) = 0;
   virtual bool loadScript(const boost::filesystem::path& scriptFile) = 0;
+
+  virtual void setupTemplateFunctions(const eyestep::Node& rootNode) = 0;
 };
 
 std::unique_ptr<ISchemeContext> createSchemeContext();

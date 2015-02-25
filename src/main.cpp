@@ -84,6 +84,18 @@ setup_scheme_context(const fs::path& prefix_path, const fs::path& module_path)
 }
 
 
+void load_template(eyestep::ISchemeContext* ctx, const fs::path& templPath,
+                   const eyestep::Node& root)
+{
+  ctx->setupTemplateFunctions(root);
+
+  if (!ctx->loadScript(templPath)) {
+    std::cerr << "Could not read " << templPath.string() << std::endl;
+    return;
+  }
+}
+
+
 eyestep::Node scan_sources(const std::vector<eyestep::Source>& sources,
                            const std::vector<std::string>& incl_paths,
                            const std::vector<std::string>& defs)
@@ -140,6 +152,8 @@ int main(int argc, char** argv)
                          "read files to scan from arg")
       ("output,o",       po::value<std::string>(),
                          "write result to arg")
+      ("template,t",     po::value<std::string>(),
+                         "use template")
       ("include-path,I", po::value<std::vector<std::string>>()->composing(),
                          "add include path to C parser")
       ("defs,D",         po::value<std::vector<std::string>>()->composing(),
@@ -211,6 +225,11 @@ int main(int argc, char** argv)
       outf = vm["output"].as<std::string>();
     }
 
+    std::string templ_path;
+    if (vm.count("template")) {
+      templ_path = vm["template"].as<std::string>();
+    }
+
     std::string prefix_path;
     if (vm.count("sairy-prefix")) {
       prefix_path = vm["sairy-prefix"].as<std::string>();
@@ -228,6 +247,7 @@ int main(int argc, char** argv)
       std::cout << "outf        : " << outf << std::endl;
       std::cout << "prefix path : " << prefix_path << std::endl;
       std::cout << "module_path : " << module_path << std::endl;
+      std::cout << "templ_path  : " << templ_path << std::endl;
     }
 
     std::vector<eyestep::Source> sources;
@@ -249,6 +269,7 @@ int main(int argc, char** argv)
     eyestep::Node root = scan_sources(sources, incl_paths, defs);
     eyestep::serialize(std::cout, root);
 
+    load_template(scheme_ctx.get(), templ_path, root);
   }
   catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
