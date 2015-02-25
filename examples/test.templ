@@ -1,0 +1,10 @@
+(display "This is test.templ") (newline)
+(define r (grove-root))
+
+(display r) (newline)
+(display "A node? ") (display (node? r)) (newline)
+(display "  GI: ") (display (gi r)) (newline)
+(display "  GI: ") (display (node-property 'gi r)) (newline)
+(display "  start-time: ") (display (node-property 'start-time r)) (newline)
+(display "  end-time: ") (display (node-property 'end-time r)) (newline)
+;;(display "  foo: ") (display (node-property "foo" r)) (newline)

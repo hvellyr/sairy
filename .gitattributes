@@ -19,6 +19,7 @@
 *.sh               text eol=lf
 *.sld              text
 *.spec             text
+*.templ            text
 *.txt              text
 *.vcproj           text
 .clang-format      text
