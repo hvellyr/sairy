@@ -26,25 +26,28 @@ namespace fs = boost::filesystem;
 namespace {
 
   struct ParseContext {
-    ParseContext() {}
+    ParseContext(Grove& grove) : mGrove(grove) {}
 
-    Node mDocumentNode;
+    Grove& mGrove;
+    Node* mDocumentNode;
   };
 
 
-  Node make_type_node(Type type)
+  Node* make_type_node(Grove* grove, Type type)
   {
-    Node nd("type");
+    Node* nd = grove->makeNode("type");
 
-    nd["name"] = type.spelling();
-    nd["const?"] = type.isConst();
+    nd->setProperty("name", type.spelling());
+    nd->setProperty("const?", type.isConst());
 
     return nd;
   }
 
 
-  Node make_function_node(Cursor ecursor)
+  Node* make_function_node(Grove* grove, Cursor ecursor)
   {
+    Node* nd = grove->makeNode("function");
+
     std::string nm = ecursor.spelling();
 
     std::vector<std::tuple<std::string, Type>> args_nm;
@@ -58,20 +61,19 @@ namespace {
     assert(args_nm.size() == type.numArgTypes());
 
 
-    Node nd;
-    nd["gi"] = "function";
-    nd["name"] = nm;
-    nd.setProperty("return-type", make_type_node(type.resultType()));
-    nd["source-location"] = ecursor.location().format();
+    nd->setProperty("name", nm);
+    nd->setProperty("return-type", make_type_node(grove, type.resultType()));
+    nd->setProperty("source-location", ecursor.location().format());
 
-    NodeList nl;
+    Nodes nl;
     for (int i = 0; i < type.numArgTypes(); i++) {
-      Node param("parameter");
-      param["name"] = std::get<0>(args_nm[i]);
-      param.setProperty("type", make_type_node(std::get<1>(args_nm[i])));
-      nl.emplace_back(std::make_shared<Node>(param));
+      Node* param = grove->makeNode("parameter");
+      param->setProperty("name", std::get<0>(args_nm[i]));
+      param->setProperty("type",
+                         make_type_node(grove, std::get<1>(args_nm[i])));
+      nl.emplace_back(param);
     }
-    nd["args"] = nl;
+    nd->setProperty("args", nl);
 
     return nd;
   }
@@ -93,9 +95,8 @@ namespace {
     if (loc.isFromMainFile()) {
       if (clang_isDeclaration(kind)) {
         if (kind == CXCursor_FunctionDecl) {
-          Node nd = make_function_node(ecursor);
-
-          ctx->mDocumentNode.addChildNode(nd);
+          Node* nd = make_function_node(ctx->mDocumentNode->grove(), ecursor);
+          ctx->mDocumentNode->addChildNode(nd);
 
           retval = CXChildVisit_Recurse;
         }
@@ -175,18 +176,19 @@ namespace {
 
 const std::string CppScanner::kId = "cpp";
 
-Node CppScanner::scanFile(const fs::path& srcfile,
-                          const std::vector<std::string>& incls,
-                          const std::vector<std::string>& defs)
+Node* CppScanner::scanFile(eyestep::Grove& grove, const fs::path& srcfile,
+                           const std::vector<std::string>& incls,
+                           const std::vector<std::string>& defs)
 {
   CXIndex idx;
   CXTranslationUnit tu;
 
-  ParseContext ctx;
+  ParseContext ctx(grove);
 
-  ctx.mDocumentNode["gi"] = "document";
-  ctx.mDocumentNode["source"] = srcfile.string();
-  ctx.mDocumentNode["scanner"] = "cpp";
+  ctx.mDocumentNode = grove.makeNode("document");
+
+  ctx.mDocumentNode->setProperty("source", srcfile.string());
+  ctx.mDocumentNode->setProperty("scanner", "cpp");
 
   // excludeDeclsFromPCH = 1, displayDiagnostics=1
   idx = clang_createIndex(1, 1);

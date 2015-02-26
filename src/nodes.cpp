@@ -1,10 +1,12 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
+#include "nodes.hpp"
+#include "estd/memory.hpp"
+
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 
-#include "nodes.hpp"
 #include <iostream>
 #include <cassert>
 
@@ -18,7 +20,7 @@ std::ostream& operator<<(std::ostream& os, const Undefined&)
 }
 
 
-std::ostream& operator<<(std::ostream& os, const NodeList& nodelist)
+std::ostream& operator<<(std::ostream& os, const Nodes& nodelist)
 {
   os << "[ " << std::endl;
   for (const auto& nd : nodelist) {
@@ -43,21 +45,94 @@ std::ostream& operator<<(std::ostream& os, const Node& node)
 }
 
 
-void Node::addChildNode(const Node& child)
+//------------------------------------------------------------------------------
+
+const std::string CommonProps::kParent = "parent";
+const std::string CommonProps::kGi = "gi";
+const std::string CommonProps::kChildren = "children";
+
+
+//------------------------------------------------------------------------------
+
+Node::Node(const std::string& gi) : mGrove(nullptr)
 {
-  addNode("children", child);
+  mProperties[CommonProps::kGi] = gi;
+}
+
+std::string Node::gi() const
+{
+  return property<std::string>(CommonProps::kGi);
 }
 
 
-void Node::addNode(const std::string& propName, const Node& child)
+Node* Node::parent() const
+{
+  return property<Node*>(CommonProps::kParent);
+}
+
+
+Grove* Node::grove() const
+{
+  return mGrove;
+}
+
+
+const PropertyValue Node::operator[](const std::string& propName) const
 {
   auto i_find = mProperties.find(propName);
+  if (i_find != mProperties.end()) {
+    return i_find->second;
+  }
+
+  return Undefined();
+}
+
+
+bool Node::hasProperty(const std::string& propName) const
+{
+  return mProperties.find(propName) != mProperties.end();
+}
+
+
+void Node::setProperty(const std::string& propName, const Nodes& nl)
+{
+  Nodes newNodes(nl);
+  for (auto* nd : newNodes) {
+    assert(nd->parent() == nullptr);
+    assert(nd->mGrove == mGrove);
+    nd->mProperties[CommonProps::kParent] = this;
+  }
+
+  mProperties[propName] = newNodes;
+}
+
+void Node::setProperty(const std::string& propName, Node* nd)
+{
+  assert(nd->mGrove == mGrove);
+  nd->mProperties[CommonProps::kParent] = this;
+  mProperties[propName] = nd;
+}
+
+
+void Node::addChildNode(Node* child)
+{
+  addNode(CommonProps::kChildren, child);
+}
+
+
+void Node::addNode(const std::string& propName, Node* child)
+{
+  assert(child->mGrove == mGrove);
+
+  auto i_find = mProperties.find(propName);
   if (i_find == mProperties.end()) {
-    mProperties[propName] = NodeList{std::make_shared<Node>(child)};
+    child->mProperties[CommonProps::kParent] = this;
+    mProperties[propName] = Nodes{child};
   }
   else {
-    if (NodeList* nl = boost::get<NodeList>(&i_find->second)) {
-      nl->emplace_back(std::make_shared<Node>(child));
+    if (Nodes* nl = boost::get<Nodes>(&i_find->second)) {
+      child->mProperties[CommonProps::kParent] = this;
+      nl->emplace_back(child);
     }
     else {
       assert(false);
@@ -68,10 +143,10 @@ void Node::addNode(const std::string& propName, const Node& child)
 
 namespace {
   class CollectChildrenVisitor : public boost::static_visitor<> {
-    NodeList& mResult;
+    Nodes& mResult;
 
   public:
-    CollectChildrenVisitor(NodeList& result) : mResult(result) {}
+    CollectChildrenVisitor(Nodes& result) : mResult(result) {}
 
     void operator()(const Undefined&) {}
 
@@ -79,20 +154,17 @@ namespace {
 
     void operator()(const std::string&) {}
 
-    void operator()(const std::shared_ptr<Node>& nd)
-    {
-      mResult.emplace_back(nd);
-    }
+    void operator()(Node* nd) { mResult.emplace_back(nd); }
 
-    void operator()(const NodeList& nl)
+    void operator()(const Nodes& nl)
     {
-      for (const auto& nd : nl) {
+      for (auto* nd : nl) {
         mResult.emplace_back(nd);
       }
     }
   };
 
-  void extractChildren(NodeList& result, PropertyValue value)
+  void extractChildren(Nodes& result, PropertyValue value)
   {
     CollectChildrenVisitor visitor(result);
     boost::apply_visitor(visitor, value);
@@ -101,11 +173,12 @@ namespace {
 } // ns anon
 
 
-NodeList Node::children(const PropertyFilterFunc& propFilter) const
+Nodes Node::children(const PropertyFilterFunc& propFilter) const
 {
-  NodeList result;
+  Nodes result;
   for (const auto& prop : mProperties) {
-    if (propFilter(prop.first)) {
+    if (prop.first != CommonProps::kGi && prop.first != CommonProps::kParent &&
+        propFilter(prop.first)) {
       extractChildren(result, prop.second);
     }
   }
@@ -113,9 +186,11 @@ NodeList Node::children(const PropertyFilterFunc& propFilter) const
 }
 
 
-NodeList Node::children() const
+Nodes Node::children() const
 {
-  return children([](const std::string&) { return true; });
+  return children([](const std::string& propName) {
+    return propName != CommonProps::kGi && propName != CommonProps::kParent;
+  });
 }
 
 
@@ -125,18 +200,47 @@ const Properties& Node::properties() const
 }
 
 
-TraverseRecursion nodeTraverse(const Node& root,
+//------------------------------------------------------------------------------
+
+Node* Grove::makeNode(const std::string& gi)
+{
+  auto nd = estd::make_unique<Node>(gi);
+  nd->mGrove = this;
+
+  mNodes.emplace_back(std::move(nd));
+
+  return mNodes[mNodes.size() - 1].get();
+}
+
+Node* Grove::setRootNode(const std::string& gi)
+{
+  assert(mNodes.empty());
+  return makeNode(gi);
+}
+
+
+Node* Grove::rootNode() const
+{
+  if (!mNodes.empty()) {
+    return mNodes[0].get();
+  }
+  return nullptr;
+}
+
+
+//------------------------------------------------------------------------------
+
+TraverseRecursion nodeTraverse(const Node* root,
                                const TraverseNodeVisitor& functor,
                                const PropertyFilterFunc& propFilter, int depth)
 {
   TraverseRecursion rec = functor(root, depth);
 
   if (rec == TraverseRecursion::kRecurse) {
-    auto children = root.children(propFilter);
+    auto children = root->children(propFilter);
 
     for (const auto& nd : children) {
-      TraverseRecursion rec2 =
-          nodeTraverse(*nd, functor, propFilter, depth + 1);
+      TraverseRecursion rec2 = nodeTraverse(nd, functor, propFilter, depth + 1);
       if (rec2 == TraverseRecursion::kBreak) {
         return rec2;
       }
@@ -147,7 +251,7 @@ TraverseRecursion nodeTraverse(const Node& root,
 }
 
 
-TraverseRecursion nodeTraverse(const Node& root,
+TraverseRecursion nodeTraverse(const Node* root,
                                const TraverseNodeVisitor& functor)
 {
   return nodeTraverse(root, functor, [](const std::string&) { return true; },
@@ -169,18 +273,18 @@ namespace {
 
     void operator()(const std::string& val) { mOs << val; }
 
-    void operator()(const std::shared_ptr<Node>& nd)
+    void operator()(const Node* nd)
     {
       mOs << std::endl;
-      serialize(mOs, *nd, mDepth);
+      serialize(mOs, nd, mDepth);
       mOs << std::string((mDepth - 1) * 2, ' ');
     }
 
-    void operator()(const NodeList& nl)
+    void operator()(const Nodes& nl)
     {
       mOs << std::endl;
-      for (const auto& nd : nl) {
-        serialize(mOs, *nd, mDepth);
+      for (auto* nd : nl) {
+        serialize(mOs, nd, mDepth);
       }
       mOs << std::string((mDepth - 1) * 2, ' ');
     }
@@ -188,7 +292,7 @@ namespace {
 
 } // ns anon
 
-void serialize(std::ostream& os, const Node& nd, int in_depth)
+void serialize(std::ostream& os, const Node* nd, int in_depth)
 {
   int last_depth = in_depth - 1;
 
@@ -198,14 +302,16 @@ void serialize(std::ostream& os, const Node& nd, int in_depth)
     }
   };
 
-  nodeTraverse(nd, [&os, &last_depth, &close_node](const Node& nd, int depth) {
+  nodeTraverse(nd, [&os, &last_depth, &close_node](const Node* nd, int depth) {
                      close_node(last_depth, depth);
                      last_depth = depth;
 
                      os << std::string(depth * 2, ' ') << "<node gi='"
-                        << nd.gi() << "'>" << std::endl;
-                     for (const auto& prop : nd.properties()) {
-                       if (prop.first != "children" && prop.first != "gi") {
+                        << nd->gi() << "'>" << std::endl;
+                     for (const auto& prop : nd->properties()) {
+                       if (prop.first != CommonProps::kChildren &&
+                           prop.first != CommonProps::kGi &&
+                           prop.first != CommonProps::kParent) {
                          os << std::string((depth + 1) * 2, ' ') << "<prop nm='"
                             << prop.first << "'>";
                          SerializeVisitor visitor(os, depth + 2);
@@ -216,7 +322,7 @@ void serialize(std::ostream& os, const Node& nd, int in_depth)
                      return TraverseRecursion::kRecurse;
                    },
                [](const std::string& propName) {
-                 return propName == "children";
+                 return propName == CommonProps::kChildren;
                },
                in_depth);
 

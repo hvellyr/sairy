@@ -85,7 +85,7 @@ setup_scheme_context(const fs::path& prefix_path, const fs::path& module_path)
 
 
 void load_template(eyestep::ISchemeContext* ctx, const fs::path& templPath,
-                   const eyestep::Node& root)
+                   const eyestep::Node* root)
 {
   ctx->setupTemplateFunctions(root);
 
@@ -96,12 +96,15 @@ void load_template(eyestep::ISchemeContext* ctx, const fs::path& templPath,
 }
 
 
-eyestep::Node scan_sources(const std::vector<eyestep::Source>& sources,
-                           const std::vector<std::string>& incl_paths,
-                           const std::vector<std::string>& defs)
+eyestep::Grove scan_sources(const std::vector<eyestep::Source>& sources,
+                            const std::vector<std::string>& incl_paths,
+                            const std::vector<std::string>& defs)
 {
-  eyestep::Node root("project");
-  root["start-time"] = to_iso_extended_string(microsec_clock::local_time());
+  eyestep::Grove grove;
+  eyestep::Node* root = grove.setRootNode("project");
+
+  root->setProperty("start-time",
+                    to_iso_extended_string(microsec_clock::local_time()));
 
   if (!sources.empty()) {
     for (const auto& src : sources) {
@@ -112,14 +115,14 @@ eyestep::Node scan_sources(const std::vector<eyestep::Source>& sources,
           make_scanner_for_file(src.mSrcfile);
 
       if (scanner) {
-        eyestep::Node nd =
-            scanner->scanFile(src.mSrcfile,
+        eyestep::Node* nd =
+            scanner->scanFile(grove, src.mSrcfile,
                               eyestep::utils::joinList(incl_paths,
                                                        src.mLocIncls),
                               eyestep::utils::joinList(defs, src.mLocDefs));
         std::cout << " ok" << std::endl;
 
-        root.addChildNode(nd);
+        root->addChildNode(nd);
       }
       else {
         std::cout << " no scanner for filetype" << std::endl;
@@ -127,8 +130,10 @@ eyestep::Node scan_sources(const std::vector<eyestep::Source>& sources,
     }
   }
 
-  root["end-time"] = to_iso_extended_string(microsec_clock::local_time());
-  return root;
+  root->setProperty("end-time",
+                    to_iso_extended_string(microsec_clock::local_time()));
+
+  return grove;
 }
 
 } // anon namespace
@@ -266,10 +271,10 @@ int main(int argc, char** argv)
 
     auto scheme_ctx = std::move(setup_scheme_context(prefix_path, module_path));
 
-    eyestep::Node root = scan_sources(sources, incl_paths, defs);
-    eyestep::serialize(std::cout, root);
+    eyestep::Grove grove = scan_sources(sources, incl_paths, defs);
+    eyestep::serialize(std::cout, grove.rootNode());
 
-    load_template(scheme_ctx.get(), templ_path, root);
+    load_template(scheme_ctx.get(), templ_path, grove.rootNode());
   }
   catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;

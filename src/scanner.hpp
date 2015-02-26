@@ -14,15 +14,15 @@ namespace eyestep {
 namespace fs = boost::filesystem;
 
 class Node;
-
+class Grove;
 
 class IScanner {
 public:
   virtual ~IScanner() {}
 
-  virtual Node scanFile(const fs::path& srcfile,
-                        const std::vector<std::string>& incls,
-                        const std::vector<std::string>& defs) = 0;
+  virtual Node* scanFile(eyestep::Grove& grove, const fs::path& srcfile,
+                         const std::vector<std::string>& incls,
+                         const std::vector<std::string>& defs) = 0;
 };
 
 } // ns eyestep

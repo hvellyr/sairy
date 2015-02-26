@@ -123,13 +123,13 @@ namespace {
         return sexp_c_string(mCtx, val.c_str(), -1);
       }
 
-      sexp operator()(const std::shared_ptr<Node>& nd)
+      sexp operator()(Node* nd)
       {
         // TODO
         return SEXP_VOID;
       }
 
-      sexp operator()(const NodeList& nl)
+      sexp operator()(const Nodes& nl)
       {
         // TODO
         return SEXP_VOID;
@@ -291,9 +291,9 @@ namespace {
     }
 
 
-    void setupTemplateFunctions(const eyestep::Node& rootNode) override
+    void setupTemplateFunctions(const eyestep::Node* rootNode) override
     {
-      sRootNode = &rootNode;
+      sRootNode = rootNode;
 
       init_node_application(mCtx);
     }
