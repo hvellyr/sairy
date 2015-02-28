@@ -271,7 +271,9 @@ int main(int argc, char** argv)
         setup_scheme_context(eyestep::utils::split_paths(prefix_path)));
 
     eyestep::Grove grove = scan_sources(sources, incl_paths, defs);
-    eyestep::serialize(std::cout, grove.rootNode());
+    if (verbose) {
+      eyestep::serialize(std::cout, grove.rootNode());
+    }
 
     load_template(scheme_ctx.get(), templ_path, grove.rootNode());
   }
