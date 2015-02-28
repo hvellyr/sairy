@@ -33,9 +33,9 @@ namespace {
   };
 
 
-  Node* make_type_node(Grove* grove, Type type)
+  Node* make_type_node(Grove* grove, std::string gi, Type type)
   {
-    Node* nd = grove->makeNode("type");
+    Node* nd = grove->makeNode(std::move(gi));
 
     nd->setProperty("name", type.spelling());
     nd->setProperty("const?", type.isConst());
@@ -60,20 +60,21 @@ namespace {
     Type type = ecursor.type();
     assert(args_nm.size() == type.numArgTypes());
 
-
     nd->setProperty("name", nm);
-    nd->setProperty("return-type", make_type_node(grove, type.resultType()));
     nd->setProperty("source-location", ecursor.location().format());
 
-    Nodes nl;
+    nd->addChildNode(make_type_node(grove, "return-type", type.resultType()));
+
+    auto* parameters = grove->makeNode("parameters");
+    nd->addChildNode(parameters);
+
     for (int i = 0; i < type.numArgTypes(); i++) {
       Node* param = grove->makeNode("parameter");
       param->setProperty("name", std::get<0>(args_nm[i]));
-      param->setProperty("type",
-                         make_type_node(grove, std::get<1>(args_nm[i])));
-      nl.emplace_back(param);
+      param->setProperty("type", make_type_node(grove, "type",
+                                                std::get<1>(args_nm[i])));
+      parameters->addChildNode(param);
     }
-    nd->setProperty("args", nl);
 
     return nd;
   }
