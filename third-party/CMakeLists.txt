@@ -29,6 +29,28 @@ target_compile_options(scheme
   PUBLIC ${warning_options} )
 
 
+add_library(param MODULE
+  chibi-scheme/lib/srfi/39/param.c
+)
+target_include_directories(param PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/chibi-scheme/include>"
+  chibi-scheme/include)
+target_compile_options(param
+  PUBLIC ${warning_options} )
+target_link_libraries(param
+  scheme)
+
 set(modules_output "${PROJECT_BINARY_DIR}/scheme/lib")
+set(modules_output_srfi39 "${modules_output}/srfi/39")
+
+file(MAKE_DIRECTORY "${modules_output_srfi39}")
+
+set_target_properties(param
+  PROPERTIES PREFIX ""
+             SUFFIX ".dylib"
+             LIBRARY_OUTPUT_DIRECTORY ${modules_output_srfi39}
+             LIBRARY_OUTPUT_DIRECTORY_DEBUG ${modules_output_srfi39}
+             LIBRARY_OUTPUT_DIRECTORY_RELEASE ${modules_output_srfi39})
+
 file(COPY chibi-scheme/lib/ DESTINATION "${modules_output}"
      FILES_MATCHING REGEX ".*\\.(scm|sld)$")
