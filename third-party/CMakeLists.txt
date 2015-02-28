@@ -25,6 +25,10 @@ add_library(scheme SHARED
 target_include_directories(scheme PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/chibi-scheme/include>"
   chibi-scheme/include)
-
 target_compile_options(scheme
   PUBLIC ${warning_options} )
+
+
+set(modules_output "${PROJECT_BINARY_DIR}/scheme/lib")
+file(COPY chibi-scheme/lib/ DESTINATION "${modules_output}"
+     FILES_MATCHING REGEX ".*\\.(scm|sld)$")

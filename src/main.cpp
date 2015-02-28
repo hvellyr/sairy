@@ -9,10 +9,11 @@
 
 #include "cpp-scanner.hpp"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/parsers.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 
 #include <string>
 #include <iostream>
@@ -69,13 +70,18 @@ std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file)
 
 
 std::unique_ptr<eyestep::ISchemeContext>
-setup_scheme_context(const fs::path& prefix_path, const fs::path& module_path)
+setup_scheme_context(const std::vector<fs::path>& prefix_paths)
 {
   auto ctx = eyestep::createSchemeContext();
-  ctx->initialize(module_path / "lib");
 
-  auto init_path = prefix_path / "init.scm";
-  if (!ctx->loadScript(init_path)) {
+  auto paths = boost::copy_range<std::vector<fs::path>>(
+      prefix_paths | boost::adaptors::transformed(
+                         [](const fs::path& path) { return path / "lib"; }));
+
+  ctx->initialize(paths);
+
+  auto init_path = fs::path("sairy") / "init.scm";
+  if (!ctx->loadModuleFile(init_path)) {
     std::cerr << "Could not read " << init_path.string() << std::endl;
     return nullptr;
   }
@@ -174,7 +180,6 @@ int main(int argc, char** argv)
     po::options_description hidden("Hidden options");
     hidden.add_options()
       ("sairy-prefix",   po::value<std::string>()->default_value(SAIRY_DEFAULT_PREFIX), "")
-      ("sairy-modules",  po::value<std::string>(), "")
       ;
     // clang-format on
 
@@ -194,8 +199,6 @@ int main(int argc, char** argv)
     po::store(po::parse_environment(options, [](const std::string& opt) {
                 if (opt == "SAIRY_PREFIX")
                   return std::string("sairy-prefix");
-                else if (opt == "SAIRY_MODULES")
-                  return std::string("sairy-modules");
                 return std::string();
               }),
               vm);
@@ -239,10 +242,6 @@ int main(int argc, char** argv)
     if (vm.count("sairy-prefix")) {
       prefix_path = vm["sairy-prefix"].as<std::string>();
     }
-    std::string module_path = prefix_path;
-    if (vm.count("sairy-modules")) {
-      module_path = vm["sairy-modules"].as<std::string>();
-    }
 
     if (verbose) {
       std::cout << "incl paths  : " << eyestep::utils::join(incl_paths, " ")
@@ -251,7 +250,6 @@ int main(int argc, char** argv)
                 << std::endl;
       std::cout << "outf        : " << outf << std::endl;
       std::cout << "prefix path : " << prefix_path << std::endl;
-      std::cout << "module_path : " << module_path << std::endl;
       std::cout << "templ_path  : " << templ_path << std::endl;
     }
 
@@ -269,7 +267,8 @@ int main(int argc, char** argv)
       }
     }
 
-    auto scheme_ctx = std::move(setup_scheme_context(prefix_path, module_path));
+    auto scheme_ctx = std::move(
+        setup_scheme_context(eyestep::utils::split_paths(prefix_path)));
 
     eyestep::Grove grove = scan_sources(sources, incl_paths, defs);
     eyestep::serialize(std::cout, grove.rootNode());

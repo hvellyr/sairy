@@ -4,7 +4,9 @@
 #pragma once
 
 #include <boost/filesystem.hpp>
+
 #include <memory>
+#include <vector>
 
 
 namespace eyestep {
@@ -16,7 +18,8 @@ class ISchemeContext {
 public:
   virtual ~ISchemeContext(){};
 
-  virtual void initialize(const boost::filesystem::path& modulePath) = 0;
+  virtual void initialize(const std::vector<boost::filesystem::path>& modulePaths) = 0;
+  virtual bool loadModuleFile(const boost::filesystem::path& scriptFile) = 0;
   virtual bool loadScript(const boost::filesystem::path& scriptFile) = 0;
 
   virtual void setupTemplateFunctions(const eyestep::Node* rootNode) = 0;

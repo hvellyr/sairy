@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <vector>
+#include <boost/filesystem.hpp>
 #include <string>
+#include <vector>
 
 
 namespace eyestep {
@@ -16,5 +17,6 @@ namespace utils {
   std::vector<std::string> joinList(const std::vector<std::string>& one,
                                     const std::vector<std::string>& sec);
 
+  std::vector<boost::filesystem::path> split_paths(const std::string& path);
 } // ns utils
 } // ns eyestep

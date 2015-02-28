@@ -13,8 +13,9 @@
 #include <boost/variant/static_visitor.hpp>
 
 #include <iostream>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
 
 
 namespace eyestep {
@@ -519,22 +520,20 @@ namespace {
     }
 
 
-    void initialize(const fs::path& modulePath) override
+    void initialize(const std::vector<fs::path>& modulePaths) override
     {
       mCtx = sexp_make_eval_context(NULL, NULL, NULL, 0, 0);
 
       sexp_gc_var1(tmp);
       sexp_gc_preserve1(mCtx, tmp);
 
-      std::string libPath = modulePath.string();
+      for (const auto& path : modulePaths) {
+        std::string libPath = path.string();
 
-      sexp_add_module_directory(mCtx,
-                                tmp = sexp_c_string(mCtx, libPath.c_str(), -1),
-                                SEXP_FALSE);
-      libPath = libPath + "/lib";
-      sexp_add_module_directory(mCtx,
-                                tmp = sexp_c_string(mCtx, libPath.c_str(), -1),
-                                SEXP_FALSE);
+        sexp_add_module_directory(mCtx,
+                                  tmp = sexp_c_string(mCtx, libPath.c_str(), -1),
+                                  SEXP_FALSE);
+      }
 
       sexp_load_standard_env(mCtx, NULL, SEXP_SEVEN);
       sexp_load_standard_ports(mCtx, NULL, stdin, stdout, stderr, 1);
@@ -543,13 +542,27 @@ namespace {
     }
 
 
+    bool loadModuleFile(const fs::path& scriptFile) override
+    {
+      sexp_gc_var1(res);
+      sexp_gc_preserve1(mCtx, res);
+
+      res = sexp_load_module_file(mCtx, scriptFile.string().c_str(), nullptr);
+      bool retv = check_exception_p(mCtx, res);
+
+      sexp_gc_release1(mCtx);
+
+      return retv;
+    }
+
+
     bool loadScript(const fs::path& scriptFile) override
     {
-      sexp_gc_var2(obj1, obj2);
-      sexp_gc_preserve2(mCtx, obj1, obj2);
+      sexp_gc_var2(obj1, res);
+      sexp_gc_preserve2(mCtx, obj1, res);
 
       obj1 = sexp_c_string(mCtx, scriptFile.string().c_str(), -1);
-      bool retv = check_exception_p(mCtx, sexp_load(mCtx, obj1, NULL));
+      bool retv = check_exception_p(mCtx, res = sexp_load(mCtx, obj1, NULL));
 
       sexp_gc_release2(mCtx);
 
