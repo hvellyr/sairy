@@ -4,6 +4,7 @@
 #include "scm-context.hpp"
 #include "estd/memory.hpp"
 #include "nodes.hpp"
+#include "nodelist.hpp"
 
 #include "chibi/eval.h"
 #include "chibi/sexp.h"
@@ -21,14 +22,16 @@ namespace eyestep {
 namespace fs = boost::filesystem;
 
 namespace {
-  static const eyestep::Node* sRootNode;
+  static const Node* sRootNode;
 
-  const eyestep::Node* rootNode() { return sRootNode; }
+  const Node* rootNode() { return sRootNode; }
 
 
 #define NODE_TAG "<node>"
 #define NODE_TAG_SIZE 6
 
+
+  //----------------------------------------------------------------------------
 
   int node_tag_p(sexp ctx)
   {
@@ -49,7 +52,7 @@ namespace {
   }
 
 
-  sexp make_node(sexp ctx, const eyestep::Node* obj, int freep)
+  sexp make_node(sexp ctx, const Node* obj)
   {
     sexp_gc_var4(ty, tmp, result, nm);
     sexp_gc_preserve4(ctx, ty, tmp, result, nm);
@@ -60,7 +63,7 @@ namespace {
 
     if (sexp_typep(ty)) {
       result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
-      sexp_cpointer_freep(result) = freep;
+      sexp_cpointer_freep(result) = 0;
       sexp_cpointer_length(result) = 0;
       sexp_cpointer_value(result) = (void*)obj;
     }
@@ -151,7 +154,7 @@ namespace {
       }
       else if (sexp_lsymbolp(propNameArg)) {
         propName = std::string(sexp_lsymbol_data(propNameArg),
-                                  sexp_lsymbol_length(propNameArg));
+                               sexp_lsymbol_length(propNameArg));
       }
       else {
         result = sexp_user_exception(ctx, self, "not a symbol", propNameArg);
@@ -173,18 +176,18 @@ namespace {
 
   sexp func_grove_root(sexp ctx, sexp self, sexp_sint_t n)
   {
-    return make_node(ctx, rootNode(), 0);
+    return make_node(ctx, rootNode());
   }
 
 
-  sexp finalize_node(sexp ctx, sexp self, sexp_sint_t n, sexp obj)
+  sexp finalize_node(sexp ctx, sexp self, sexp_sint_t n, sexp nodeArg)
   {
-    printf("finalize node\n");
+    sexp_cpointer_value(nodeArg) = nullptr;
     return SEXP_VOID;
   }
 
 
-  void init_node_application(sexp ctx)
+  void init_node_functions(sexp ctx)
   {
     sexp_gc_var3(nm, ty, op);
     sexp_gc_preserve3(ctx, nm, ty, op);
@@ -196,7 +199,6 @@ namespace {
     sexp_env_cell_define(ctx, sexp_context_env(ctx),
                          nm = sexp_intern(ctx, NODE_TAG, NODE_TAG_SIZE), ty,
                          NULL);
-
     op =
         sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "node?", -1), ty);
     sexp_env_define(ctx, sexp_context_env(ctx),
@@ -214,6 +216,270 @@ namespace {
     sexp_gc_release3(ctx);
   }
 
+
+//----------------------------------------------------------------------------
+
+#define NODELIST_TAG "<node-list>"
+#define NODELIST_TAG_SIZE 11
+
+  int nodelist_tag_p(sexp ctx)
+  {
+    int retv = 0;
+    sexp_gc_var2(ty, nm);
+    sexp_gc_preserve2(ctx, ty, nm);
+
+    ty = sexp_env_ref(ctx, sexp_context_env(ctx),
+                      nm = sexp_intern(ctx, NODELIST_TAG, NODELIST_TAG_SIZE),
+                      SEXP_VOID);
+    if (sexp_typep(ty)) {
+      retv = sexp_type_tag(ty);
+    }
+
+    sexp_gc_release2(ctx);
+
+    return retv;
+  }
+
+
+  sexp make_nodelist(sexp ctx, const NodeList* obj)
+  {
+    sexp_gc_var4(ty, tmp, result, nm);
+    sexp_gc_preserve4(ctx, ty, tmp, result, nm);
+
+    ty = sexp_env_ref(ctx, sexp_context_env(ctx),
+                      nm = sexp_intern(ctx, NODELIST_TAG, NODELIST_TAG_SIZE),
+                      SEXP_VOID);
+
+    if (sexp_typep(ty)) {
+      result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
+      sexp_cpointer_freep(result) = 0;
+      sexp_cpointer_length(result) = 0;
+      sexp_cpointer_value(result) = (void*)obj;
+    }
+    else {
+      result = SEXP_VOID;
+    }
+
+    sexp_gc_release4(ctx);
+
+    return result;
+  }
+
+
+  sexp free_nodelist(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nlArg));
+    delete nl;
+
+    sexp_cpointer_value(nlArg) = nullptr;
+    return SEXP_VOID;
+  }
+
+
+  sexp func_empty_node_list(sexp ctx, sexp self, sexp_sint_t n)
+  {
+    return make_nodelist(ctx, new NodeList());
+  }
+
+
+  sexp func_node_list_empty_p(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    if (sexp_check_tag(nlArg, nodelist_tag_p(ctx))) {
+      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nlArg));
+      result = sexp_make_boolean(nl->empty());
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a node-list", nlArg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_node_list_length(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    if (sexp_check_tag(nlArg, nodelist_tag_p(ctx))) {
+      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nlArg));
+      result = sexp_make_fixnum(nl->length());
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a node-list", nlArg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_node_list_head(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    if (sexp_check_tag(nlArg, nodelist_tag_p(ctx))) {
+      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nlArg));
+      const Node* node = nl->head();
+      result = node ? make_node(ctx, node) : SEXP_VOID;
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a node-list", nlArg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_node_list_rest(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    if (sexp_check_tag(nlArg, nodelist_tag_p(ctx))) {
+      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nlArg));
+      result = make_nodelist(ctx, new NodeList(std::move(nl->rest())));
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a node-list", nlArg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp make_nodelist_on_axis(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg,
+                             NodeList::Kind kind)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    if (sexp_check_tag(nlArg, nodelist_tag_p(ctx))) {
+      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nlArg));
+      if (nl->length() == 1) {
+        std::cout << "make nodelist on axis: " << nl->length() << std::endl;
+        result = make_nodelist(ctx, new NodeList(nl->head(), kind));
+      }
+      else {
+        result =
+            sexp_user_exception(ctx, self, "not a singleton node-list", nlArg);
+      }
+    }
+    else if (sexp_check_tag(nlArg, node_tag_p(ctx))) {
+      const Node* nd = (const Node*)(sexp_cpointer_value(nlArg));
+      std::cout << "make nodelist on axis (nd): " << nd->gi() << std::endl;
+      result = make_nodelist(ctx, new NodeList(nd, kind));
+    }
+    else {
+      result =
+          sexp_user_exception(ctx, self, "neither a node nor node-list", nlArg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_children(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    return make_nodelist_on_axis(ctx, self, n, nlArg, NodeList::kChildren);
+  }
+
+
+  sexp func_ancestors(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    return make_nodelist_on_axis(ctx, self, n, nlArg, NodeList::kAncestors);
+  }
+
+
+  sexp func_descendants(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    return make_nodelist_on_axis(ctx, self, n, nlArg, NodeList::kDescendants);
+  }
+
+
+  sexp func_siblings(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    return make_nodelist_on_axis(ctx, self, n, nlArg, NodeList::kSiblings);
+  }
+
+
+  sexp func_follow(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    return make_nodelist_on_axis(ctx, self, n, nlArg, NodeList::kFollow);
+  }
+
+
+  sexp func_preced(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    return make_nodelist_on_axis(ctx, self, n, nlArg, NodeList::kPreced);
+  }
+
+
+  void init_nodelist_functions(sexp ctx)
+  {
+    sexp_gc_var3(nm, ty, op);
+    sexp_gc_preserve3(ctx, nm, ty, op);
+
+    // register qobject type
+    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "node-list", -1),
+                              &free_nodelist);
+    sexp_env_cell_define(ctx, sexp_context_env(ctx),
+                         nm = sexp_intern(ctx, NODELIST_TAG, NODELIST_TAG_SIZE),
+                         ty, NULL);
+
+    op =
+        sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "node-list?", -1),
+                                 ty);
+    sexp_env_define(ctx, sexp_context_env(ctx),
+                    nm = sexp_intern(ctx, "node-list?", -1), op);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "empty-node-list", 0,
+                        &func_empty_node_list);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list-length", 1,
+                        &func_node_list_length);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list-empty?", 1,
+                        &func_node_list_empty_p);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list-head", 1,
+                        &func_node_list_head);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list-rest", 1,
+                        &func_node_list_rest);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "children", 1,
+                        &func_children);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "siblings", 1,
+                        &func_siblings);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "follow", 1, &func_follow);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "preced", 1, &func_preced);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "ancestors", 1,
+                        &func_ancestors);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "descendants", 1,
+                        &func_descendants);
+
+    sexp_gc_release3(ctx);
+  }
+
+
+  void init_node_application(sexp ctx)
+  {
+    init_node_functions(ctx);
+    init_nodelist_functions(ctx);
+  }
+
+
+  //----------------------------------------------------------------------------
 
   bool check_exception_p(sexp ctx, sexp res)
   {
@@ -291,7 +557,7 @@ namespace {
     }
 
 
-    void setupTemplateFunctions(const eyestep::Node* rootNode) override
+    void setupTemplateFunctions(const Node* rootNode) override
     {
       sRootNode = rootNode;
 
