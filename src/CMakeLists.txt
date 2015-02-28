@@ -6,16 +6,18 @@ link_directories(
 )
 
 add_library(cppscanner
-  cpp-lang.hpp
   cpp-lang.cpp
-  cpp-scanner.hpp
+  cpp-lang.hpp
   cpp-scanner.cpp
-  nodes.hpp
+  cpp-scanner.hpp
+  nodelist.cpp
+  nodelist.hpp
   nodes.cpp
-  source.hpp
+  nodes.hpp
   source.cpp
-  utils.hpp
+  source.hpp
   utils.cpp
+  utils.hpp
 )
 target_include_directories(cppscanner PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../third-party;${Boost_INCLUDE_DIRS}>")

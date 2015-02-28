@@ -24,8 +24,7 @@ using Nodes = std::vector<Node*>;
 struct Undefined {
 };
 
-using PropertyValue =
-    boost::variant<Undefined, int, std::string, Node*, Nodes>;
+using PropertyValue = boost::variant<Undefined, int, std::string, Node*, Nodes>;
 using Properties = std::map<std::string, PropertyValue>;
 
 using PropertyFilterFunc = std::function<bool(const std::string&)>;
@@ -33,8 +32,7 @@ using PropertyFilterFunc = std::function<bool(const std::string&)>;
 class Grove;
 
 
-struct CommonProps
-{
+struct CommonProps {
   static const std::string kParent;
   static const std::string kGi;
   static const std::string kChildren;

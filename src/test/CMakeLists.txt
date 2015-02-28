@@ -4,6 +4,7 @@
 add_executable(nodes_test
   tst_main.cpp
   tst_nodes.cpp
+  tst_nodelist.cpp
 )
 
 target_link_libraries(nodes_test
