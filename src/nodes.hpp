@@ -27,8 +27,6 @@ struct Undefined {
 using PropertyValue = boost::variant<Undefined, int, std::string, Node*, Nodes>;
 using Properties = std::map<std::string, PropertyValue>;
 
-using PropertyFilterFunc = std::function<bool(const std::string&)>;
-
 class Grove;
 
 
@@ -85,8 +83,6 @@ public:
   void addChildNode(Node* child);
   void addNode(const std::string& propName, Node* child);
 
-  Nodes children() const;
-  Nodes children(const PropertyFilterFunc& propFilter) const;
   const Properties& properties() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Node& node);
@@ -120,10 +116,7 @@ using TraverseNodeVisitor =
 
 TraverseRecursion nodeTraverse(const Node* root,
                                const TraverseNodeVisitor& functor,
-                               const PropertyFilterFunc& propFilter, int depth);
-
-TraverseRecursion nodeTraverse(const Node* root,
-                               const TraverseNodeVisitor& functor);
+                               int depth = 0);
 
 void serialize(std::ostream& os, const Node* nd, int depth = 0);
 

@@ -141,59 +141,6 @@ void Node::addNode(const std::string& propName, Node* child)
 }
 
 
-namespace {
-  class CollectChildrenVisitor : public boost::static_visitor<> {
-    Nodes& mResult;
-
-  public:
-    CollectChildrenVisitor(Nodes& result) : mResult(result) {}
-
-    void operator()(const Undefined&) {}
-
-    void operator()(const int&) {}
-
-    void operator()(const std::string&) {}
-
-    void operator()(Node* nd) { mResult.emplace_back(nd); }
-
-    void operator()(const Nodes& nl)
-    {
-      for (auto* nd : nl) {
-        mResult.emplace_back(nd);
-      }
-    }
-  };
-
-  void extractChildren(Nodes& result, PropertyValue value)
-  {
-    CollectChildrenVisitor visitor(result);
-    boost::apply_visitor(visitor, value);
-  }
-
-} // ns anon
-
-
-Nodes Node::children(const PropertyFilterFunc& propFilter) const
-{
-  Nodes result;
-  for (const auto& prop : mProperties) {
-    if (prop.first != CommonProps::kGi && prop.first != CommonProps::kParent &&
-        propFilter(prop.first)) {
-      extractChildren(result, prop.second);
-    }
-  }
-  return result;
-}
-
-
-Nodes Node::children() const
-{
-  return children([](const std::string& propName) {
-    return propName != CommonProps::kGi && propName != CommonProps::kParent;
-  });
-}
-
-
 const Properties& Node::properties() const
 {
   return mProperties;
@@ -231,16 +178,15 @@ Node* Grove::rootNode() const
 //------------------------------------------------------------------------------
 
 TraverseRecursion nodeTraverse(const Node* root,
-                               const TraverseNodeVisitor& functor,
-                               const PropertyFilterFunc& propFilter, int depth)
+                               const TraverseNodeVisitor& functor, int depth)
 {
   TraverseRecursion rec = functor(root, depth);
 
   if (rec == TraverseRecursion::kRecurse) {
-    auto children = root->children(propFilter);
+    const Nodes& nodes = root->property<Nodes>(CommonProps::kChildren);
 
-    for (const auto& nd : children) {
-      TraverseRecursion rec2 = nodeTraverse(nd, functor, propFilter, depth + 1);
+    for (const auto& nd : nodes) {
+      TraverseRecursion rec2 = nodeTraverse(nd, functor, depth + 1);
       if (rec2 == TraverseRecursion::kBreak) {
         return rec2;
       }
@@ -248,14 +194,6 @@ TraverseRecursion nodeTraverse(const Node* root,
   }
 
   return rec;
-}
-
-
-TraverseRecursion nodeTraverse(const Node* root,
-                               const TraverseNodeVisitor& functor)
-{
-  return nodeTraverse(root, functor, [](const std::string&) { return true; },
-                      0);
 }
 
 
@@ -321,9 +259,6 @@ void serialize(std::ostream& os, const Node* nd, int in_depth)
                      }
                      return TraverseRecursion::kRecurse;
                    },
-               [](const std::string& propName) {
-                 return propName == CommonProps::kChildren;
-               },
                in_depth);
 
   close_node(last_depth, in_depth);

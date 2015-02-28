@@ -89,9 +89,9 @@ TEST_CASE("Traverse", "[nodes]")
   args->addNode("params", grove.makeNode("p2"));
   args->addNode("params", grove.makeNode("p3"));
 
-  nd->addNode("kids", grove.makeNode("title"));
-  nd->addNode("kids", args);
-  nd->addNode("types", type);
+  nd->addChildNode(grove.makeNode("title"));
+  nd->addChildNode(args);
+  nd->addChildNode(type);
 
   SECTION("Full recursion")
   {
@@ -106,9 +106,6 @@ TEST_CASE("Traverse", "[nodes]")
     REQUIRE(gis == (ExpectedGiType{{"foo", 0},
                                    {"title", 1},
                                    {"args", 1},
-                                   {"p1", 2},
-                                   {"p2", 2},
-                                   {"p3", 2},
                                    {"type", 1}}));
   }
 
