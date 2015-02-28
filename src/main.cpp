@@ -275,7 +275,9 @@ int main(int argc, char** argv)
       eyestep::serialize(std::cout, grove.rootNode());
     }
 
-    load_template(scheme_ctx.get(), templ_path, grove.rootNode());
+    if (!templ_path.empty()) {
+      load_template(scheme_ctx.get(), templ_path, grove.rootNode());
+    }
   }
   catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
