@@ -139,6 +139,27 @@ namespace {
   }
 
 
+  sexp func_parent(sexp ctx, sexp self, sexp n, sexp nodeArg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_NULL;
+
+    if (const Node* node = node_from_arg(ctx, nodeArg)) {
+      result = make_node(ctx, node->parent());
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
+                                   nodeArg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
   sexp func_node_property(sexp ctx, sexp self, sexp_sint_t n, sexp propNameArg,
                           sexp nodeArg)
   {
@@ -245,6 +266,7 @@ namespace {
 
     // register functions
     sexp_define_foreign(ctx, sexp_context_env(ctx), "gi", 1, &func_gi);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "parent", 1, &func_parent);
 
     sexp_define_foreign(ctx, sexp_context_env(ctx), "node-property", 2,
                         &func_node_property);
