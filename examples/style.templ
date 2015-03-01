@@ -1,0 +1,51 @@
+;;-*-dsssl-*-
+
+(import (srfi 28))
+
+;;;-----------------------------------------------------------------------------
+
+(default
+  (display (format "moo ~%"))
+  '(from moo)
+  )
+
+
+(element (chapter poem)
+  (display (format "chapter 1 ~%"))
+  '(from chapter poem c)
+  )
+
+(element poem
+  (display (format "poem 1 ~%"))
+  '(from poem)
+  )
+
+(element title
+  (display (format "title 1 ~%"))
+  '(from title)
+  )
+
+(mode epigraph-mode
+  (element p
+    (display "match p")
+    '(from p))
+  (element poem
+    (display (format "poem 1x ~%"))
+    '(from poem in epigraph-mode)
+    )
+  )
+
+
+
+(display (format "SOSOFO: ~s~%"
+                 (process-node-by-path (current-mode) '(poem chapter abc))))
+(display (format "SOSOFO: ~s~%"
+                 (process-node-by-path (current-mode) '(poem))))
+
+(display (format "SOSOFO: ~s~%"
+                 (process-node-by-path 'epigraph-mode '(poem chapter abc))))
+(display (format "SOSOFO: ~s~%"
+                 (process-node-by-path 'epigraph-mode '(title))))
+
+(display (format "SOSOFO: ~s~%"
+                 (process-node-by-path 'epigraph-mode '(blabla))))
