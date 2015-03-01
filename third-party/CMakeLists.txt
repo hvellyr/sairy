@@ -29,6 +29,9 @@ target_compile_options(scheme
   PUBLIC ${warning_options} )
 
 
+set(modules_output "${PROJECT_BINARY_DIR}/scheme/lib")
+
+
 add_library(param MODULE
   chibi-scheme/lib/srfi/39/param.c
 )
@@ -40,17 +43,37 @@ target_compile_options(param
 target_link_libraries(param
   scheme)
 
-set(modules_output "${PROJECT_BINARY_DIR}/scheme/lib")
 set(modules_output_srfi39 "${modules_output}/srfi/39")
-
 file(MAKE_DIRECTORY "${modules_output_srfi39}")
-
 set_target_properties(param
   PROPERTIES PREFIX ""
              SUFFIX ".dylib"
              LIBRARY_OUTPUT_DIRECTORY ${modules_output_srfi39}
              LIBRARY_OUTPUT_DIRECTORY_DEBUG ${modules_output_srfi39}
              LIBRARY_OUTPUT_DIRECTORY_RELEASE ${modules_output_srfi39})
+
+
+add_library(hash MODULE
+  chibi-scheme/lib/srfi/69/hash.c
+)
+target_include_directories(hash PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/chibi-scheme/include>"
+  chibi-scheme/include)
+target_compile_options(hash
+  PUBLIC ${warning_options} )
+target_link_libraries(hash
+  scheme)
+
+set(modules_output_srfi69 "${modules_output}/srfi/69")
+file(MAKE_DIRECTORY "${modules_output_srfi69}")
+set_target_properties(hash
+  PROPERTIES PREFIX ""
+             SUFFIX ".dylib"
+             LIBRARY_OUTPUT_DIRECTORY ${modules_output_srfi69}
+             LIBRARY_OUTPUT_DIRECTORY_DEBUG ${modules_output_srfi69}
+             LIBRARY_OUTPUT_DIRECTORY_RELEASE ${modules_output_srfi69})
+
+
 
 file(COPY chibi-scheme/lib/ DESTINATION "${modules_output}"
      FILES_MATCHING REGEX ".*\\.(scm|sld)$")
