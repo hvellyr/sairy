@@ -345,7 +345,7 @@ namespace {
     if (sexp_check_tag(nlArg, nodelist_tag_p(ctx))) {
       const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nlArg));
       const Node* node = nl->head();
-      result = node ? make_node(ctx, node) : SEXP_VOID;
+      result = node ? make_node(ctx, node) : SEXP_NULL;
     }
     else {
       result = sexp_user_exception(ctx, self, "not a node-list", nlArg);
