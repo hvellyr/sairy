@@ -602,9 +602,20 @@ namespace {
     }
 
 
-    void setupTemplateFunctions(const Node* rootNode) override
+    void processRootNode(const eyestep::Node* rootNode) override
     {
+      sexp_gc_var1(res);
+      sexp_gc_preserve1(mCtx, res);
+
       sRootNode = rootNode;
+      res =
+          sexp_eval_string(mCtx, "(process-node-list (children (grove-root)))",
+                           -1, NULL);
+      // res = sexp_eval_string(mCtx, "(foo (grove-root))", -1, NULL);
+
+      check_exception_p(mCtx, res);
+
+      sexp_gc_release1(mCtx);
     }
   };
 

@@ -5,8 +5,8 @@
 ;;;-----------------------------------------------------------------------------
 
 (default
-  (display (format "moo ~%"))
-  '(from moo)
+  (display (format "~a~%" (gi (current-node))))
+  (process-children)
   )
 
 
@@ -34,18 +34,3 @@
     '(from poem in epigraph-mode)
     )
   )
-
-
-
-(display (format "SOSOFO: ~s~%"
-                 (process-node-by-path (current-mode) '(poem chapter abc))))
-(display (format "SOSOFO: ~s~%"
-                 (process-node-by-path (current-mode) '(poem))))
-
-(display (format "SOSOFO: ~s~%"
-                 (process-node-by-path 'epigraph-mode '(poem chapter abc))))
-(display (format "SOSOFO: ~s~%"
-                 (process-node-by-path 'epigraph-mode '(title))))
-
-(display (format "SOSOFO: ~s~%"
-                 (process-node-by-path 'epigraph-mode '(blabla))))

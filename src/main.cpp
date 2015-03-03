@@ -93,12 +93,12 @@ setup_scheme_context(const std::vector<fs::path>& prefix_paths)
 void load_template(eyestep::ISchemeContext* ctx, const fs::path& templPath,
                    const eyestep::Node* root)
 {
-  ctx->setupTemplateFunctions(root);
-
   if (!ctx->loadScript(templPath)) {
     std::cerr << "Could not read " << templPath.string() << std::endl;
     return;
   }
+
+  ctx->processRootNode(root);
 }
 
 
