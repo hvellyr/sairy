@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cassert>
 
 
 namespace eyestep {
@@ -95,6 +96,7 @@ namespace {
 
   sexp make_node(sexp ctx, const Node* obj)
   {
+    assert(obj);
     sexp_gc_var4(ty, tmp, result, nm);
     sexp_gc_preserve4(ctx, ty, tmp, result, nm);
 
@@ -147,7 +149,9 @@ namespace {
     result = SEXP_NULL;
 
     if (const Node* node = node_from_arg(ctx, nodeArg)) {
-      result = make_node(ctx, node->parent());
+      if (const Node* p = node->parent()) {
+        result = make_node(ctx, p);
+      }
     }
     else {
       result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
