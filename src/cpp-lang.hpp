@@ -5,9 +5,11 @@
 
 #include "clang-c/Index.h"
 
-#include <string>
+#include <functional>
 #include <iostream>
 #include <sstream>
+#include <string>
+
 
 namespace eyestep {
 
