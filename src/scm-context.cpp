@@ -164,6 +164,31 @@ namespace {
   }
 
 
+  sexp func_class(sexp ctx, sexp self, sexp n, sexp nodeArg)
+  {
+    sexp_gc_var2(result, str);
+    sexp_gc_preserve2(ctx, result, str);
+
+    result = SEXP_VOID;
+
+    if (const Node* node = node_from_arg(ctx, nodeArg)) {
+      result =
+          sexp_string_to_symbol(ctx,
+                                str = sexp_c_string(ctx,
+                                                    node->className().c_str(),
+                                                    -1));
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
+                                   nodeArg);
+    }
+
+    sexp_gc_release2(ctx);
+
+    return result;
+  }
+
+
   sexp func_node_property(sexp ctx, sexp self, sexp_sint_t n, sexp propNameArg,
                           sexp nodeArg)
   {
@@ -271,6 +296,7 @@ namespace {
     // register functions
     sexp_define_foreign(ctx, sexp_context_env(ctx), "gi", 1, &func_gi);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "parent", 1, &func_parent);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "class", 1, &func_class);
 
     sexp_define_foreign(ctx, sexp_context_env(ctx), "node-property", 2,
                         &func_node_property);
