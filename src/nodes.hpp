@@ -18,6 +18,7 @@
 namespace eyestep {
 
 class Node;
+class NodeClass;
 
 using Nodes = std::vector<Node*>;
 
@@ -40,16 +41,17 @@ struct CommonProps {
 class Node {
   Properties mProperties;
   Grove* mGrove;
+  const NodeClass* mClass;
 
 public:
-  Node() : mGrove(nullptr){};
+  Node();
+  Node(const NodeClass* nodeClass);
   Node(const Node& other) = default;
   Node(Node&& other) = default;
   Node& operator=(const Node& other) = default;
   Node& operator=(Node&& other) = default;
 
-  Node(const std::string& gi);
-
+  const std::string& className() const;
   std::string gi() const;
   Node* parent() const;
   Grove* grove() const;
@@ -71,11 +73,8 @@ public:
 
   bool hasProperty(const std::string& propName) const;
 
-  template <typename T>
-  void setProperty(const std::string& propName, const T& value)
-  {
-    mProperties[propName] = value;
-  }
+  void setProperty(const std::string& propName, int value);
+  void setProperty(const std::string& propName, const std::string& value);
 
   void setProperty(const std::string& propName, const Nodes& nl);
   void setProperty(const std::string& propName, Node* nd);
@@ -98,9 +97,10 @@ class Grove {
   std::vector<std::unique_ptr<Node>> mNodes;
 
 public:
-  Node* makeNode(const std::string& gi);
+  Node* makeNode(const NodeClass* nodeClass);
+  Node* makeEltNode(const std::string& gi);
 
-  Node* setRootNode(const std::string& gi);
+  Node* setRootNode(const NodeClass* nodeClass);
   Node* rootNode() const;
 };
 

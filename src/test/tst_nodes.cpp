@@ -3,6 +3,7 @@
 
 #include "catch/catch.hpp"
 
+#include "../nodeclass.hpp"
 #include "../nodes.hpp"
 
 #include <string>
@@ -11,8 +12,8 @@
 
 TEST_CASE("Base node creation", "[nodes]")
 {
-  eyestep::Node nd("blue");
-  REQUIRE(nd.gi() == "blue");
+  eyestep::Node nd(eyestep::elementClassDefinition());
+  REQUIRE(nd.className() == "element");
 }
 
 
@@ -46,10 +47,10 @@ TEST_CASE("Unknown properties report as default", "[nodes]")
 TEST_CASE("Add node", "[nodes]")
 {
   eyestep::Grove grove;
-  eyestep::Node* nd = grove.makeNode("");
+  eyestep::Node* nd = grove.makeNode(eyestep::documentClassDefinition());
 
-  nd->addNode("kids", grove.makeNode("foo"));
-  nd->addNode("kids", grove.makeNode("bar"));
+  nd->addNode("kids", grove.makeEltNode("foo"));
+  nd->addNode("kids", grove.makeEltNode("bar"));
 
   REQUIRE(nd->property<eyestep::Nodes>("kids").size() == 2u);
   REQUIRE(nd->property<eyestep::Nodes>("kids")[0]->gi() == "foo");
@@ -60,15 +61,15 @@ TEST_CASE("Add node", "[nodes]")
 TEST_CASE("Parent property", "[nodes]")
 {
   eyestep::Grove grove;
-  auto* a = grove.setRootNode("a");
-  auto* b = grove.makeNode("b");
+  auto* a = grove.setRootNode(eyestep::rootClassDefinition());
+  auto* b = grove.makeEltNode("b");
 
   a->addChildNode(b);
 
   REQUIRE(b->gi() == "b");
 
-  REQUIRE(b->property<eyestep::Node*>("parent")->gi() == "a");
-  REQUIRE(b->parent()->gi() == "a");
+  REQUIRE(b->property<eyestep::Node*>("parent")->className() == "root");
+  REQUIRE(b->parent()->className() == "root");
   REQUIRE(b->parent() == a);
 }
 
@@ -76,20 +77,20 @@ TEST_CASE("Parent property", "[nodes]")
 TEST_CASE("Traverse", "[nodes]")
 {
   eyestep::Grove grove;
-  auto* nd = grove.makeNode("foo");
+  auto* nd = grove.makeEltNode("foo");
 
   nd->setProperty("name", "bar");
   nd->setProperty("size", 42);
 
-  auto* type = grove.makeNode("type");
+  auto* type = grove.makeEltNode("type");
   type->setProperty("const?", true);
 
-  auto* args = grove.makeNode("args");
-  args->addNode("params", grove.makeNode("p1"));
-  args->addNode("params", grove.makeNode("p2"));
-  args->addNode("params", grove.makeNode("p3"));
+  auto* args = grove.makeEltNode("args");
+  args->addNode("params", grove.makeEltNode("p1"));
+  args->addNode("params", grove.makeEltNode("p2"));
+  args->addNode("params", grove.makeEltNode("p3"));
 
-  nd->addChildNode(grove.makeNode("title"));
+  nd->addChildNode(grove.makeEltNode("title"));
   nd->addChildNode(args);
   nd->addChildNode(type);
 
@@ -161,19 +162,19 @@ TEST_CASE("Serialize", "[nodes]")
 {
   eyestep::Grove grove;
 
-  auto* nd = grove.makeNode("foo");
+  auto* nd = grove.makeEltNode("foo");
   nd->setProperty("name", "bar");
   nd->setProperty("size", 42);
 
-  auto* type = grove.makeNode("type");
+  auto* type = grove.makeEltNode("type");
   type->setProperty("const?", true);
 
-  auto* args = grove.makeNode("args");
-  args->addNode("params", grove.makeNode("p1"));
-  args->addNode("params", grove.makeNode("p2"));
-  args->addNode("params", grove.makeNode("p3"));
+  auto* args = grove.makeEltNode("args");
+  args->addNode("params", grove.makeEltNode("p1"));
+  args->addNode("params", grove.makeEltNode("p2"));
+  args->addNode("params", grove.makeEltNode("p3"));
 
-  nd->addChildNode(grove.makeNode("title"));
+  nd->addChildNode(grove.makeEltNode("title"));
   nd->addChildNode(args);
   nd->addNode("types", type);
 

@@ -4,6 +4,7 @@
 #include "cpp-lang.hpp"
 #include "cpp-scanner.hpp"
 #include "nodes.hpp"
+#include "nodeclass.hpp"
 
 #include "clang-c/Index.h"
 
@@ -35,8 +36,9 @@ namespace {
 
   Node* make_type_node(Grove* grove, std::string gi, Type type)
   {
-    Node* nd = grove->makeNode(std::move(gi));
+    Node* nd = grove->makeNode(elementClassDefinition());
 
+    nd->setProperty("gi", std::move(gi));
     nd->setProperty("name", type.spelling());
     nd->setProperty("const?", type.isConst());
 
@@ -46,7 +48,9 @@ namespace {
 
   Node* make_function_node(Grove* grove, Cursor ecursor)
   {
-    Node* nd = grove->makeNode("function");
+    Node* nd = grove->makeNode(elementClassDefinition());
+
+    nd->setProperty("gi", "function");
 
     std::string nm = ecursor.spelling();
 
@@ -61,15 +65,18 @@ namespace {
     assert(args_nm.size() == type.numArgTypes());
 
     nd->setProperty("name", nm);
-    nd->setProperty("source-location", ecursor.location().format());
+    nd->setProperty("source", ecursor.location().format());
 
     nd->addChildNode(make_type_node(grove, "return-type", type.resultType()));
 
-    auto* parameters = grove->makeNode("parameters");
+    auto* parameters = grove->makeNode(elementClassDefinition());
+    parameters->setProperty("gi", "parameters");
+
     nd->addChildNode(parameters);
 
     for (int i = 0; i < type.numArgTypes(); i++) {
-      Node* param = grove->makeNode("parameter");
+      Node* param = grove->makeNode(elementClassDefinition());
+      param->setProperty("gi", "parameter");
       param->setProperty("name", std::get<0>(args_nm[i]));
       param->setProperty("type", make_type_node(grove, "type",
                                                 std::get<1>(args_nm[i])));
@@ -186,10 +193,10 @@ Node* CppScanner::scanFile(eyestep::Grove& grove, const fs::path& srcfile,
 
   ParseContext ctx(grove);
 
-  ctx.mDocumentNode = grove.makeNode("document");
+  ctx.mDocumentNode = grove.makeNode(documentClassDefinition());
 
   ctx.mDocumentNode->setProperty("source", srcfile.string());
-  ctx.mDocumentNode->setProperty("scanner", "cpp");
+  ctx.mDocumentNode->setProperty("app-info", "cpp");
 
   // excludeDeclsFromPCH = 1, displayDiagnostics=1
   idx = clang_createIndex(1, 1);

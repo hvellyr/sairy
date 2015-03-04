@@ -3,6 +3,7 @@
 
 #include "estd/memory.hpp"
 #include "nodes.hpp"
+#include "nodeclass.hpp"
 #include "scm-context.hpp"
 #include "source.hpp"
 #include "utils.hpp"
@@ -107,7 +108,7 @@ eyestep::Grove scan_sources(const std::vector<eyestep::Source>& sources,
                             const std::vector<std::string>& defs)
 {
   eyestep::Grove grove;
-  eyestep::Node* root = grove.setRootNode("project");
+  eyestep::Node* root = grove.setRootNode(eyestep::rootClassDefinition());
 
   root->setProperty("start-time",
                     to_iso_extended_string(microsec_clock::local_time()));

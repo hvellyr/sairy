@@ -2,6 +2,7 @@
 // All rights reserved.
 
 #include "nodes.hpp"
+#include "nodeclass.hpp"
 #include "estd/memory.hpp"
 
 #include <boost/variant/apply_visitor.hpp>
@@ -54,9 +55,18 @@ const std::string CommonProps::kChildren = "children";
 
 //------------------------------------------------------------------------------
 
-Node::Node(const std::string& gi) : mGrove(nullptr)
+Node::Node() : mGrove(nullptr), mClass(anyClassDefinition())
 {
-  mProperties[CommonProps::kGi] = gi;
+}
+
+Node::Node(const NodeClass* nodeClass) : mGrove(nullptr), mClass(nodeClass)
+{
+}
+
+const std::string& Node::className() const
+{
+  assert(mClass);
+  return mClass->className;
 }
 
 std::string Node::gi() const
@@ -94,8 +104,27 @@ bool Node::hasProperty(const std::string& propName) const
 }
 
 
+void Node::setProperty(const std::string& propName, int value)
+{
+  assert(findProperty(mClass, propName) == nullptr ||
+         findProperty(mClass, propName)->type == PropertyType::kInt);
+
+  mProperties[propName] = value;
+}
+
+void Node::setProperty(const std::string& propName, const std::string& value)
+{
+  assert(findProperty(mClass, propName) == nullptr ||
+         findProperty(mClass, propName)->type == PropertyType::kString);
+
+  mProperties[propName] = value;
+}
+
 void Node::setProperty(const std::string& propName, const Nodes& nl)
 {
+  assert(findProperty(mClass, propName) == nullptr ||
+         findProperty(mClass, propName)->type == PropertyType::kNodeList);
+
   Nodes newNodes(nl);
   for (auto* nd : newNodes) {
     assert(nd->parent() == nullptr);
@@ -108,7 +137,10 @@ void Node::setProperty(const std::string& propName, const Nodes& nl)
 
 void Node::setProperty(const std::string& propName, Node* nd)
 {
+  assert(findProperty(mClass, propName) == nullptr ||
+         findProperty(mClass, propName)->type == PropertyType::kNode);
   assert(nd->mGrove == mGrove);
+
   nd->mProperties[CommonProps::kParent] = this;
   mProperties[propName] = nd;
 }
@@ -149,20 +181,50 @@ const Properties& Node::properties() const
 
 //------------------------------------------------------------------------------
 
-Node* Grove::makeNode(const std::string& gi)
+Node* Grove::makeNode(const NodeClass* nodeClass)
 {
-  auto nd = estd::make_unique<Node>(gi);
+  auto nd = estd::make_unique<Node>();
+
   nd->mGrove = this;
+  nd->mClass = nodeClass;
+
+  const NodeClass* p = nodeClass;
+  while (p) {
+    for (const auto& propspec : nodeClass->propertiesSpec) {
+      if (propspec.isRequired) {
+        switch (propspec.type) {
+        case PropertyType::kInt:
+          nd->mProperties[propspec.name] = 0;
+          break;
+        case PropertyType::kString:
+          nd->mProperties[propspec.name] = std::string();
+          break;
+        case PropertyType::kNode:
+        case PropertyType::kNodeList:
+          break;
+        }
+      }
+    }
+    p = p->superClass;
+  }
 
   mNodes.emplace_back(std::move(nd));
 
   return mNodes[mNodes.size() - 1].get();
 }
 
-Node* Grove::setRootNode(const std::string& gi)
+
+Node* Grove::makeEltNode(const std::string& gi)
+{
+  auto* nd = makeNode(elementClassDefinition());
+  nd->setProperty(CommonProps::kGi, gi);
+  return nd;
+}
+
+Node* Grove::setRootNode(const NodeClass* nodeClass)
 {
   assert(mNodes.empty());
-  return makeNode(gi);
+  return makeNode(nodeClass);
 }
 
 

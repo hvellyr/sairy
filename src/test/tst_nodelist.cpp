@@ -3,8 +3,9 @@
 
 #include "catch/catch.hpp"
 
-#include "../nodes.hpp"
+#include "../nodeclass.hpp"
 #include "../nodelist.hpp"
+#include "../nodes.hpp"
 
 #include <string>
 
@@ -21,24 +22,24 @@ TEST_CASE("Empty nodelist", "[nodelist]")
 TEST_CASE("NodeList of all children", "[nodelist]")
 {
   eyestep::Grove grove;
-  auto* nd = grove.makeNode("foo");
+  auto* nd = grove.makeEltNode("foo");
 
   nd->setProperty("name", "bar");
   nd->setProperty("size", 42);
 
-  auto* title = grove.makeNode("title");
+  auto* title = grove.makeEltNode("title");
 
-  auto* args = grove.makeNode("args");
-  args->addNode("params", grove.makeNode("p1"));
-  args->addNode("params", grove.makeNode("p2"));
-  args->addNode("params", grove.makeNode("p3"));
+  auto* args = grove.makeEltNode("args");
+  args->addNode("params", grove.makeEltNode("p1"));
+  args->addNode("params", grove.makeEltNode("p2"));
+  args->addNode("params", grove.makeEltNode("p3"));
 
-  auto* gaz = grove.makeNode("gaz");
+  auto* gaz = grove.makeEltNode("gaz");
   args->addChildNode(gaz);
-  auto* moo = grove.makeNode("moo");
+  auto* moo = grove.makeEltNode("moo");
   gaz->addChildNode(moo);
 
-  auto* type = grove.makeNode("type");
+  auto* type = grove.makeEltNode("type");
   type->setProperty("const?", true);
 
   nd->addChildNode(title);

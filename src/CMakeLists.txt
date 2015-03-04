@@ -14,6 +14,8 @@ add_library(cppscanner
   nodelist.hpp
   nodes.cpp
   nodes.hpp
+  nodeclass.cpp
+  nodeclass.hpp
   source.cpp
   source.hpp
   utils.cpp
