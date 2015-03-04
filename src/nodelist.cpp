@@ -4,6 +4,7 @@
 #include "nodelist.hpp"
 #include "estd/memory.hpp"
 
+#include <algorithm>
 #include <cassert>
 
 

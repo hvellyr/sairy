@@ -4,6 +4,7 @@
 #include "nodeclass.hpp"
 #include "estd/memory.hpp"
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
