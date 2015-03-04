@@ -8,6 +8,7 @@
 
 #include <string>
 #include <sstream>
+#include <tuple>
 
 
 TEST_CASE("Base node creation", "[nodes]")
@@ -96,7 +97,8 @@ TEST_CASE("Traverse", "[nodes]")
 
   SECTION("Full recursion")
   {
-    using ExpectedGiType = std::vector<std::tuple<std::string, int>>;
+    using GiType = std::tuple<std::string, int>;
+    using ExpectedGiType = std::vector<GiType>;
     ExpectedGiType gis;
 
     eyestep::nodeTraverse(nd, [&gis](const eyestep::Node* n, int depth) {
@@ -104,10 +106,10 @@ TEST_CASE("Traverse", "[nodes]")
       return eyestep::TraverseRecursion::kRecurse;
     });
 
-    REQUIRE(gis == (ExpectedGiType{{"foo", 0},
-                                   {"title", 1},
-                                   {"args", 1},
-                                   {"type", 1}}));
+    REQUIRE(gis == (ExpectedGiType{GiType{"foo", 0},
+                                   GiType{"title", 1},
+                                   GiType{"args", 1},
+                                   GiType{"type", 1}}));
   }
 
   SECTION("Only siblings")
