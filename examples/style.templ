@@ -5,7 +5,13 @@
 ;;;-----------------------------------------------------------------------------
 
 (default
-  (display (format "~a~%" (gi (current-node))))
+  (display (format "ANY ~s:~s~%" (class (current-node)) (gi (current-node))))
+  (process-children)
+  )
+
+
+(root
+  (display (format "ROOT: ~s~%" (class (current-node))))
   (process-children)
   )
 

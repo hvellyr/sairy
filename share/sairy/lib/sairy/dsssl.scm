@@ -134,11 +134,9 @@
         result
         '())))
 
-(define (process-node-by-path mode nd-path)
-  (let loop ((tests `((,nd-path ,mode)
-                      (,nd-path ,default-mode-marker)
-                      ((<all>) ,mode)
-                      ((<all>) ,default-mode-marker))))
+
+(define (process-node-by-path-and-mode tests-set mode nd-path)
+  (let loop ((tests tests-set))
     (if (null? tests)
         ;; @todo use (empty-sosofo)
         '()
@@ -149,8 +147,24 @@
               sosofo
               (loop (cdr tests)))) )))
 
+(define (process-element-by-path mode nd-path)
+  (process-node-by-path-and-mode `((,nd-path ,mode)
+                                   (,nd-path ,default-mode-marker)
+                                   ((<all>) ,mode)
+                                   ((<all>) ,default-mode-marker))
+                                 mode nd-path))
+
+(define (process-document mode)
+  (process-node-by-path-and-mode `(((<root>) ,mode)
+                                   ((<root>) ,default-mode-marker))
+                                 mode
+                                 '(<root>)))
+
 (define (process-node mode nd)
-  (process-node-by-path mode (gi-path nd)))
+  (case (class nd)
+   ( (document) (process-document mode))
+   ( (element) (process-element-by-path mode (gi-path nd)))
+   ( else '()) ))
 
 
 ;; Returns a singleton node-list.  This node is the one currently matched.
