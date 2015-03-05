@@ -126,24 +126,20 @@
                            (match-node-body cur-rule-node)
                            (loop (cdr path)
                                  mnd)))
-                     )))
-         (result (if (and (list? spec) (procedure? (car spec)))
-                     ((car spec))
-                     '()) ))
-    (if (list? result)
-        result
-        '())))
+                     ))) )
+    (if (and (list? spec) (procedure? (car spec)))
+        ((car spec))
+        #f) ))
 
 
 (define (process-node-by-path-and-mode tests-set mode nd-path)
   (let loop ((tests tests-set))
     (if (null? tests)
-        ;; @todo use (empty-sosofo)
-        '()
+        (empty-sosofo)
         (let* ((test (car tests))
-               (sosofo (process-node-in-registry (car test) (rules-registry (cadr test)))))
-          ;; @todo check with sosofo?
-          (if (not (null? sosofo))
+               (sosofo (process-node-in-registry (car test)
+                                                 (rules-registry (cadr test)))))
+          (if (sosofo? sosofo)
               sosofo
               (loop (cdr tests)))) )))
 
@@ -164,7 +160,7 @@
   (case (class nd)
    ( (document) (process-document mode))
    ( (element) (process-element-by-path mode (gi-path nd)))
-   ( else '()) ))
+   ( else (empty-sosofo)) ))
 
 
 ;; Returns a singleton node-list.  This node is the one currently matched.
@@ -175,16 +171,16 @@
 ;; processing the members of the @prm{nl} in order.
 (define (process-node-list nl)
   (let loop ((p nl)
-             (sosofo '()))
+             (sosofo (empty-sosofo)))
     (if (node-list-empty? p)
         sosofo
         (let* ((node (node-list-head p))
-               (process-result (parameterize ((current-node node))
-                                             (process-node (current-mode)
-                                                           node))) )
+               (result-sosofo (parameterize ((current-node node))
+                                            (process-node (current-mode)
+                                                          node))) )
           (loop (node-list-rest p)
-                ;; @todo should be sosofo-append
-                (append sosofo (list process-result))) ))))
+                (sosofo-append sosofo result-sosofo))
+          ))))
 
 
 ;; Returns the sosofo that results from appending the sosofos that result from

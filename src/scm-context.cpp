@@ -5,6 +5,7 @@
 #include "estd/memory.hpp"
 #include "nodes.hpp"
 #include "nodelist.hpp"
+#include "sosofo.hpp"
 
 #include "chibi/eval.h"
 #include "chibi/sexp.h"
@@ -34,6 +35,9 @@ namespace {
 
 #define NODELIST_TAG "<node-list>"
 #define NODELIST_TAG_SIZE 11
+
+#define SOSOFO_TAG "<sosofo>"
+#define SOSOFO_TAG_SIZE 8
 
 
   //----------------------------------------------------------------------------
@@ -65,6 +69,25 @@ namespace {
 
     ty = sexp_env_ref(ctx, sexp_context_env(ctx),
                       nm = sexp_intern(ctx, NODELIST_TAG, NODELIST_TAG_SIZE),
+                      SEXP_VOID);
+    if (sexp_typep(ty)) {
+      retv = sexp_type_tag(ty);
+    }
+
+    sexp_gc_release2(ctx);
+
+    return retv;
+  }
+
+
+  int sosofo_tag_p(sexp ctx)
+  {
+    int retv = 0;
+    sexp_gc_var2(ty, nm);
+    sexp_gc_preserve2(ctx, ty, nm);
+
+    ty = sexp_env_ref(ctx, sexp_context_env(ctx),
+                      nm = sexp_intern(ctx, SOSOFO_TAG, SOSOFO_TAG_SIZE),
                       SEXP_VOID);
     if (sexp_typep(ty)) {
       retv = sexp_type_tag(ty);
@@ -528,10 +551,97 @@ namespace {
   }
 
 
+  //----------------------------------------------------------------------------
+
+  sexp make_sosofo(sexp ctx, const Sosofo* obj)
+  {
+    sexp_gc_var4(ty, tmp, result, nm);
+    sexp_gc_preserve4(ctx, ty, tmp, result, nm);
+
+    ty = sexp_env_ref(ctx, sexp_context_env(ctx),
+                      nm = sexp_intern(ctx, SOSOFO_TAG, SOSOFO_TAG_SIZE),
+                      SEXP_VOID);
+
+    if (sexp_typep(ty)) {
+      result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
+      sexp_cpointer_freep(result) = 0;
+      sexp_cpointer_length(result) = 0;
+      sexp_cpointer_value(result) = (void*)obj;
+    }
+    else {
+      result = SEXP_VOID;
+    }
+
+    sexp_gc_release4(ctx);
+
+    return result;
+  }
+
+
+  sexp free_sosofo(sexp ctx, sexp self, sexp_sint_t n, sexp sosofoArg)
+  {
+    const Sosofo* sosofo = (const Sosofo*)(sexp_cpointer_value(sosofoArg));
+    delete sosofo;
+
+    sexp_cpointer_value(sosofoArg) = nullptr;
+    return SEXP_VOID;
+  }
+
+
+  sexp func_empty_sosofo(sexp ctx, sexp self, sexp_sint_t n)
+  {
+    return make_sosofo(ctx, new Sosofo());
+  }
+
+
+  sexp func_sosofo_append(sexp ctx, sexp self, sexp_sint_t n, sexp sosofoArg1,
+                          sexp sosofoArg2)
+  {
+    if (sexp_check_tag(sosofoArg1, sosofo_tag_p(ctx)) &&
+        sexp_check_tag(sosofoArg2, sosofo_tag_p(ctx))) {
+      const Sosofo* sosofo1 = (const Sosofo*)(sexp_cpointer_value(sosofoArg1));
+      const Sosofo* sosofo2 = (const Sosofo*)(sexp_cpointer_value(sosofoArg2));
+
+      return make_sosofo(ctx, new Sosofo(*sosofo1, *sosofo2));
+    }
+
+    return SEXP_VOID;
+  }
+
+
+  void init_sosofo_functions(sexp ctx)
+  {
+    sexp_gc_var3(nm, ty, op);
+    sexp_gc_preserve3(ctx, nm, ty, op);
+
+    // register qobject type
+    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "sosofo", -1),
+                              &free_sosofo);
+    sexp_env_cell_define(ctx, sexp_context_env(ctx),
+                         nm = sexp_intern(ctx, SOSOFO_TAG, SOSOFO_TAG_SIZE), ty,
+                         NULL);
+
+    op = sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "sosofo?", -1),
+                                  ty);
+    sexp_env_define(ctx, sexp_context_env(ctx),
+                    nm = sexp_intern(ctx, "sosofo?", -1), op);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "empty-sosofo", 0,
+                        &func_empty_sosofo);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "sosofo-append", 2,
+                        &func_sosofo_append);
+
+    sexp_gc_release3(ctx);
+  }
+
+
+  //----------------------------------------------------------------------------
+
   void init_builtins(sexp ctx)
   {
     init_node_functions(ctx);
     init_nodelist_functions(ctx);
+    init_sosofo_functions(ctx);
   }
 
 
