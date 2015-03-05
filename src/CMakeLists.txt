@@ -10,12 +10,12 @@ add_library(cppscanner
   cpp-lang.hpp
   cpp-scanner.cpp
   cpp-scanner.hpp
+  nodeclass.cpp
+  nodeclass.hpp
   nodelist.cpp
   nodelist.hpp
   nodes.cpp
   nodes.hpp
-  nodeclass.cpp
-  nodeclass.hpp
   source.cpp
   source.hpp
   utils.cpp
@@ -28,8 +28,15 @@ target_compile_options(cppscanner
 
 
 add_executable(sairy
-  scm-context.cpp
+  fo.hpp
+  fos.cpp
+  fos.hpp
   main.cpp
+  scanner.hpp
+  scm-context.cpp
+  scm-context.hpp
+  sosofo.cpp
+  sosofo.hpp
 )
 target_include_directories(sairy PUBLIC
   ../third-party/chibi-scheme/include
