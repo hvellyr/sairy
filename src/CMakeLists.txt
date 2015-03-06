@@ -37,6 +37,8 @@ add_executable(sairy
   scm-context.hpp
   sosofo.cpp
   sosofo.hpp
+  style-engine.cpp
+  style-engine.hpp
 )
 target_include_directories(sairy PUBLIC
   ../third-party/chibi-scheme/include

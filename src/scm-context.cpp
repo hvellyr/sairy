@@ -738,8 +738,10 @@ namespace {
     }
 
 
-    void processRootNode(const eyestep::Node* rootNode) override
+    std::unique_ptr<Sosofo> processRootNode(const Node* rootNode) override
     {
+      std::unique_ptr<Sosofo> result;
+
       sexp_gc_var1(res);
       sexp_gc_preserve1(mCtx, res);
 
@@ -751,7 +753,17 @@ namespace {
 
       check_exception_p(mCtx, res);
 
+      if (sexp_check_tag(res, sosofo_tag_p(mCtx))) {
+        const Sosofo* sosofo = (const Sosofo*)(sexp_cpointer_value(res));
+
+        if (sosofo) {
+          result.reset(new Sosofo(*sosofo));
+        }
+      }
+
       sexp_gc_release1(mCtx);
+
+      return std::move(result);
     }
   };
 

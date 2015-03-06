@@ -9,7 +9,6 @@
   (process-children)
   )
 
-
 (root
   (display (format "ROOT: ~s~%" (class (current-node))))
   (process-children)
@@ -18,25 +17,24 @@
 
 (element (chapter poem)
   (display (format "chapter 1 ~%"))
-  '(from chapter poem c)
+  (process-children)
   )
 
 (element poem
   (display (format "poem 1 ~%"))
-  '(from poem)
+  (process-children)
   )
 
 (element title
   (display (format "title 1 ~%"))
-  '(from title)
+  (process-children)
   )
 
 (mode epigraph-mode
   (element p
     (display "match p")
-    '(from p))
+    (process-children))
   (element poem
     (display (format "poem 1x ~%"))
-    '(from poem in epigraph-mode)
-    )
+    (process-children))
   )

@@ -5,8 +5,10 @@
 #include "nodes.hpp"
 #include "nodeclass.hpp"
 #include "scm-context.hpp"
+#include "sosofo.hpp"
 #include "source.hpp"
 #include "utils.hpp"
+#include "style-engine.hpp"
 
 #include "cpp-scanner.hpp"
 
@@ -67,39 +69,6 @@ std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file)
   }
 
   return nullptr;
-}
-
-
-std::unique_ptr<eyestep::ISchemeContext>
-setup_scheme_context(const std::vector<fs::path>& prefix_paths)
-{
-  auto ctx = eyestep::createSchemeContext();
-
-  auto paths = boost::copy_range<std::vector<fs::path>>(
-      prefix_paths | boost::adaptors::transformed(
-                         [](const fs::path& path) { return path / "lib"; }));
-
-  ctx->initialize(paths);
-
-  auto init_path = fs::path("sairy") / "init.scm";
-  if (!ctx->loadModuleFile(init_path)) {
-    std::cerr << "Could not read " << init_path.string() << std::endl;
-    return nullptr;
-  }
-
-  return std::move(ctx);
-}
-
-
-void load_template(eyestep::ISchemeContext* ctx, const fs::path& templPath,
-                   const eyestep::Node* root)
-{
-  if (!ctx->loadScript(templPath)) {
-    std::cerr << "Could not read " << templPath.string() << std::endl;
-    return;
-  }
-
-  ctx->processRootNode(root);
 }
 
 
@@ -268,16 +237,20 @@ int main(int argc, char** argv)
       }
     }
 
-    auto scheme_ctx = std::move(
-        setup_scheme_context(eyestep::utils::split_paths(prefix_path)));
-
     eyestep::Grove grove = scan_sources(sources, incl_paths, defs);
     if (verbose) {
       eyestep::serialize(std::cout, grove.rootNode());
     }
 
     if (!templ_path.empty()) {
-      load_template(scheme_ctx.get(), templ_path, grove.rootNode());
+      // @todo: create processor
+
+      eyestep::StyleEngine engine(eyestep::utils::split_paths(prefix_path));
+      if (engine.loadStyle(templ_path)) {
+        auto sosofo = std::move(engine.processNode(grove.rootNode()));
+
+        // @todo: render sosofo using the processor
+      }
     }
   }
   catch (const std::exception& e) {
