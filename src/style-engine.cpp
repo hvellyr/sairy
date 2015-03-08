@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <string>
 
 
 namespace eyestep {
@@ -39,7 +40,9 @@ namespace {
 } // ns anon
 
 
-StyleEngine::StyleEngine(const std::vector<fs::path>& prefix_paths)
+StyleEngine::StyleEngine(const std::vector<fs::path>& prefix_paths,
+                         const std::string& backendId)
+    : mBackendId(backendId)
 {
   mCtx = setup_scheme_context(prefix_paths);
 }
@@ -53,6 +56,8 @@ bool StyleEngine::loadStyle(const boost::filesystem::path& path)
     std::cerr << "Could not read " << path.string() << std::endl;
     return false;
   }
+
+  // mCtx->defineVariable("%backend%", path.string());
 
   return true;
 }

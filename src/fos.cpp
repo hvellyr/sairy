@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <limits>
+#include <ostream>
 
 
 namespace eyestep {
@@ -16,6 +17,14 @@ namespace eyestep {
 namespace fo {
 
   static Sosofo kNilSosofo;
+
+
+  const std::vector<std::string>& Fo::ports() const
+  {
+    static const auto ports = std::vector<std::string>{
+    };
+    return ports;
+  }
 
 
   //----------------------------------------------------------------------------
@@ -78,6 +87,14 @@ namespace fo {
     return propspecs;
   }
 
+  const std::vector<std::string>& Paragraph::ports() const
+  {
+    static const auto ports = std::vector<std::string>{
+      "text",
+    };
+    return ports;
+  }
+
   const Sosofo& Paragraph::port(const std::string& portName) const
   {
     if (portName == "text") {
@@ -125,6 +142,14 @@ namespace fo {
         PropertySpec("lines", ""),
     };
     return propspecs;
+  }
+
+  const std::vector<std::string>& DisplayGroup::ports() const
+  {
+    static const auto ports = std::vector<std::string>{
+      "text",
+    };
+    return ports;
   }
 
   const Sosofo& DisplayGroup::port(const std::string& portName) const
@@ -178,6 +203,14 @@ namespace fo {
     return propspecs;
   }
 
+  const std::vector<std::string>& SimplePageSequence::ports() const
+  {
+    static const auto ports = std::vector<std::string>{
+      "text",
+    };
+    return ports;
+  }
+
   const Sosofo& SimplePageSequence::port(const std::string& portName) const
   {
     if (portName == "text") {
@@ -211,6 +244,35 @@ namespace fo {
     }
 
     return nullptr;
+  }
+
+
+  std::ostream& operator<<(std::ostream& os, const Dimen& dimen)
+  {
+    auto unit_name = [](Unit un) {
+      switch (un) {
+      case k_pt: return "pt";
+      case k_m: return "m";
+      case k_mm: return "mm";
+      case k_cm: return "cm";
+      case k_em: return "em";
+      }
+    };
+
+    os << "<dimen:" << dimen.mValue << unit_name(dimen.mUnit);
+    if (dimen.mValue != dimen.mMin) {
+      os << " min " << dimen.mMin << unit_name(dimen.mUnit);
+    }
+    if (dimen.mMax == std::numeric_limits<double>::infinity()) {
+      os << " plus INF";
+    }
+    else if (dimen.mValue != dimen.mMax) {
+      os << " plus " << dimen.mMax << unit_name(dimen.mUnit);
+    }
+
+    os << ">";
+
+    return os;
   }
 
 } // ns fo

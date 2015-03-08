@@ -16,8 +16,6 @@ namespace eyestep {
 class Sosofo;
 
 namespace fo {
-  using PropertySpecs = std::vector<PropertySpec>;
-
   class Fo : public IFormattingObject {
   protected:
     const PropertySpecs mProps;
@@ -25,7 +23,8 @@ namespace fo {
     Fo(const PropertySpecs& props) : mProps(props) {}
 
   public:
-    const PropertySpecs& properties() const { return mProps; }
+    const PropertySpecs& properties() const override { return mProps; }
+    const std::vector<std::string>& ports() const override;
   };
 
 
@@ -51,6 +50,7 @@ namespace fo {
 
     std::string className() const override;
     const PropertySpecs& propertiesSpec() const override;
+    const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portName) const override;
   };
 
@@ -74,6 +74,7 @@ namespace fo {
 
     std::string className() const override;
     const PropertySpecs& propertiesSpec() const override;
+    const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portName) const override;
   };
 
@@ -87,6 +88,7 @@ namespace fo {
 
     std::string className() const override;
     const PropertySpecs& propertiesSpec() const override;
+    const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portName) const override;
   };
 

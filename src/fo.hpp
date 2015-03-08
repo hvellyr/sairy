@@ -55,6 +55,8 @@ namespace fo {
     const double mMax;
   };
 
+  std::ostream& operator<<(std::ostream& os, const Dimen& dimen);
+
 
   struct PropertySpec {
     using ValueType = boost::variant<Dimen, bool, int, std::string, std::shared_ptr<Sosofo>>;
@@ -100,6 +102,8 @@ namespace fo {
     const ValueType mValue;
   };
 
+  using PropertySpecs = std::vector<PropertySpec>;
+
 } // ns fo
 
 class IFormattingObject {
@@ -111,6 +115,10 @@ public:
 
   /*! Return the set of defined properties */
   virtual const std::vector<fo::PropertySpec>& propertiesSpec() const = 0;
+
+  virtual const fo::PropertySpecs& properties() const = 0;
+
+  virtual const std::vector<std::string>& ports() const = 0;
 
   /*! Return a port by @p portName */
   virtual const Sosofo& port(const std::string& portName) const = 0;

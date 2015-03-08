@@ -28,10 +28,16 @@ target_compile_options(cppscanner
 
 
 add_executable(sairy
+  abstract-processor.ipp
+  abstract-processor.hpp
+  debug-processor.cpp
+  debug-processor.hpp
+  fo-processor.hpp
   fo.hpp
   fos.cpp
   fos.hpp
   main.cpp
+  processor.hpp
   scanner.hpp
   scm-context.cpp
   scm-context.hpp

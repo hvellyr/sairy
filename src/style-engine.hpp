@@ -5,6 +5,7 @@
 
 #include <boost/filesystem.hpp>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace eyestep {
@@ -16,9 +17,11 @@ class ISchemeContext;
 
 class StyleEngine {
   std::unique_ptr<ISchemeContext> mCtx;
+  std::string mBackendId;
 
 public:
-  StyleEngine(const std::vector<boost::filesystem::path>& prefix_paths);
+  StyleEngine(const std::vector<boost::filesystem::path>& prefix_paths,
+              const std::string& backendId);
 
   bool loadStyle(const boost::filesystem::path& path);
 

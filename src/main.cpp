@@ -2,15 +2,17 @@
 // All rights reserved.
 
 #include "estd/memory.hpp"
-#include "nodes.hpp"
 #include "nodeclass.hpp"
+#include "nodes.hpp"
+#include "processor.hpp"
 #include "scm-context.hpp"
 #include "sosofo.hpp"
 #include "source.hpp"
-#include "utils.hpp"
 #include "style-engine.hpp"
+#include "utils.hpp"
 
 #include "cpp-scanner.hpp"
+#include "debug-processor.hpp"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
@@ -112,6 +114,15 @@ eyestep::Grove scan_sources(const std::vector<eyestep::Source>& sources,
   return grove;
 }
 
+std::unique_ptr<eyestep::IProcessor> findProcessor(const std::string& backend)
+{
+  if (backend == "debug") {
+    return estd::make_unique<eyestep::DebugProcessor>();
+  }
+
+  return nullptr;
+}
+
 } // anon namespace
 
 
@@ -133,6 +144,8 @@ int main(int argc, char** argv)
                          "read files to scan from arg")
       ("output,o",       po::value<std::string>(),
                          "write result to arg")
+      ("backend,b",      po::value<std::string>(),
+                         "use backend processor")
       ("template,t",     po::value<std::string>(),
                          "use template")
       ("include-path,I", po::value<std::vector<std::string>>()->composing(),
@@ -213,6 +226,11 @@ int main(int argc, char** argv)
       prefix_path = vm["sairy-prefix"].as<std::string>();
     }
 
+    std::string backend;
+    if (vm.count("backend")) {
+      backend = vm["backend"].as<std::string>();
+    }
+
     if (verbose) {
       std::cout << "incl paths  : " << eyestep::utils::join(incl_paths, " ")
                 << std::endl;
@@ -243,13 +261,23 @@ int main(int argc, char** argv)
     }
 
     if (!templ_path.empty()) {
-      // @todo: create processor
+      auto processor = findProcessor(backend);
+      if (processor) {
+        processor->setOutputFile(outf);
 
-      eyestep::StyleEngine engine(eyestep::utils::split_paths(prefix_path));
-      if (engine.loadStyle(templ_path)) {
-        auto sosofo = std::move(engine.processNode(grove.rootNode()));
+        eyestep::StyleEngine engine(eyestep::utils::split_paths(prefix_path),
+                                    processor->procId());
+        if (engine.loadStyle(templ_path)) {
+          auto sosofo = std::move(engine.processNode(grove.rootNode()));
 
-        // @todo: render sosofo using the processor
+          processor->renderProcessedNode(sosofo.get());
+        }
+        else {
+          std::cerr << "Loading stylesheet failed" << std::endl;
+        }
+      }
+      else {
+        std::cerr << "Unknown backend: " << backend << std::endl;
       }
     }
   }
