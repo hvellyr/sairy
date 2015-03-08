@@ -164,8 +164,13 @@
 
 
 ;; Returns a singleton node-list.  This node is the one currently matched.
-(define current-node
-  (make-parameter (empty-node-list)))
+;; (define current-node
+;;   (make-parameter (empty-node-list)))
+
+(define *current-node* (empty-node-list))
+
+;; Returns a singleton node-list.  This node is the one currently matched.
+(define (current-node) *current-node*)
 
 ;; Returns the sosofo that results from appending the sosofos that result from
 ;; processing the members of the @prm{nl} in order.
@@ -175,9 +180,15 @@
     (if (node-list-empty? p)
         sosofo
         (let* ((node (node-list-head p))
-               (result-sosofo (parameterize ((current-node node))
-                                            (process-node (current-mode)
-                                                          node))) )
+               ;; (result-sosofo (parameterize ((current-node node))
+               ;;                              (process-node (current-mode)
+               ;;                                            node))) )
+               (result-sosofo (let ((cn (current-node)))
+                                (set! *current-node* node)
+                                (let ((res (process-node (current-mode)
+                                                         node)))
+                                  (set! *current-node* cn)
+                                  res))) )
           (loop (node-list-rest p)
                 (sosofo-append sosofo result-sosofo))
           ))))
