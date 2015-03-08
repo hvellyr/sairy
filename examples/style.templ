@@ -6,7 +6,16 @@
 
 (default
   (display (format "ANY ~s:~s~%" (class (current-node)) (gi (current-node))))
-  (process-children)
+  (make paragraph
+    quadding: 'justify
+    numbered-lines?: #t
+    asis-wrap-indent: 42
+    line-spacing: (dimen 3/4 pt)
+    font-size: (dimen 14.4 pt)
+    (sosofo-append
+     (make literal)
+     (process-children))
+    )
   )
 
 (root

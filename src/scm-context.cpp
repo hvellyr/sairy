@@ -1,10 +1,11 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
-#include "scm-context.hpp"
 #include "estd/memory.hpp"
-#include "nodes.hpp"
+#include "fo.hpp"
 #include "nodelist.hpp"
+#include "nodes.hpp"
+#include "scm-context.hpp"
 #include "sosofo.hpp"
 
 #include "chibi/eval.h"
@@ -12,6 +13,7 @@
 
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
+#include <boost/optional/optional.hpp>
 
 #include <iostream>
 #include <memory>
@@ -41,6 +43,29 @@ namespace {
 
 
   //----------------------------------------------------------------------------
+
+  bool check_exception_p(sexp ctx, sexp res)
+  {
+    sexp_gc_var3(err, sym, tmp);
+
+    if (res && sexp_exceptionp(res)) {
+      sexp_gc_preserve3(ctx, err, sym, tmp);
+      tmp = res;
+      err = sexp_current_error_port(ctx);
+      if (!sexp_oportp(err)) {
+        err = sexp_make_output_port(ctx, stderr, SEXP_FALSE);
+      }
+
+      sexp_print_exception(ctx, res, err);
+      sexp_stack_trace(ctx, err);
+
+      sexp_gc_release3(ctx);
+
+      return false;
+    }
+    return true;
+  }
+
 
   int node_tag_p(sexp ctx)
   {
@@ -112,6 +137,74 @@ namespace {
     }
 
     return nullptr;
+  }
+
+
+  boost::optional<std::string> string_from_symbol_sexp_or_none(sexp ctx,
+                                                               sexp obj)
+  {
+    sexp_gc_var1(str);
+    sexp_gc_preserve1(ctx, str);
+
+    boost::optional<std::string> result;
+    if (sexp_isymbolp(obj)) {
+      str = sexp_symbol_to_string(ctx, obj);
+      result = sexp_string_data(str);
+    }
+    else if (sexp_lsymbolp(obj)) {
+      result = std::string(sexp_lsymbol_data(obj), sexp_lsymbol_length(obj));
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  fo::Unit map_name_to_unit(const std::string& nm)
+  {
+    if (nm == "pt") {
+      return fo::k_pt;
+    }
+    else if (nm == "cm") {
+      return fo::k_cm;
+    }
+    else if (nm == "em") {
+      return fo::k_em;
+    }
+    else if (nm == "m") {
+      return fo::k_m;
+    }
+    else if (nm == "mm") {
+      return fo::k_mm;
+    }
+
+    return fo::k_pt;
+  }
+
+  boost::optional<fo::Dimen> dimen_from_sexp_or_none(sexp ctx, sexp obj)
+  {
+    boost::optional<fo::Dimen> result;
+
+    if (sexp_pairp(obj)) {
+      auto unitnm = string_from_symbol_sexp_or_none(ctx, sexp_cdr(obj));
+
+      if (unitnm) {
+        fo::Unit unit = map_name_to_unit(*unitnm);
+
+        if (sexp_flonump(sexp_car(obj))) {
+          result = fo::Dimen(sexp_flonum_value(sexp_car(obj)), unit);
+        }
+        else if (sexp_ratiop(sexp_car(obj))) {
+          result = fo::Dimen(sexp_ratio_to_double(sexp_car(obj)), unit);
+        }
+        else if (sexp_fixnump(sexp_car(obj))) {
+          result = fo::Dimen(int(sexp_unbox_fixnum(sexp_car(obj))), unit);
+        }
+      }
+    }
+
+    return result;
   }
 
 
@@ -258,22 +351,15 @@ namespace {
     result = SEXP_VOID;
 
     if (const Node* node = node_from_arg(ctx, nodeArg)) {
-      std::string propName;
-      if (sexp_isymbolp(propNameArg)) {
-        str = sexp_symbol_to_string(ctx, propNameArg);
-        propName = sexp_string_data(str);
-      }
-      else if (sexp_lsymbolp(propNameArg)) {
-        propName = std::string(sexp_lsymbol_data(propNameArg),
-                               sexp_lsymbol_length(propNameArg));
-      }
-      else {
+      auto propName = string_from_symbol_sexp_or_none(ctx, propNameArg);
+      if (!propName) {
         result = sexp_user_exception(ctx, self, "not a symbol", propNameArg);
       }
-
-      SexpPropVisitor visitor(ctx, self, propNameArg);
-      PropertyValue value = (*node)[propName];
-      result = boost::apply_visitor(visitor, value);
+      else {
+        SexpPropVisitor visitor(ctx, self, propNameArg);
+        PropertyValue value = (*node)[*propName];
+        result = boost::apply_visitor(visitor, value);
+      }
     }
     else {
       result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
@@ -597,15 +683,25 @@ namespace {
   sexp func_sosofo_append(sexp ctx, sexp self, sexp_sint_t n, sexp sosofoArg1,
                           sexp sosofoArg2)
   {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_VOID;
+
     if (sexp_check_tag(sosofoArg1, sosofo_tag_p(ctx)) &&
         sexp_check_tag(sosofoArg2, sosofo_tag_p(ctx))) {
       const Sosofo* sosofo1 = (const Sosofo*)(sexp_cpointer_value(sosofoArg1));
       const Sosofo* sosofo2 = (const Sosofo*)(sexp_cpointer_value(sosofoArg2));
 
-      return make_sosofo(ctx, new Sosofo(*sosofo1, *sosofo2));
+      result = make_sosofo(ctx, new Sosofo(*sosofo1, *sosofo2));
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a sosofo", sosofoArg1);
     }
 
-    return SEXP_VOID;
+    sexp_gc_release1(ctx);
+
+    return result;
   }
 
 
@@ -637,38 +733,174 @@ namespace {
 
   //----------------------------------------------------------------------------
 
-  void init_builtins(sexp ctx)
+  boost::optional<fo::PropertySpec>
+  evaluate_keyword_parameter(sexp ctx, sexp self, const std::string& key,
+                             sexp expr)
   {
-    init_node_functions(ctx);
-    init_nodelist_functions(ctx);
-    init_sosofo_functions(ctx);
+    boost::optional<fo::PropertySpec> result;
+
+    sexp_gc_var2(obj, excep);
+    sexp_gc_preserve2(ctx, obj, excep);
+
+    obj = sexp_eval(ctx, expr, sexp_context_env(ctx));
+    if (obj && sexp_exceptionp(obj)) {
+      excep = sexp_user_exception(ctx, self, "bad property expression", expr);
+      check_exception_p(ctx, excep);
+    }
+    else {
+      auto sym_value = string_from_symbol_sexp_or_none(ctx, obj);
+      if (sym_value) {
+        result = fo::PropertySpec(key, *sym_value);
+      }
+      else if (sexp_check_tag(obj, sosofo_tag_p(ctx))) {
+        const Sosofo* sosofo = (const Sosofo*)(sexp_cpointer_value(obj));
+        result = fo::PropertySpec(key, std::make_shared<Sosofo>(*sosofo));
+      }
+      else if (sexp_booleanp(obj)) {
+        result = fo::PropertySpec(key, bool(sexp_unbox_boolean(obj)));
+      }
+      else if (sexp_fixnump(obj)) {
+        result = fo::PropertySpec(key, int(sexp_unbox_fixnum(obj)));
+      }
+      else if (sexp_pairp(obj)) {
+        auto dimen = dimen_from_sexp_or_none(ctx, obj);
+        if (dimen) {
+          result = fo::PropertySpec(key, *dimen);
+        }
+      }
+      else {
+        excep = sexp_user_exception(ctx, self, "Bad property type: ", expr);
+        check_exception_p(ctx, excep);
+      }
+    }
+
+    sexp_gc_release2(ctx);
+
+    return result;
+  }
+
+
+  std::unique_ptr<IFormattingObject> allocate_fo(sexp ctx,
+                                                 const std::string& foClass,
+                                                 const fo::PropertySpecs& props,
+                                                 sexp principalPort)
+  {
+    if (sexp_check_tag(principalPort, sosofo_tag_p(ctx))) {
+      const Sosofo* sosofo =
+          (const Sosofo*)(sexp_cpointer_value(principalPort));
+
+      return std::move(
+          fo::createFoByClassName(std::string("#") + foClass, props, *sosofo));
+    }
+
+    Sosofo sosofo;
+    return std::move(
+        fo::createFoByClassName(std::string("#") + foClass, props, sosofo));
+  }
+
+
+  sexp func_make_fo(sexp ctx, sexp self, sexp_sint_t n, sexp foClassArg,
+                    sexp argsArg)
+  {
+    sexp_gc_var4(result, str, obj, err);
+    sexp_gc_preserve4(ctx, result, str, obj, err);
+
+    result = SEXP_NULL;
+
+    auto foClass = string_from_symbol_sexp_or_none(ctx, foClassArg);
+    if (!foClass) {
+      result = sexp_user_exception(ctx, self, "not a symbol", foClassArg);
+    }
+
+    fo::PropertySpecs props;
+
+    if (sexp_vectorp(argsArg)) {
+      int len = sexp_vector_length(argsArg);
+
+      for (int i = 0; i < len; ++i) {
+        sexp ref = sexp_vector_ref(argsArg, sexp_make_fixnum(i));
+
+        auto key = string_from_symbol_sexp_or_none(ctx, ref);
+
+        // is the parameter a keyword
+        if (key && key->back() == ':') {
+          if (i + 1 < len) {
+            ref = sexp_vector_ref(argsArg, sexp_make_fixnum(i + 1));
+            auto prop =
+                evaluate_keyword_parameter(ctx, self,
+                                           key->substr(0, key->size() - 1),
+                                           ref);
+            if (prop) {
+              props.push_back(*prop);
+            }
+
+            i = i + 1;
+          }
+          else {
+            result = sexp_user_exception(ctx, self, "value missing for keyword",
+                                         ref);
+            break;
+          }
+        }
+        else {
+          obj = sexp_eval(ctx, ref, sexp_context_env(ctx));
+          if (obj && sexp_exceptionp(obj)) {
+            result = obj;
+            break;
+          }
+          else {
+            result = obj;
+          }
+        }
+      }
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a vector", argsArg);
+    }
+
+    if (foClass) {
+      std::shared_ptr<IFormattingObject> fo(
+          allocate_fo(ctx, *foClass, props, result));
+
+      if (!fo) {
+        result =
+            sexp_user_exception(ctx, self, "Unknown fo-class: ", foClassArg);
+      }
+      else {
+        result = make_sosofo(ctx, new Sosofo(fo));
+      }
+    }
+
+    sexp_gc_release4(ctx);
+
+    return result;
+  }
+
+
+  void init_make_functions(sexp ctx)
+  {
+    sexp_gc_var3(nm, ty, op);
+    sexp_gc_preserve3(ctx, nm, ty, op);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-fo", 2,
+                        &func_make_fo);
+
+    sexp_gc_release3(ctx);
   }
 
 
   //----------------------------------------------------------------------------
 
-  bool check_exception_p(sexp ctx, sexp res)
+  void init_builtins(sexp ctx)
   {
-    sexp_gc_var3(err, sym, tmp);
-
-    if (res && sexp_exceptionp(res)) {
-      sexp_gc_preserve3(ctx, err, sym, tmp);
-      tmp = res;
-      err = sexp_current_error_port(ctx);
-      if (!sexp_oportp(err)) {
-        err = sexp_make_output_port(ctx, stderr, SEXP_FALSE);
-      }
-
-      sexp_print_exception(ctx, res, err);
-      sexp_stack_trace(ctx, err);
-
-      sexp_gc_release3(ctx);
-
-      return false;
-    }
-    return true;
+    init_node_functions(ctx);
+    init_nodelist_functions(ctx);
+    init_sosofo_functions(ctx);
+    init_make_functions(ctx);
   }
 
+
+  //----------------------------------------------------------------------------
 
   class SchemeContext : public ISchemeContext {
     sexp mCtx;

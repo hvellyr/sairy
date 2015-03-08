@@ -194,3 +194,8 @@
 ;;                    (display (format "MODE ~a~%" key))
 ;;                    (match-node-display value)
 ;;                    (display (format "------------------------------------------------~%"))))
+
+
+(define-syntax dimen
+  (syntax-rules ()
+    ((dimen real unit) (cons real 'unit))))

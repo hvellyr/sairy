@@ -1,6 +1,7 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
+#include "estd/memory.hpp"
 #include "fo.hpp"
 #include "fos.hpp"
 #include "sosofo.hpp"
@@ -184,6 +185,32 @@ namespace fo {
     }
 
     return kNilSosofo;
+  }
+
+
+  //----------------------------------------------------------------------------
+
+  std::unique_ptr<IFormattingObject>
+  createFoByClassName(const std::string& className, const PropertySpecs& props,
+                      const Sosofo& sosofo)
+  {
+    if (className == "#literal") {
+      return estd::make_unique<Literal>();
+    }
+    else if (className == "#paragraph-break") {
+      return estd::make_unique<ParagraphBreak>();
+    }
+    else if (className == "#paragraph") {
+      return estd::make_unique<Paragraph>(props, sosofo);
+    }
+    else if (className == "#display-group") {
+      return estd::make_unique<DisplayGroup>(props, sosofo);
+    }
+    else if (className == "#simple-page-sequence") {
+      return estd::make_unique<SimplePageSequence>(props, sosofo);
+    }
+
+    return nullptr;
   }
 
 } // ns fo

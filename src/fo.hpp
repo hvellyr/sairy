@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace eyestep {
 
@@ -32,6 +33,22 @@ namespace fo {
     {
     }
 
+    Dimen(const Dimen& other)
+      : mValue(other.mValue),
+        mUnit(other.mUnit),
+        mMin(other.mMin),
+        mMax(other.mMax)
+    {}
+
+    Dimen& operator=(const Dimen& other)
+    {
+      const_cast<double&>(mValue) = other.mValue;
+      const_cast<Unit&>(mUnit) = other.mUnit;
+      const_cast<double&>(mMin) = other.mMin;
+      const_cast<double&>(mMax) = other.mMax;
+      return *this;
+    }
+
     const double mValue;
     const Unit mUnit;
     const double mMin;
@@ -40,6 +57,8 @@ namespace fo {
 
 
   struct PropertySpec {
+    using ValueType = boost::variant<Dimen, bool, int, std::string, std::shared_ptr<Sosofo>>;
+
     PropertySpec(std::string name, Dimen val)
         : mName(std::move(name)), mValue(val)
     {
@@ -65,9 +84,20 @@ namespace fo {
     {
     }
 
+    PropertySpec(const PropertySpec& other)
+      : mName(other.mName),
+        mValue(other.mValue)
+    {}
+
+    PropertySpec& operator=(const PropertySpec& other)
+    {
+      const_cast<std::string&>(mName) = other.mName;
+      const_cast<ValueType&>(mValue) = other.mValue;
+      return *this;
+    }
+
     const std::string mName;
-    const boost::variant<Dimen, bool, int, std::string, std::shared_ptr<Sosofo>>
-        mValue;
+    const ValueType mValue;
   };
 
 } // ns fo
@@ -85,5 +115,12 @@ public:
   /*! Return a port by @p portName */
   virtual const Sosofo& port(const std::string& portName) const = 0;
 };
+
+
+namespace fo {
+  std::unique_ptr<IFormattingObject>
+  createFoByClassName(const std::string& className, const PropertySpecs& props,
+                      const Sosofo& sosofo);
+}
 
 } // ns eyestep
