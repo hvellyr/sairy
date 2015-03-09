@@ -38,6 +38,8 @@ add_executable(sairy
   fos.hpp
   main.cpp
   processor.hpp
+  propstack.cpp
+  propstack.hpp
   scanner.hpp
   scm-context.cpp
   scm-context.hpp

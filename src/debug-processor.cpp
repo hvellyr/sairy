@@ -47,8 +47,25 @@ namespace {
         DebugPropertySpecVisitor visitor;
         boost::apply_visitor(visitor, spec.mValue);
 
-        std::cout << "      }" << std::endl;
+        std::cout << " }" << std::endl;
       }
+
+#if 0
+      for (const auto& spec : fo->defaultProperties()) {
+        DebugPropertySpecVisitor visitor;
+
+        auto prop = processor->property(fo, spec.mName);
+        if (prop) {
+          std::cout << "      {" << spec.mName << ": ";
+          boost::apply_visitor(visitor, spec.mValue);
+          std::cout << " } -> ";
+
+          std::cout << " [" << spec.mName << ": ";
+          boost::apply_visitor(visitor, prop->mValue);
+          std::cout << " ]" << std::endl;
+        }
+      }
+#endif
 
       for (const auto& portnm : fo->ports()) {
         std::cout << "DEBUG: PORT -> " << portnm << std::endl;

@@ -64,12 +64,21 @@ void AbstractProcessor<ProcessorT>::renderFo(const IFormattingObject* fo)
               << std::endl;
   }
   else {
-    // mProps.push(fo->properties());
+    mProps.push(fo->properties());
 
     foproc->render(static_cast<ProcessorT*>(this), fo);
 
-    // mProps.pop();
+    mProps.pop();
   }
+}
+
+
+template <typename ProcessorT>
+fo::PropertySpecOrNone
+AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
+                                        const std::string& key) const
+{
+  return mProps.get(key, fo->defaultProperties());
 }
 
 } // ns eyestep

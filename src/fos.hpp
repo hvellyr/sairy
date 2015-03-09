@@ -36,7 +36,7 @@ namespace fo {
     Literal(std::string data);
 
     std::string className() const override;
-    const PropertySpecs& propertiesSpec() const override;
+    const PropertySpecs& defaultProperties() const override;
     const Sosofo& port(const std::string& portName) const override;
   };
 
@@ -49,7 +49,7 @@ namespace fo {
     Paragraph(const PropertySpecs& props, const Sosofo& sosofo);
 
     std::string className() const override;
-    const PropertySpecs& propertiesSpec() const override;
+    const PropertySpecs& defaultProperties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portName) const override;
   };
@@ -60,7 +60,7 @@ namespace fo {
     ParagraphBreak() = default;
 
     std::string className() const override;
-    const PropertySpecs& propertiesSpec() const override;
+    const PropertySpecs& defaultProperties() const override;
     const Sosofo& port(const std::string& portName) const override;
   };
 
@@ -73,7 +73,7 @@ namespace fo {
     DisplayGroup(const PropertySpecs& props, const Sosofo& sosofo);
 
     std::string className() const override;
-    const PropertySpecs& propertiesSpec() const override;
+    const PropertySpecs& defaultProperties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portName) const override;
   };
@@ -87,7 +87,7 @@ namespace fo {
     SimplePageSequence(const PropertySpecs& props, const Sosofo& sosofo);
 
     std::string className() const override;
-    const PropertySpecs& propertiesSpec() const override;
+    const PropertySpecs& defaultProperties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portName) const override;
   };

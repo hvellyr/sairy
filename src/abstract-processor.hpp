@@ -3,7 +3,9 @@
 
 #pragma once
 
+#include "fo.hpp"
 #include "processor.hpp"
+#include "propstack.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -21,6 +23,7 @@ template<typename ProcessorT>
 class AbstractProcessor : public IProcessor {
 protected:
   boost::filesystem::path mOutputFile;
+  PropertiesStack mProps;
 
 public:
   void setOutputFile(const boost::filesystem::path& outputFile) override;
@@ -34,6 +37,9 @@ public:
 
   virtual void beforeRendering();
   virtual void afterRendering();
+
+  fo::PropertySpecOrNone property(const IFormattingObject* fo,
+                                  const std::string& key) const override;
 };
 
 } // ns eyestep

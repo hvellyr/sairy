@@ -58,7 +58,8 @@ namespace fo {
   std::ostream& operator<<(std::ostream& os, const Dimen& dimen);
 
 
-  struct PropertySpec {
+  class PropertySpec {
+  public:
     using ValueType = boost::variant<Dimen, bool, int, std::string, std::shared_ptr<Sosofo>>;
 
     PropertySpec(std::string name, Dimen val)
@@ -102,7 +103,10 @@ namespace fo {
     const ValueType mValue;
   };
 
+  using PropertySpecOrNone = boost::optional<fo::PropertySpec>;
   using PropertySpecs = std::vector<PropertySpec>;
+
+  bool isPropertyBeInherited(const std::string& key);
 
 } // ns fo
 
@@ -114,7 +118,7 @@ public:
   virtual std::string className() const = 0;
 
   /*! Return the set of defined properties */
-  virtual const std::vector<fo::PropertySpec>& propertiesSpec() const = 0;
+  virtual const fo::PropertySpecs& defaultProperties() const = 0;
 
   virtual const fo::PropertySpecs& properties() const = 0;
 

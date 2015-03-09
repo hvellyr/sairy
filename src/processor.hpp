@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "fo.hpp"
+
 #include <boost/filesystem.hpp>
 
 #include <string>
@@ -23,6 +25,9 @@ public:
 
   virtual void renderSosofo(const Sosofo* sosofo) = 0;
   virtual void renderFo(const IFormattingObject* fo) = 0;
+
+  virtual fo::PropertySpecOrNone property(const IFormattingObject* fo,
+                                          const std::string& key) const = 0;
 };
 
 } // ns eyestep
