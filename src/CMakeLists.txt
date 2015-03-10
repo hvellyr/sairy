@@ -32,6 +32,8 @@ add_executable(sairy
   abstract-processor.hpp
   debug-processor.cpp
   debug-processor.hpp
+  html-processor.cpp
+  html-processor.hpp
   fo-processor.hpp
   fo.hpp
   fos.cpp

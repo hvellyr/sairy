@@ -38,6 +38,8 @@ namespace fo {
     std::string className() const override;
     const PropertySpecs& defaultProperties() const override;
     const Sosofo& port(const std::string& portName) const override;
+
+    std::string text() const;
   };
 
 

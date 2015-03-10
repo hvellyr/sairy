@@ -108,6 +108,8 @@ namespace fo {
     return kNilSosofo;
   }
 
+  std::string Literal::text() const { return mData; }
+
 
   //----------------------------------------------------------------------------
 
@@ -288,8 +290,8 @@ namespace fo {
     const auto i_find =
         std::find_if(propertyInherited.begin(), propertyInherited.end(),
                      [&key](const PropertyInherited& propinh) {
-          return propinh.mKey == key;
-        });
+                       return propinh.mKey == key;
+                     });
     return i_find != propertyInherited.end() ? i_find->mIsInherited : false;
   }
 

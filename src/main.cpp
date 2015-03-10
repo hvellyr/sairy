@@ -13,6 +13,7 @@
 
 #include "cpp-scanner.hpp"
 #include "debug-processor.hpp"
+#include "html-processor.hpp"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
@@ -118,6 +119,9 @@ std::unique_ptr<eyestep::IProcessor> findProcessor(const std::string& backend)
 {
   if (backend == "debug") {
     return estd::make_unique<eyestep::DebugProcessor>();
+  }
+  else if (backend == "html") {
+    return estd::make_unique<eyestep::HtmlProcessor>();
   }
 
   return nullptr;
