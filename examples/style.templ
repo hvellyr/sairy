@@ -4,46 +4,45 @@
 
 ;;;-----------------------------------------------------------------------------
 
-(default
-  (display (format "ANY ~s:~s~%" (class (current-node)) (gi (current-node))))
-  (make paragraph
-    quadding: 'justify
-    numbered-lines?: #t
-    asis-wrap-indent: 42
-    line-spacing: (dimen 3/4 pt)
-    font-size: (dimen 14.4 pt)
-    (sosofo-append
-     (make literal)
-     (process-children))
-    )
-  )
+;; (default
+;;   (display (format "ANY ~s:~s~%" (class (current-node)) (gi (current-node)))))
+;;   (make paragraph
+;;     quadding: 'justify
+;;     numbered-lines?: #t
+;;     asis-wrap-indent: 42
+;;     line-spacing: (dimen 3/4 pt)
+;;     font-size: (dimen 14.4 pt)
+;;     (sosofo-append
+;;      (make literal)
+;;      (process-children))
+;;     )
+;;   )
+
+(define doo "hello")
 
 (root
-  (display (format "ROOT: ~s~%" (class (current-node))))
-  (process-children)
-  )
+  (make simple-page-sequence
+    (sosofo-append
+     (let ((foo "hello!"))
+       (make literal 'text: foo)
+;;       (literal foo)
+       )
+     (process-children))))
 
+(element function
+  (make display-group
+    (make paragraph
+      'quadding: 'left
+      (process-children))))
 
-(element (chapter poem)
-  (display (format "chapter 1 ~%"))
-  (process-children)
-  )
+(element return-type
+  (make paragraph
+    (process-children)))
 
-(element poem
-  (display (format "poem 1 ~%"))
-  (process-children)
-  )
+(element parameters
+  (make display-group
+    (process-children)))
 
-(element title
-  (display (format "title 1 ~%"))
-  (process-children)
-  )
-
-(mode epigraph-mode
-  (element p
-    (display "match p")
-    (process-children))
-  (element poem
-    (display (format "poem 1x ~%"))
-    (process-children))
-  )
+;; (element parameter
+;;   (make display-group
+;;     (process-children)))
