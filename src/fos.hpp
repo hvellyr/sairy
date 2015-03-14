@@ -29,11 +29,9 @@ namespace fo {
 
 
   class Literal : public Fo {
-    std::string mData;
-
   public:
     Literal() = default;
-    Literal(std::string data);
+    Literal(const PropertySpecs& props);
 
     std::string className() const override;
     const PropertySpecs& defaultProperties() const override;

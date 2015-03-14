@@ -6,10 +6,13 @@
 #include "fos.hpp"
 #include "sosofo.hpp"
 
+#include <boost/variant/get.hpp>
+
 #include <string>
 #include <vector>
 #include <limits>
 #include <ostream>
+#include <iostream>
 
 
 namespace eyestep {
@@ -73,6 +76,7 @@ namespace fo {
       {"center-footer", false},          // Sosofo
       {"right-footer", false},           // Sosofo
       {"position-point-shift", false},   // Dimen
+      {"text", false},                   // String
   };
 
 
@@ -89,7 +93,9 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
-  Literal::Literal(std::string data) : mData(data) {}
+  Literal::Literal(const PropertySpecs& props)
+    : Fo(props)
+  {}
 
   /*! Returns the class name for this FOs @p class. */
   std::string Literal::className() const { return "#literal"; }
@@ -97,7 +103,9 @@ namespace fo {
   /*! Return the set of defined properties */
   const PropertySpecs& Literal::defaultProperties() const
   {
-    static const PropertySpecs propspecs;
+    static const PropertySpecs propspecs = {
+        PropertySpec("text", ""), PropertySpec("language", ""),
+    };
 
     return propspecs;
   }
@@ -108,7 +116,20 @@ namespace fo {
     return kNilSosofo;
   }
 
-  std::string Literal::text() const { return mData; }
+  std::string Literal::text() const
+  {
+    const auto i_find = std::find_if(mProps.begin(), mProps.end(),
+                                     [](const PropertySpec& spec) {
+                                       return spec.mName == "text";
+                                     });
+    if (i_find != mProps.end()) {
+      if (const std::string* val = boost::get<const std::string>(&i_find->mValue)) {
+        return *val;
+      }
+    }
+
+    return "";
+  }
 
 
   //----------------------------------------------------------------------------
@@ -303,7 +324,7 @@ namespace fo {
                       const Sosofo& sosofo)
   {
     if (className == "#literal") {
-      return estd::make_unique<Literal>();
+      return estd::make_unique<Literal>(props);
     }
     else if (className == "#paragraph-break") {
       return estd::make_unique<ParagraphBreak>();
