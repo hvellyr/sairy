@@ -8,6 +8,7 @@ add_executable(nodes_test
 )
 
 target_link_libraries(nodes_test
-  cppscanner)
+  cppscanner
+  grove)
 
 add_test(nodes_test_case nodes_test)
