@@ -67,6 +67,8 @@ target_compile_options(processor-base
 add_library(html-processor
   html-processor.cpp
   html-processor.hpp
+  html-writer.cpp
+  html-writer.hpp
 )
 target_include_directories(html-processor
   PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>")

@@ -5,8 +5,7 @@
 
 #include "fo.hpp"
 #include "abstract-processor.hpp"
-
-#include <boost/filesystem/fstream.hpp>
+#include "html-writer.hpp"
 
 #include <ostream>
 #include <string>
@@ -19,9 +18,11 @@ template<typename T> class IFoProcessor;
 
 
 class HtmlProcessor : public AbstractProcessor<HtmlProcessor> {
-  boost::filesystem::ofstream mMainStream;
+  html::Writer mWriter;
 
 public:
+  HtmlProcessor();
+
   std::string procId() const override;
 
   const IFoProcessor<HtmlProcessor>*
@@ -30,7 +31,7 @@ public:
   void beforeRendering() override;
   void afterRendering() override;
 
-  std::ostream& mainStream();
+  html::Writer& writer();
 
 private:
   void writeHtmlProlog();

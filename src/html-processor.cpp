@@ -9,7 +9,6 @@
 #include "sosofo.hpp"
 
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 
@@ -23,6 +22,7 @@ namespace eyestep {
 
 namespace fs = boost::filesystem;
 
+const std::string kSairyGenerator = "Sairy HTML Processor";
 
 namespace {
   class HtmlLiteralFoProcessor : public IFoProcessor<HtmlProcessor> {
@@ -30,7 +30,9 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      processor->mainStream() << static_cast<const fo::Literal*>(fo)->text();
+      auto str = static_cast<const fo::Literal*>(fo)->text();
+      std::cout << "#literal[html-processor] value: '" << str << "'" << std::endl;
+      processor->writer().write_text(str);
     }
   };
 
@@ -39,9 +41,8 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      processor->mainStream() << "<p>";
+      html::Tag with_tag(processor->writer(), "p");
       processor->renderSosofo(&fo->port("text"));
-      processor->mainStream() << "</p>" << std::endl;
     }
   };
 
@@ -50,7 +51,7 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      processor->mainStream() << "<br/>" << std::endl;
+      processor->writer().empty_tag("br");
     }
   };
 
@@ -59,9 +60,8 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      processor->mainStream() << "<div>" << std::endl;
+      html::Tag with_tag(processor->writer(), "div");
       processor->renderSosofo(&fo->port("text"));
-      processor->mainStream() << "</div>" << std::endl;
     }
   };
 
@@ -70,15 +70,18 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      processor->mainStream() << "<div class='page'>" << std::endl;
+      html::Tag with_tag(processor->writer(), "div", { html::Attr{"class", "page"} });
 
       processor->renderSosofo(&fo->port("text"));
-
-      processor->mainStream() << "</div>" << std::endl;
     }
   };
 
 } // ns anon
+
+
+HtmlProcessor::HtmlProcessor() : mWriter(html::kXHTML_1_1_DTD, kSairyGenerator)
+{
+}
 
 
 std::string HtmlProcessor::procId() const
@@ -111,12 +114,7 @@ void HtmlProcessor::beforeRendering()
 {
   std::cout << "DEBUG: Processor: " << procId() << std::endl;
 
-  mMainStream.open(mOutputFile.string(), std::ios_base::out |
-                                             std::ios_base::binary |
-                                             std::ios_base::trunc);
-  if (mMainStream.fail()) {
-    std::cerr << "Opening file '" << mOutputFile << "' failed" << std::endl;
-  }
+  mWriter.open(mOutputFile);
 
   writeHtmlProlog();
 }
@@ -128,9 +126,9 @@ void HtmlProcessor::afterRendering()
 }
 
 
-std::ostream& HtmlProcessor::mainStream()
+html::Writer& HtmlProcessor::writer()
 {
-  return mMainStream;
+  return mWriter;
 }
 
 
@@ -141,39 +139,12 @@ void HtmlProcessor::writeHtmlProlog()
   std::string author;
   std::string desc;
 
-  // static const char* XHTML_1_0_TRANSITIONAL_DTD_PUBLIC_ID =
-  //     "-//W3C//DTD XHTML 1.0 Transitional//EN";
-  // static const char* XHTML_1_0_TRANSITIONAL_DTD_SYSTEM_ID =
-  //     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd";
-  static const char* XHTML_1_1_DTD_PUBLIC_ID = "-//W3C//DTD XHTML 1.1//EN";
-  static const char* XHTML_1_1_DTD_SYSTEM_ID =
-      "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd";
-  static const char* SAIRY_GENERATOR = "Sairy HTML Processor";
-
-  mMainStream << "<!DOCTYPE html PUBLIC '" << XHTML_1_1_DTD_PUBLIC_ID << "' '"
-              << XHTML_1_1_DTD_SYSTEM_ID << "'>" << std::endl;
-
-  mMainStream << "<html xmlns='http://www.w3.org/1999/xhtml'>" << std::endl
-              << "<head>" << std::endl
-              << "<title>" << title << "</title>" << std::endl
-              << "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'/>" << std::endl
-              << "<meta name='generator' content='" << SAIRY_GENERATOR << "'/>" << std::endl;
-
-  if (!author.empty()) {
-    mMainStream << "<meta name='author' content='"<< author << "'/>" << std::endl;
-  }
-  if (!desc.empty()) {
-    mMainStream << "<meta name='description' content='"<< desc << "'/>" << std::endl;
-  }
-
-  mMainStream << "</head>" << std::endl
-              << "<body>" << std::endl;
+  mWriter.header(title, author, desc, [](std::ostream&) { });
 }
 
 void HtmlProcessor::writeHtmlEpilog()
 {
-  mMainStream << "</body>" << std::endl
-              << "</html>" << std::endl;
+  mWriter.footer();
 }
 
 } // ns eyestep
