@@ -154,6 +154,9 @@ namespace {
     else if (sexp_lsymbolp(obj)) {
       result = std::string(sexp_lsymbol_data(obj), sexp_lsymbol_length(obj));
     }
+    else if (sexp_synclop(obj)) {
+      return string_from_symbol_sexp_or_none(ctx, sexp_synclo_expr(obj));
+    }
 
     sexp_gc_release1(ctx);
 
