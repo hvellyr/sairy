@@ -770,6 +770,9 @@ namespace {
           result = fo::PropertySpec(key, *dimen);
         }
       }
+      else if (sexp_stringp(obj)) {
+        result = fo::PropertySpec(key, std::string(sexp_string_data(obj)));
+      }
       else {
         excep = sexp_user_exception(ctx, self, "Bad property type: ", expr);
         check_exception_p(ctx, excep);
