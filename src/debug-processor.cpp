@@ -39,8 +39,6 @@ namespace {
     void render(DebugProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      std::cout << "    DEBUG: Render fo: " << fo->className() << std::endl;
-
       for (const auto& spec : fo->properties()) {
         std::cout << "      {" << spec.mName << ": ";
 
