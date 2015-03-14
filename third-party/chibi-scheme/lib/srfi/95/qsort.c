@@ -96,6 +96,11 @@ static int sexp_object_compare (sexp ctx, sexp a, sexp b) {
         case SEXP_SYMBOL:
           res = strcmp(sexp_lsymbol_data(a), sexp_lsymbol_data(b));
           break;
+#if SEXP_USE_KEYWORDS
+        case SEXP_KEYWORD:
+          res = strcmp(sexp_keyword_data(a), sexp_keyword_data(b));
+          break;
+#endif
         /* TODO: consider recursively traversing containers.  requires */
         /* cycle detection. */
         /* case SEXP_PAIR: */

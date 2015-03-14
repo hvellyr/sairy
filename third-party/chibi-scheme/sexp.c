@@ -238,6 +238,9 @@ static struct sexp_type_struct _sexp_type_specs[] = {
 #if SEXP_USE_WEAK_REFERENCES
   {SEXP_EPHEMERON, sexp_offsetof(lit, value), 0, 0, 0, 0, sizeof(sexp), 0, 0, sexp_offsetof(lit, value), 1, 0, 0, 1, 0, (sexp)"Ephemeron", SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, NULL, SEXP_FALSE, NULL, NULL},
 #endif
+#if SEXP_USE_KEYWORDS
+  {SEXP_KEYWORD, 0, 0, 0, 0, 0, sexp_sizeof(symbol)+1, sexp_offsetof(symbol, length), 1, 0, 0, 0, 0, 0, 0, (sexp)"Keyword", SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, NULL, SEXP_FALSE, NULL, NULL},
+#endif
 };
 
 #define SEXP_INIT_NUM_TYPES (SEXP_NUM_CORE_TYPES*2)
@@ -1263,6 +1266,38 @@ sexp sexp_make_cpointer (sexp ctx, sexp_uint_t type_id, void *value,
   return ptr;
 }
 
+#if SEXP_USE_KEYWORDS
+sexp sexp_make_keyword(sexp ctx, const char *str, sexp_sint_t len)
+{
+  sexp_gc_var1(keyw);
+  sexp_gc_preserve1(ctx, keyw);
+
+  if (len < 0) len = strlen(str);
+
+  keyw = sexp_c_string(ctx, str, len);
+  if (sexp_exceptionp(keyw))
+    return keyw;
+#if ! SEXP_USE_PACKED_STRINGS
+  keyw = sexp_string_bytes(keyw);
+#endif
+
+  sexp_pointer_tag(keyw) = SEXP_KEYWORD;
+  sexp_gc_release1(ctx);
+
+  return keyw;
+}
+
+sexp sexp_string_to_keyword_op (sexp ctx, sexp self, sexp_sint_t n, sexp str) {
+  sexp_assert_type(ctx, sexp_stringp, SEXP_STRING, str);
+  return sexp_make_keyword(ctx, sexp_string_data(str), sexp_string_size(str));
+}
+
+sexp sexp_keyword_to_string_op (sexp ctx, sexp self, sexp_sint_t n, sexp sym) {
+  sexp_assert_type(ctx, sexp_keywordp, SEXP_KEYWORD, sym);
+  return sexp_c_string(ctx, sexp_keyword_data(sym), sexp_keyword_length(sym));
+}
+#endif
+
 /************************ reading and writing *************************/
 
 #if SEXP_USE_STRING_STREAMS
@@ -2102,6 +2137,21 @@ sexp sexp_write_one (sexp ctx, sexp obj, sexp out) {
       }
       if (c!=EOF) sexp_write_char(ctx, c, out);
       break;
+#if SEXP_USE_KEYWORDS
+    case SEXP_KEYWORD:
+      str = sexp_keyword_data(obj);
+      c = sexp_keyword_length(obj) > 0 ? EOF : '|';
+      for (i=sexp_keyword_length(obj)-1; i>=0; i--)
+        if (str[i] <= ' ' || str[i] == '\\' || sexp_is_separator(str[i])) c = '|';
+      if (c!=EOF) sexp_write_char(ctx, c, out);
+      for (i=sexp_keyword_length(obj); i>0; str++, i--) {
+        if (str[0] == '\\') sexp_write_char(ctx, '\\', out);
+        sexp_write_char(ctx, str[0], out);
+      }
+      if (c!=EOF) sexp_write_char(ctx, c, out);
+      break;
+#endif
+
 #if SEXP_USE_BIGNUMS
     case SEXP_BIGNUM:
       sexp_write_bignum(ctx, obj, out, 10);
@@ -2422,7 +2472,15 @@ sexp sexp_read_symbol (sexp ctx, sexp in, int init, int internp) {
 
   if (!sexp_exceptionp(res)) {
     buf[i] = '\0';
+#if SEXP_USE_KEYWORDS
+    res = (internp
+      ? (buf[i - 1] == ':'
+           ? sexp_make_keyword(ctx, buf, i)
+           : sexp_intern(ctx, buf, i))
+      : sexp_c_string(ctx, buf, i));
+#else
     res = (internp ? sexp_intern(ctx, buf, i) : sexp_c_string(ctx, buf, i));
+#endif
   }
   if (size != INIT_STRING_BUFFER_SIZE) free(buf);
   return res;

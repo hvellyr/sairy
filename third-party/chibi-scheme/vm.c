@@ -1491,6 +1491,10 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
     _ARG1 = sexp_make_boolean(sexp_fixnump(_ARG1)); break;
   case SEXP_OP_SYMBOLP:
     _ARG1 = sexp_make_boolean(sexp_symbolp(_ARG1)); break;
+#if SEXP_USE_KEYWORDS
+  case SEXP_OP_KEYWORDP:
+    _ARG1 = sexp_make_boolean(sexp_keywordp(_ARG1)); break;
+#endif
   case SEXP_OP_CHARP:
     _ARG1 = sexp_make_boolean(sexp_charp(_ARG1)); break;
   case SEXP_OP_ISA:

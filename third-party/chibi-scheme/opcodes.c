@@ -271,6 +271,11 @@ _OP(SEXP_OPC_GENERIC, SEXP_OP_FORCE, 1, 0, _I(SEXP_OBJECT), _I(SEXP_OBJECT), SEX
 _FN2(_I(SEXP_PROMISE), _I(SEXP_BOOLEAN), _I(SEXP_OBJECT), "promise", 0, sexp_make_promise),
 _OP(SEXP_OPC_TYPE_PREDICATE, SEXP_OP_TYPEP,  1, 0, _I(SEXP_BOOLEAN), _I(SEXP_OBJECT), SEXP_FALSE, SEXP_FALSE, 0, "promise?", _I(SEXP_PROMISE), 0),
 #endif
+#if SEXP_USE_KEYWORDS
+_OP(SEXP_OPC_TYPE_PREDICATE, SEXP_OP_KEYWORDP,  1, 0, _I(SEXP_BOOLEAN), _I(SEXP_OBJECT), SEXP_FALSE, SEXP_FALSE, 0, "keyword?", NULL, 0),
+_FN1(_I(SEXP_KEYWORD), _I(SEXP_STRING), "string->keyword", 0, sexp_string_to_keyword_op),
+_FN1(_I(SEXP_STRING), _I(SEXP_KEYWORD), "keyword->string", 0, sexp_keyword_to_string_op),
+#endif
 _OP(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 };
 

@@ -165,6 +165,9 @@ enum sexp_types {
 #if SEXP_USE_WEAK_REFERENCES
   SEXP_EPHEMERON,
 #endif
+#if SEXP_USE_KEYWORDS
+  SEXP_KEYWORD,
+#endif
   SEXP_NUM_CORE_TYPES
 };
 
@@ -1462,6 +1465,17 @@ SEXP_API int sexp_write_utf8_char (sexp ctx, int c, sexp out);
 #define sexp_substring_cursor(ctx, s, i, j) sexp_substring_op(ctx, NULL, 3, s, i, j)
 #endif
 
+#if SEXP_USE_KEYWORDS
+#define sexp_keywordp(x)    (sexp_check_tag(x, SEXP_KEYWORD))
+#define sexp_keyword_data(x)   (sexp_field(x, symbol, SEXP_KEYWORD, data))
+#define sexp_keyword_length(x) (sexp_field(x, symbol, SEXP_KEYWORD, length))
+#define sexp_string_to_keyword(ctx, s) sexp_string_to_keyword_op(ctx, NULL, 1, s)
+#define sexp_keyword_to_string(ctx, s) sexp_keyword_to_string_op(ctx, NULL, 1, s)
+SEXP_API sexp sexp_string_to_keyword_op (sexp ctx, sexp self, sexp_sint_t n, sexp str);
+SEXP_API sexp sexp_keyword_to_string_op (sexp ctx, sexp self, sexp_sint_t n, sexp sym);
+SEXP_API sexp sexp_make_keyword(sexp ctx, const char *str, sexp_sint_t len);
+#endif
+
 #if SEXP_USE_GREEN_THREADS
 SEXP_API int sexp_maybe_block_port (sexp ctx, sexp in, int forcep);
 SEXP_API void sexp_maybe_unblock_port (sexp ctx, sexp in);
@@ -1653,6 +1667,9 @@ enum sexp_opcode_names {
   SEXP_OP_FORCE,
   SEXP_OP_RET,
   SEXP_OP_DONE,
+#if SEXP_USE_KEYWORDS
+  SEXP_OP_KEYWORDP,
+#endif
   SEXP_OP_NUM_OPCODES
 };
 

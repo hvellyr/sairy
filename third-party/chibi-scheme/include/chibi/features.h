@@ -199,6 +199,9 @@
 /*   by FILE* objects using memstreams and funopen/fopencookie. */
 /* #define SEXP_USE_STRING_STREAMS 1 */
 
+/* uncomment this to enable SRFI-88 keywords */
+/* #define SEXP_USE_KEYWORDS 1 */
+
 /* uncomment this to disable automatic closing of ports */
 /*   If enabled, the underlying FILE* for file ports will be */
 /*   automatically closed when they're garbage collected.  Doesn't */
@@ -594,6 +597,10 @@
 
 #ifndef SEXP_USE_STRING_STREAMS
 #define SEXP_USE_STRING_STREAMS 0
+#endif
+
+#ifndef SEXP_USE_KEYWORDS
+#define SEXP_USE_KEYWORDS 0
 #endif
 
 #ifndef SEXP_USE_AUTOCLOSE_PORTS

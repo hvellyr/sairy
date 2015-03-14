@@ -381,7 +381,11 @@ static sexp sexp_make_macro (sexp ctx, sexp p, sexp e) {
 
 sexp sexp_make_synclo_op (sexp ctx, sexp self, sexp_sint_t n, sexp env, sexp fv, sexp expr) {
   sexp res;
-  if (! (sexp_symbolp(expr) || sexp_pairp(expr) || sexp_synclop(expr)))
+  if (! (sexp_symbolp(expr) || sexp_pairp(expr) || sexp_synclop(expr)
+#if SEXP_USE_KEYWORDS
+         || sexp_keywordp(expr)
+#endif
+        ))
     return expr;
   res = sexp_alloc_type(ctx, synclo, SEXP_SYNCLO);
   if (SEXP_USE_FLAT_SYNTACTIC_CLOSURES && sexp_synclop(expr)) {
