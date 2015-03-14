@@ -238,20 +238,22 @@ namespace {
 
   sexp func_gi(sexp ctx, sexp self, sexp n, sexp nodeArg)
   {
-    sexp_gc_var1(result);
-    sexp_gc_preserve1(ctx, result);
+    sexp_gc_var2(result, str);
+    sexp_gc_preserve2(ctx, result, str);
 
     result = SEXP_VOID;
 
     if (const Node* node = node_from_arg(ctx, nodeArg)) {
-      result = sexp_c_string(ctx, node->gi().c_str(), -1);
+      result = sexp_string_to_symbol(ctx,
+                                     str = sexp_c_string(ctx, node->gi().c_str(), -1));
+
     }
     else {
       result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
                                    nodeArg);
     }
 
-    sexp_gc_release1(ctx);
+    sexp_gc_release2(ctx);
 
     return result;
   }
