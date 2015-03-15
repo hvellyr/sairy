@@ -1,4 +1,5 @@
-Sairy is an experiment documentation extraction facility
+Sairy is an experimental documentation preparation and extraction facility.  It
+will use a pluggable and extensible architecture.
 
 Requirements
 ------------
@@ -7,6 +8,8 @@ Requirements
   - boost >= 1.54
   - libclang 3.5.0
   - a decent c++11 enabled compiler, apple's clang "6.0" should do
+
+Development is happening mostly on Mac OS X for now.
 
 
 Build and Test
