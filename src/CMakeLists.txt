@@ -88,6 +88,8 @@ target_compile_options(debug-processor
 
 
 #------------------------------------------------------------------------------
+add_definitions(-DSEXP_USE_KEYWORDS=1)
+
 add_executable(sairy
   main.cpp
   scanner.hpp

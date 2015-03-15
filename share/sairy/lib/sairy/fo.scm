@@ -1,22 +1,29 @@
 ;; Copyright (c) 2015 by Gregor Klinke
 ;; All rights reserved.
 
-(define-syntax %args
+(define-syntax quote-arg
   (syntax-rules ()
-    ((%args) '())
-    ((%args e) (list (if (symbol? e) 'e e)))
-    ((%args e1 e2 ...)
+    ((quote-arg v) (if (symbol? v) 'v v))
+    ))
+
+(define-syntax quote-args
+  (syntax-rules ()
+    ((quote-args) '())
+    ((quote-args e) (list (quote-arg e)))
+    ((quote-args e1 e2 ...)
      (begin
-       (cons (if (symbol? e1) 'e1 e1) (%args e2 ...))) )))
+       (cons (quote-arg e1) (quote-args e2 ...))) )
+    ))
+
 
 (define-syntax make
   (syntax-rules ()
     ((make fo-class) (%make-fo 'fo-class #()))
-    ((make fo-class args ...) (%make-fo 'fo-class (list->vector (%args args ...))))
+    ((make fo-class args ...) (%make-fo 'fo-class
+                                        (list->vector (quote-args args ...))))
     ))
-
 
 (define-syntax literal
   (syntax-rules ()
-    ((literal str) (%make-fo 'literal (vector 'text: str)))
+    ((literal str) (%make-fo 'literal (vector text: str)))
     ))

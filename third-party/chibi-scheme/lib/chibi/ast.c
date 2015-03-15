@@ -204,6 +204,10 @@ static sexp sexp_type_of (sexp ctx, sexp self, sexp_sint_t n, sexp x) {
   else if (sexp_symbolp(x))
     return sexp_type_by_index(ctx, SEXP_SYMBOL);
 #endif
+#if SEXP_USE_KEYWORDS
+  else if (sexp_keywordp(x))
+    return sexp_type_by_index(ctx, SEXP_KEYWORD);
+#endif
 #if SEXP_USE_IMMEDIATE_FLONUMS
   else if (sexp_flonump(x))
     return sexp_type_by_index(ctx, SEXP_FLONUM);

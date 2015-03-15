@@ -14,7 +14,11 @@ extern sexp_uint_t sexp_allocated_bytes (sexp ctx, sexp x);
 static void sexp_print_simple (sexp ctx, sexp x, sexp out, int depth) {
   int i;
   if ((!sexp_pointerp(x)) || sexp_symbolp(x) || sexp_stringp(x)
-      || sexp_flonump(x) || sexp_bignump(x)) {
+      || sexp_flonump(x) || sexp_bignump(x)
+#if SEXP_USE_KEYWORDS
+      || sexp_keywordp(x)
+#endif
+    ) {
     sexp_write(ctx, x, out);
   } else if (depth <= 0) {
     goto print_name;
