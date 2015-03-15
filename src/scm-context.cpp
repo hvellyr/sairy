@@ -154,8 +154,22 @@ namespace {
     else if (sexp_lsymbolp(obj)) {
       result = std::string(sexp_lsymbol_data(obj), sexp_lsymbol_length(obj));
     }
-    else if (sexp_synclop(obj)) {
-      return string_from_symbol_sexp_or_none(ctx, sexp_synclo_expr(obj));
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  boost::optional<std::string> string_from_keyword_or_none(sexp ctx, sexp obj)
+  {
+    sexp_gc_var1(str);
+    sexp_gc_preserve1(ctx, str);
+
+    boost::optional<std::string> result;
+    if (sexp_keywordp(obj)) {
+      str = sexp_keyword_to_string(ctx, obj);
+      result = sexp_string_data(str);
     }
 
     sexp_gc_release1(ctx);
@@ -247,9 +261,10 @@ namespace {
     result = SEXP_VOID;
 
     if (const Node* node = node_from_arg(ctx, nodeArg)) {
-      result = sexp_string_to_symbol(ctx,
-                                     str = sexp_c_string(ctx, node->gi().c_str(), -1));
-
+      result =
+          sexp_string_to_symbol(ctx,
+                                str =
+                                    sexp_c_string(ctx, node->gi().c_str(), -1));
     }
     else {
       result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
@@ -828,10 +843,10 @@ namespace {
       for (int i = 0; i < len; ++i) {
         sexp ref = sexp_vector_ref(argsArg, sexp_make_fixnum(i));
 
-        auto key = string_from_symbol_sexp_or_none(ctx, ref);
+        auto key = string_from_keyword_or_none(ctx, ref);
 
         // is the parameter a keyword
-        if (key && key->back() == ':') {
+        if (key) {
           if (i + 1 < len) {
             ref = sexp_vector_ref(argsArg, sexp_make_fixnum(i + 1));
             auto prop =

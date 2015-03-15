@@ -18,21 +18,14 @@
 ;;     )
 ;;   )
 
-(define doo "hello")
-
 (root
   (make simple-page-sequence
-    (sosofo-append
-     (let ((foo "hello!"))
-       (make literal 'text: foo)
-;;       (literal foo)
-       )
-     (process-children))))
+    (process-children)))
 
 (element function
   (make display-group
     (make paragraph
-      'quadding: 'left
+      quadding: 'left
       (process-children))))
 
 (element return-type
