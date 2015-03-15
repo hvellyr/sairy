@@ -1,0 +1,254 @@
+diff --git a/third-party/chibi-scheme/eval.c b/third-party/chibi-scheme/eval.c
+index f2585d5..1c2a176 100644
+--- a/third-party/chibi-scheme/eval.c
++++ b/third-party/chibi-scheme/eval.c
+@@ -381,7 +381,11 @@ static sexp sexp_make_macro (sexp ctx, sexp p, sexp e) {
+ 
+ sexp sexp_make_synclo_op (sexp ctx, sexp self, sexp_sint_t n, sexp env, sexp fv, sexp expr) {
+   sexp res;
+-  if (! (sexp_symbolp(expr) || sexp_pairp(expr) || sexp_synclop(expr)))
++  if (! (sexp_symbolp(expr) || sexp_pairp(expr) || sexp_synclop(expr)
++#if SEXP_USE_KEYWORDS
++         || sexp_keywordp(expr)
++#endif
++        ))
+     return expr;
+   res = sexp_alloc_type(ctx, synclo, SEXP_SYNCLO);
+   if (SEXP_USE_FLAT_SYNTACTIC_CLOSURES && sexp_synclop(expr)) {
+diff --git a/third-party/chibi-scheme/include/chibi/features.h b/third-party/chibi-scheme/include/chibi/features.h
+index 9103df2..5b85975 100644
+--- a/third-party/chibi-scheme/include/chibi/features.h
++++ b/third-party/chibi-scheme/include/chibi/features.h
+@@ -199,6 +199,9 @@
+ /*   by FILE* objects using memstreams and funopen/fopencookie. */
+ /* #define SEXP_USE_STRING_STREAMS 1 */
+ 
++/* uncomment this to enable SRFI-88 keywords */
++/* #define SEXP_USE_KEYWORDS 1 */
++
+ /* uncomment this to disable automatic closing of ports */
+ /*   If enabled, the underlying FILE* for file ports will be */
+ /*   automatically closed when they're garbage collected.  Doesn't */
+@@ -596,6 +599,10 @@
+ #define SEXP_USE_STRING_STREAMS 0
+ #endif
+ 
++#ifndef SEXP_USE_KEYWORDS
++#define SEXP_USE_KEYWORDS 0
++#endif
++
+ #ifndef SEXP_USE_AUTOCLOSE_PORTS
+ #define SEXP_USE_AUTOCLOSE_PORTS ! SEXP_USE_NO_FEATURES
+ #endif
+diff --git a/third-party/chibi-scheme/include/chibi/sexp.h b/third-party/chibi-scheme/include/chibi/sexp.h
+index 78cbde3..f9fa64e 100755
+--- a/third-party/chibi-scheme/include/chibi/sexp.h
++++ b/third-party/chibi-scheme/include/chibi/sexp.h
+@@ -165,6 +165,9 @@ enum sexp_types {
+ #if SEXP_USE_WEAK_REFERENCES
+   SEXP_EPHEMERON,
+ #endif
++#if SEXP_USE_KEYWORDS
++  SEXP_KEYWORD,
++#endif
+   SEXP_NUM_CORE_TYPES
+ };
+ 
+@@ -1462,6 +1465,17 @@ SEXP_API int sexp_write_utf8_char (sexp ctx, int c, sexp out);
+ #define sexp_substring_cursor(ctx, s, i, j) sexp_substring_op(ctx, NULL, 3, s, i, j)
+ #endif
+ 
++#if SEXP_USE_KEYWORDS
++#define sexp_keywordp(x)    (sexp_check_tag(x, SEXP_KEYWORD))
++#define sexp_keyword_data(x)   (sexp_field(x, symbol, SEXP_KEYWORD, data))
++#define sexp_keyword_length(x) (sexp_field(x, symbol, SEXP_KEYWORD, length))
++#define sexp_string_to_keyword(ctx, s) sexp_string_to_keyword_op(ctx, NULL, 1, s)
++#define sexp_keyword_to_string(ctx, s) sexp_keyword_to_string_op(ctx, NULL, 1, s)
++SEXP_API sexp sexp_string_to_keyword_op (sexp ctx, sexp self, sexp_sint_t n, sexp str);
++SEXP_API sexp sexp_keyword_to_string_op (sexp ctx, sexp self, sexp_sint_t n, sexp sym);
++SEXP_API sexp sexp_make_keyword(sexp ctx, const char *str, sexp_sint_t len);
++#endif
++
+ #if SEXP_USE_GREEN_THREADS
+ SEXP_API int sexp_maybe_block_port (sexp ctx, sexp in, int forcep);
+ SEXP_API void sexp_maybe_unblock_port (sexp ctx, sexp in);
+@@ -1653,6 +1667,9 @@ enum sexp_opcode_names {
+   SEXP_OP_FORCE,
+   SEXP_OP_RET,
+   SEXP_OP_DONE,
++#if SEXP_USE_KEYWORDS
++  SEXP_OP_KEYWORDP,
++#endif
+   SEXP_OP_NUM_OPCODES
+ };
+ 
+diff --git a/third-party/chibi-scheme/lib/chibi/ast.c b/third-party/chibi-scheme/lib/chibi/ast.c
+index 8e3cfed..7fdf05c 100644
+--- a/third-party/chibi-scheme/lib/chibi/ast.c
++++ b/third-party/chibi-scheme/lib/chibi/ast.c
+@@ -204,6 +204,10 @@ static sexp sexp_type_of (sexp ctx, sexp self, sexp_sint_t n, sexp x) {
+   else if (sexp_symbolp(x))
+     return sexp_type_by_index(ctx, SEXP_SYMBOL);
+ #endif
++#if SEXP_USE_KEYWORDS
++  else if (sexp_keywordp(x))
++    return sexp_type_by_index(ctx, SEXP_KEYWORD);
++#endif
+ #if SEXP_USE_IMMEDIATE_FLONUMS
+   else if (sexp_flonump(x))
+     return sexp_type_by_index(ctx, SEXP_FLONUM);
+diff --git a/third-party/chibi-scheme/lib/chibi/heap-stats.c b/third-party/chibi-scheme/lib/chibi/heap-stats.c
+index 921cf40..ea5369d 100644
+--- a/third-party/chibi-scheme/lib/chibi/heap-stats.c
++++ b/third-party/chibi-scheme/lib/chibi/heap-stats.c
+@@ -14,7 +14,11 @@ extern sexp_uint_t sexp_allocated_bytes (sexp ctx, sexp x);
+ static void sexp_print_simple (sexp ctx, sexp x, sexp out, int depth) {
+   int i;
+   if ((!sexp_pointerp(x)) || sexp_symbolp(x) || sexp_stringp(x)
+-      || sexp_flonump(x) || sexp_bignump(x)) {
++      || sexp_flonump(x) || sexp_bignump(x)
++#if SEXP_USE_KEYWORDS
++      || sexp_keywordp(x)
++#endif
++    ) {
+     sexp_write(ctx, x, out);
+   } else if (depth <= 0) {
+     goto print_name;
+diff --git a/third-party/chibi-scheme/lib/srfi/95/qsort.c b/third-party/chibi-scheme/lib/srfi/95/qsort.c
+index 10ce14c..d96f27d 100644
+--- a/third-party/chibi-scheme/lib/srfi/95/qsort.c
++++ b/third-party/chibi-scheme/lib/srfi/95/qsort.c
+@@ -96,6 +96,11 @@ static int sexp_object_compare (sexp ctx, sexp a, sexp b) {
+         case SEXP_SYMBOL:
+           res = strcmp(sexp_lsymbol_data(a), sexp_lsymbol_data(b));
+           break;
++#if SEXP_USE_KEYWORDS
++        case SEXP_KEYWORD:
++          res = strcmp(sexp_keyword_data(a), sexp_keyword_data(b));
++          break;
++#endif
+         /* TODO: consider recursively traversing containers.  requires */
+         /* cycle detection. */
+         /* case SEXP_PAIR: */
+diff --git a/third-party/chibi-scheme/opcodes.c b/third-party/chibi-scheme/opcodes.c
+index 57e770b..b626d57 100644
+--- a/third-party/chibi-scheme/opcodes.c
++++ b/third-party/chibi-scheme/opcodes.c
+@@ -271,6 +271,11 @@ _OP(SEXP_OPC_GENERIC, SEXP_OP_FORCE, 1, 0, _I(SEXP_OBJECT), _I(SEXP_OBJECT), SEX
+ _FN2(_I(SEXP_PROMISE), _I(SEXP_BOOLEAN), _I(SEXP_OBJECT), "promise", 0, sexp_make_promise),
+ _OP(SEXP_OPC_TYPE_PREDICATE, SEXP_OP_TYPEP,  1, 0, _I(SEXP_BOOLEAN), _I(SEXP_OBJECT), SEXP_FALSE, SEXP_FALSE, 0, "promise?", _I(SEXP_PROMISE), 0),
+ #endif
++#if SEXP_USE_KEYWORDS
++_OP(SEXP_OPC_TYPE_PREDICATE, SEXP_OP_KEYWORDP,  1, 0, _I(SEXP_BOOLEAN), _I(SEXP_OBJECT), SEXP_FALSE, SEXP_FALSE, 0, "keyword?", NULL, 0),
++_FN1(_I(SEXP_KEYWORD), _I(SEXP_STRING), "string->keyword", 0, sexp_string_to_keyword_op),
++_FN1(_I(SEXP_STRING), _I(SEXP_KEYWORD), "keyword->string", 0, sexp_keyword_to_string_op),
++#endif
+ _OP(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+ };
+ 
+diff --git a/third-party/chibi-scheme/sexp.c b/third-party/chibi-scheme/sexp.c
+index f3cbb50..f6b8f13 100644
+--- a/third-party/chibi-scheme/sexp.c
++++ b/third-party/chibi-scheme/sexp.c
+@@ -238,6 +238,9 @@ static struct sexp_type_struct _sexp_type_specs[] = {
+ #if SEXP_USE_WEAK_REFERENCES
+   {SEXP_EPHEMERON, sexp_offsetof(lit, value), 0, 0, 0, 0, sizeof(sexp), 0, 0, sexp_offsetof(lit, value), 1, 0, 0, 1, 0, (sexp)"Ephemeron", SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, NULL, SEXP_FALSE, NULL, NULL},
+ #endif
++#if SEXP_USE_KEYWORDS
++  {SEXP_KEYWORD, 0, 0, 0, 0, 0, sexp_sizeof(symbol)+1, sexp_offsetof(symbol, length), 1, 0, 0, 0, 0, 0, 0, (sexp)"Keyword", SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, NULL, SEXP_FALSE, NULL, NULL},
++#endif
+ };
+ 
+ #define SEXP_INIT_NUM_TYPES (SEXP_NUM_CORE_TYPES*2)
+@@ -1263,6 +1266,38 @@ sexp sexp_make_cpointer (sexp ctx, sexp_uint_t type_id, void *value,
+   return ptr;
+ }
+ 
++#if SEXP_USE_KEYWORDS
++sexp sexp_make_keyword(sexp ctx, const char *str, sexp_sint_t len)
++{
++  sexp_gc_var1(keyw);
++  sexp_gc_preserve1(ctx, keyw);
++
++  if (len < 0) len = strlen(str);
++
++  keyw = sexp_c_string(ctx, str, len);
++  if (sexp_exceptionp(keyw))
++    return keyw;
++#if ! SEXP_USE_PACKED_STRINGS
++  keyw = sexp_string_bytes(keyw);
++#endif
++
++  sexp_pointer_tag(keyw) = SEXP_KEYWORD;
++  sexp_gc_release1(ctx);
++
++  return keyw;
++}
++
++sexp sexp_string_to_keyword_op (sexp ctx, sexp self, sexp_sint_t n, sexp str) {
++  sexp_assert_type(ctx, sexp_stringp, SEXP_STRING, str);
++  return sexp_make_keyword(ctx, sexp_string_data(str), sexp_string_size(str));
++}
++
++sexp sexp_keyword_to_string_op (sexp ctx, sexp self, sexp_sint_t n, sexp sym) {
++  sexp_assert_type(ctx, sexp_keywordp, SEXP_KEYWORD, sym);
++  return sexp_c_string(ctx, sexp_keyword_data(sym), sexp_keyword_length(sym));
++}
++#endif
++
+ /************************ reading and writing *************************/
+ 
+ #if SEXP_USE_STRING_STREAMS
+@@ -2102,6 +2137,21 @@ sexp sexp_write_one (sexp ctx, sexp obj, sexp out) {
+       }
+       if (c!=EOF) sexp_write_char(ctx, c, out);
+       break;
++#if SEXP_USE_KEYWORDS
++    case SEXP_KEYWORD:
++      str = sexp_keyword_data(obj);
++      c = sexp_keyword_length(obj) > 0 ? EOF : '|';
++      for (i=sexp_keyword_length(obj)-1; i>=0; i--)
++        if (str[i] <= ' ' || str[i] == '\\' || sexp_is_separator(str[i])) c = '|';
++      if (c!=EOF) sexp_write_char(ctx, c, out);
++      for (i=sexp_keyword_length(obj); i>0; str++, i--) {
++        if (str[0] == '\\') sexp_write_char(ctx, '\\', out);
++        sexp_write_char(ctx, str[0], out);
++      }
++      if (c!=EOF) sexp_write_char(ctx, c, out);
++      break;
++#endif
++
+ #if SEXP_USE_BIGNUMS
+     case SEXP_BIGNUM:
+       sexp_write_bignum(ctx, obj, out, 10);
+@@ -2422,7 +2472,15 @@ sexp sexp_read_symbol (sexp ctx, sexp in, int init, int internp) {
+ 
+   if (!sexp_exceptionp(res)) {
+     buf[i] = '\0';
++#if SEXP_USE_KEYWORDS
++    res = (internp
++      ? (buf[i - 1] == ':'
++           ? sexp_make_keyword(ctx, buf, i)
++           : sexp_intern(ctx, buf, i))
++      : sexp_c_string(ctx, buf, i));
++#else
+     res = (internp ? sexp_intern(ctx, buf, i) : sexp_c_string(ctx, buf, i));
++#endif
+   }
+   if (size != INIT_STRING_BUFFER_SIZE) free(buf);
+   return res;
+diff --git a/third-party/chibi-scheme/vm.c b/third-party/chibi-scheme/vm.c
+index 5fcf637..a3f9fdc 100644
+--- a/third-party/chibi-scheme/vm.c
++++ b/third-party/chibi-scheme/vm.c
+@@ -1491,6 +1491,10 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
+     _ARG1 = sexp_make_boolean(sexp_fixnump(_ARG1)); break;
+   case SEXP_OP_SYMBOLP:
+     _ARG1 = sexp_make_boolean(sexp_symbolp(_ARG1)); break;
++#if SEXP_USE_KEYWORDS
++  case SEXP_OP_KEYWORDP:
++    _ARG1 = sexp_make_boolean(sexp_keywordp(_ARG1)); break;
++#endif
+   case SEXP_OP_CHARP:
+     _ARG1 = sexp_make_boolean(sexp_charp(_ARG1)); break;
+   case SEXP_OP_ISA:
