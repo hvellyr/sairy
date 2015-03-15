@@ -25,6 +25,7 @@ namespace fo {
   public:
     const PropertySpecs& properties() const override { return mProps; }
     const std::vector<std::string>& ports() const override;
+    const Sosofo& port(const std::string& portName) const override;
   };
 
 
@@ -61,7 +62,6 @@ namespace fo {
 
     std::string className() const override;
     const PropertySpecs& defaultProperties() const override;
-    const Sosofo& port(const std::string& portName) const override;
   };
 
 
@@ -71,6 +71,48 @@ namespace fo {
   public:
     DisplayGroup() = default;
     DisplayGroup(const PropertySpecs& props, const Sosofo& sosofo);
+
+    std::string className() const override;
+    const PropertySpecs& defaultProperties() const override;
+    const std::vector<std::string>& ports() const override;
+    const Sosofo& port(const std::string& portName) const override;
+  };
+
+
+  class Sequence : public Fo {
+    const Sosofo mTextPort;
+
+  public:
+    Sequence() = default;
+    Sequence(const PropertySpecs& props, const Sosofo& sosofo);
+
+    std::string className() const override;
+    const PropertySpecs& defaultProperties() const override;
+    const std::vector<std::string>& ports() const override;
+    const Sosofo& port(const std::string& portName) const override;
+  };
+
+
+  class LineField : public Fo {
+    const Sosofo mTextPort;
+
+  public:
+    LineField() = default;
+    LineField(const PropertySpecs& props, const Sosofo& sosofo);
+
+    std::string className() const override;
+    const PropertySpecs& defaultProperties() const override;
+    const std::vector<std::string>& ports() const override;
+    const Sosofo& port(const std::string& portName) const override;
+  };
+
+
+  class Score : public Fo {
+    const Sosofo mTextPort;
+
+  public:
+    Score() = default;
+    Score(const PropertySpecs& props, const Sosofo& sosofo);
 
     std::string className() const override;
     const PropertySpecs& defaultProperties() const override;
@@ -91,6 +133,56 @@ namespace fo {
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portName) const override;
   };
+
+
+  class ScrollSequence : public Fo {
+    const Sosofo mScrollPort;
+
+  public:
+    ScrollSequence() = default;
+    ScrollSequence(const PropertySpecs& props, const Sosofo& sosofo);
+
+    std::string className() const override;
+    const PropertySpecs& defaultProperties() const override;
+    const std::vector<std::string>& ports() const override;
+    const Sosofo& port(const std::string& portName) const override;
+  };
+
+
+  class PageNumber : public Fo {
+  public:
+    PageNumber() = default;
+    PageNumber(const PropertySpecs& props);
+
+    std::string className() const override;
+    const PropertySpecs& defaultProperties() const override;
+  };
+
+
+  class Anchor : public Fo {
+  public:
+    Anchor() = default;
+    Anchor(const PropertySpecs& props);
+
+    std::string className() const override;
+    const PropertySpecs& defaultProperties() const override;
+  };
+
+
+  class FootNote : public Fo {
+    const Sosofo mTextPort;
+
+  public:
+    FootNote() = default;
+    FootNote(const PropertySpecs& props, const Sosofo& sosofo);
+
+    std::string className() const override;
+    const PropertySpecs& defaultProperties() const override;
+    const std::vector<std::string>& ports() const override;
+    const Sosofo& port(const std::string& portName) const override;
+  };
+
+
 
 } // ns fo
 } // ns eyestep

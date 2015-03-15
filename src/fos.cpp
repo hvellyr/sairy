@@ -92,11 +92,12 @@ namespace fo {
   }
 
 
+  const Sosofo& Fo::port(const std::string&) const { return kNilSosofo; }
+
+
   //----------------------------------------------------------------------------
 
-  Literal::Literal(const PropertySpecs& props)
-    : Fo(props)
-  {}
+  Literal::Literal(const PropertySpecs& props) : Fo(props) {}
 
   /*! Returns the class name for this FOs @p class. */
   std::string Literal::className() const { return "#literal"; }
@@ -124,7 +125,8 @@ namespace fo {
                                        return spec.mName == "text";
                                      });
     if (i_find != mProps.end()) {
-      if (const std::string* val = boost::get<const std::string>(&i_find->mValue)) {
+      if (const std::string* val =
+              boost::get<const std::string>(&i_find->mValue)) {
         return *val;
       }
     }
@@ -199,11 +201,6 @@ namespace fo {
     return propspecs;
   }
 
-  const Sosofo& ParagraphBreak::port(const std::string& portName) const
-  {
-    return kNilSosofo;
-  }
-
 
   //----------------------------------------------------------------------------
 
@@ -237,6 +234,116 @@ namespace fo {
   }
 
   const Sosofo& DisplayGroup::port(const std::string& portName) const
+  {
+    if (portName == "text") {
+      return mTextPort;
+    }
+
+    return kNilSosofo;
+  }
+
+
+  //----------------------------------------------------------------------------
+
+  Sequence::Sequence(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props), mTextPort(sosofo)
+  {
+  }
+
+  std::string Sequence::className() const { return "#sequence"; }
+
+  const PropertySpecs& Sequence::defaultProperties() const
+  {
+    static PropertySpecs propspecs = {
+        PropertySpec("position-point-shift", Dimen(0, k_pt)),
+    };
+    return propspecs;
+  }
+
+  const std::vector<std::string>& Sequence::ports() const
+  {
+    static const auto ports = std::vector<std::string>{
+        "text",
+    };
+    return ports;
+  }
+
+  const Sosofo& Sequence::port(const std::string& portName) const
+  {
+    if (portName == "text") {
+      return mTextPort;
+    }
+
+    return kNilSosofo;
+  }
+
+
+  //----------------------------------------------------------------------------
+
+  LineField::LineField(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props), mTextPort(sosofo)
+  {
+  }
+
+  std::string LineField::className() const { return "#line-field"; }
+
+  const PropertySpecs& LineField::defaultProperties() const
+  {
+    static PropertySpecs propspecs = {
+        PropertySpec("field-width", Dimen(0, k_pt)),
+        PropertySpec("field-align", "left"),
+        PropertySpec("inhibit-line-breaks?", false),
+        PropertySpec("position-point-shift", Dimen(0, k_pt)),
+    };
+    return propspecs;
+  }
+
+  const std::vector<std::string>& LineField::ports() const
+  {
+    static const auto ports = std::vector<std::string>{
+        "text",
+    };
+    return ports;
+  }
+
+  const Sosofo& LineField::port(const std::string& portName) const
+  {
+    if (portName == "text") {
+      return mTextPort;
+    }
+
+    return kNilSosofo;
+  }
+
+
+  //----------------------------------------------------------------------------
+
+  Score::Score(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props), mTextPort(sosofo)
+  {
+  }
+
+  std::string Score::className() const { return "#score"; }
+
+  const PropertySpecs& Score::defaultProperties() const
+  {
+    static PropertySpecs propspecs = {
+        PropertySpec("below?", false), PropertySpec("above?", false),
+        PropertySpec("color", ""),
+        PropertySpec("line-thickness", Dimen(0, k_pt)),
+    };
+    return propspecs;
+  }
+
+  const std::vector<std::string>& Score::ports() const
+  {
+    static const auto ports = std::vector<std::string>{
+        "text",
+    };
+    return ports;
+  }
+
+  const Sosofo& Score::port(const std::string& portName) const
   {
     if (portName == "text") {
       return mTextPort;
@@ -307,6 +414,114 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
+  ScrollSequence::ScrollSequence(const PropertySpecs& props,
+                                 const Sosofo& sosofo)
+      : Fo(props), mScrollPort(sosofo)
+  {
+  }
+
+  std::string ScrollSequence::className() const { return "#scroll-sequence"; }
+
+  const PropertySpecs& ScrollSequence::defaultProperties() const
+  {
+    static PropertySpecs propspecs = {
+        PropertySpec("font-caps", "normal"), PropertySpec("font-name", "serif"),
+        PropertySpec("font-posture", "upright"),
+        PropertySpec("font-size", Dimen(10, k_pt)),
+        PropertySpec("font-weight", "medium"), PropertySpec("title", false),
+        PropertySpec("start-margin", Dimen(0, k_pt)),
+        PropertySpec("end-margin", Dimen(0, k_pt)),
+        PropertySpec("background-color", false),
+        PropertySpec("background-tile", false),
+    };
+    return propspecs;
+  }
+
+  const std::vector<std::string>& ScrollSequence::ports() const
+  {
+    static const auto ports = std::vector<std::string>{
+        "scroll",
+    };
+    return ports;
+  }
+
+  const Sosofo& ScrollSequence::port(const std::string& portName) const
+  {
+    if (portName == "scroll") {
+      return mScrollPort;
+    }
+
+    return kNilSosofo;
+  }
+
+
+  //----------------------------------------------------------------------------
+
+  PageNumber::PageNumber(const PropertySpecs& props) : Fo(props) {}
+
+  std::string PageNumber::className() const { return "#page-number"; }
+
+  const PropertySpecs& PageNumber::defaultProperties() const
+  {
+    static PropertySpecs propspecs = {
+        PropertySpec("refid", "#current"),
+    };
+    return propspecs;
+  }
+
+
+  //----------------------------------------------------------------------------
+
+  Anchor::Anchor(const PropertySpecs& props) : Fo(props) {}
+
+  std::string Anchor::className() const { return "#anchor"; }
+
+  const PropertySpecs& Anchor::defaultProperties() const
+  {
+    static PropertySpecs propspecs = {
+        PropertySpec("id", false),
+    };
+    return propspecs;
+  }
+
+
+  //----------------------------------------------------------------------------
+
+  FootNote::FootNote(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props), mTextPort(sosofo)
+  {
+  }
+
+  std::string FootNote::className() const { return "#foot-note"; }
+
+  const PropertySpecs& FootNote::defaultProperties() const
+  {
+    static PropertySpecs propspecs = {
+        PropertySpec("id", false),
+    };
+    return propspecs;
+  }
+
+  const std::vector<std::string>& FootNote::ports() const
+  {
+    static const auto ports = std::vector<std::string>{
+        "text",
+    };
+    return ports;
+  }
+
+  const Sosofo& FootNote::port(const std::string& portName) const
+  {
+    if (portName == "text") {
+      return mTextPort;
+    }
+
+    return kNilSosofo;
+  }
+
+
+  //----------------------------------------------------------------------------
+
   bool isPropertyBeInherited(const std::string& key)
   {
     const auto i_find =
@@ -348,22 +563,38 @@ namespace fo {
         });
   }
 
+  template <typename FoClass>
+  void registerFoClassFactoryProps()
+  {
+    registerFoClassFactory<FoClass>([](const PropertySpecs& p, const Sosofo&) {
+      return estd::make_unique<FoClass>(p);
+    });
+  }
+
 
   std::unique_ptr<IFormattingObject>
   createFoByClassName(const std::string& className, const PropertySpecs& props,
                       const Sosofo& sosofo)
   {
     if (sFoClassFactoryMap.empty()) {
-      registerFoClassFactory<Literal>([](const PropertySpecs& p, const Sosofo&) {
-          return estd::make_unique<Literal>(p);
-        });
+      registerFoClassFactoryProps<Literal>();
+
       registerFoClassFactory<ParagraphBreak>(
-        [](const PropertySpecs&, const Sosofo&) {
-          return estd::make_unique<ParagraphBreak>();
-        });
+          [](const PropertySpecs&, const Sosofo&) {
+            return estd::make_unique<ParagraphBreak>();
+          });
+
       registerFoClassFactory<Paragraph>();
       registerFoClassFactory<DisplayGroup>();
+      registerFoClassFactory<Sequence>();
+      registerFoClassFactory<LineField>();
+      registerFoClassFactory<Score>();
       registerFoClassFactory<SimplePageSequence>();
+      registerFoClassFactory<ScrollSequence>();
+      registerFoClassFactory<FootNote>();
+
+      registerFoClassFactoryProps<PageNumber>();
+      registerFoClassFactoryProps<Anchor>();
     }
 
     const auto i_find = sFoClassFactoryMap.find(className);
