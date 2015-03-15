@@ -13,6 +13,7 @@
 #include <limits>
 #include <ostream>
 #include <iostream>
+#include <unordered_map>
 
 
 namespace eyestep {
@@ -319,24 +320,55 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
+  using FoClassFactoryFunc = std::function<std::unique_ptr<
+      IFormattingObject>(const PropertySpecs& props, const Sosofo& sosofo)>;
+
+  using FoClassFactoryMap = std::unordered_map<std::string, FoClassFactoryFunc>;
+
+  FoClassFactoryMap sFoClassFactoryMap;
+
+  template <typename FoClass, typename FactoryFunc>
+  void registerFoClassFactory(FactoryFunc factoryFunc)
+  {
+    FoClass foClass;
+    const auto className = foClass.className();
+
+    const auto i_find = sFoClassFactoryMap.find(className);
+    if (i_find == sFoClassFactoryMap.end()) {
+      sFoClassFactoryMap[className] = factoryFunc;
+    }
+  }
+
+  template <typename FoClass>
+  void registerFoClassFactory()
+  {
+    registerFoClassFactory<FoClass>(
+        [](const PropertySpecs& p, const Sosofo& s) {
+          return estd::make_unique<FoClass>(p, s);
+        });
+  }
+
+
   std::unique_ptr<IFormattingObject>
   createFoByClassName(const std::string& className, const PropertySpecs& props,
                       const Sosofo& sosofo)
   {
-    if (className == "#literal") {
-      return estd::make_unique<Literal>(props);
+    if (sFoClassFactoryMap.empty()) {
+      registerFoClassFactory<Literal>([](const PropertySpecs& p, const Sosofo&) {
+          return estd::make_unique<Literal>(p);
+        });
+      registerFoClassFactory<ParagraphBreak>(
+        [](const PropertySpecs&, const Sosofo&) {
+          return estd::make_unique<ParagraphBreak>();
+        });
+      registerFoClassFactory<Paragraph>();
+      registerFoClassFactory<DisplayGroup>();
+      registerFoClassFactory<SimplePageSequence>();
     }
-    else if (className == "#paragraph-break") {
-      return estd::make_unique<ParagraphBreak>();
-    }
-    else if (className == "#paragraph") {
-      return estd::make_unique<Paragraph>(props, sosofo);
-    }
-    else if (className == "#display-group") {
-      return estd::make_unique<DisplayGroup>(props, sosofo);
-    }
-    else if (className == "#simple-page-sequence") {
-      return estd::make_unique<SimplePageSequence>(props, sosofo);
+
+    const auto i_find = sFoClassFactoryMap.find(className);
+    if (i_find != sFoClassFactoryMap.end()) {
+      return i_find->second(props, sosofo);
     }
 
     return nullptr;
