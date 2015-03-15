@@ -92,68 +92,86 @@ namespace html {
 
   void Writer::write_attrs(const Attrs& attrs)
   {
-    for (const auto& attr : attrs) {
-      mStream << " " << attr.mKey << "='";
-      escape_attr_str_to_stream(mStream, attr.mValue);
-      mStream << "'";
+    if (mStream.is_open()) {
+      for (const auto& attr : attrs) {
+        mStream << " " << attr.mKey << "='";
+        escape_attr_str_to_stream(mStream, attr.mValue);
+        mStream << "'";
+      }
     }
   }
 
   void Writer::entity(const std::string& name)
   {
-    mStream << "&" << name << ";";
+    if (mStream.is_open()) {
+      mStream << "&" << name << ";";
+    }
   }
 
 
   void Writer::open_tag(const std::string& tag, const Attrs& attrs)
   {
-    mStream << "<" << tag;
-    write_attrs(attrs);
-    mStream << ">";
+    if (mStream.is_open()) {
+      mStream << "<" << tag;
+      write_attrs(attrs);
+      mStream << ">";
+    }
   }
 
 
   void Writer::close_tag(const std::string& tag)
   {
-    mStream << "</" << tag << ">";
+    if (mStream.is_open()) {
+      mStream << "</" << tag << ">";
+    }
   }
 
 
   void Writer::empty_tag(const std::string& tag, const Attrs& attrs)
   {
-    mStream << "<" << tag;
-    write_attrs(attrs);
-    mStream << "/>";
+    if (mStream.is_open()) {
+      mStream << "<" << tag;
+      write_attrs(attrs);
+      mStream << "/>";
+    }
   }
 
 
   void Writer::text_tag(const std::string& tag, const std::string& value,
                         const Attrs& attrs)
   {
-    open_tag(tag, attrs);
-    escape_str_to_stream(mStream, value);
-    close_tag(tag);
+    if (mStream.is_open()) {
+      open_tag(tag, attrs);
+      escape_str_to_stream(mStream, value);
+      close_tag(tag);
+    }
   }
 
 
   void Writer::write_text(const std::string& value)
   {
-    escape_str_to_stream(mStream, value);
+    if (mStream.is_open()) {
+      escape_str_to_stream(mStream, value);
+    }
   }
 
 
   void Writer::write_style(const std::string& text)
   {
-    open_tag("style", {{"type", "text/css"}});
-    mStream << text;
-    close_tag("style");
+    if (mStream.is_open()) {
+      open_tag("style", {{"type", "text/css"}});
+      mStream << text;
+      close_tag("style");
+    }
   }
 
 
   void Writer::doctype()
   {
-    mStream << "<!DOCTYPE html PUBLIC '" << mDoctype.mPublicId << "' '"
-            << mDoctype.mSystemId << "'>" << std::endl;
+    if (mStream.is_open()) {
+      mStream << "<!DOCTYPE html PUBLIC '" << mDoctype.mPublicId << "' '"
+              << mDoctype.mSystemId << "'>" << std::endl;
+    }
   }
 
 
@@ -161,35 +179,40 @@ namespace html {
                       const std::string& desc,
                       const std::function<void(std::ostream&)>& style_proc)
   {
-    doctype();
-    open_tag("html", {Attr{"xmlns", "http://www.w3.org/1999/xhtml"}});
+    if (mStream.is_open()) {
+      doctype();
+      open_tag("html", {Attr{"xmlns", "http://www.w3.org/1999/xhtml"}});
 
-    open_tag("head");
-    text_tag("title", title);
-    empty_tag("meta", {Attr{"http-equiv", "Content-Type"},
-                       Attr{"content", "text/html; charset=UTF-8"}});
-    if (!author.empty()) {
-      empty_tag("meta", {Attr{"name", "author"},
-                         Attr{"content", escape_attr_str(author)}});
+      open_tag("head");
+      text_tag("title", title);
+      empty_tag("meta", {Attr{"http-equiv", "Content-Type"},
+                         Attr{"content", "text/html; charset=UTF-8"}});
+      if (!author.empty()) {
+        empty_tag("meta", {Attr{"name", "author"},
+                           Attr{"content", escape_attr_str(author)}});
+      }
+      if (!desc.empty()) {
+        empty_tag("meta", {Attr{"name", "description"},
+                           Attr{"content", escape_attr_str(desc)}});
+      }
+
+      empty_tag("meta",
+                {Attr{"name", "generator"}, Attr{"content", mGenerator}});
+
+      style_proc(mStream);
+
+      close_tag("head");
+      open_tag("body");
     }
-    if (!desc.empty()) {
-      empty_tag("meta", {Attr{"name", "description"},
-                         Attr{"content", escape_attr_str(desc)}});
-    }
-
-    empty_tag("meta", {Attr{"name", "generator"}, Attr{"content", mGenerator}});
-
-    style_proc(mStream);
-
-    close_tag("head");
-    open_tag("body");
   }
 
 
   void Writer::footer()
   {
-    close_tag("body");
-    close_tag("html");
+    if (mStream.is_open()) {
+      close_tag("body");
+      close_tag("html");
+    }
   }
 
 
