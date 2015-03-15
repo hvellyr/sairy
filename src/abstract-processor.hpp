@@ -16,10 +16,11 @@ namespace eyestep {
 
 class Sosofo;
 class IFormattingObject;
-template<typename T> class IFoProcessor;
+template <typename T>
+class IFoProcessor;
 
 
-template<typename ProcessorT>
+template <typename ProcessorT>
 class AbstractProcessor : public IProcessor {
 protected:
   boost::filesystem::path mOutputFile;
@@ -40,6 +41,10 @@ public:
 
   fo::PropertySpecOrNone property(const IFormattingObject* fo,
                                   const std::string& key) const override;
+
+  template <typename T>
+  T property(const IFormattingObject* fo, const std::string& key,
+             T defaultValue) const;
 };
 
 } // ns eyestep

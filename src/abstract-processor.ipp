@@ -6,6 +6,7 @@
 #include "sosofo.hpp"
 
 #include <boost/filesystem.hpp>
+#include <boost/variant/get.hpp>
 
 #include <iostream>
 #include <string>
@@ -79,6 +80,23 @@ AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
                                         const std::string& key) const
 {
   return mProps.get(key, fo->defaultProperties());
+}
+
+
+template <typename ProcessorT>
+template <typename T>
+T AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
+                                          const std::string& key,
+                                          T defaultValue) const
+{
+  auto prop = property(fo, key);
+  if (prop) {
+    if (const T* val = boost::get<const T>(&prop->mValue)) {
+      return *val;
+    }
+  }
+
+  return defaultValue;
 }
 
 } // ns eyestep
