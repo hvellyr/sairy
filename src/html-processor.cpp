@@ -7,6 +7,7 @@
 #include "fo.hpp"
 #include "fos.hpp"
 #include "sosofo.hpp"
+#include "estd/memory.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/variant/apply_visitor.hpp>
@@ -24,14 +25,72 @@ namespace fs = boost::filesystem;
 
 const std::string kSairyGenerator = "Sairy HTML Processor";
 
+detail::HtmlRenderContext::HtmlRenderContext() : mCaps(detail::kNormalCaps)
+{
+}
+
+html::Writer& detail::HtmlRenderContext::port()
+{
+  return *mPort.get();
+}
+
+boost::filesystem::path detail::HtmlRenderContext::currentPath()
+{
+  return mPath;
+}
+
+void detail::HtmlRenderContext::pushPort(std::unique_ptr<html::Writer> port,
+                                         const fs::path& path)
+{
+  mPorts.push_front(
+      std::tuple<std::unique_ptr<html::Writer>, fs::path>(std::move(mPort),
+                                                          mPath));
+  mPort = std::move(port);
+  mPath = path;
+}
+
+void detail::HtmlRenderContext::popPort()
+{
+  if (!mPorts.empty()) {
+    auto tup = std::move(mPorts.front());
+    mPort = std::move(std::get<0>(tup));
+    mPath = std::get<1>(tup);
+    mPorts.pop_front();
+  }
+}
+
+
 namespace {
+  template <typename Functor>
+  void withHtmlFile(HtmlProcessor* processor, const fs::path& path,
+                    const std::string& title, const std::string& author,
+                    const std::string& desc, const html::Doctype& doctype,
+                    Functor functor)
+  {
+    detail::HtmlRenderContext& ctx = processor->ctx();
+
+    auto port = estd::make_unique<html::Writer>(doctype, kSairyGenerator);
+    port->open(path);
+
+    ctx.pushPort(std::move(port), path);
+
+    ctx.port().header(title, author, desc, [](std::ostream&) {});
+
+    functor(processor);
+
+    ctx.port().footer();
+    ctx.popPort();
+  }
+
+
   class HtmlLiteralFoProcessor : public IFoProcessor<HtmlProcessor> {
   public:
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
       auto str = static_cast<const fo::Literal*>(fo)->text();
-      std::cout << "#literal[html-processor] value: '" << str << "'" << std::endl;
+      std::cout << "#literal[html-processor] value: '" << str << "'"
+                << std::endl;
       processor->writer().write_text(str);
     }
   };
@@ -70,16 +129,26 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      html::Tag with_tag(processor->writer(), "div", { html::Attr{"class", "page"} });
+      auto title = processor->property(fo, "metadata:title", std::string());
+      auto author = processor->property(fo, "metadata:author", std::string());
+      auto desc = processor->property(fo, "metadata:desc", std::string());
 
-      processor->renderSosofo(&fo->port("text"));
+      withHtmlFile(processor, processor->ctx().currentPath(), title, author,
+                   desc,
+                   html::kXHTML_1_1_DTD,
+                   [fo](HtmlProcessor* processor) {
+                     html::Tag with_tag(processor->ctx().port(), "div",
+                                        {html::Attr{"class", "page"}});
+
+                     processor->renderSosofo(&fo->port("text"));
+                   });
     }
   };
 
 } // ns anon
 
 
-HtmlProcessor::HtmlProcessor() : mWriter(html::kXHTML_1_1_DTD, kSairyGenerator)
+HtmlProcessor::HtmlProcessor()
 {
 }
 
@@ -112,39 +181,26 @@ HtmlProcessor::lookupFoProcessor(const std::string& foClassName) const
 
 void HtmlProcessor::beforeRendering()
 {
-  std::cout << "DEBUG: Processor: " << procId() << std::endl;
-
-  mWriter.open(mOutputFile);
-
-  writeHtmlProlog();
+  auto mainPort =
+      estd::make_unique<html::Writer>(html::kXHTML_1_1_DTD, kSairyGenerator);
+  mCtx.pushPort(std::move(mainPort), mOutputFile);
 }
 
 
 void HtmlProcessor::afterRendering()
 {
-  writeHtmlEpilog();
+}
+
+
+detail::HtmlRenderContext& HtmlProcessor::ctx()
+{
+  return mCtx;
 }
 
 
 html::Writer& HtmlProcessor::writer()
 {
-  return mWriter;
-}
-
-
-void HtmlProcessor::writeHtmlProlog()
-{
-  // @todo:
-  std::string title;
-  std::string author;
-  std::string desc;
-
-  mWriter.header(title, author, desc, [](std::ostream&) { });
-}
-
-void HtmlProcessor::writeHtmlEpilog()
-{
-  mWriter.footer();
+  return mCtx.port();
 }
 
 } // ns eyestep
