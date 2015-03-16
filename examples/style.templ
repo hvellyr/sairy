@@ -28,7 +28,11 @@
   (make display-group
     (make paragraph
       quadding: 'left
-      (process-children))))
+      font-caps: 'small-caps
+
+      (sosofo-append
+       (literal (node-property 'name (current-node)))
+       (process-children)))))
 
 (element return-type
   (make paragraph

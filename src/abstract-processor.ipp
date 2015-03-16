@@ -85,6 +85,22 @@ AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
 
 template <typename ProcessorT>
 template <typename T>
+boost::optional<T>
+AbstractProcessor<ProcessorT>::propertyOrNone(const IFormattingObject* fo,
+                                              const std::string& key) const
+{
+  auto prop = property(fo, key);
+  if (prop) {
+    if (const T* val = boost::get<const T>(&prop->mValue)) {
+      return *val;
+    }
+  }
+
+  return boost::none;
+}
+
+template <typename ProcessorT>
+template <typename T>
 T AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
                                           const std::string& key,
                                           T defaultValue) const

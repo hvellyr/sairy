@@ -52,6 +52,9 @@ namespace detail {
     void pushPort(std::unique_ptr<html::Writer> port,
                   const boost::filesystem::path& path);
     void popPort();
+
+    CapsStyle capsStyle();
+    void setCapsStyle(CapsStyle capsStyle);
   };
 } // ns detail
 

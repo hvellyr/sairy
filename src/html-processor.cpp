@@ -9,14 +9,16 @@
 #include "sosofo.hpp"
 #include "estd/memory.hpp"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 
 #include <iostream>
-#include <string>
 #include <map>
 #include <memory>
+#include <sstream>
+#include <string>
 
 
 namespace eyestep {
@@ -60,7 +62,52 @@ void detail::HtmlRenderContext::popPort()
 }
 
 
+detail::CapsStyle detail::HtmlRenderContext::capsStyle()
+{
+  return mCaps;
+}
+
+void detail::HtmlRenderContext::setCapsStyle(CapsStyle capsStyle)
+{
+  mCaps = capsStyle;
+}
+
+
 namespace {
+  std::string dimenToCss(const fo::Dimen& dim)
+  {
+    auto unit_name = [](fo::Unit un) {
+      switch (un) {
+      case fo::k_pt:
+        return "pt";
+      case fo::k_m:
+        return "m";
+      case fo::k_mm:
+        return "mm";
+      case fo::k_cm:
+        return "cm";
+      case fo::k_em:
+        return "em";
+      }
+    };
+
+    std::stringstream ss;
+    ss << dim.mValue << unit_name(dim.mUnit);
+    return ss.str();
+  }
+
+
+  html::Attrs styleStrToAttrs(const std::string& str)
+  {
+    html::Attrs attrs;
+    if (!str.empty()) {
+      attrs.push_back(html::Attr{"style", str});
+    }
+
+    return attrs;
+  }
+
+
   template <typename Functor>
   void withHtmlFile(HtmlProcessor* processor, const fs::path& path,
                     const std::string& title, const std::string& author,
@@ -89,9 +136,20 @@ namespace {
                 const IFormattingObject* fo) const override
     {
       auto str = static_cast<const fo::Literal*>(fo)->text();
-      std::cout << "#literal[html-processor] value: '" << str << "'"
-                << std::endl;
-      processor->writer().write_text(str);
+
+      auto capsStyle = processor->ctx().capsStyle();
+      if (capsStyle == detail::kNormalCaps) {
+        processor->ctx().port().write_text(str);
+      }
+      else if (capsStyle == detail::kUpperCaps) {
+        processor->ctx().port().write_text(boost::to_upper_copy(str));
+      }
+      else if (capsStyle == detail::kSmallCaps) {
+        // html::Tag with_Tag(processor->ctx().port(), "span",
+        //                    {html::Attr{"style", "font-variant:
+        //                    small-caps;"}});
+        processor->ctx().port().write_text(str);
+      }
     }
   };
 
@@ -100,8 +158,80 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      html::Tag with_tag(processor->writer(), "p");
-      processor->renderSosofo(&fo->port("text"));
+      auto startIndent =
+          processor->propertyOrNone<fo::Dimen>(fo, "start-indent");
+      auto firstLineStartIndent =
+          processor->propertyOrNone<fo::Dimen>(fo, "first-line-start-indent");
+      auto fontSize = processor->propertyOrNone<fo::Dimen>(fo, "font-size");
+      auto fontStyle = processor->propertyOrNone<std::string>(fo, "font-style");
+      auto fontPosture =
+          processor->propertyOrNone<std::string>(fo, "font-posture");
+      auto fontCaps = processor->propertyOrNone<std::string>(fo, "font-caps");
+      auto spaceBefore =
+          processor->propertyOrNone<fo::Dimen>(fo, "space-before");
+      auto spaceAfter = processor->propertyOrNone<fo::Dimen>(fo, "space-after");
+
+      bool isBold = false;
+      bool isItalic = false;
+      std::stringstream ss;
+
+      if (startIndent) {
+        ss << "margin-left: " << dimenToCss(*startIndent) << "; ";
+      }
+      if (firstLineStartIndent) {
+        ss << "first-line-start-indent: " << dimenToCss(*firstLineStartIndent)
+           << "; ";
+      }
+      if (fontSize) {
+        ss << "font-size: " << dimenToCss(*fontSize) << "; ";
+      }
+
+      if (fontCaps) {
+        if (*fontCaps == std::string("normal")) {
+          processor->ctx().setCapsStyle(detail::kNormalCaps);
+        }
+        else if (*fontCaps == std::string("caps")) {
+          processor->ctx().setCapsStyle(detail::kUpperCaps);
+        }
+        else if (*fontCaps == std::string("small-caps")) {
+          processor->ctx().setCapsStyle(detail::kSmallCaps);
+          ss << "font-variant: small-caps; ";
+        }
+      }
+      if (spaceBefore) {
+        ss << "margin-top: " << dimenToCss(*spaceBefore) << "; ";
+      }
+      if (spaceAfter) {
+        ss << "margin-bottom: " << dimenToCss(*spaceAfter) << "; ";
+      }
+
+      {
+        html::Tag with_tag(processor->ctx().port(), "p",
+                           styleStrToAttrs(ss.str()));
+
+        if (fontStyle) {
+          if (*fontStyle == "bold") {
+            isBold = true;
+            processor->ctx().port().open_tag("b");
+          }
+        }
+        if (fontPosture) {
+          if (*fontStyle == "italic") {
+            isItalic = false;
+            processor->ctx().port().open_tag("i");
+          }
+        }
+
+        processor->renderSosofo(&fo->port("text"));
+
+        if (isItalic) {
+          processor->ctx().port().close_tag("i");
+        }
+        if (isItalic) {
+          processor->ctx().port().close_tag("b");
+        }
+      }
+      processor->ctx().port().newln();
     }
   };
 
@@ -110,7 +240,8 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      processor->writer().empty_tag("br");
+      processor->ctx().port().empty_tag("br");
+      processor->ctx().port().newln();
     }
   };
 
@@ -119,8 +250,12 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      html::Tag with_tag(processor->writer(), "div");
-      processor->renderSosofo(&fo->port("text"));
+      {
+        html::Tag with_tag(processor->ctx().port(), "div");
+        processor->ctx().port().newln();
+        processor->renderSosofo(&fo->port("text"));
+      }
+      processor->ctx().port().newln();
     }
   };
 
@@ -134,14 +269,82 @@ namespace {
       auto desc = processor->property(fo, "metadata:desc", std::string());
 
       withHtmlFile(processor, processor->ctx().currentPath(), title, author,
-                   desc,
-                   html::kXHTML_1_1_DTD,
-                   [fo](HtmlProcessor* processor) {
-                     html::Tag with_tag(processor->ctx().port(), "div",
-                                        {html::Attr{"class", "page"}});
+                   desc, html::kXHTML_1_1_DTD, [fo](HtmlProcessor* processor) {
+                     {
+                       html::Tag with_tag(processor->ctx().port(), "div",
+                                          {html::Attr{"class", "page"}});
+                       processor->ctx().port().newln();
 
-                     processor->renderSosofo(&fo->port("text"));
+                       processor->renderSosofo(&fo->port("text"));
+                     }
+                     processor->ctx().port().newln();
                    });
+    }
+  };
+
+  class HtmlSequenceFoProcessor : public IFoProcessor<HtmlProcessor> {
+  public:
+    void render(HtmlProcessor* processor,
+                const IFormattingObject* fo) const override
+    {
+      auto posPtShift =
+          processor->propertyOrNone<fo::Dimen>(fo, "position-point-shift");
+      auto fontSize = processor->propertyOrNone<fo::Dimen>(fo, "font-size");
+      auto fontStyle = processor->propertyOrNone<std::string>(fo, "font-style");
+      auto fontPosture =
+          processor->propertyOrNone<std::string>(fo, "font-posture");
+      auto fontCaps = processor->propertyOrNone<std::string>(fo, "font-caps");
+
+      bool isBold = false;
+      bool isItalic = false;
+      std::stringstream ss;
+
+      if (posPtShift) {
+        ss << "position: relative; top: " << dimenToCss(*posPtShift) << "; ";
+      }
+      if (fontSize) {
+        ss << "font-size: " << dimenToCss(*fontSize) << "; ";
+      }
+      if (fontCaps) {
+        if (*fontCaps == std::string("normal")) {
+          processor->ctx().setCapsStyle(detail::kNormalCaps);
+        }
+        else if (*fontCaps == std::string("caps")) {
+          processor->ctx().setCapsStyle(detail::kUpperCaps);
+        }
+        else if (*fontCaps == std::string("small-caps")) {
+          processor->ctx().setCapsStyle(detail::kSmallCaps);
+          ss << "font-variant: small-caps; ";
+        }
+      }
+
+      {
+        html::Tag with_tag(processor->ctx().port(), "span",
+                           styleStrToAttrs(ss.str()));
+
+        if (fontStyle) {
+          if (*fontStyle == "bold") {
+            isBold = true;
+            processor->ctx().port().open_tag("b");
+          }
+        }
+        if (fontPosture) {
+          if (*fontStyle == "italic") {
+            isItalic = false;
+            processor->ctx().port().open_tag("i");
+          }
+        }
+
+        processor->renderSosofo(&fo->port("text"));
+
+        if (isItalic) {
+          processor->ctx().port().close_tag("i");
+        }
+        if (isItalic) {
+          processor->ctx().port().close_tag("b");
+        }
+      }
+      processor->ctx().port().newln();
     }
   };
 
@@ -171,6 +374,7 @@ HtmlProcessor::lookupFoProcessor(const std::string& foClassName) const
           {"#display-group", std::make_shared<HtmlDisplayGroupFoProcessor>()},
           {"#simple-page-sequence",
            std::make_shared<HtmlSimplePageSequenceFoProcessor>()},
+          {"#sequence", std::make_shared<HtmlSequenceFoProcessor>()},
       };
 
   auto i_find = procs.find(foClassName);
