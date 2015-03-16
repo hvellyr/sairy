@@ -58,6 +58,8 @@ namespace html {
                 const std::function<void(std::ostream&)>& style_proc =
                     [](std::ostream&) {});
     void footer();
+
+    void newln();
   };
 
 

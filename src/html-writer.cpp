@@ -159,9 +159,9 @@ namespace html {
   void Writer::write_style(const std::string& text)
   {
     if (mStream.is_open()) {
-      open_tag("style", {{"type", "text/css"}});
+      open_tag("style", {{"type", "text/css"}}); newln();
       mStream << text;
-      close_tag("style");
+      close_tag("style"); newln();
     }
   }
 
@@ -170,7 +170,8 @@ namespace html {
   {
     if (mStream.is_open()) {
       mStream << "<!DOCTYPE html PUBLIC '" << mDoctype.mPublicId << "' '"
-              << mDoctype.mSystemId << "'>" << std::endl;
+              << mDoctype.mSystemId << "'>";
+      newln();
     }
   }
 
@@ -181,28 +182,28 @@ namespace html {
   {
     if (mStream.is_open()) {
       doctype();
-      open_tag("html", {Attr{"xmlns", "http://www.w3.org/1999/xhtml"}});
+      open_tag("html", {Attr{"xmlns", "http://www.w3.org/1999/xhtml"}}); newln();
 
-      open_tag("head");
-      text_tag("title", title);
+      open_tag("head"); newln();
+      text_tag("title", title); newln();
       empty_tag("meta", {Attr{"http-equiv", "Content-Type"},
-                         Attr{"content", "text/html; charset=UTF-8"}});
+                         Attr{"content", "text/html; charset=UTF-8"}}); newln();
       if (!author.empty()) {
         empty_tag("meta", {Attr{"name", "author"},
-                           Attr{"content", escape_attr_str(author)}});
+                           Attr{"content", escape_attr_str(author)}}); newln();
       }
       if (!desc.empty()) {
         empty_tag("meta", {Attr{"name", "description"},
-                           Attr{"content", escape_attr_str(desc)}});
+                           Attr{"content", escape_attr_str(desc)}}); newln();
       }
 
       empty_tag("meta",
-                {Attr{"name", "generator"}, Attr{"content", mGenerator}});
+                {Attr{"name", "generator"}, Attr{"content", mGenerator}}); newln();
 
       style_proc(mStream);
 
-      close_tag("head");
-      open_tag("body");
+      close_tag("head"); newln();
+      open_tag("body"); newln();
     }
   }
 
@@ -210,11 +211,17 @@ namespace html {
   void Writer::footer()
   {
     if (mStream.is_open()) {
-      close_tag("body");
-      close_tag("html");
+      close_tag("body"); newln();
+      close_tag("html"); newln();
     }
   }
 
+  void Writer::newln()
+  {
+    if (mStream.is_open()) {
+      mStream << std::endl;
+    }
+  }
 
 } // ns html
 } // ns eyestep
