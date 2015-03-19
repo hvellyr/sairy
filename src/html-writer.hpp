@@ -64,17 +64,38 @@ namespace html {
 
 
   class Tag {
-    Writer& mWriter;
-    const std::string& mTag;
+    Writer* mWriter = nullptr;
+    std::string mTag;
 
   public:
+    Tag() : mWriter(nullptr) {}
+
     Tag(Writer& writer, const std::string& tag, const Attrs& attrs = {})
-        : mWriter(writer), mTag(tag)
+        : mWriter(&writer), mTag(tag)
     {
-      mWriter.open_tag(tag, attrs);
+      mWriter->open_tag(tag, attrs);
     }
 
-    ~Tag() { mWriter.close_tag(mTag); }
+    Tag(Tag&& other)
+        : mWriter(std::move(other.mWriter)), mTag(std::move(other.mTag))
+    {
+      other.mWriter = nullptr;
+    }
+
+    Tag& operator=(Tag&& other)
+    {
+      mWriter = std::move(other.mWriter);
+      mTag = std::move(other.mTag);
+      other.mWriter = nullptr;
+      return *this;
+    }
+
+    ~Tag()
+    {
+      if (mWriter) {
+        mWriter->close_tag(mTag);
+      }
+    }
   };
 } // ns html
 } // ns eyestep

@@ -97,6 +97,76 @@ namespace {
   }
 
 
+  using CssAttrMap = std::map<std::string, std::string>;
+
+  std::string css_attr_to_string(const CssAttrMap& map)
+  {
+    std::stringstream ss;
+    for (const auto& pair : map) {
+      ss << pair.first << ": " << pair.second << "; ";
+    }
+    return ss.str();
+  }
+
+
+  template <typename T>
+  void set_css_attr(CssAttrMap& map, const std::string& key,
+                    boost::optional<T> val_or_none)
+  {
+    if (val_or_none) {
+      map[key] = *val_or_none;
+    }
+  }
+
+
+  void set_css_attr(CssAttrMap& map, const std::string& key,
+                    boost::optional<fo::Dimen> val_or_none)
+  {
+    if (val_or_none) {
+      map[key] = dimenToCss(*val_or_none);
+    }
+  }
+
+
+  void set_css_attr(CssAttrMap& map, const std::string& key,
+                    const std::string& val)
+  {
+    map[key] = val;
+  }
+
+
+  void set_css_capsstyle(CssAttrMap& map, HtmlProcessor* processor,
+                         boost::optional<std::string> val_or_none)
+  {
+    if (val_or_none) {
+      if (*val_or_none == std::string("normal")) {
+        processor->ctx().setCapsStyle(detail::kNormalCaps);
+      }
+      else if (*val_or_none == std::string("caps")) {
+        processor->ctx().setCapsStyle(detail::kUpperCaps);
+      }
+      else if (*val_or_none == std::string("small-caps")) {
+        processor->ctx().setCapsStyle(detail::kSmallCaps);
+        map["font-variant"] = "small-caps";
+      }
+    }
+  }
+
+
+  html::Tag css_optional_tag(HtmlProcessor* processor, const std::string& tag,
+                             boost::optional<std::string> val_or_none,
+                             const std::string& exp_val)
+  {
+    if (val_or_none) {
+      if (*val_or_none == exp_val) {
+        return std::move(html::Tag(processor->ctx().port(), tag));
+      }
+    }
+
+    return std::move(html::Tag());
+  }
+
+
   html::Attrs styleStrToAttrs(const std::string& str)
   {
     html::Attrs attrs;
@@ -153,6 +223,7 @@ namespace {
     }
   };
 
+
   class HtmlParagraphFoProcessor : public IFoProcessor<HtmlProcessor> {
   public:
     void render(HtmlProcessor* processor,
@@ -163,7 +234,8 @@ namespace {
       auto firstLineStartIndent =
           processor->propertyOrNone<fo::Dimen>(fo, "first-line-start-indent");
       auto fontSize = processor->propertyOrNone<fo::Dimen>(fo, "font-size");
-      auto fontStyle = processor->propertyOrNone<std::string>(fo, "font-style");
+      auto fontWeight =
+          processor->propertyOrNone<std::string>(fo, "font-weight");
       auto fontPosture =
           processor->propertyOrNone<std::string>(fo, "font-posture");
       auto fontCaps = processor->propertyOrNone<std::string>(fo, "font-caps");
@@ -171,69 +243,28 @@ namespace {
           processor->propertyOrNone<fo::Dimen>(fo, "space-before");
       auto spaceAfter = processor->propertyOrNone<fo::Dimen>(fo, "space-after");
 
-      bool isBold = false;
-      bool isItalic = false;
-      std::stringstream ss;
-
-      if (startIndent) {
-        ss << "margin-left: " << dimenToCss(*startIndent) << "; ";
-      }
-      if (firstLineStartIndent) {
-        ss << "first-line-start-indent: " << dimenToCss(*firstLineStartIndent)
-           << "; ";
-      }
-      if (fontSize) {
-        ss << "font-size: " << dimenToCss(*fontSize) << "; ";
-      }
-
-      if (fontCaps) {
-        if (*fontCaps == std::string("normal")) {
-          processor->ctx().setCapsStyle(detail::kNormalCaps);
-        }
-        else if (*fontCaps == std::string("caps")) {
-          processor->ctx().setCapsStyle(detail::kUpperCaps);
-        }
-        else if (*fontCaps == std::string("small-caps")) {
-          processor->ctx().setCapsStyle(detail::kSmallCaps);
-          ss << "font-variant: small-caps; ";
-        }
-      }
-      if (spaceBefore) {
-        ss << "margin-top: " << dimenToCss(*spaceBefore) << "; ";
-      }
-      if (spaceAfter) {
-        ss << "margin-bottom: " << dimenToCss(*spaceAfter) << "; ";
-      }
+      CssAttrMap map;
+      set_css_attr(map, "margin-left", startIndent);
+      set_css_attr(map, "first-line-start-indent", firstLineStartIndent);
+      set_css_attr(map, "font-size", fontSize);
+      set_css_attr(map, "margin-top", spaceBefore);
+      set_css_attr(map, "margin-bottom", spaceAfter);
+      set_css_capsstyle(map, processor, fontCaps);
 
       {
         html::Tag with_tag(processor->ctx().port(), "p",
-                           styleStrToAttrs(ss.str()));
-
-        if (fontStyle) {
-          if (*fontStyle == "bold") {
-            isBold = true;
-            processor->ctx().port().open_tag("b");
-          }
-        }
-        if (fontPosture) {
-          if (*fontStyle == "italic") {
-            isItalic = false;
-            processor->ctx().port().open_tag("i");
-          }
-        }
+                           styleStrToAttrs(css_attr_to_string(map)));
+        html::Tag b_tag(
+            std::move(css_optional_tag(processor, "b", fontWeight, "bold")));
+        html::Tag i_tag(
+            std::move(css_optional_tag(processor, "i", fontPosture, "italic")));
 
         processor->renderSosofo(&fo->port("text"));
-
-        if (isItalic) {
-          processor->ctx().port().close_tag("i");
-        }
-        if (isItalic) {
-          processor->ctx().port().close_tag("b");
-        }
       }
       processor->ctx().port().newln();
     }
   };
+
 
   class HtmlParagraphBreakFoProcessor : public IFoProcessor<HtmlProcessor> {
   public:
@@ -244,6 +275,7 @@ namespace {
       processor->ctx().port().newln();
     }
   };
+
 
   class HtmlDisplayGroupFoProcessor : public IFoProcessor<HtmlProcessor> {
   public:
@@ -258,6 +290,7 @@ namespace {
       processor->ctx().port().newln();
     }
   };
+
 
   class HtmlSimplePageSequenceFoProcessor : public IFoProcessor<HtmlProcessor> {
   public:
@@ -282,6 +315,7 @@ namespace {
     }
   };
 
+
   class HtmlSequenceFoProcessor : public IFoProcessor<HtmlProcessor> {
   public:
     void render(HtmlProcessor* processor,
@@ -290,59 +324,27 @@ namespace {
       auto posPtShift =
           processor->propertyOrNone<fo::Dimen>(fo, "position-point-shift");
       auto fontSize = processor->propertyOrNone<fo::Dimen>(fo, "font-size");
-      auto fontStyle = processor->propertyOrNone<std::string>(fo, "font-style");
+      auto fontWeight =
+          processor->propertyOrNone<std::string>(fo, "font-weight");
       auto fontPosture =
           processor->propertyOrNone<std::string>(fo, "font-posture");
       auto fontCaps = processor->propertyOrNone<std::string>(fo, "font-caps");
 
-      bool isBold = false;
-      bool isItalic = false;
-      std::stringstream ss;
-
-      if (posPtShift) {
-        ss << "position: relative; top: " << dimenToCss(*posPtShift) << "; ";
-      }
-      if (fontSize) {
-        ss << "font-size: " << dimenToCss(*fontSize) << "; ";
-      }
-      if (fontCaps) {
-        if (*fontCaps == std::string("normal")) {
-          processor->ctx().setCapsStyle(detail::kNormalCaps);
-        }
-        else if (*fontCaps == std::string("caps")) {
-          processor->ctx().setCapsStyle(detail::kUpperCaps);
-        }
-        else if (*fontCaps == std::string("small-caps")) {
-          processor->ctx().setCapsStyle(detail::kSmallCaps);
-          ss << "font-variant: small-caps; ";
-        }
-      }
+      CssAttrMap map;
+      set_css_attr(map, "position", "relative");
+      set_css_attr(map, "top", posPtShift);
+      set_css_attr(map, "font-size", fontSize);
+      set_css_capsstyle(map, processor, fontCaps);
 
       {
         html::Tag with_tag(processor->ctx().port(), "span",
-                           styleStrToAttrs(ss.str()));
-
-        if (fontStyle) {
-          if (*fontStyle == "bold") {
-            isBold = true;
-            processor->ctx().port().open_tag("b");
-          }
-        }
-        if (fontPosture) {
-          if (*fontStyle == "italic") {
-            isItalic = false;
-            processor->ctx().port().open_tag("i");
-          }
-        }
+                           styleStrToAttrs(css_attr_to_string(map)));
+        html::Tag b_tag(
+            std::move(css_optional_tag(processor, "b", fontWeight, "bold")));
+        html::Tag i_tag(
+            std::move(css_optional_tag(processor, "i", fontPosture, "italic")));
 
         processor->renderSosofo(&fo->port("text"));
-
-        if (isItalic) {
-          processor->ctx().port().close_tag("i");
-        }
-        if (isItalic) {
-          processor->ctx().port().close_tag("b");
-        }
       }
       processor->ctx().port().newln();
     }
