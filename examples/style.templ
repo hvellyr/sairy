@@ -28,19 +28,23 @@
   (make display-group
     (make paragraph
       quadding: 'left
-      font-caps: 'small-caps
-
       (sosofo-append
+       (process-children)
        (literal (node-property 'name (current-node)))
-       (process-children)))))
+       ))))
 
-(element return-type
-  (make paragraph
-    (process-children)))
+(element (function return-type)
+  (make sequence
+    font-weight: 'bold
+    (literal (node-property 'name (current-node))) ))
 
 (element parameters
-  (make display-group
-    (process-children)))
+  (make sequence
+    (sosofo-append
+     (literal "(")
+     (sosofo-append
+      (process-children)
+      (literal ")")) )))
 
 ;; (element parameter
 ;;   (make display-group
