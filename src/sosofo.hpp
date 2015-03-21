@@ -16,6 +16,7 @@ public:
   /*! Creates an empty sosofo */
   Sosofo();
   Sosofo(const Sosofo& one, const Sosofo& two);
+  Sosofo(const std::vector<Sosofo>& sosofos);
 
   /*! Creates a sosofo with exactly one formatting object */
   Sosofo(std::shared_ptr<IFormattingObject> FO);

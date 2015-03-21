@@ -736,23 +736,32 @@ namespace {
   }
 
 
-  sexp func_sosofo_append(sexp ctx, sexp self, sexp_sint_t n, sexp sosofoArg1,
-                          sexp sosofoArg2)
+  sexp func_sosofo_append(sexp ctx, sexp self, sexp_sint_t n, sexp sosofoArg)
   {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
     result = SEXP_VOID;
 
-    if (sexp_check_tag(sosofoArg1, sosofo_tag_p(ctx)) &&
-        sexp_check_tag(sosofoArg2, sosofo_tag_p(ctx))) {
-      const Sosofo* sosofo1 = (const Sosofo*)(sexp_cpointer_value(sosofoArg1));
-      const Sosofo* sosofo2 = (const Sosofo*)(sexp_cpointer_value(sosofoArg2));
+    if (sexp_vectorp(sosofoArg)) {
+      int len = sexp_vector_length(sosofoArg);
 
-      result = make_sosofo(ctx, new Sosofo(*sosofo1, *sosofo2));
+      std::vector<Sosofo> sosofos;
+
+      for (int i = 0; i < len; ++i) {
+        sexp ref = sexp_vector_ref(sosofoArg, sexp_make_fixnum(i));
+
+        if (sexp_check_tag(ref, sosofo_tag_p(ctx))) {
+          const Sosofo* sosofo = (const Sosofo*)(sexp_cpointer_value(ref));
+
+          sosofos.emplace_back(*sosofo);
+        }
+      }
+
+      result = make_sosofo(ctx, new Sosofo(sosofos));
     }
     else {
-      result = sexp_user_exception(ctx, self, "not a sosofo", sosofoArg1);
+      result = sexp_user_exception(ctx, self, "not a sosofo", sosofoArg);
     }
 
     sexp_gc_release1(ctx);
@@ -780,7 +789,7 @@ namespace {
 
     sexp_define_foreign(ctx, sexp_context_env(ctx), "empty-sosofo", 0,
                         &func_empty_sosofo);
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "sosofo-append", 2,
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "%sosofo-append", 1,
                         &func_sosofo_append);
 
     sexp_gc_release3(ctx);

@@ -34,3 +34,9 @@
     ((node-list) (empty-node-list))
     ((node-list args ...) (%node-list (list->vector (quote-args args ...))))
     ))
+
+(define-syntax sosofo-append
+  (syntax-rules ()
+    ((sosofo-append) (empty-sosofo))
+    ((sosofo-append args ...) (%sosofo-append (list->vector (quote-args args ...))))
+    ))

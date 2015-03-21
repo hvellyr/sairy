@@ -19,6 +19,13 @@ Sosofo::Sosofo(const Sosofo& one, const Sosofo& two)
   mFOs.insert(mFOs.end(), two.mFOs.begin(), two.mFOs.end());
 }
 
+Sosofo::Sosofo(const std::vector<Sosofo>& sosofos)
+{
+  for (const auto& sosofo : sosofos) {
+    mFOs.insert(mFOs.end(), sosofo.mFOs.begin(), sosofo.mFOs.end());
+  }
+}
+
 Sosofo::Sosofo(std::shared_ptr<IFormattingObject> FO) : mFOs({FO})
 {
 }
