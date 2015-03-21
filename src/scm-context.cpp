@@ -647,6 +647,56 @@ namespace {
   }
 
 
+  sexp func_abs_first_sibling_p(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    if (const Node* node = node_from_arg(ctx, nlArg)) {
+      const Node* parent = node->parent();
+      if (parent) {
+        auto siblings = parent->property<Nodes>(CommonProps::kChildren);
+        if (!siblings.empty()) {
+          result = siblings.front() == node ? SEXP_TRUE : SEXP_FALSE;
+        }
+      }
+    }
+    else {
+      result =
+        sexp_user_exception(ctx, self, "not a node/singleton node-list", nlArg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_abs_last_sibling_p(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    if (const Node* node = node_from_arg(ctx, nlArg)) {
+      const Node* parent = node->parent();
+      if (parent) {
+        auto siblings = parent->property<Nodes>(CommonProps::kChildren);
+        if (!siblings.empty()) {
+          result = siblings.back() == node ? SEXP_TRUE : SEXP_FALSE;
+        }
+      }
+    }
+    else {
+      result =
+        sexp_user_exception(ctx, self, "not a node/singleton node-list", nlArg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
   void init_nodelist_functions(sexp ctx)
   {
     sexp_gc_var3(nm, ty, op);
@@ -688,6 +738,11 @@ namespace {
                         &func_ancestors);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "descendants", 1,
                         &func_descendants);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "absolute-first-sibling?", 1,
+                        &func_abs_first_sibling_p);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "absolute-last-sibling?", 1,
+                        &func_abs_last_sibling_p);
 
     sexp_gc_release3(ctx);
   }
