@@ -8,13 +8,15 @@
 #include "html-writer.hpp"
 
 #include <boost/filesystem.hpp>
+#include <boost/optional/optional.hpp>
 
 #include <list>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <string>
-#include <unordered_map>
 #include <tuple>
+#include <unordered_map>
 
 
 namespace eyestep {
@@ -32,6 +34,8 @@ namespace detail {
     kSmallCaps,
   };
 
+  using CssAttrMap = std::map<std::string, std::string>;
+
   using RefRegistry = std::unordered_map<std::string, std::string>;
 
   class HtmlRenderContext {
@@ -42,6 +46,7 @@ namespace detail {
     CapsStyle mCaps;
     RefRegistry mRefRegistry;
     // std::list<Sosofo> mFootNotes;
+    std::list<CssAttrMap> mCssStack;
 
   public:
     HtmlRenderContext();
@@ -55,6 +60,11 @@ namespace detail {
 
     CapsStyle capsStyle();
     void setCapsStyle(CapsStyle capsStyle);
+
+    void pushCssMap(const CssAttrMap& map);
+    void popCssMap();
+
+    boost::optional<std::string> cssProperty(const std::string& key) const;
   };
 } // ns detail
 

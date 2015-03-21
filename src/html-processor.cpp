@@ -13,6 +13,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
+#include <boost/optional/optional.hpp>
 
 #include <iostream>
 #include <map>
@@ -45,8 +46,8 @@ void detail::HtmlRenderContext::pushPort(std::unique_ptr<html::Writer> port,
                                          const fs::path& path)
 {
   mPorts.push_front(
-      std::tuple<std::unique_ptr<html::Writer>, fs::path>(std::move(mPort),
-                                                          mPath));
+    std::tuple<std::unique_ptr<html::Writer>, fs::path>(std::move(mPort),
+                                                        mPath));
   mPort = std::move(port);
   mPath = path;
 }
@@ -73,6 +74,35 @@ void detail::HtmlRenderContext::setCapsStyle(CapsStyle capsStyle)
 }
 
 
+void detail::HtmlRenderContext::pushCssMap(const CssAttrMap& map)
+{
+  mCssStack.push_front(map);
+}
+
+
+void detail::HtmlRenderContext::popCssMap()
+{
+  if (!mCssStack.empty()) {
+    mCssStack.pop_front();
+  }
+}
+
+boost::optional<std::string>
+detail::HtmlRenderContext::cssProperty(const std::string& key) const
+{
+  for (const auto& map : mCssStack) {
+    const auto i_find = map.find(key);
+    if (i_find != map.end()) {
+      return i_find->second;
+    }
+  }
+
+  return boost::none;
+}
+
+
+//------------------------------------------------------------------------------
+
 namespace {
   std::string dimenToCss(const fo::Dimen& dim)
   {
@@ -97,9 +127,23 @@ namespace {
   }
 
 
-  using CssAttrMap = std::map<std::string, std::string>;
+  detail::CssAttrMap new_css_attrs(const detail::HtmlRenderContext& ctx,
+                                   const detail::CssAttrMap& attrs)
+  {
+    detail::CssAttrMap result;
 
-  std::string css_attr_to_string(const CssAttrMap& map)
+    for (const auto& pair : attrs) {
+      auto val = ctx.cssProperty(pair.first);
+      if (!val || *val != pair.second) {
+        result[pair.first] = pair.second;
+      }
+    }
+
+    return result;
+  }
+
+
+  std::string css_attr_to_string(const detail::CssAttrMap& map)
   {
     std::stringstream ss;
     for (const auto& pair : map) {
@@ -110,7 +154,7 @@ namespace {
 
 
   template <typename T>
-  void set_css_attr(CssAttrMap& map, const std::string& key,
+  void set_css_attr(detail::CssAttrMap& map, const std::string& key,
                     boost::optional<T> val_or_none)
   {
     if (val_or_none) {
@@ -119,7 +163,7 @@ namespace {
   }
 
 
-  void set_css_attr(CssAttrMap& map, const std::string& key,
+  void set_css_attr(detail::CssAttrMap& map, const std::string& key,
                     boost::optional<fo::Dimen> val_or_none)
   {
     if (val_or_none) {
@@ -128,14 +172,14 @@ namespace {
   }
 
 
-  void set_css_attr(CssAttrMap& map, const std::string& key,
+  void set_css_attr(detail::CssAttrMap& map, const std::string& key,
                     const std::string& val)
   {
     map[key] = val;
   }
 
 
-  void set_css_capsstyle(CssAttrMap& map, HtmlProcessor* processor,
+  void set_css_capsstyle(detail::CssAttrMap& map, HtmlProcessor* processor,
                          boost::optional<std::string> val_or_none)
   {
     if (val_or_none) {
@@ -175,6 +219,60 @@ namespace {
     }
 
     return attrs;
+  }
+
+
+  html::Tag css_optional_span_tag(HtmlProcessor* processor,
+                                  const detail::CssAttrMap& attrs)
+  {
+    if (!attrs.empty()) {
+      return std::move(html::Tag(processor->ctx().port(), "span",
+                                 styleStrToAttrs(css_attr_to_string(attrs))));
+    }
+
+    return std::move(html::Tag());
+  }
+
+
+  void set_css_font_characteristics(detail::CssAttrMap& map,
+                                    HtmlProcessor* processor,
+                                    const IFormattingObject* fo)
+  {
+    auto fontSize = processor->propertyOrNone<fo::Dimen>(fo, "font-size");
+    // auto fontWeight =
+    //   processor->propertyOrNone<std::string>(fo, "font-weight");
+    // auto fontPosture =
+    //   processor->propertyOrNone<std::string>(fo, "font-posture");
+    auto fontCaps = processor->propertyOrNone<std::string>(fo, "font-caps");
+    auto posPtShift =
+      processor->propertyOrNone<fo::Dimen>(fo, "position-point-shift");
+
+    set_css_attr(map, "font-size", fontSize);
+    set_css_capsstyle(map, processor, fontCaps);
+    set_css_attr(map, "position", "relative");
+    set_css_attr(map, "top", posPtShift);
+  }
+
+
+  void set_css_space_characteristics(detail::CssAttrMap& map,
+                                     HtmlProcessor* processor,
+                                     const IFormattingObject* fo)
+  {
+    auto startIndent =
+      processor->propertyOrNone<fo::Dimen>(fo, "start-indent");
+    auto endIndent =
+      processor->propertyOrNone<fo::Dimen>(fo, "end-indent");
+    auto firstLineStartIndent =
+      processor->propertyOrNone<fo::Dimen>(fo, "first-line-start-indent");
+    auto spaceBefore =
+      processor->propertyOrNone<fo::Dimen>(fo, "space-before");
+    auto spaceAfter = processor->propertyOrNone<fo::Dimen>(fo, "space-after");
+
+    set_css_attr(map, "margin-left", startIndent);
+    set_css_attr(map, "margin-right", endIndent);
+    set_css_attr(map, "margin-top", spaceBefore);
+    set_css_attr(map, "margin-bottom", spaceAfter);
+    set_css_attr(map, "first-line-start-indent", firstLineStartIndent);
   }
 
 
@@ -229,37 +327,30 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      auto startIndent =
-          processor->propertyOrNone<fo::Dimen>(fo, "start-indent");
-      auto firstLineStartIndent =
-          processor->propertyOrNone<fo::Dimen>(fo, "first-line-start-indent");
-      auto fontSize = processor->propertyOrNone<fo::Dimen>(fo, "font-size");
-      auto fontWeight =
-          processor->propertyOrNone<std::string>(fo, "font-weight");
-      auto fontPosture =
-          processor->propertyOrNone<std::string>(fo, "font-posture");
-      auto fontCaps = processor->propertyOrNone<std::string>(fo, "font-caps");
-      auto spaceBefore =
-          processor->propertyOrNone<fo::Dimen>(fo, "space-before");
-      auto spaceAfter = processor->propertyOrNone<fo::Dimen>(fo, "space-after");
-
-      CssAttrMap map;
-      set_css_attr(map, "margin-left", startIndent);
-      set_css_attr(map, "first-line-start-indent", firstLineStartIndent);
-      set_css_attr(map, "font-size", fontSize);
-      set_css_attr(map, "margin-top", spaceBefore);
-      set_css_attr(map, "margin-bottom", spaceAfter);
-      set_css_capsstyle(map, processor, fontCaps);
+      detail::CssAttrMap map;
+      set_css_font_characteristics(map, processor, fo);
+      set_css_space_characteristics(map, processor, fo);
 
       {
+        auto css_attrs = new_css_attrs(processor->ctx(), map);
         html::Tag with_tag(processor->ctx().port(), "p",
-                           styleStrToAttrs(css_attr_to_string(map)));
-        html::Tag b_tag(
-            std::move(css_optional_tag(processor, "b", fontWeight, "bold")));
-        html::Tag i_tag(
-            std::move(css_optional_tag(processor, "i", fontPosture, "italic")));
+                           styleStrToAttrs(css_attr_to_string(css_attrs)));
+        processor->ctx().pushCssMap(css_attrs);
+
+        html::Tag b_tag(std::move(
+          css_optional_tag(processor, "b",
+                           processor
+                             ->propertyOrNone<std::string>(fo, "font-weight"),
+                           "bold")));
+        html::Tag i_tag(std::move(
+          css_optional_tag(processor, "i",
+                           processor
+                             ->propertyOrNone<std::string>(fo, "font-posture"),
+                           "italic")));
 
         processor->renderSosofo(&fo->port("text"));
+
+        processor->ctx().popCssMap();
       }
       processor->ctx().port().newln();
     }
@@ -282,10 +373,20 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
+      detail::CssAttrMap map;
+      set_css_font_characteristics(map, processor, fo);
+      set_css_space_characteristics(map, processor, fo);
+
       {
-        html::Tag with_tag(processor->ctx().port(), "div");
+        auto css_attrs = new_css_attrs(processor->ctx(), map);
+        html::Tag with_tag(processor->ctx().port(), "div",
+                           styleStrToAttrs(css_attr_to_string(css_attrs)));
+        processor->ctx().pushCssMap(css_attrs);
+
         processor->ctx().port().newln();
         processor->renderSosofo(&fo->port("text"));
+
+        processor->ctx().popCssMap();
       }
       processor->ctx().port().newln();
     }
@@ -321,30 +422,28 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      auto posPtShift =
-          processor->propertyOrNone<fo::Dimen>(fo, "position-point-shift");
-      auto fontSize = processor->propertyOrNone<fo::Dimen>(fo, "font-size");
-      auto fontWeight =
-          processor->propertyOrNone<std::string>(fo, "font-weight");
-      auto fontPosture =
-          processor->propertyOrNone<std::string>(fo, "font-posture");
-      auto fontCaps = processor->propertyOrNone<std::string>(fo, "font-caps");
-
-      CssAttrMap map;
-      set_css_attr(map, "position", "relative");
-      set_css_attr(map, "top", posPtShift);
-      set_css_attr(map, "font-size", fontSize);
-      set_css_capsstyle(map, processor, fontCaps);
+      detail::CssAttrMap map;
+      set_css_font_characteristics(map, processor, fo);
 
       {
-        html::Tag with_tag(processor->ctx().port(), "span",
-                           styleStrToAttrs(css_attr_to_string(map)));
-        html::Tag b_tag(
-            std::move(css_optional_tag(processor, "b", fontWeight, "bold")));
-        html::Tag i_tag(
-            std::move(css_optional_tag(processor, "i", fontPosture, "italic")));
+        auto css_attrs = new_css_attrs(processor->ctx(), map);
+        html::Tag span_tag(css_optional_span_tag(processor, css_attrs));
+        processor->ctx().pushCssMap(css_attrs);
+
+        html::Tag b_tag(std::move(
+          css_optional_tag(processor, "b",
+                           processor
+                             ->propertyOrNone<std::string>(fo, "font-weight"),
+                           "bold")));
+        html::Tag i_tag(std::move(
+          css_optional_tag(processor, "i",
+                           processor
+                             ->propertyOrNone<std::string>(fo, "font-posture"),
+                           "italic")));
 
         processor->renderSosofo(&fo->port("text"));
+
+        processor->ctx().popCssMap();
       }
     }
   };
@@ -367,16 +466,15 @@ const IFoProcessor<HtmlProcessor>*
 HtmlProcessor::lookupFoProcessor(const std::string& foClassName) const
 {
   static auto procs =
-      std::map<std::string, std::shared_ptr<IFoProcessor<HtmlProcessor>>>{
-          {"#literal", std::make_shared<HtmlLiteralFoProcessor>()},
-          {"#paragraph", std::make_shared<HtmlParagraphFoProcessor>()},
-          {"#paragraph-break",
-           std::make_shared<HtmlParagraphBreakFoProcessor>()},
-          {"#display-group", std::make_shared<HtmlDisplayGroupFoProcessor>()},
-          {"#simple-page-sequence",
-           std::make_shared<HtmlSimplePageSequenceFoProcessor>()},
-          {"#sequence", std::make_shared<HtmlSequenceFoProcessor>()},
-      };
+    std::map<std::string, std::shared_ptr<IFoProcessor<HtmlProcessor>>>{
+      {"#literal", std::make_shared<HtmlLiteralFoProcessor>()},
+      {"#paragraph", std::make_shared<HtmlParagraphFoProcessor>()},
+      {"#paragraph-break", std::make_shared<HtmlParagraphBreakFoProcessor>()},
+      {"#display-group", std::make_shared<HtmlDisplayGroupFoProcessor>()},
+      {"#simple-page-sequence",
+       std::make_shared<HtmlSimplePageSequenceFoProcessor>()},
+      {"#sequence", std::make_shared<HtmlSequenceFoProcessor>()},
+    };
 
   auto i_find = procs.find(foClassName);
 
@@ -387,7 +485,7 @@ HtmlProcessor::lookupFoProcessor(const std::string& foClassName) const
 void HtmlProcessor::beforeRendering()
 {
   auto mainPort =
-      estd::make_unique<html::Writer>(html::kXHTML_1_1_DTD, kSairyGenerator);
+    estd::make_unique<html::Writer>(html::kXHTML_1_1_DTD, kSairyGenerator);
   mCtx.pushPort(std::move(mainPort), mOutputFile);
 }
 
@@ -407,5 +505,6 @@ html::Writer& HtmlProcessor::writer()
 {
   return mCtx.port();
 }
+
 
 } // ns eyestep

@@ -169,6 +169,7 @@ namespace fo {
         PropertySpec("asis-wrap-indent", 10),
         PropertySpec("numbered-lines?", false),
         PropertySpec("line-number-side", "start"),
+        PropertySpec("position-point-shift", Dimen(0, k_pt)),
     };
     return propspecs;
   }
