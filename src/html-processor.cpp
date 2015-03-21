@@ -346,7 +346,6 @@ namespace {
 
         processor->renderSosofo(&fo->port("text"));
       }
-      processor->ctx().port().newln();
     }
   };
 
