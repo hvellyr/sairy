@@ -78,8 +78,8 @@ namespace {
       Node* param = grove->makeNode(elementClassDefinition());
       param->setProperty("gi", "parameter");
       param->setProperty("name", std::get<0>(args_nm[i]));
-      param->setProperty("type", make_type_node(grove, "type",
-                                                std::get<1>(args_nm[i])));
+      param->addChildNode(make_type_node(grove, "type",
+                                         std::get<1>(args_nm[i])));
       parameters->addChildNode(param);
     }
 
