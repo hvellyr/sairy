@@ -3,8 +3,11 @@
   (export current-mode register-default-rule register-root-rule register-element-rule
           default element root mode process-node-list process-children current-node
           make literal dimen
+          select-elements match-element?
           node-list
           sosofo-append
           )
+  (include "fo.scm")
   (include "dsssl.scm")
-  (include "fo.scm"))
+  (include "query.scm")
+  )
