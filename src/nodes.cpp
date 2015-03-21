@@ -69,6 +69,11 @@ const std::string& Node::className() const
   return mClass->className;
 }
 
+const NodeClass* Node::nodeClass() const
+{
+  return mClass;
+}
+
 std::string Node::gi() const
 {
   return property<std::string>(CommonProps::kGi);
@@ -303,25 +308,24 @@ void serialize(std::ostream& os, const Node* nd, int in_depth)
   };
 
   nodeTraverse(nd, [&os, &last_depth, &close_node](const Node* nd, int depth) {
-                     close_node(last_depth, depth);
-                     last_depth = depth;
+    close_node(last_depth, depth);
+    last_depth = depth;
 
-                     os << std::string(depth * 2, ' ') << "<node gi='"
-                        << nd->gi() << "'>" << std::endl;
-                     for (const auto& prop : nd->properties()) {
-                       if (prop.first != CommonProps::kChildren &&
-                           prop.first != CommonProps::kGi &&
-                           prop.first != CommonProps::kParent) {
-                         os << std::string((depth + 1) * 2, ' ') << "<prop nm='"
-                            << prop.first << "'>";
-                         SerializeVisitor visitor(os, depth + 2);
-                         boost::apply_visitor(visitor, prop.second);
-                         os << "</prop>" << std::endl;
-                       }
-                     }
-                     return TraverseRecursion::kRecurse;
-                   },
-               in_depth);
+    os << std::string(depth * 2, ' ') << "<node gi='" << nd->gi() << "'>"
+       << std::endl;
+    for (const auto& prop : nd->properties()) {
+      if (prop.first != CommonProps::kChildren &&
+          prop.first != CommonProps::kGi &&
+          prop.first != CommonProps::kParent) {
+        os << std::string((depth + 1) * 2, ' ') << "<prop nm='" << prop.first
+           << "'>";
+        SerializeVisitor visitor(os, depth + 2);
+        boost::apply_visitor(visitor, prop.second);
+        os << "</prop>" << std::endl;
+      }
+    }
+    return TraverseRecursion::kRecurse;
+  }, in_depth);
 
   close_node(last_depth, in_depth);
 }

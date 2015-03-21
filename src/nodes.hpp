@@ -52,6 +52,7 @@ public:
   Node& operator=(Node&& other) = default;
 
   const std::string& className() const;
+  const NodeClass* nodeClass() const;
   std::string gi() const;
   Node* parent() const;
   Grove* grove() const;

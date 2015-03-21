@@ -3,6 +3,7 @@
 
 #include "estd/memory.hpp"
 #include "fo.hpp"
+#include "nodeclass.hpp"
 #include "nodelist.hpp"
 #include "nodes.hpp"
 #include "scm-context.hpp"
@@ -11,9 +12,10 @@
 #include "chibi/eval.h"
 #include "chibi/sexp.h"
 
+#include <boost/optional/optional.hpp>
+#include <boost/range/algorithm/find_if.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
-#include <boost/optional/optional.hpp>
 
 #include <iostream>
 #include <memory>
@@ -651,12 +653,17 @@ namespace {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
+    result = SEXP_FALSE;
+
     if (const Node* node = node_from_arg(ctx, nlArg)) {
       const Node* parent = node->parent();
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::kChildren);
-        if (!siblings.empty()) {
-          result = siblings.front() == node ? SEXP_TRUE : SEXP_FALSE;
+        auto i_find = boost::find_if(siblings, [&node](const Node* lnd) {
+          return lnd->nodeClass() == elementClassDefinition();
+        });
+        if (i_find != siblings.end()) {
+          result = *i_find == node ? SEXP_TRUE : SEXP_FALSE;
         }
       }
     }
@@ -676,12 +683,21 @@ namespace {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
+    result = SEXP_FALSE;
+
     if (const Node* node = node_from_arg(ctx, nlArg)) {
       const Node* parent = node->parent();
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::kChildren);
-        if (!siblings.empty()) {
-          result = siblings.back() == node ? SEXP_TRUE : SEXP_FALSE;
+        std::reverse(siblings.begin(), siblings.end());
+
+        auto i_find =
+          boost::find_if(siblings,
+                       [&node](Node* lnd) {
+                         return lnd && lnd->nodeClass() == elementClassDefinition();
+                       });
+        if (i_find != siblings.end()) {
+          result = *i_find == node ? SEXP_TRUE : SEXP_FALSE;
         }
       }
     }
@@ -738,8 +754,8 @@ namespace {
     sexp_define_foreign(ctx, sexp_context_env(ctx), "descendants", 1,
                         &func_descendants);
 
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "absolute-first-sibling?", 1,
-                        &func_abs_first_sibling_p);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "absolute-first-sibling?",
+                        1, &func_abs_first_sibling_p);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "absolute-last-sibling?", 1,
                         &func_abs_last_sibling_p);
 
