@@ -43,6 +43,9 @@ namespace {
 #define SOSOFO_TAG "<sosofo>"
 #define SOSOFO_TAG_SIZE 8
 
+#define DIMEN_TAG "<dimen>"
+#define DIMEN_TAG_SIZE 7
+
 
   //----------------------------------------------------------------------------
 
@@ -66,6 +69,25 @@ namespace {
       return false;
     }
     return true;
+  }
+
+
+  int dimen_tag_p(sexp ctx)
+  {
+    int retv = 0;
+    sexp_gc_var2(ty, nm);
+    sexp_gc_preserve2(ctx, ty, nm);
+
+    ty =
+      sexp_env_ref(ctx, sexp_context_env(ctx),
+                   nm = sexp_intern(ctx, DIMEN_TAG, DIMEN_TAG_SIZE), SEXP_VOID);
+    if (sexp_typep(ty)) {
+      retv = sexp_type_tag(ty);
+    }
+
+    sexp_gc_release2(ctx);
+
+    return retv;
   }
 
 
@@ -201,29 +223,102 @@ namespace {
     return fo::k_pt;
   }
 
-  boost::optional<fo::Dimen> dimen_from_sexp_or_none(sexp ctx, sexp obj)
+
+  //------------------------------------------------------------------------------
+
+  sexp make_dimen(sexp ctx, fo::Dimen dim)
   {
-    boost::optional<fo::Dimen> result;
+    sexp_gc_var4(ty, tmp, result, nm);
+    sexp_gc_preserve4(ctx, ty, tmp, result, nm);
 
-    if (sexp_pairp(obj)) {
-      auto unitnm = string_from_symbol_sexp_or_none(ctx, sexp_cdr(obj));
+    ty =
+      sexp_env_ref(ctx, sexp_context_env(ctx),
+                   nm = sexp_intern(ctx, DIMEN_TAG, DIMEN_TAG_SIZE), SEXP_VOID);
 
-      if (unitnm) {
-        fo::Unit unit = map_name_to_unit(*unitnm);
-
-        if (sexp_flonump(sexp_car(obj))) {
-          result = fo::Dimen(sexp_flonum_value(sexp_car(obj)), unit);
-        }
-        else if (sexp_ratiop(sexp_car(obj))) {
-          result = fo::Dimen(sexp_ratio_to_double(sexp_car(obj)), unit);
-        }
-        else if (sexp_fixnump(sexp_car(obj))) {
-          result = fo::Dimen(int(sexp_unbox_fixnum(sexp_car(obj))), unit);
-        }
-      }
+    if (sexp_typep(ty)) {
+      result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
+      sexp_cpointer_freep(result) = 0;
+      sexp_cpointer_length(result) = 0;
+      sexp_cpointer_value(result) = (void*)new fo::Dimen(dim);
+    }
+    else {
+      result = SEXP_VOID;
     }
 
+    sexp_gc_release4(ctx);
+
     return result;
+  }
+
+
+  sexp free_dimen(sexp ctx, sexp self, sexp_sint_t n, sexp dimArg)
+  {
+    const fo::Dimen* dimen = (const fo::Dimen*)(sexp_cpointer_value(dimArg));
+    delete dimen;
+
+    sexp_cpointer_value(dimArg) = nullptr;
+    return SEXP_VOID;
+  }
+
+
+  sexp func_make_dimen(sexp ctx, sexp self, sexp n, sexp valArg, sexp unitArg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    auto unitnm = string_from_symbol_sexp_or_none(ctx, unitArg);
+
+    result = SEXP_VOID;
+
+    if (unitnm) {
+      fo::Unit unit = map_name_to_unit(*unitnm);
+
+      if (sexp_flonump(valArg)) {
+        result = make_dimen(ctx, fo::Dimen(sexp_flonum_value(valArg), unit));
+      }
+      else if (sexp_ratiop(valArg)) {
+        result = make_dimen(ctx, fo::Dimen(sexp_ratio_to_double(valArg), unit));
+      }
+      else if (sexp_fixnump(valArg)) {
+        result =
+          make_dimen(ctx, fo::Dimen(int(sexp_unbox_fixnum(valArg)), unit));
+      }
+      else {
+        result = sexp_user_exception(ctx, self, "invalid number", valArg);
+      }
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "invalid unit", unitArg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  void init_dimen_functions(sexp ctx)
+  {
+    sexp_gc_var3(nm, ty, op);
+    sexp_gc_preserve3(ctx, nm, ty, op);
+
+    // register qobject type
+    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "dimen", -1),
+                              &free_dimen);
+
+    sexp_env_cell_define(ctx, sexp_context_env(ctx),
+                         nm = sexp_intern(ctx, DIMEN_TAG, DIMEN_TAG_SIZE), ty,
+                         NULL);
+    op =
+      sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "dimen?", -1), ty);
+    sexp_env_define(ctx, sexp_context_env(ctx),
+                    nm = sexp_intern(ctx, "dimen?", -1), op);
+
+    // register functions
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-dimen", 2,
+                        &func_make_dimen);
+
+    sexp_gc_release3(ctx);
   }
 
 
@@ -691,11 +786,9 @@ namespace {
         auto siblings = parent->property<Nodes>(CommonProps::kChildren);
         std::reverse(siblings.begin(), siblings.end());
 
-        auto i_find =
-          boost::find_if(siblings,
-                       [&node](Node* lnd) {
-                         return lnd && lnd->nodeClass() == elementClassDefinition();
-                       });
+        auto i_find = boost::find_if(siblings, [&node](Node* lnd) {
+          return lnd && lnd->nodeClass() == elementClassDefinition();
+        });
         if (i_find != siblings.end()) {
           result = *i_find == node ? SEXP_TRUE : SEXP_FALSE;
         }
@@ -897,11 +990,9 @@ namespace {
       else if (sexp_fixnump(obj)) {
         result = fo::PropertySpec(key, int(sexp_unbox_fixnum(obj)));
       }
-      else if (sexp_pairp(obj)) {
-        auto dimen = dimen_from_sexp_or_none(ctx, obj);
-        if (dimen) {
-          result = fo::PropertySpec(key, *dimen);
-        }
+      else if (sexp_check_tag(obj, dimen_tag_p(ctx))) {
+        const fo::Dimen* dimen = (const fo::Dimen*)(sexp_cpointer_value(obj));
+        result = fo::PropertySpec(key, *dimen);
       }
       else if (sexp_stringp(obj)) {
         result = fo::PropertySpec(key, std::string(sexp_string_data(obj)));
@@ -1030,6 +1121,7 @@ namespace {
 
   void init_builtins(sexp ctx)
   {
+    init_dimen_functions(ctx);
     init_node_functions(ctx);
     init_nodelist_functions(ctx);
     init_sosofo_functions(ctx);

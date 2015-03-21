@@ -27,6 +27,7 @@
 (element function
   (make display-group
     (make paragraph
+      space-before: (dimen 1 em)
       quadding: 'left
       (sosofo-append
        (process-node-list (select-elements (children (current-node)) 'return-type))
