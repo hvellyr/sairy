@@ -557,6 +557,40 @@ namespace {
   }
 
 
+  sexp func_node_list_ctor(sexp ctx, sexp self, sexp_sint_t n, sexp argsArg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    if (sexp_vectorp(argsArg)) {
+      int len = sexp_vector_length(argsArg);
+
+      std::vector<NodeList> nodelist;
+      for (int i = 0; i < len; ++i) {
+        sexp ref = sexp_vector_ref(argsArg, sexp_make_fixnum(i));
+
+        if (sexp_check_tag(ref, node_tag_p(ctx))) {
+          const Node* nd = (const Node*)(sexp_cpointer_value(ref));
+          nodelist.emplace_back(NodeList(std::vector<const Node*>{nd}));
+        }
+        else if (sexp_check_tag(ref, nodelist_tag_p(ctx))) {
+          const NodeList* nl = (const NodeList*)(sexp_cpointer_value(ref));
+          nodelist.emplace_back(nl->clone());
+        }
+      }
+
+      result = make_nodelist(ctx, new NodeList(nodelist));
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a vector", argsArg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
   sexp make_nodelist_on_axis(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg,
                              NodeList::Kind kind)
   {
@@ -641,6 +675,8 @@ namespace {
                         &func_node_list_first);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list-rest", 1,
                         &func_node_list_rest);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "%node-list", 1,
+                        &func_node_list_ctor);
 
     sexp_define_foreign(ctx, sexp_context_env(ctx), "children", 1,
                         &func_children);

@@ -27,3 +27,10 @@
   (syntax-rules ()
     ((literal str) (%make-fo 'literal (vector text: str)))
     ))
+
+
+(define-syntax node-list
+  (syntax-rules ()
+    ((node-list) (empty-node-list))
+    ((node-list args ...) (%node-list (list->vector (quote-args args ...))))
+    ))
