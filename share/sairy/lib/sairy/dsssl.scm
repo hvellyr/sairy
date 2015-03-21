@@ -179,7 +179,7 @@
              (sosofo (empty-sosofo)))
     (if (node-list-empty? p)
         sosofo
-        (let* ((node (node-list-head p))
+        (let* ((node (node-list-first p))
                ;; (result-sosofo (parameterize ((current-node node))
                ;;                              (process-node (current-mode)
                ;;                                            node))) )

@@ -15,7 +15,7 @@
 (display nl) (newline)
 (display "A node list? ") (display (node-list? nl)) (newline)
 (display "  length: ") (display (node-list-length nl)) (newline)
-(display "  head: ") (display (node-list-head nl)) (newline)
+(display "  head: ") (display (node-list-first nl)) (newline)
 (display "  empty?: ") (display (node-list-empty? nl)) (newline)
 (newline)
 
@@ -24,6 +24,6 @@
      (if (node-list-empty? nl)
          #t
          (begin
-           (display (gi (node-list-head nl))) (newline)
+           (display (gi (node-list-first nl))) (newline)
            (loop (node-list-rest nl)))
          ))

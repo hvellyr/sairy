@@ -518,7 +518,7 @@ namespace {
   }
 
 
-  sexp func_node_list_head(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
+  sexp func_node_list_first(sexp ctx, sexp self, sexp_sint_t n, sexp nlArg)
   {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
@@ -637,8 +637,8 @@ namespace {
                         &func_node_list_length);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list-empty?", 1,
                         &func_node_list_empty_p);
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list-head", 1,
-                        &func_node_list_head);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list-first", 1,
+                        &func_node_list_first);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list-rest", 1,
                         &func_node_list_rest);
 
