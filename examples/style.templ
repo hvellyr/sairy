@@ -29,8 +29,10 @@
     (make paragraph
       quadding: 'left
       (sosofo-append
-       (process-children)
+       (process-node-list (select-elements (children (current-node)) 'return-type))
+       (literal " ")
        (literal (node-property 'name (current-node)))
+       (process-node-list (select-elements (children (current-node)) 'parameters))
        ))))
 
 (element (function return-type)
@@ -38,14 +40,26 @@
     font-weight: 'bold
     (literal (node-property 'name (current-node))) ))
 
-(element parameters
+(element (function parameters)
   (make sequence
     (sosofo-append
      (literal "(")
-     (sosofo-append
-      (process-children)
-      (literal ")")) )))
+     (process-children)
+     (literal ")")) ))
 
-;; (element parameter
-;;   (make display-group
-;;     (process-children)))
+(element (parameter type)
+  (make sequence
+    font-weight: 'bold
+    (literal (node-property 'name (current-node))) ))
+
+(element parameter
+  (sosofo-append
+   (process-node-list (select-elements (children (current-node)) 'type))
+   (literal " ")
+   (make sequence
+     font-posture: 'italic
+     (literal (node-property 'name (current-node))))
+   (if (absolute-last-sibling? (current-node))
+       (empty-sosofo)
+       (literal ", "))
+   ))
