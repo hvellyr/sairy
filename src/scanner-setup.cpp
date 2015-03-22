@@ -7,6 +7,7 @@
 #include "utils.hpp"
 
 #include "cpp-scanner.hpp"
+#include "md-scanner.hpp"
 #include "textbook-scanner.hpp"
 
 #include <boost/filesystem.hpp>
@@ -59,6 +60,7 @@ namespace {
     if (s_scanner_factory_map.empty()) {
       register_scanner_factory<CppScanner>();
       register_scanner_factory<TextbookScanner>();
+      register_scanner_factory<MarkdownScanner>();
     }
 
     return s_scanner_factory_map;

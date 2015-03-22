@@ -66,6 +66,17 @@ target_compile_options(textbook-scanner
 
 
 #------------------------------------------------------------------------------
+add_library(mdscanner
+  md-scanner.cpp
+  md-scanner.hpp
+)
+target_include_directories(mdscanner
+  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_compile_options(mdscanner
+  PUBLIC ${cxx11_options} ${warning_options})
+
+
+#------------------------------------------------------------------------------
 add_library(fo
   fo.hpp
   fos.cpp
@@ -141,6 +152,7 @@ target_include_directories(sairy
 target_link_libraries(sairy
   cppscanner
   textbook-scanner
+  mdscanner
   debug-processor
   fo
   grove
@@ -150,6 +162,7 @@ target_link_libraries(sairy
   textbook-parser
   sairy-utils
   ${LibClang_LIBRARIES}
+  hoedown
   ${Boost_LIBRARIES})
 
 set(sairy_app "${PROJECT_BINARY_DIR}/app")
