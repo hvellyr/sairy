@@ -4,17 +4,22 @@
 *.chibi            text
 *.cmake            text
 *.cpp              text diff=cpp
+*.def              text
 *.dylib            binary
 *.el               text
-*.h                text diff=cpp
+*.gperf            text
 *.h                text diff=cpp
 *.hpp              text diff=cpp
+*.html             text
 *.in               text
 *.ipp              text diff=cpp
+*.json             text
 *.libs             text
+*.md               text
 *.modulemap        text
 *.pl               text
 *.png              binary
+*.py               text
 *.sch              text
 *.scm              text
 *.scrbl            text
@@ -23,6 +28,7 @@
 *.spec             text
 *.tb               text
 *.templ            text
+*.text             text
 *.textbook         text
 *.tstyle           text
 *.txt              text
