@@ -53,6 +53,9 @@
 (define (register-root-rule mode . body)
   (hash-table-set! (match-node-others (rules-registry mode)) '<root> (make-match-node body)))
 
+(define (register-text-rule mode . body)
+  (hash-table-set! (match-node-others (rules-registry mode)) '<text> (make-match-node body)))
+
 (define (register-element-rule selector mode . body)
   (let loop ((gis (if (list? selector)
                       (reverse selector)
@@ -95,6 +98,12 @@
   (syntax-rules ()
     ((root body ...)
      (register-root-rule (current-mode) (lambda () body ...)) )))
+
+;; A text-construction-rule matches any text nodes
+(define-syntax text
+  (syntax-rules ()
+    ((text body ...)
+     (register-text-rule (current-mode) (lambda () body ...)) )))
 
 ;; A construction-rule in a mode-construction-rule-group matches a node only
 ;; when the current processing mode is mode-name.
@@ -156,10 +165,17 @@
                                  mode
                                  '(<root>)))
 
+(define (process-text mode)
+  (process-node-by-path-and-mode `(((<text>) ,mode)
+                                   ((<text>) ,default-mode-marker))
+                                 mode
+                                 '(<text>)))
+
 (define (process-node mode nd)
   (case (class nd)
    ( (document) (process-document mode))
    ( (element) (process-element-by-path mode (gi-path nd)))
+   ( (text) (process-text mode))
    ( else (empty-sosofo)) ))
 
 
