@@ -24,8 +24,8 @@ std::ostream& operator<<(std::ostream& os, const Undefined&)
 std::ostream& operator<<(std::ostream& os, const Nodes& nodelist)
 {
   os << "[ " << std::endl;
-  for (const auto& nd : nodelist) {
-    os << nd << std::endl;
+  for (const auto* nd : nodelist) {
+    os << *nd << std::endl;
   }
   os << "]";
   return os;
@@ -34,11 +34,16 @@ std::ostream& operator<<(std::ostream& os, const Nodes& nodelist)
 
 std::ostream& operator<<(std::ostream& os, const Node& node)
 {
-  os << "Node '" << node["gi"] << "' {" << std::endl;
+  os << node.className();
+  if (node.nodeClass() == elementClassDefinition()) {
+    os << " '" << node["gi"] << "'";
+  }
+  os << " {" << std::endl;
 
   for (const auto& p : node.mProperties) {
-    if (p.first != "gi")
+    if (p.first != CommonProps::kGi && p.first != CommonProps::kParent) {
       os << "  '" << p.first << "': " << p.second << ";" << std::endl;
+    }
   }
   os << "}";
 
@@ -287,11 +292,13 @@ namespace {
 
     void operator()(const Nodes& nl)
     {
-      mOs << std::endl;
-      for (auto* nd : nl) {
-        serialize(mOs, nd, mDepth);
+      if (!nl.empty()) {
+        mOs << std::endl;
+        for (auto* nd : nl) {
+          serialize(mOs, nd, mDepth);
+        }
+        mOs << std::string((mDepth - 1) * 2, ' ');
       }
-      mOs << std::string((mDepth - 1) * 2, ' ');
     }
   };
 
@@ -301,18 +308,21 @@ void serialize(std::ostream& os, const Node* nd, int in_depth)
 {
   int last_depth = in_depth - 1;
 
-  auto close_node = [&os](int lastd, int depth) {
+  auto close_node = [&os](const Node* n, int lastd, int depth) {
     for (int i = lastd; i >= depth; --i) {
-      os << std::string(i * 2, ' ') << "</node>" << std::endl;
+      os << std::string(i * 2, ' ') << "</" << n->className() << ">" << std::endl;
     }
   };
 
   nodeTraverse(nd, [&os, &last_depth, &close_node](const Node* nd, int depth) {
-    close_node(last_depth, depth);
+    close_node(nd, last_depth, depth);
     last_depth = depth;
 
-    os << std::string(depth * 2, ' ') << "<node gi='" << nd->gi() << "'>"
-       << std::endl;
+    os << std::string(depth * 2, ' ') << "<" << nd->className();
+    if (nd->nodeClass() == elementClassDefinition()) {
+      os << " gi='" << nd->gi() << "'";
+    }
+    os << ">" << std::endl;
     for (const auto& prop : nd->properties()) {
       if (prop.first != CommonProps::kChildren &&
           prop.first != CommonProps::kGi &&
@@ -327,7 +337,7 @@ void serialize(std::ostream& os, const Node* nd, int in_depth)
     return TraverseRecursion::kRecurse;
   }, in_depth);
 
-  close_node(last_depth, in_depth);
+  close_node(nd, last_depth, in_depth);
 }
 
 } // ns eyestep
