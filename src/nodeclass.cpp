@@ -57,6 +57,17 @@ const NodeClass* elementClassDefinition()
 }
 
 
+const NodeClass* textClassDefinition()
+{
+  static NodeClass eltClass{"text",
+                            PropertySet{
+                              {"data", PropertyType::kString, false},
+                            },
+                            anyClassDefinition()};
+  return &eltClass;
+}
+
+
 const Property* findProperty(const NodeClass* nodeClass,
                              const std::string& propName)
 {

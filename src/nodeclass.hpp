@@ -46,6 +46,7 @@ const NodeClass* anyClassDefinition();
 const NodeClass* rootClassDefinition();
 const NodeClass* documentClassDefinition();
 const NodeClass* elementClassDefinition();
+const NodeClass* textClassDefinition();
 
 const Property* findProperty(const NodeClass* nodeClass,
                              const std::string& propName);

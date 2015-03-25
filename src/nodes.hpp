@@ -35,6 +35,7 @@ struct CommonProps {
   static const std::string kParent;
   static const std::string kGi;
   static const std::string kChildren;
+  static const std::string kData;
 };
 
 
@@ -100,6 +101,7 @@ class Grove {
 public:
   Node* makeNode(const NodeClass* nodeClass);
   Node* makeEltNode(const std::string& gi);
+  Node* makeTextNode(const std::string& data);
 
   Node* setRootNode(const NodeClass* nodeClass);
   Node* rootNode() const;

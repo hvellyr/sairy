@@ -56,6 +56,7 @@ std::ostream& operator<<(std::ostream& os, const Node& node)
 const std::string CommonProps::kParent = "parent";
 const std::string CommonProps::kGi = "gi";
 const std::string CommonProps::kChildren = "children";
+const std::string CommonProps::kData = "data";
 
 
 //------------------------------------------------------------------------------
@@ -230,6 +231,15 @@ Node* Grove::makeEltNode(const std::string& gi)
   nd->setProperty(CommonProps::kGi, gi);
   return nd;
 }
+
+
+Node* Grove::makeTextNode(const std::string& data)
+{
+  auto* nd = makeNode(textClassDefinition());
+  nd->setProperty(CommonProps::kData, data);
+  return nd;
+}
+
 
 Node* Grove::setRootNode(const NodeClass* nodeClass)
 {
