@@ -28,7 +28,9 @@ The unit tests can be executed with ctest:
 You might set the following variables:
 
 - Boost_INCLUDE_DIR   to the folder, where Boost headers are found
-
+- LibClang_ROOT_DIR   to the folder, where LibClang headers and libraries are
+                      installed
 Example:
 
-  cmake .. -DBoost_INCLUDE_DIR=/opt/local/include/
+  cmake .. -DBoost_INCLUDE_DIR=/opt/local/include/ \
+           -DLibClang_ROOT_DIR=/opt/local
