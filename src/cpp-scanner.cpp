@@ -184,7 +184,15 @@ namespace {
 
 //------------------------------------------------------------------------------
 
-const std::string CppScanner::kId = "cpp";
+std::string CppScanner::scanner_id() const
+{
+  return "cpp";
+}
+
+std::unordered_set<std::string> CppScanner::supported_extensions() const
+{
+  return { ".c", ".cpp", ".cxx", ".h", ".hh", ".hpp", ".hxx", ".ipp", ".m", ".mm" };
+}
 
 Node* CppScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile,
                             const std::vector<std::string>& incls,

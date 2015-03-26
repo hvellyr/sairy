@@ -11,6 +11,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <cassert>
 
 
 namespace eyestep {
@@ -18,34 +19,54 @@ namespace eyestep {
 namespace fs = boost::filesystem;
 
 
+namespace {
+  using ScannerFactoryFunc = std::function<std::unique_ptr<IScanner>()>;
+  using ScannerClassFactoryMap =
+    std::unordered_map<std::string, ScannerFactoryFunc>;
+
+  using ScannerExtensionMap = std::unordered_map<std::string, std::string>;
+
+  ScannerClassFactoryMap s_scanner_factory_map;
+  ScannerExtensionMap s_scanner_extension_map;
+
+  template <typename ScannerClass>
+  void register_scanner_factory()
+  {
+    ScannerClass scanner;
+    const auto id = scanner.scanner_id();
+
+    const auto i_find = s_scanner_factory_map.find(id);
+    assert(i_find == s_scanner_factory_map.end());
+    s_scanner_factory_map[id] =
+      []() { return estd::make_unique<ScannerClass>(); };
+
+    for (const auto& ext : scanner.supported_extensions()) {
+      const auto i_find = s_scanner_extension_map.find(ext);
+      assert(i_find == s_scanner_extension_map.end());
+      s_scanner_extension_map[ext] = id;
+    }
+  }
+
+} // anon ns
+
+
 std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file)
 {
-  static std::unordered_map<std::string, std::string> parser_map = {
-    {".c", eyestep::CppScanner::kId},
-    {".cpp", eyestep::CppScanner::kId},
-    {".cxx", eyestep::CppScanner::kId},
-    {".h", eyestep::CppScanner::kId},
-    {".hh", eyestep::CppScanner::kId},
-    {".hpp", eyestep::CppScanner::kId},
-    {".hxx", eyestep::CppScanner::kId},
-    {".ipp", eyestep::CppScanner::kId},
-    {".m", eyestep::CppScanner::kId},
-    {".mm", eyestep::CppScanner::kId},
-  };
+  if (s_scanner_factory_map.empty()) {
+    register_scanner_factory<CppScanner>();
+  }
 
-  auto i_parser_type = parser_map.find(file.extension().string());
-  if (i_parser_type != parser_map.end()) {
-    if (i_parser_type->second == eyestep::CppScanner::kId) {
-      return estd::make_unique<eyestep::CppScanner>();
-    }
-    else if (i_parser_type->second == eyestep::ScribeScanner::kId) {
-      return estd::make_unique<eyestep::ScribeScanner>();
+  auto ext = file.extension().string();
+  const auto i_scanner_type = s_scanner_extension_map.find(ext);
+  if (i_scanner_type != s_scanner_extension_map.end()) {
+    const auto i_scanner_factory =
+      s_scanner_factory_map.find(i_scanner_type->second);
+    if (i_scanner_factory != s_scanner_factory_map.end()) {
+      return i_scanner_factory->second();
     }
   }
 
   return nullptr;
 }
-
-
 
 } // ns eyestep
