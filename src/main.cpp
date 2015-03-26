@@ -5,13 +5,14 @@
 #include "nodeclass.hpp"
 #include "nodes.hpp"
 #include "processor.hpp"
+#include "scanner-setup.hpp"
+#include "scanner.hpp"
 #include "scm-context.hpp"
 #include "sosofo.hpp"
 #include "source.hpp"
 #include "style-engine.hpp"
 #include "utils.hpp"
 
-#include "cpp-scanner.hpp"
 #include "debug-processor.hpp"
 #include "html-processor.hpp"
 
@@ -23,7 +24,6 @@
 
 #include <string>
 #include <iostream>
-#include <unordered_map>
 #include <memory>
 
 #define SAIRY_DEFAULT_PREFIX "/usr/local/share/sairy"
@@ -49,32 +49,6 @@ std::pair<std::string, std::string> parse_for_isystem(const std::string& s)
 }
 
 
-std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file)
-{
-  static std::unordered_map<std::string, std::string> parser_map = {
-    {".c", eyestep::CppScanner::kId},
-    {".cpp", eyestep::CppScanner::kId},
-    {".cxx", eyestep::CppScanner::kId},
-    {".h", eyestep::CppScanner::kId},
-    {".hh", eyestep::CppScanner::kId},
-    {".hpp", eyestep::CppScanner::kId},
-    {".hxx", eyestep::CppScanner::kId},
-    {".ipp", eyestep::CppScanner::kId},
-    {".m", eyestep::CppScanner::kId},
-    {".mm", eyestep::CppScanner::kId},
-  };
-
-  auto i_parser_type = parser_map.find(file.extension().string());
-  if (i_parser_type != parser_map.end()) {
-    if (i_parser_type->second == eyestep::CppScanner::kId) {
-      return estd::make_unique<eyestep::CppScanner>();
-    }
-  }
-
-  return nullptr;
-}
-
-
 eyestep::Grove scan_sources(const std::vector<eyestep::Source>& sources,
                             const std::vector<std::string>& incl_paths,
                             const std::vector<std::string>& defs)
@@ -91,7 +65,7 @@ eyestep::Grove scan_sources(const std::vector<eyestep::Source>& sources,
       std::cout.flush();
 
       std::unique_ptr<eyestep::IScanner> scanner =
-        make_scanner_for_file(src._srcfile);
+        eyestep::make_scanner_for_file(src._srcfile);
 
       if (scanner) {
         eyestep::Node* nd =
