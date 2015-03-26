@@ -48,7 +48,7 @@ set(modules_output_srfi39 "${modules_output}/srfi/39")
 file(MAKE_DIRECTORY "${modules_output_srfi39}")
 set_target_properties(param
   PROPERTIES PREFIX ""
-             SUFFIX ".dylib"
+             SUFFIX ".so"
              LIBRARY_OUTPUT_DIRECTORY ${modules_output_srfi39}
              LIBRARY_OUTPUT_DIRECTORY_DEBUG ${modules_output_srfi39}
              LIBRARY_OUTPUT_DIRECTORY_RELEASE ${modules_output_srfi39})
@@ -69,7 +69,7 @@ set(modules_output_srfi69 "${modules_output}/srfi/69")
 file(MAKE_DIRECTORY "${modules_output_srfi69}")
 set_target_properties(hash
   PROPERTIES PREFIX ""
-             SUFFIX ".dylib"
+             SUFFIX ".so"
              LIBRARY_OUTPUT_DIRECTORY ${modules_output_srfi69}
              LIBRARY_OUTPUT_DIRECTORY_DEBUG ${modules_output_srfi69}
              LIBRARY_OUTPUT_DIRECTORY_RELEASE ${modules_output_srfi69})
