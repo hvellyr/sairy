@@ -126,6 +126,22 @@ std::unique_ptr<eyestep::IProcessor> findProcessor(const std::string& backend)
   return nullptr;
 }
 
+fs::path deduceOutputFile(const std::string& outf,
+                          const std::vector<eyestep::Source>& sources,
+                          const std::string& default_ext)
+{
+  if (!outf.empty()) {
+    return outf;
+  }
+
+  if (!sources.empty()) {
+    auto first = sources[0].mSrcfile;
+    return first.replace_extension(default_ext).filename();
+  }
+
+  return fs::path();
+}
+
 } // anon namespace
 
 
@@ -265,7 +281,9 @@ int main(int argc, char** argv)
     if (!templ_path.empty()) {
       auto processor = findProcessor(backend);
       if (processor) {
-        processor->setOutputFile(outf);
+        processor->setOutputFile(
+          deduceOutputFile(outf, sources,
+                           processor->default_output_extension()));
 
         eyestep::StyleEngine engine(eyestep::utils::split_paths(prefix_path),
                                     processor->procId());

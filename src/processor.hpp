@@ -20,6 +20,8 @@ public:
   virtual ~IProcessor() {}
 
   virtual void setOutputFile(const boost::filesystem::path& outputFile) = 0;
+  virtual std::string default_output_extension() const = 0;
+
   virtual std::string procId() const = 0;
   virtual void renderProcessedNode(const Sosofo* sosofo) = 0;
 

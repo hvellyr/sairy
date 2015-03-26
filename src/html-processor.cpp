@@ -459,6 +459,11 @@ std::string HtmlProcessor::procId() const
 }
 
 
+std::string HtmlProcessor::default_output_extension() const
+{
+  return ".html";
+}
+
 const IFoProcessor<HtmlProcessor>*
 HtmlProcessor::lookupFoProcessor(const std::string& foClassName) const
 {

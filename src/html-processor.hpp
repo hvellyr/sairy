@@ -76,6 +76,7 @@ public:
   HtmlProcessor();
 
   std::string procId() const override;
+  std::string default_output_extension() const override;
 
   const IFoProcessor<HtmlProcessor>*
   lookupFoProcessor(const std::string& foClassName) const override;

@@ -22,6 +22,7 @@ class DebugProcessor : public AbstractProcessor<DebugProcessor> {
 
 public:
   std::string procId() const override;
+  std::string default_output_extension() const override;
 
   const IFoProcessor<DebugProcessor>*
   lookupFoProcessor(const std::string& foClassName) const override;

@@ -81,6 +81,10 @@ std::string DebugProcessor::procId() const
   return "#debug-processor";
 }
 
+std::string DebugProcessor::default_output_extension() const
+{
+  return std::string();
+}
 
 const IFoProcessor<DebugProcessor>*
 DebugProcessor::lookupFoProcessor(const std::string& foClassName) const
