@@ -2,6 +2,7 @@
 *.a                binary
 *.c                text diff=cpp
 *.chibi            text
+*.cmake            text
 *.cpp              text diff=cpp
 *.dylib            binary
 *.h                text diff=cpp

@@ -29,7 +29,7 @@ add_library(cppscanner
   cpp-scanner.hpp
 )
 target_include_directories(cppscanner
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+  PUBLIC "$<BUILD_INTERFACE:${LibClang_INCLUDE_DIRS};${Boost_INCLUDE_DIRS}>")
 target_compile_options(cppscanner
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -113,7 +113,7 @@ target_link_libraries(sairy
   html-processor
   processor-base
   scheme
-  clang
+  ${LibClang_LIBRARIES}
   ${Boost_LIBRARIES})
 
 
