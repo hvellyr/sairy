@@ -52,16 +52,16 @@ std::pair<std::string, std::string> parseForISystem(const std::string& s)
 std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file)
 {
   static std::unordered_map<std::string, std::string> parser_map = {
-      {".c", eyestep::CppScanner::kId},
-      {".cpp", eyestep::CppScanner::kId},
-      {".cxx", eyestep::CppScanner::kId},
-      {".h", eyestep::CppScanner::kId},
-      {".hh", eyestep::CppScanner::kId},
-      {".hpp", eyestep::CppScanner::kId},
-      {".hxx", eyestep::CppScanner::kId},
-      {".ipp", eyestep::CppScanner::kId},
-      {".m", eyestep::CppScanner::kId},
-      {".mm", eyestep::CppScanner::kId},
+    {".c", eyestep::CppScanner::kId},
+    {".cpp", eyestep::CppScanner::kId},
+    {".cxx", eyestep::CppScanner::kId},
+    {".h", eyestep::CppScanner::kId},
+    {".hh", eyestep::CppScanner::kId},
+    {".hpp", eyestep::CppScanner::kId},
+    {".hxx", eyestep::CppScanner::kId},
+    {".ipp", eyestep::CppScanner::kId},
+    {".m", eyestep::CppScanner::kId},
+    {".mm", eyestep::CppScanner::kId},
   };
 
   auto i_parser_type = parser_map.find(file.extension().string());
@@ -91,14 +91,13 @@ eyestep::Grove scan_sources(const std::vector<eyestep::Source>& sources,
       std::cout.flush();
 
       std::unique_ptr<eyestep::IScanner> scanner =
-          make_scanner_for_file(src.mSrcfile);
+        make_scanner_for_file(src.mSrcfile);
 
       if (scanner) {
         eyestep::Node* nd =
-            scanner->scanFile(grove, src.mSrcfile,
-                              eyestep::utils::joinList(incl_paths,
-                                                       src.mLocIncls),
-                              eyestep::utils::joinList(defs, src.mLocDefs));
+          scanner->scanFile(grove, src.mSrcfile,
+                            eyestep::utils::joinList(incl_paths, src.mLocIncls),
+                            eyestep::utils::joinList(defs, src.mLocDefs));
         std::cout << " ok" << std::endl;
 
         root->addChildNode(nd);
@@ -178,17 +177,16 @@ int main(int argc, char** argv)
 
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv)
-                  .options(options)
-                  .positional(p)
-                  .extra_parser(parseForISystem)
-                  .run(),
+                .options(options)
+                .positional(p)
+                .extra_parser(parseForISystem)
+                .run(),
               vm);
     po::store(po::parse_environment(options, [](const std::string& opt) {
-                if (opt == "SAIRY_PREFIX")
-                  return std::string("sairy-prefix");
-                return std::string();
-              }),
-              vm);
+      if (opt == "SAIRY_PREFIX")
+        return std::string("sairy-prefix");
+      return std::string();
+    }), vm);
     po::notify(vm);
 
     if (vm.count("help")) {
@@ -252,7 +250,7 @@ int main(int argc, char** argv)
     }
     else if (vm.count("input-file") > 0) {
       std::vector<std::string> inputs =
-          vm["input-file"].as<std::vector<std::string>>();
+        vm["input-file"].as<std::vector<std::string>>();
       for (const auto& input : inputs) {
         sources.emplace_back(input, std::vector<std::string>(),
                              std::vector<std::string>());

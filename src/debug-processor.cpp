@@ -86,13 +86,13 @@ const IFoProcessor<DebugProcessor>*
 DebugProcessor::lookupFoProcessor(const std::string& foClassName) const
 {
   static auto procs =
-      std::map<std::string, std::shared_ptr<IFoProcessor<DebugProcessor>>>{
-          {"#literal", std::make_shared<DebugFoProcessor>()},
-          {"#paragraph", std::make_shared<DebugFoProcessor>()},
-          {"#paragraph-break", std::make_shared<DebugFoProcessor>()},
-          {"#display-group", std::make_shared<DebugFoProcessor>()},
-          {"#simple-page-sequence", std::make_shared<DebugFoProcessor>()},
-      };
+    std::map<std::string, std::shared_ptr<IFoProcessor<DebugProcessor>>>{
+      {"#literal", std::make_shared<DebugFoProcessor>()},
+      {"#paragraph", std::make_shared<DebugFoProcessor>()},
+      {"#paragraph-break", std::make_shared<DebugFoProcessor>()},
+      {"#display-group", std::make_shared<DebugFoProcessor>()},
+      {"#simple-page-sequence", std::make_shared<DebugFoProcessor>()},
+    };
 
   auto i_find = procs.find(foClassName);
 

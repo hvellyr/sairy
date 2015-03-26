@@ -258,14 +258,11 @@ namespace {
                                      HtmlProcessor* processor,
                                      const IFormattingObject* fo)
   {
-    auto startIndent =
-      processor->propertyOrNone<fo::Dimen>(fo, "start-indent");
-    auto endIndent =
-      processor->propertyOrNone<fo::Dimen>(fo, "end-indent");
+    auto startIndent = processor->propertyOrNone<fo::Dimen>(fo, "start-indent");
+    auto endIndent = processor->propertyOrNone<fo::Dimen>(fo, "end-indent");
     auto firstLineStartIndent =
       processor->propertyOrNone<fo::Dimen>(fo, "first-line-start-indent");
-    auto spaceBefore =
-      processor->propertyOrNone<fo::Dimen>(fo, "space-before");
+    auto spaceBefore = processor->propertyOrNone<fo::Dimen>(fo, "space-before");
     auto spaceAfter = processor->propertyOrNone<fo::Dimen>(fo, "space-after");
 
     set_css_attr(map, "margin-left", startIndent);
