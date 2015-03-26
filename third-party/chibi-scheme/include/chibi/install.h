@@ -1,4 +1,4 @@
-#define sexp_so_extension ".dylib"
+#define sexp_so_extension ".so"
 #define sexp_default_module_path "/usr/local/share/chibi:/usr/local/lib/chibi"
 #define sexp_platform "macosx"
 #define sexp_version "0.7.2"
