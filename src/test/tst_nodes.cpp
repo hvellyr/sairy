@@ -181,27 +181,27 @@ TEST_CASE("Serialize", "[nodes]")
   nd->addNode("types", type);
 
   const std::string exptected_output =
-      "<node gi='foo'>\n"
+      "<element gi='foo'>\n"
       "  <prop nm='name'>bar</prop>\n"
       "  <prop nm='size'>42</prop>\n"
       "  <prop nm='types'>\n"
-      "    <node gi='type'>\n"
+      "    <element gi='type'>\n"
       "      <prop nm='const?'>1</prop>\n"
-      "    </node>\n"
+      "    </element>\n"
       "  </prop>\n"
-      "  <node gi='title'>\n"
-      "  </node>\n"
-      "  <node gi='args'>\n"
+      "  <element gi='title'>\n"
+      "  </element>\n"
+      "  <element gi='args'>\n"
       "    <prop nm='params'>\n"
-      "      <node gi='p1'>\n"
-      "      </node>\n"
-      "      <node gi='p2'>\n"
-      "      </node>\n"
-      "      <node gi='p3'>\n"
-      "      </node>\n"
+      "      <element gi='p1'>\n"
+      "      </element>\n"
+      "      <element gi='p2'>\n"
+      "      </element>\n"
+      "      <element gi='p3'>\n"
+      "      </element>\n"
       "    </prop>\n"
-      "  </node>\n"
-      "</node>\n";
+      "  </element>\n"
+      "</element>\n";
 
   std::stringstream ss;
   serialize(ss, grove.rootNode());
