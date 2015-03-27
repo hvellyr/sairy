@@ -21,13 +21,15 @@
 
 include(FindPackageHandleStandardArgs)
 
-find_path(LibClang_ROOT_DIR
-  NAMES include/clang include/clang-c
-  PATHS /usr/lib/llvm-3.5 /usr/local/lib/llvm-3.5 /opt/local/lib/llvm-3.5
-        /usr /usr/local /opt/local
-    ENV LibClang_ROOT_DIR
-  NO_DEFAULT_PATH
-  DOC "libclang root directory")
+if (NOT LibClang_ROOT_DIR)
+  find_path(LibClang_ROOT_DIR
+    NAMES include/clang include/clang-c
+    PATHS /usr/lib/llvm-3.5 /usr/local/lib/llvm-3.5 /opt/local/lib/llvm-3.5
+          /usr /usr/local /opt/local
+      ENV LibClang_ROOT_DIR
+    NO_DEFAULT_PATH
+    DOC "libclang root directory")
+endif()
 
 find_path(LibClang_INCLUDE_DIR
     NAMES clang/Analysis clang/ARCMigrate
