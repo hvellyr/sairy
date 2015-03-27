@@ -22,15 +22,15 @@ class DebugProcessor : public AbstractProcessor<DebugProcessor> {
   using Super = AbstractProcessor;
 
 public:
-  std::string procId() const override;
+  std::string proc_id() const override;
   std::string default_output_extension() const override;
 
   const IFoProcessor<DebugProcessor>*
-  lookupFoProcessor(const std::string& foClassName) const override;
+  lookup_fo_processor(const std::string& fo_classname) const override;
 
-  void beforeRendering() override;
-  void renderSosofo(const Sosofo* sosofo) override;
-  void renderFo(const IFormattingObject* fo) override;
+  void before_rendering() override;
+  void render_sosofo(const Sosofo* sosofo) override;
+  void render_fo(const IFormattingObject* fo) override;
 };
 
 } // ns eyestep

@@ -11,78 +11,78 @@
 
 namespace eyestep {
 
-const NodeClass* anyClassDefinition()
+const NodeClass* any_class_definition()
 {
-  static NodeClass anyClass{"any", PropertySet(), nullptr};
-  return &anyClass;
+  static NodeClass any_class{"any", PropertySet(), nullptr};
+  return &any_class;
 }
 
-const NodeClass* rootClassDefinition()
+const NodeClass* root_class_definition()
 {
-  static NodeClass rootClass{"root",
-                             PropertySet{{"start-time", PropertyType::kString,
-                                          false},
-                                         {"end-time", PropertyType::kString,
-                                          false}},
-                             anyClassDefinition()};
-  return &rootClass;
+  static NodeClass root_class{"root",
+                              PropertySet{{"start-time", PropertyType::k_string,
+                                           false},
+                                          {"end-time", PropertyType::k_string,
+                                           false}},
+                              any_class_definition()};
+  return &root_class;
 }
 
-const NodeClass* documentClassDefinition()
+const NodeClass* document_class_definition()
 {
-  static NodeClass docClass{"document",
-                            PropertySet{
-                              {"source", PropertyType::kString, false},
-                              {"app-info", PropertyType::kString, false},
-                              {"children", PropertyType::kNodeList,
-                               true}, // conprop=content
-                            },
-                            anyClassDefinition()};
-  return &docClass;
-}
-
-
-const NodeClass* elementClassDefinition()
-{
-  static NodeClass eltClass{"element",
-                            PropertySet{
-                              {"source", PropertyType::kString, false},
-                              {"children", PropertyType::kNodeList,
-                               true}, // conprop=content
-                              {"gi", PropertyType::kString, true},
-                              {"id", PropertyType::kString, false},
-                            },
-                            anyClassDefinition()};
-  return &eltClass;
+  static NodeClass doc_class{"document",
+                             PropertySet{
+                               {"source", PropertyType::k_string, false},
+                               {"app-info", PropertyType::k_string, false},
+                               {"children", PropertyType::k_nodelist,
+                                true}, // conprop=content
+                             },
+                             any_class_definition()};
+  return &doc_class;
 }
 
 
-const NodeClass* textClassDefinition()
+const NodeClass* element_class_definition()
 {
-  static NodeClass eltClass{"text",
-                            PropertySet{
-                              {"data", PropertyType::kString, false},
-                            },
-                            anyClassDefinition()};
-  return &eltClass;
+  static NodeClass elt_class{"element",
+                             PropertySet{
+                               {"source", PropertyType::k_string, false},
+                               {"children", PropertyType::k_nodelist,
+                                true}, // conprop=content
+                               {"gi", PropertyType::k_string, true},
+                               {"id", PropertyType::k_string, false},
+                             },
+                             any_class_definition()};
+  return &elt_class;
 }
 
 
-const Property* findProperty(const NodeClass* nodeClass,
-                             const std::string& propName)
+const NodeClass* text_class_definition()
 {
-  const NodeClass* p = nodeClass;
+  static NodeClass elt_class{"text",
+                             PropertySet{
+                               {"data", PropertyType::k_string, false},
+                             },
+                             any_class_definition()};
+  return &elt_class;
+}
+
+
+const Property* find_property(const NodeClass* node_class,
+                              const std::string& propname)
+{
+  const NodeClass* p = node_class;
   while (p) {
     auto i_prop =
-      std::find_if(p->propertiesSpec.begin(), p->propertiesSpec.end(),
-                   [&propName](const Property& prop) {
-                     return prop.name == propName;
+      std::find_if(p->_properties_spec.begin(), p->_properties_spec.end(),
+                   [&propname](const Property& prop) {
+                     return prop._name == propname;
                    });
-    if (i_prop != p->propertiesSpec.end()) {
+    if (i_prop != p->_properties_spec.end()) {
       return &(*i_prop);
     }
 
-    p = p->superClass;
+    p = p->_super_class;
   }
 
   return nullptr;

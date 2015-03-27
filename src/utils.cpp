@@ -39,8 +39,8 @@ namespace utils {
   }
 
 
-  std::vector<std::string> joinList(const std::vector<std::string>& one,
-                                    const std::vector<std::string>& sec)
+  std::vector<std::string> join_list(const std::vector<std::string>& one,
+                                     const std::vector<std::string>& sec)
   {
     std::vector<std::string> result;
     result.insert(result.end(), one.begin(), one.end());

@@ -12,7 +12,7 @@
 namespace eyestep {
 
 class PropertiesStack {
-  std::list<fo::PropertySpecs> mStack;
+  std::list<fo::PropertySpecs> _stack;
 
 public:
   void push(const fo::PropertySpecs& props);

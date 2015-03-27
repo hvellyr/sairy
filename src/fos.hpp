@@ -18,14 +18,14 @@ class Sosofo;
 namespace fo {
   class Fo : public IFormattingObject {
   protected:
-    const PropertySpecs mProps;
+    const PropertySpecs _props;
     Fo() = default;
-    Fo(const PropertySpecs& props) : mProps(props) {}
+    Fo(const PropertySpecs& props) : _props(props) {}
 
   public:
-    const PropertySpecs& properties() const override { return mProps; }
+    const PropertySpecs& properties() const override { return _props; }
     const std::vector<std::string>& ports() const override;
-    const Sosofo& port(const std::string& portName) const override;
+    const Sosofo& port(const std::string& portname) const override;
   };
 
 
@@ -34,25 +34,25 @@ namespace fo {
     Literal() = default;
     Literal(const PropertySpecs& props);
 
-    std::string className() const override;
-    const PropertySpecs& defaultProperties() const override;
-    const Sosofo& port(const std::string& portName) const override;
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
+    const Sosofo& port(const std::string& portname) const override;
 
     std::string text() const;
   };
 
 
   class Paragraph : public Fo {
-    const Sosofo mTextPort;
+    const Sosofo _text_port;
 
   public:
     Paragraph() = default;
     Paragraph(const PropertySpecs& props, const Sosofo& sosofo);
 
-    std::string className() const override;
-    const PropertySpecs& defaultProperties() const override;
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
-    const Sosofo& port(const std::string& portName) const override;
+    const Sosofo& port(const std::string& portname) const override;
   };
 
 
@@ -60,92 +60,92 @@ namespace fo {
   public:
     ParagraphBreak() = default;
 
-    std::string className() const override;
-    const PropertySpecs& defaultProperties() const override;
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
   };
 
 
   class DisplayGroup : public Fo {
-    const Sosofo mTextPort;
+    const Sosofo _text_port;
 
   public:
     DisplayGroup() = default;
     DisplayGroup(const PropertySpecs& props, const Sosofo& sosofo);
 
-    std::string className() const override;
-    const PropertySpecs& defaultProperties() const override;
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
-    const Sosofo& port(const std::string& portName) const override;
+    const Sosofo& port(const std::string& portname) const override;
   };
 
 
   class Sequence : public Fo {
-    const Sosofo mTextPort;
+    const Sosofo _text_port;
 
   public:
     Sequence() = default;
     Sequence(const PropertySpecs& props, const Sosofo& sosofo);
 
-    std::string className() const override;
-    const PropertySpecs& defaultProperties() const override;
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
-    const Sosofo& port(const std::string& portName) const override;
+    const Sosofo& port(const std::string& portname) const override;
   };
 
 
   class LineField : public Fo {
-    const Sosofo mTextPort;
+    const Sosofo _text_port;
 
   public:
     LineField() = default;
     LineField(const PropertySpecs& props, const Sosofo& sosofo);
 
-    std::string className() const override;
-    const PropertySpecs& defaultProperties() const override;
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
-    const Sosofo& port(const std::string& portName) const override;
+    const Sosofo& port(const std::string& portname) const override;
   };
 
 
   class Score : public Fo {
-    const Sosofo mTextPort;
+    const Sosofo _text_port;
 
   public:
     Score() = default;
     Score(const PropertySpecs& props, const Sosofo& sosofo);
 
-    std::string className() const override;
-    const PropertySpecs& defaultProperties() const override;
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
-    const Sosofo& port(const std::string& portName) const override;
+    const Sosofo& port(const std::string& portname) const override;
   };
 
 
   class SimplePageSequence : public Fo {
-    const Sosofo mTextPort;
+    const Sosofo _text_port;
 
   public:
     SimplePageSequence() = default;
     SimplePageSequence(const PropertySpecs& props, const Sosofo& sosofo);
 
-    std::string className() const override;
-    const PropertySpecs& defaultProperties() const override;
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
-    const Sosofo& port(const std::string& portName) const override;
+    const Sosofo& port(const std::string& portname) const override;
   };
 
 
   class ScrollSequence : public Fo {
-    const Sosofo mScrollPort;
+    const Sosofo _scroll_port;
 
   public:
     ScrollSequence() = default;
     ScrollSequence(const PropertySpecs& props, const Sosofo& sosofo);
 
-    std::string className() const override;
-    const PropertySpecs& defaultProperties() const override;
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
-    const Sosofo& port(const std::string& portName) const override;
+    const Sosofo& port(const std::string& portname) const override;
   };
 
 
@@ -154,8 +154,8 @@ namespace fo {
     PageNumber() = default;
     PageNumber(const PropertySpecs& props);
 
-    std::string className() const override;
-    const PropertySpecs& defaultProperties() const override;
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
   };
 
 
@@ -164,22 +164,22 @@ namespace fo {
     Anchor() = default;
     Anchor(const PropertySpecs& props);
 
-    std::string className() const override;
-    const PropertySpecs& defaultProperties() const override;
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
   };
 
 
   class FootNote : public Fo {
-    const Sosofo mTextPort;
+    const Sosofo _text_port;
 
   public:
     FootNote() = default;
     FootNote(const PropertySpecs& props, const Sosofo& sosofo);
 
-    std::string className() const override;
-    const PropertySpecs& defaultProperties() const override;
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
-    const Sosofo& port(const std::string& portName) const override;
+    const Sosofo& port(const std::string& portname) const override;
   };
 
 

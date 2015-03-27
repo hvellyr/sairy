@@ -10,45 +10,45 @@
 
 namespace eyestep {
 
-enum class PropertyType { kInt, kString, kNode, kNodeList };
+enum class PropertyType { k_int, k_string, k_node, k_nodelist };
 
 class Property {
 public:
   Property(const std::string& nm, PropertyType ty, bool req)
-    : name(nm), type(ty), isRequired(req)
+    : _name(nm), _type(ty), _is_required(req)
   {
   }
 
-  const std::string name;
-  const PropertyType type;
-  const bool isRequired;
+  const std::string _name;
+  const PropertyType _type;
+  const bool _is_required;
 };
 
 using PropertySet = std::vector<Property>;
 
 class NodeClass {
 public:
-  NodeClass(const std::string& cnm, const PropertySet& propSpec,
+  NodeClass(const std::string& cnm, const PropertySet& prop_spec,
             const NodeClass* super)
-    : className(cnm), propertiesSpec(propSpec), superClass(super)
+    : _classname(cnm), _properties_spec(prop_spec), _super_class(super)
   {
   }
 
-  const std::string className;
-  const PropertySet propertiesSpec;
-  const NodeClass* superClass;
+  const std::string _classname;
+  const PropertySet _properties_spec;
+  const NodeClass* _super_class;
 };
 
 
 // common class definitions
 
-const NodeClass* anyClassDefinition();
-const NodeClass* rootClassDefinition();
-const NodeClass* documentClassDefinition();
-const NodeClass* elementClassDefinition();
-const NodeClass* textClassDefinition();
+const NodeClass* any_class_definition();
+const NodeClass* root_class_definition();
+const NodeClass* document_class_definition();
+const NodeClass* element_class_definition();
+const NodeClass* text_class_definition();
 
-const Property* findProperty(const NodeClass* nodeClass,
-                             const std::string& propName);
+const Property* find_property(const NodeClass* node_class,
+                              const std::string& propname);
 
 } // ns eyestep

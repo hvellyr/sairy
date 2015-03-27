@@ -19,9 +19,9 @@ class CppScanner : public IScanner {
 public:
   static const std::string kId;
 
-  Node* scanFile(eyestep::Grove& grove, const fs::path& srfile,
-                 const std::vector<std::string>& incls,
-                 const std::vector<std::string>& defs) override;
+  Node* scan_file(eyestep::Grove& grove, const fs::path& srfile,
+                  const std::vector<std::string>& incls,
+                  const std::vector<std::string>& defs) override;
 };
 
 } // ns eyestep

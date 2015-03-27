@@ -29,9 +29,9 @@ class IFoProcessor;
 
 namespace detail {
   enum CapsStyle {
-    kNormalCaps,
-    kUpperCaps,
-    kSmallCaps,
+    k_normal_caps,
+    k_upper_caps,
+    k_small_caps,
   };
 
   using CssAttrMap = std::map<std::string, std::string>;
@@ -39,50 +39,50 @@ namespace detail {
   using RefRegistry = std::unordered_map<std::string, std::string>;
 
   class HtmlRenderContext {
-    std::unique_ptr<html::Writer> mPort;
-    boost::filesystem::path mPath;
+    std::unique_ptr<html::Writer> _port;
+    boost::filesystem::path _path;
     std::list<std::tuple<std::unique_ptr<html::Writer>,
-                         boost::filesystem::path>> mPorts;
-    CapsStyle mCaps;
-    RefRegistry mRefRegistry;
-    // std::list<Sosofo> mFootNotes;
-    std::list<CssAttrMap> mCssStack;
+                         boost::filesystem::path>> _ports;
+    CapsStyle _caps;
+    RefRegistry _ref_registry;
+    // std::list<Sosofo> _foot_notes;
+    std::list<CssAttrMap> _css_stack;
 
   public:
     HtmlRenderContext();
 
     html::Writer& port();
-    boost::filesystem::path currentPath();
+    boost::filesystem::path current_path();
 
-    void pushPort(std::unique_ptr<html::Writer> port,
-                  const boost::filesystem::path& path);
-    void popPort();
+    void push_port(std::unique_ptr<html::Writer> port,
+                   const boost::filesystem::path& path);
+    void pop_port();
 
-    CapsStyle capsStyle();
-    void setCapsStyle(CapsStyle capsStyle);
+    CapsStyle capsstyle();
+    void set_capsstyle(CapsStyle capsstyle);
 
-    void pushCssMap(const CssAttrMap& map);
-    void popCssMap();
+    void push_cssmap(const CssAttrMap& map);
+    void pop_cssmap();
 
-    boost::optional<std::string> cssProperty(const std::string& key) const;
+    boost::optional<std::string> css_property(const std::string& key) const;
   };
 } // ns detail
 
 
 class HtmlProcessor : public AbstractProcessor<HtmlProcessor> {
-  detail::HtmlRenderContext mCtx;
+  detail::HtmlRenderContext _ctx;
 
 public:
   HtmlProcessor();
 
-  std::string procId() const override;
+  std::string proc_id() const override;
   std::string default_output_extension() const override;
 
   const IFoProcessor<HtmlProcessor>*
-  lookupFoProcessor(const std::string& foClassName) const override;
+  lookup_fo_processor(const std::string& fo_classname) const override;
 
-  void beforeRendering() override;
-  void afterRendering() override;
+  void before_rendering() override;
+  void after_rendering() override;
 
   detail::HtmlRenderContext& ctx();
   html::Writer& writer();

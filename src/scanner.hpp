@@ -20,9 +20,9 @@ class IScanner {
 public:
   virtual ~IScanner() {}
 
-  virtual Node* scanFile(eyestep::Grove& grove, const fs::path& srcfile,
-                         const std::vector<std::string>& incls,
-                         const std::vector<std::string>& defs) = 0;
+  virtual Node* scan_file(eyestep::Grove& grove, const fs::path& srcfile,
+                          const std::vector<std::string>& incls,
+                          const std::vector<std::string>& defs) = 0;
 };
 
 } // ns eyestep

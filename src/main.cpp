@@ -35,7 +35,7 @@ using namespace boost::gregorian;
 
 namespace {
 
-std::pair<std::string, std::string> parseForISystem(const std::string& s)
+std::pair<std::string, std::string> parse_for_isystem(const std::string& s)
 {
   if (s.find("-isystem") == 0) {
     return std::make_pair("isystem", std::string());
@@ -80,27 +80,28 @@ eyestep::Grove scan_sources(const std::vector<eyestep::Source>& sources,
                             const std::vector<std::string>& defs)
 {
   eyestep::Grove grove;
-  eyestep::Node* root = grove.setRootNode(eyestep::rootClassDefinition());
+  eyestep::Node* root = grove.set_root_node(eyestep::root_class_definition());
 
-  root->setProperty("start-time",
-                    to_iso_extended_string(microsec_clock::local_time()));
+  root->set_property("start-time",
+                     to_iso_extended_string(microsec_clock::local_time()));
 
   if (!sources.empty()) {
     for (const auto& src : sources) {
-      std::cout << "Scan " << src.mSrcfile << " ...";
+      std::cout << "Scan " << src._srcfile << " ...";
       std::cout.flush();
 
       std::unique_ptr<eyestep::IScanner> scanner =
-        make_scanner_for_file(src.mSrcfile);
+        make_scanner_for_file(src._srcfile);
 
       if (scanner) {
         eyestep::Node* nd =
-          scanner->scanFile(grove, src.mSrcfile,
-                            eyestep::utils::joinList(incl_paths, src.mLocIncls),
-                            eyestep::utils::joinList(defs, src.mLocDefs));
+          scanner->scan_file(grove, src._srcfile,
+                             eyestep::utils::join_list(incl_paths,
+                                                       src._locincls),
+                             eyestep::utils::join_list(defs, src._locdefs));
         std::cout << " ok" << std::endl;
 
-        root->addChildNode(nd);
+        root->add_child_node(nd);
       }
       else {
         std::cout << " no scanner for filetype" << std::endl;
@@ -108,13 +109,13 @@ eyestep::Grove scan_sources(const std::vector<eyestep::Source>& sources,
     }
   }
 
-  root->setProperty("end-time",
-                    to_iso_extended_string(microsec_clock::local_time()));
+  root->set_property("end-time",
+                     to_iso_extended_string(microsec_clock::local_time()));
 
   return grove;
 }
 
-std::unique_ptr<eyestep::IProcessor> findProcessor(const std::string& backend)
+std::unique_ptr<eyestep::IProcessor> find_processor(const std::string& backend)
 {
   if (backend == "debug") {
     return estd::make_unique<eyestep::DebugProcessor>();
@@ -126,16 +127,16 @@ std::unique_ptr<eyestep::IProcessor> findProcessor(const std::string& backend)
   return nullptr;
 }
 
-fs::path deduceOutputFile(const std::string& outf,
-                          const std::vector<eyestep::Source>& sources,
-                          const std::string& default_ext)
+fs::path deduce_output_file(const std::string& outf,
+                            const std::vector<eyestep::Source>& sources,
+                            const std::string& default_ext)
 {
   if (!outf.empty()) {
     return outf;
   }
 
   if (!sources.empty()) {
-    auto first = sources[0].mSrcfile;
+    auto first = sources[0]._srcfile;
     return first.replace_extension(default_ext).filename();
   }
 
@@ -195,7 +196,7 @@ int main(int argc, char** argv)
     po::store(po::command_line_parser(argc, argv)
                 .options(options)
                 .positional(p)
-                .extra_parser(parseForISystem)
+                .extra_parser(&parse_for_isystem)
                 .run(),
               vm);
     po::store(po::parse_environment(options, [](const std::string& opt) {
@@ -262,7 +263,7 @@ int main(int argc, char** argv)
     std::vector<eyestep::Source> sources;
 
     if (vm.count("file") > 0) {
-      sources = eyestep::readScanDb(vm["file"].as<std::string>());
+      sources = eyestep::read_scan_db(vm["file"].as<std::string>());
     }
     else if (vm.count("input-file") > 0) {
       std::vector<std::string> inputs =
@@ -275,22 +276,22 @@ int main(int argc, char** argv)
 
     eyestep::Grove grove = scan_sources(sources, incl_paths, defs);
     if (verbose) {
-      eyestep::serialize(std::cout, grove.rootNode());
+      eyestep::serialize(std::cout, grove.root_node());
     }
 
     if (!templ_path.empty()) {
-      auto processor = findProcessor(backend);
+      auto processor = find_processor(backend);
       if (processor) {
-        processor->setOutputFile(
-          deduceOutputFile(outf, sources,
-                           processor->default_output_extension()));
+        processor->set_output_file(
+          deduce_output_file(outf, sources,
+                             processor->default_output_extension()));
 
         eyestep::StyleEngine engine(eyestep::utils::split_paths(prefix_path),
-                                    processor->procId());
-        if (engine.loadStyle(templ_path)) {
-          auto sosofo = std::move(engine.processNode(grove.rootNode()));
+                                    processor->proc_id());
+        if (engine.load_style(templ_path)) {
+          auto sosofo = std::move(engine.process_node(grove.root_node()));
 
-          processor->renderProcessedNode(sosofo.get());
+          processor->render_processed_node(sosofo.get());
         }
         else {
           std::cerr << "Loading stylesheet failed" << std::endl;

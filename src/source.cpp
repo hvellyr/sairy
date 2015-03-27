@@ -18,7 +18,7 @@ namespace fs = boost::filesystem;
 
 namespace {
 
-  std::vector<std::string> arrayToStringVector(const json_spirit::Array& array)
+  std::vector<std::string> array2stringvector(const json_spirit::Array& array)
   {
     std::vector<std::string> result;
 
@@ -32,54 +32,54 @@ namespace {
 } // anon ns
 
 
-std::vector<Source> readScanDb(const fs::path& file)
+std::vector<Source> read_scan_db(const fs::path& file)
 {
   std::vector<Source> result;
 
   json_spirit::Array array;
-  json_spirit::Value rootElt;
+  json_spirit::Value root_elt;
 
   fs::ifstream inf(file);
 
-  if (json_spirit::read_stream(inf, rootElt)) {
+  if (json_spirit::read_stream(inf, root_elt)) {
     // [ [ [ "projectA/includes/" ],          // include paths
     //     [ "CURRENT_PROJECT=projectA" ],    // defines
     //     [ "projectA/src/echo.cpp",
     //       "projectA/src/version.cpp" ]],   // source files
     //   ... ]
 
-    if (rootElt.type() == json_spirit::array_type) {
-      array = rootElt.get_array();
+    if (root_elt.type() == json_spirit::array_type) {
+      array = root_elt.get_array();
 
       for (const auto& v : array) {
         if (v.type() == json_spirit::array_type) {
           json_spirit::Array data = v.get_array();
 
           if (data.size() == 3) {
-            std::vector<std::string> locIncls;
-            std::vector<std::string> locDefs;
+            std::vector<std::string> locincls;
+            std::vector<std::string> locdefs;
 
             if (data[0].type() == json_spirit::array_type) {
-              locIncls = arrayToStringVector(data[0].get_array());
+              locincls = array2stringvector(data[0].get_array());
             }
             else {
               std::cerr << "Bad formatted scan database" << std::endl;
             }
 
             if (data[1].type() == json_spirit::array_type) {
-              locDefs = arrayToStringVector(data[1].get_array());
+              locdefs = array2stringvector(data[1].get_array());
             }
             else {
               std::cerr << "Bad formatted scan database" << std::endl;
             }
 
             if (data[2].type() == json_spirit::array_type) {
-              json_spirit::Array locArray = data[2].get_array();
+              json_spirit::Array locarray = data[2].get_array();
 
-              for (const auto& loc : locArray) {
+              for (const auto& loc : locarray) {
                 if (loc.type() == json_spirit::str_type) {
-                  result.emplace_back(fs::path(loc.get_str()), locIncls,
-                                      locDefs);
+                  result.emplace_back(fs::path(loc.get_str()), locincls,
+                                      locdefs);
                 }
               }
             }

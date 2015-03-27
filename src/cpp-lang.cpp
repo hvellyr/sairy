@@ -322,7 +322,7 @@ const char* kind2str(enum CXCursorKind kind)
 }
 
 
-std::string toString(CXString cxstr)
+std::string to_string(CXString cxstr)
 {
   std::string retval;
   const char* cstr = clang_getCString(cxstr);
@@ -335,8 +335,8 @@ std::string toString(CXString cxstr)
 }
 
 
-bool visitChildren(Cursor cursor,
-                   std::function<CXChildVisitResult(Cursor, Cursor)> functor)
+bool visit_children(Cursor cursor,
+                    std::function<CXChildVisitResult(Cursor, Cursor)> functor)
 {
   return clang_visitChildren(cursor.cxcursor(),
                              [](CXCursor c, CXCursor parent,

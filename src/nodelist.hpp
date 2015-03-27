@@ -36,8 +36,8 @@ namespace detail {
     const Node* head() const override;
     NodeList rest() const override;
 
-    std::vector<const Node*> mNodes;
-    int mStart;
+    std::vector<const Node*> _nodes;
+    int _start;
   };
 
   class SiblingsNodeListStrategy : public INodeListStrategy {
@@ -50,9 +50,9 @@ namespace detail {
     const Node* head() const override;
     NodeList rest() const override;
 
-    const Node* mNode;
-    int mStart;
-    int mEnd;
+    const Node* _node;
+    int _start;
+    int _end;
   };
 
   class AncestorsNodeListStrategy : public INodeListStrategy {
@@ -65,8 +65,8 @@ namespace detail {
     const Node* head() const override;
     NodeList rest() const override;
 
-    const Node* mNode;
-    int mCount;
+    const Node* _node;
+    int _count;
   };
 
   class DescendantsNodeListStrategy : public INodeListStrategy {
@@ -80,11 +80,11 @@ namespace detail {
     const Node* head() const override;
     NodeList rest() const override;
 
-    const Node* mNode;
-    int mStart;
-    int mEnd;
-    int mCount;
-    std::vector<int> mStack;
+    const Node* _node;
+    int _start;
+    int _end;
+    int _count;
+    std::vector<int> _stack;
   };
 
   class CompositeNodeListStrategy : public INodeListStrategy {
@@ -97,8 +97,8 @@ namespace detail {
     const Node* head() const override;
     NodeList rest() const override;
 
-    std::vector<NodeList> mNL;
-    int mCount;
+    std::vector<NodeList> _nl;
+    int _count;
   };
 
 } // detail ns
@@ -107,13 +107,13 @@ namespace detail {
 class NodeList {
 public:
   enum Kind {
-    kEmpty,
-    kChildren,
-    kSiblings, // all siblings, incl. node
-    kPreced,   // all preceding siblings
-    kFollow,   // all following siblings
-    kAncestors,
-    kDescendants,
+    k_empty,
+    k_children,
+    k_siblings, // all siblings, incl. node
+    k_preced,   // all preceding siblings
+    k_follow,   // all following siblings
+    k_ancestors,
+    k_descendants,
   };
 
   NodeList();
@@ -133,7 +133,7 @@ public:
 private:
   friend class detail::DescendantsNodeListStrategy;
 
-  std::unique_ptr<detail::INodeListStrategy> mStrategy;
+  std::unique_ptr<detail::INodeListStrategy> _strategy;
 };
 
 } // ns eyestep

@@ -19,7 +19,7 @@ public:
   Sosofo(const std::vector<Sosofo>& sosofos);
 
   /*! Creates a sosofo with exactly one formatting object */
-  Sosofo(std::shared_ptr<IFormattingObject> FO);
+  Sosofo(std::shared_ptr<IFormattingObject> fo);
 
   /*! Returns a new sosofo with all FOs from @p other appended */
   Sosofo concat(const Sosofo& other) const;
@@ -30,7 +30,7 @@ public:
   const IFormattingObject* operator[](size_t idx) const;
 
 private:
-  std::vector<std::shared_ptr<IFormattingObject>> mFOs;
+  std::vector<std::shared_ptr<IFormattingObject>> _fos;
 };
 
 } // ns eyestep

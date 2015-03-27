@@ -15,97 +15,97 @@ namespace eyestep {
 
 const char* kind2str(enum CXCursorKind kind);
 
-std::string toString(CXString cxstr);
+std::string to_string(CXString cxstr);
 
 class Type {
-  CXType mType;
+  CXType _type;
 
 public:
-  Type(CXType type) : mType(type) {}
+  Type(CXType type) : _type(type) {}
 
   std::string spelling() const
   {
-    return toString(clang_getTypeSpelling(mType));
+    return to_string(clang_getTypeSpelling(_type));
   }
 
-  Type resultType() const { return Type(clang_getResultType(mType)); }
+  Type result_type() const { return Type(clang_getResultType(_type)); }
 
-  size_t numArgTypes() const { return clang_getNumArgTypes(mType); }
+  size_t num_arg_types() const { return clang_getNumArgTypes(_type); }
 
-  Type argType(size_t idx) const { return Type(clang_getArgType(mType, idx)); }
+  Type arg_type(size_t idx) const { return Type(clang_getArgType(_type, idx)); }
 
-  bool isConst() const { return clang_isConstQualifiedType(mType) != 0; }
+  bool is_const() const { return clang_isConstQualifiedType(_type) != 0; }
 };
 
 
 class File {
-  CXFile mFile;
+  CXFile _file;
 
 public:
   File() {}
 
-  File(CXFile file) : mFile(file) {}
+  File(CXFile file) : _file(file) {}
 
-  std::string fileName() const { return toString(clang_getFileName(mFile)); }
+  std::string filename() const { return to_string(clang_getFileName(_file)); }
 };
 
 
 class SourceLocation {
-  CXSourceLocation mLoc;
-  unsigned int mLine = 0;
-  unsigned int mColumn = 0;
-  unsigned int mOffset = 0;
-  File mFile;
+  CXSourceLocation _loc;
+  unsigned int _line = 0;
+  unsigned int _column = 0;
+  unsigned int _offset = 0;
+  File _file;
 
 public:
-  SourceLocation(CXSourceLocation loc) : mLoc(loc)
+  SourceLocation(CXSourceLocation loc) : _loc(loc)
   {
     CXFile file;
-    clang_getExpansionLocation(mLoc, &file, &mLine, &mColumn, &mOffset);
-    mFile = File(file);
+    clang_getExpansionLocation(_loc, &file, &_line, &_column, &_offset);
+    _file = File(file);
   }
 
-  std::string fileName() const { return mFile.fileName(); }
+  std::string fileName() const { return _file.filename(); }
 
   std::string format() const
   {
     std::stringstream ss;
-    ss << mFile.fileName() << ":" << mLine << ":" << mColumn;
+    ss << _file.filename() << ":" << _line << ":" << _column;
     return ss.str();
   }
 
-  bool isFromMainFile() const
+  bool is_from_main_file() const
   {
-    return clang_Location_isFromMainFile(mLoc) != 0;
+    return clang_Location_isFromMainFile(_loc) != 0;
   }
 };
 
 
 class Cursor {
-  CXCursor mCursor;
+  CXCursor _cursor;
 
 public:
-  Cursor(CXCursor cursor) : mCursor(cursor) {}
+  Cursor(CXCursor cursor) : _cursor(cursor) {}
 
-  CXCursor cxcursor() const { return mCursor; }
+  CXCursor cxcursor() const { return _cursor; }
 
-  CXCursorKind kind() const { return clang_getCursorKind(mCursor); }
+  CXCursorKind kind() const { return clang_getCursorKind(_cursor); }
 
   std::string spelling() const
   {
-    return toString(clang_getCursorSpelling(mCursor));
+    return to_string(clang_getCursorSpelling(_cursor));
   }
 
   SourceLocation location() const
   {
-    return SourceLocation(clang_getCursorLocation(mCursor));
+    return SourceLocation(clang_getCursorLocation(_cursor));
   }
 
-  Type type() const { return Type(clang_getCursorType(mCursor)); }
+  Type type() const { return Type(clang_getCursorType(_cursor)); }
 };
 
 
-bool visitChildren(Cursor cursor,
-                   std::function<CXChildVisitResult(Cursor, Cursor)> functor);
+bool visit_children(Cursor cursor,
+                    std::function<CXChildVisitResult(Cursor, Cursor)> functor);
 
 } // ns eyestep

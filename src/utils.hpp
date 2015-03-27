@@ -14,9 +14,10 @@ namespace utils {
   std::string join(const std::vector<std::string>& strlist,
                    const std::string& gap);
 
-  std::vector<std::string> joinList(const std::vector<std::string>& one,
-                                    const std::vector<std::string>& sec);
+  std::vector<std::string> join_list(const std::vector<std::string>& one,
+                                     const std::vector<std::string>& sec);
 
   std::vector<boost::filesystem::path> split_paths(const std::string& path);
+
 } // ns utils
 } // ns eyestep

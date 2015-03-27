@@ -20,7 +20,7 @@ namespace {
   std::unique_ptr<ISchemeContext>
   setup_scheme_context(const std::vector<fs::path>& prefix_paths)
   {
-    auto ctx = createSchemeContext();
+    auto ctx = create_scheme_context();
 
     auto paths = boost::copy_range<std::vector<fs::path>>(
       prefix_paths | boost::adaptors::transformed(
@@ -29,7 +29,7 @@ namespace {
     ctx->initialize(paths);
 
     auto init_path = fs::path("sairy") / "init.scm";
-    if (!ctx->loadModuleFile(init_path)) {
+    if (!ctx->load_module_file(init_path)) {
       std::cerr << "Could not read " << init_path.string() << std::endl;
       return nullptr;
     }
@@ -41,33 +41,33 @@ namespace {
 
 
 StyleEngine::StyleEngine(const std::vector<fs::path>& prefix_paths,
-                         const std::string& backendId)
-  : mBackendId(backendId)
+                         const std::string& backend_id)
+  : _backend_id(backend_id)
 {
-  mCtx = setup_scheme_context(prefix_paths);
+  _ctx = setup_scheme_context(prefix_paths);
 }
 
 
-bool StyleEngine::loadStyle(const boost::filesystem::path& path)
+bool StyleEngine::load_style(const boost::filesystem::path& path)
 {
-  assert(mCtx);
+  assert(_ctx);
 
-  if (!mCtx->loadScript(path)) {
+  if (!_ctx->load_script(path)) {
     std::cerr << "Could not read " << path.string() << std::endl;
     return false;
   }
 
-  // mCtx->defineVariable("%backend%", path.string());
+  // _ctx->defineVariable("%backend%", path.string());
 
   return true;
 }
 
 
-std::unique_ptr<Sosofo> StyleEngine::processNode(const Node* root)
+std::unique_ptr<Sosofo> StyleEngine::process_node(const Node* root)
 {
-  assert(mCtx);
+  assert(_ctx);
 
-  return std::move(mCtx->processRootNode(root));
+  return std::move(_ctx->process_root_node(root));
 }
 
 } // ns eyestep
