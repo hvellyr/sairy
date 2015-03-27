@@ -1,11 +1,6 @@
 # Copyright (c) 2015 Gregor Klinke
 # All rights reserved.
 
-link_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/../lib
-)
-
-
 #------------------------------------------------------------------------------
 add_library(grove
   nodeclass.cpp
