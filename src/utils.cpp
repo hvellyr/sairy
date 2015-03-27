@@ -39,8 +39,8 @@ namespace utils {
   }
 
 
-  std::vector<std::string> joinList(const std::vector<std::string>& one,
-                                    const std::vector<std::string>& sec)
+  std::vector<std::string> join_list(const std::vector<std::string>& one,
+                                     const std::vector<std::string>& sec)
   {
     std::vector<std::string> result;
     result.insert(result.end(), one.begin(), one.end());
@@ -58,8 +58,8 @@ namespace utils {
     split(steps, path, is_any_of(":"), token_compress_on);
 
     return boost::copy_range<std::vector<fs::path>>(
-        steps |
-        transformed([](const std::string& value) { return fs::path(value); }));
+      steps |
+      transformed([](const std::string& value) { return fs::path(value); }));
   }
 
 } // ns utils

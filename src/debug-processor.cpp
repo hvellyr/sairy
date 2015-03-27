@@ -40,26 +40,26 @@ namespace {
                 const IFormattingObject* fo) const override
     {
       for (const auto& spec : fo->properties()) {
-        std::cout << "      {" << spec.mName << ": ";
+        std::cout << "      {" << spec._name << ": ";
 
         DebugPropertySpecVisitor visitor;
-        boost::apply_visitor(visitor, spec.mValue);
+        boost::apply_visitor(visitor, spec._value);
 
         std::cout << " }" << std::endl;
       }
 
 #if 0
-      for (const auto& spec : fo->defaultProperties()) {
+      for (const auto& spec : fo->default_properties()) {
         DebugPropertySpecVisitor visitor;
 
-        auto prop = processor->property(fo, spec.mName);
+        auto prop = processor->property(fo, spec._name);
         if (prop) {
-          std::cout << "      {" << spec.mName << ": ";
-          boost::apply_visitor(visitor, spec.mValue);
+          std::cout << "      {" << spec._name << ": ";
+          boost::apply_visitor(visitor, spec._value);
           std::cout << " } -> ";
 
-          std::cout << " [" << spec.mName << ": ";
-          boost::apply_visitor(visitor, prop->mValue);
+          std::cout << " [" << spec._name << ": ";
+          boost::apply_visitor(visitor, prop->_value);
           std::cout << " ]" << std::endl;
         }
       }
@@ -68,7 +68,7 @@ namespace {
       for (const auto& portnm : fo->ports()) {
         std::cout << "DEBUG: PORT -> " << portnm << std::endl;
         const Sosofo& port = fo->port(portnm);
-        processor->renderSosofo(&port);
+        processor->render_sosofo(&port);
       }
     }
   };
@@ -76,7 +76,7 @@ namespace {
 } // ns anon
 
 
-std::string DebugProcessor::procId() const
+std::string DebugProcessor::proc_id() const
 {
   return "#debug-processor";
 }
@@ -87,7 +87,7 @@ std::string DebugProcessor::default_output_extension() const
 }
 
 const IFoProcessor<DebugProcessor>*
-DebugProcessor::lookupFoProcessor(const std::string& foClassName) const
+DebugProcessor::lookup_fo_processor(const std::string& fo_classname) const
 {
   static auto procs =
     std::map<std::string, std::shared_ptr<IFoProcessor<DebugProcessor>>>{
@@ -98,19 +98,19 @@ DebugProcessor::lookupFoProcessor(const std::string& foClassName) const
       {"#simple-page-sequence", std::make_shared<DebugFoProcessor>()},
     };
 
-  auto i_find = procs.find(foClassName);
+  auto i_find = procs.find(fo_classname);
 
   return i_find != procs.end() ? i_find->second.get() : nullptr;
 }
 
 
-void DebugProcessor::beforeRendering()
+void DebugProcessor::before_rendering()
 {
-  std::cout << "DEBUG: Processor: " << procId() << std::endl;
+  std::cout << "DEBUG: Processor: " << proc_id() << std::endl;
 }
 
 
-void DebugProcessor::renderSosofo(const Sosofo* sosofo)
+void DebugProcessor::render_sosofo(const Sosofo* sosofo)
 {
   if (!sosofo) {
     std::cout << "  DEBUG: sosofo: (null)" << std::endl;
@@ -122,15 +122,15 @@ void DebugProcessor::renderSosofo(const Sosofo* sosofo)
     std::cout << "  DEBUG: sosofo: [" << sosofo->length() << "]" << std::endl;
   }
 
-  Super::renderSosofo(sosofo);
+  Super::render_sosofo(sosofo);
 }
 
 
-void DebugProcessor::renderFo(const IFormattingObject* fo)
+void DebugProcessor::render_fo(const IFormattingObject* fo)
 {
-  std::cout << "  DEBUG: fo: " << fo->className() << std::endl;
+  std::cout << "  DEBUG: fo: " << fo->classname() << std::endl;
 
-  Super::renderFo(fo);
+  Super::render_fo(fo);
 }
 
 } // ns eyestep

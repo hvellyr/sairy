@@ -15,18 +15,18 @@ Sosofo::Sosofo()
 
 Sosofo::Sosofo(const Sosofo& one, const Sosofo& two)
 {
-  mFOs.insert(mFOs.end(), one.mFOs.begin(), one.mFOs.end());
-  mFOs.insert(mFOs.end(), two.mFOs.begin(), two.mFOs.end());
+  _fos.insert(_fos.end(), one._fos.begin(), one._fos.end());
+  _fos.insert(_fos.end(), two._fos.begin(), two._fos.end());
 }
 
 Sosofo::Sosofo(const std::vector<Sosofo>& sosofos)
 {
   for (const auto& sosofo : sosofos) {
-    mFOs.insert(mFOs.end(), sosofo.mFOs.begin(), sosofo.mFOs.end());
+    _fos.insert(_fos.end(), sosofo._fos.begin(), sosofo._fos.end());
   }
 }
 
-Sosofo::Sosofo(std::shared_ptr<IFormattingObject> FO) : mFOs({FO})
+Sosofo::Sosofo(std::shared_ptr<IFormattingObject> fo) : _fos({fo})
 {
 }
 
@@ -34,24 +34,24 @@ Sosofo::Sosofo(std::shared_ptr<IFormattingObject> FO) : mFOs({FO})
 Sosofo Sosofo::concat(const Sosofo& other) const
 {
   Sosofo sosofo;
-  sosofo.mFOs.insert(sosofo.mFOs.end(), mFOs.begin(), mFOs.end());
-  sosofo.mFOs.insert(sosofo.mFOs.end(), other.mFOs.begin(), other.mFOs.end());
+  sosofo._fos.insert(sosofo._fos.end(), _fos.begin(), _fos.end());
+  sosofo._fos.insert(sosofo._fos.end(), other._fos.begin(), other._fos.end());
   return sosofo;
 }
 
 bool Sosofo::empty() const
 {
-  return mFOs.empty();
+  return _fos.empty();
 }
 
 int Sosofo::length() const
 {
-  return int(mFOs.size());
+  return int(_fos.size());
 }
 
 const IFormattingObject* Sosofo::operator[](size_t idx) const
 {
-  return mFOs[idx].get();
+  return _fos[idx].get();
 }
 
 } // ns eyestep

@@ -19,14 +19,14 @@ class IProcessor {
 public:
   virtual ~IProcessor() {}
 
-  virtual void setOutputFile(const boost::filesystem::path& outputFile) = 0;
+  virtual void set_output_file(const boost::filesystem::path& output_file) = 0;
   virtual std::string default_output_extension() const = 0;
 
-  virtual std::string procId() const = 0;
-  virtual void renderProcessedNode(const Sosofo* sosofo) = 0;
+  virtual std::string proc_id() const = 0;
+  virtual void render_processed_node(const Sosofo* sosofo) = 0;
 
-  virtual void renderSosofo(const Sosofo* sosofo) = 0;
-  virtual void renderFo(const IFormattingObject* fo) = 0;
+  virtual void render_sosofo(const Sosofo* sosofo) = 0;
+  virtual void render_fo(const IFormattingObject* fo) = 0;
 
   virtual fo::PropertySpecOrNone property(const IFormattingObject* fo,
                                           const std::string& key) const = 0;

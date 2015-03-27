@@ -18,58 +18,58 @@ namespace fs = boost::filesystem;
 
 
 template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::setOutputFile(const fs::path& outputFile)
+void AbstractProcessor<ProcessorT>::set_output_file(const fs::path& output_file)
 {
-  mOutputFile = outputFile;
+  _output_file = output_file;
 }
 
 
 template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::renderProcessedNode(const Sosofo* sosofo)
+void AbstractProcessor<ProcessorT>::render_processed_node(const Sosofo* sosofo)
 {
-  beforeRendering();
-  renderSosofo(sosofo);
-  afterRendering();
+  before_rendering();
+  render_sosofo(sosofo);
+  after_rendering();
 }
 
 
 template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::beforeRendering()
-{
-}
-
-
-template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::afterRendering()
+void AbstractProcessor<ProcessorT>::before_rendering()
 {
 }
 
 
 template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::renderSosofo(const Sosofo* sosofo)
+void AbstractProcessor<ProcessorT>::after_rendering()
+{
+}
+
+
+template <typename ProcessorT>
+void AbstractProcessor<ProcessorT>::render_sosofo(const Sosofo* sosofo)
 {
   if (sosofo) {
     for (size_t i = 0; i < sosofo->length(); ++i) {
-      renderFo((*sosofo)[i]);
+      render_fo((*sosofo)[i]);
     }
   }
 }
 
 
 template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::renderFo(const IFormattingObject* fo)
+void AbstractProcessor<ProcessorT>::render_fo(const IFormattingObject* fo)
 {
-  const IFoProcessor<ProcessorT>* foproc = lookupFoProcessor(fo->className());
+  const IFoProcessor<ProcessorT>* foproc = lookup_fo_processor(fo->classname());
   if (!foproc) {
-    std::cerr << "Flow object '" << fo->className() << "' unhandled"
+    std::cerr << "Flow object '" << fo->classname() << "' unhandled"
               << std::endl;
   }
   else {
-    mProps.push(fo->properties());
+    _props.push(fo->properties());
 
     foproc->render(static_cast<ProcessorT*>(this), fo);
 
-    mProps.pop();
+    _props.pop();
   }
 }
 
@@ -79,19 +79,19 @@ fo::PropertySpecOrNone
 AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
                                         const std::string& key) const
 {
-  return mProps.get(key, fo->defaultProperties());
+  return _props.get(key, fo->default_properties());
 }
 
 
 template <typename ProcessorT>
 template <typename T>
 boost::optional<T>
-AbstractProcessor<ProcessorT>::propertyOrNone(const IFormattingObject* fo,
-                                              const std::string& key) const
+AbstractProcessor<ProcessorT>::property_or_none(const IFormattingObject* fo,
+                                                const std::string& key) const
 {
   auto prop = property(fo, key);
   if (prop) {
-    if (const T* val = boost::get<const T>(&prop->mValue)) {
+    if (const T* val = boost::get<const T>(&prop->_value)) {
       return *val;
     }
   }
@@ -103,16 +103,16 @@ template <typename ProcessorT>
 template <typename T>
 T AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
                                           const std::string& key,
-                                          T defaultValue) const
+                                          T default_value) const
 {
   auto prop = property(fo, key);
   if (prop) {
-    if (const T* val = boost::get<const T>(&prop->mValue)) {
+    if (const T* val = boost::get<const T>(&prop->_value)) {
       return *val;
     }
   }
 
-  return defaultValue;
+  return default_value;
 }
 
 } // ns eyestep

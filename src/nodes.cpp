@@ -34,14 +34,14 @@ std::ostream& operator<<(std::ostream& os, const Nodes& nodelist)
 
 std::ostream& operator<<(std::ostream& os, const Node& node)
 {
-  os << node.className();
-  if (node.nodeClass() == elementClassDefinition()) {
+  os << node.classname();
+  if (node.node_class() == element_class_definition()) {
     os << " '" << node["gi"] << "'";
   }
   os << " {" << std::endl;
 
-  for (const auto& p : node.mProperties) {
-    if (p.first != CommonProps::kGi && p.first != CommonProps::kParent) {
+  for (const auto& p : node._properties) {
+    if (p.first != CommonProps::k_gi && p.first != CommonProps::k_parent) {
       os << "  '" << p.first << "': " << p.second << ";" << std::endl;
     }
   }
@@ -53,55 +53,55 @@ std::ostream& operator<<(std::ostream& os, const Node& node)
 
 //------------------------------------------------------------------------------
 
-const std::string CommonProps::kParent = "parent";
-const std::string CommonProps::kGi = "gi";
-const std::string CommonProps::kChildren = "children";
-const std::string CommonProps::kData = "data";
+const std::string CommonProps::k_parent = "parent";
+const std::string CommonProps::k_gi = "gi";
+const std::string CommonProps::k_children = "children";
+const std::string CommonProps::k_data = "data";
 
 
 //------------------------------------------------------------------------------
 
-Node::Node() : mGrove(nullptr), mClass(anyClassDefinition())
+Node::Node() : _grove(nullptr), _class(any_class_definition())
 {
 }
 
-Node::Node(const NodeClass* nodeClass) : mGrove(nullptr), mClass(nodeClass)
+Node::Node(const NodeClass* node_class) : _grove(nullptr), _class(node_class)
 {
 }
 
-const std::string& Node::className() const
+const std::string& Node::classname() const
 {
-  assert(mClass);
-  return mClass->className;
+  assert(_class);
+  return _class->_classname;
 }
 
-const NodeClass* Node::nodeClass() const
+const NodeClass* Node::node_class() const
 {
-  return mClass;
+  return _class;
 }
 
 std::string Node::gi() const
 {
-  return property<std::string>(CommonProps::kGi);
+  return property<std::string>(CommonProps::k_gi);
 }
 
 
 Node* Node::parent() const
 {
-  return property<Node*>(CommonProps::kParent);
+  return property<Node*>(CommonProps::k_parent);
 }
 
 
 Grove* Node::grove() const
 {
-  return mGrove;
+  return _grove;
 }
 
 
-const PropertyValue Node::operator[](const std::string& propName) const
+const PropertyValue Node::operator[](const std::string& propname) const
 {
-  auto i_find = mProperties.find(propName);
-  if (i_find != mProperties.end()) {
+  auto i_find = _properties.find(propname);
+  if (i_find != _properties.end()) {
     return i_find->second;
   }
 
@@ -109,72 +109,72 @@ const PropertyValue Node::operator[](const std::string& propName) const
 }
 
 
-bool Node::hasProperty(const std::string& propName) const
+bool Node::has_property(const std::string& propname) const
 {
-  return mProperties.find(propName) != mProperties.end();
+  return _properties.find(propname) != _properties.end();
 }
 
 
-void Node::setProperty(const std::string& propName, int value)
+void Node::set_property(const std::string& propname, int value)
 {
-  assert(findProperty(mClass, propName) == nullptr ||
-         findProperty(mClass, propName)->type == PropertyType::kInt);
+  assert(find_property(_class, propname) == nullptr ||
+         find_property(_class, propname)->_type == PropertyType::k_int);
 
-  mProperties[propName] = value;
+  _properties[propname] = value;
 }
 
-void Node::setProperty(const std::string& propName, const std::string& value)
+void Node::set_property(const std::string& propname, const std::string& value)
 {
-  assert(findProperty(mClass, propName) == nullptr ||
-         findProperty(mClass, propName)->type == PropertyType::kString);
+  assert(find_property(_class, propname) == nullptr ||
+         find_property(_class, propname)->_type == PropertyType::k_string);
 
-  mProperties[propName] = value;
+  _properties[propname] = value;
 }
 
-void Node::setProperty(const std::string& propName, const Nodes& nl)
+void Node::set_property(const std::string& propname, const Nodes& nl)
 {
-  assert(findProperty(mClass, propName) == nullptr ||
-         findProperty(mClass, propName)->type == PropertyType::kNodeList);
+  assert(find_property(_class, propname) == nullptr ||
+         find_property(_class, propname)->_type == PropertyType::k_nodelist);
 
-  Nodes newNodes(nl);
-  for (auto* nd : newNodes) {
+  Nodes new_nodes(nl);
+  for (auto* nd : new_nodes) {
     assert(nd->parent() == nullptr);
-    assert(nd->mGrove == mGrove);
-    nd->mProperties[CommonProps::kParent] = this;
+    assert(nd->_grove == _grove);
+    nd->_properties[CommonProps::k_parent] = this;
   }
 
-  mProperties[propName] = newNodes;
+  _properties[propname] = new_nodes;
 }
 
-void Node::setProperty(const std::string& propName, Node* nd)
+void Node::set_property(const std::string& propname, Node* nd)
 {
-  assert(findProperty(mClass, propName) == nullptr ||
-         findProperty(mClass, propName)->type == PropertyType::kNode);
-  assert(nd->mGrove == mGrove);
+  assert(find_property(_class, propname) == nullptr ||
+         find_property(_class, propname)->_type == PropertyType::k_node);
+  assert(nd->_grove == _grove);
 
-  nd->mProperties[CommonProps::kParent] = this;
-  mProperties[propName] = nd;
-}
-
-
-void Node::addChildNode(Node* child)
-{
-  addNode(CommonProps::kChildren, child);
+  nd->_properties[CommonProps::k_parent] = this;
+  _properties[propname] = nd;
 }
 
 
-void Node::addNode(const std::string& propName, Node* child)
+void Node::add_child_node(Node* child)
 {
-  assert(child->mGrove == mGrove);
+  add_node(CommonProps::k_children, child);
+}
 
-  auto i_find = mProperties.find(propName);
-  if (i_find == mProperties.end()) {
-    child->mProperties[CommonProps::kParent] = this;
-    mProperties[propName] = Nodes{child};
+
+void Node::add_node(const std::string& propname, Node* child)
+{
+  assert(child->_grove == _grove);
+
+  auto i_find = _properties.find(propname);
+  if (i_find == _properties.end()) {
+    child->_properties[CommonProps::k_parent] = this;
+    _properties[propname] = Nodes{child};
   }
   else {
     if (Nodes* nl = boost::get<Nodes>(&i_find->second)) {
-      child->mProperties[CommonProps::kParent] = this;
+      child->_properties[CommonProps::k_parent] = this;
       nl->emplace_back(child);
     }
     else {
@@ -186,72 +186,72 @@ void Node::addNode(const std::string& propName, Node* child)
 
 const Properties& Node::properties() const
 {
-  return mProperties;
+  return _properties;
 }
 
 
 //------------------------------------------------------------------------------
 
-Node* Grove::makeNode(const NodeClass* nodeClass)
+Node* Grove::make_node(const NodeClass* node_class)
 {
   auto nd = estd::make_unique<Node>();
 
-  nd->mGrove = this;
-  nd->mClass = nodeClass;
+  nd->_grove = this;
+  nd->_class = node_class;
 
-  const NodeClass* p = nodeClass;
+  const NodeClass* p = node_class;
   while (p) {
-    for (const auto& propspec : nodeClass->propertiesSpec) {
-      if (propspec.isRequired) {
-        switch (propspec.type) {
-        case PropertyType::kInt:
-          nd->mProperties[propspec.name] = 0;
+    for (const auto& propspec : node_class->_properties_spec) {
+      if (propspec._is_required) {
+        switch (propspec._type) {
+        case PropertyType::k_int:
+          nd->_properties[propspec._name] = 0;
           break;
-        case PropertyType::kString:
-          nd->mProperties[propspec.name] = std::string();
+        case PropertyType::k_string:
+          nd->_properties[propspec._name] = std::string();
           break;
-        case PropertyType::kNode:
-        case PropertyType::kNodeList:
+        case PropertyType::k_node:
+        case PropertyType::k_nodelist:
           break;
         }
       }
     }
-    p = p->superClass;
+    p = p->_super_class;
   }
 
-  mNodes.emplace_back(std::move(nd));
+  _nodes.emplace_back(std::move(nd));
 
-  return mNodes[mNodes.size() - 1].get();
+  return _nodes[_nodes.size() - 1].get();
 }
 
 
-Node* Grove::makeEltNode(const std::string& gi)
+Node* Grove::make_elt_node(const std::string& gi)
 {
-  auto* nd = makeNode(elementClassDefinition());
-  nd->setProperty(CommonProps::kGi, gi);
+  auto* nd = make_node(element_class_definition());
+  nd->set_property(CommonProps::k_gi, gi);
   return nd;
 }
 
 
-Node* Grove::makeTextNode(const std::string& data)
+Node* Grove::make_text_node(const std::string& data)
 {
-  auto* nd = makeNode(textClassDefinition());
-  nd->setProperty(CommonProps::kData, data);
+  auto* nd = make_node(text_class_definition());
+  nd->set_property(CommonProps::k_data, data);
   return nd;
 }
 
 
-Node* Grove::setRootNode(const NodeClass* nodeClass)
+Node* Grove::set_root_node(const NodeClass* node_class)
 {
-  assert(mNodes.empty());
-  return makeNode(nodeClass);
+  assert(_nodes.empty());
+  return make_node(node_class);
 }
 
 
-Node* Grove::rootNode() const
+Node* Grove::root_node() const
 {
-  if (!mNodes.empty()) {
-    return mNodes[0].get();
+  if (!_nodes.empty()) {
+    return _nodes[0].get();
   }
   return nullptr;
 }
@@ -259,17 +259,17 @@ Node* Grove::rootNode() const
 
 //------------------------------------------------------------------------------
 
-TraverseRecursion nodeTraverse(const Node* root,
-                               const TraverseNodeVisitor& functor, int depth)
+TraverseRecursion node_traverse(const Node* root,
+                                const TraverseNodeVisitor& functor, int depth)
 {
   TraverseRecursion rec = functor(root, depth);
 
-  if (rec == TraverseRecursion::kRecurse) {
-    const Nodes& nodes = root->property<Nodes>(CommonProps::kChildren);
+  if (rec == TraverseRecursion::k_recurse) {
+    const Nodes& nodes = root->property<Nodes>(CommonProps::k_children);
 
     for (const auto& nd : nodes) {
-      TraverseRecursion rec2 = nodeTraverse(nd, functor, depth + 1);
-      if (rec2 == TraverseRecursion::kBreak) {
+      TraverseRecursion rec2 = node_traverse(nd, functor, depth + 1);
+      if (rec2 == TraverseRecursion::k_break) {
         return rec2;
       }
     }
@@ -281,38 +281,39 @@ TraverseRecursion nodeTraverse(const Node* root,
 
 namespace {
   class SerializeVisitor : public boost::static_visitor<> {
-    std::ostream& mOs;
-    int mDepth;
+    std::ostream& _os;
+    int _depth;
 
   public:
-    SerializeVisitor(std::ostream& os, int depth) : mOs(os), mDepth(depth) {}
+    SerializeVisitor(std::ostream& os, int depth) : _os(os), _depth(depth) {}
 
     void operator()(const Undefined&) {}
 
-    void operator()(const int& val) { mOs << val; }
+    void operator()(const int& val) { _os << val; }
 
-    void operator()(const std::string& val) { mOs << val; }
+    void operator()(const std::string& val) { _os << val; }
 
     void operator()(const Node* nd)
     {
-      mOs << std::endl;
-      serialize(mOs, nd, mDepth);
-      mOs << std::string((mDepth - 1) * 2, ' ');
+      _os << std::endl;
+      serialize(_os, nd, _depth);
+      _os << std::string((_depth - 1) * 2, ' ');
     }
 
     void operator()(const Nodes& nl)
     {
       if (!nl.empty()) {
-        mOs << std::endl;
+        _os << std::endl;
         for (auto* nd : nl) {
-          serialize(mOs, nd, mDepth);
+          serialize(_os, nd, _depth);
         }
-        mOs << std::string((mDepth - 1) * 2, ' ');
+        _os << std::string((_depth - 1) * 2, ' ');
       }
     }
   };
 
 } // ns anon
+
 
 void serialize(std::ostream& os, const Node* nd, int in_depth)
 {
@@ -320,23 +321,24 @@ void serialize(std::ostream& os, const Node* nd, int in_depth)
 
   auto close_node = [&os](const Node* n, int lastd, int depth) {
     for (int i = lastd; i >= depth; --i) {
-      os << std::string(i * 2, ' ') << "</" << n->className() << ">" << std::endl;
+      os << std::string(i * 2, ' ') << "</" << n->classname() << ">"
+         << std::endl;
     }
   };
 
-  nodeTraverse(nd, [&os, &last_depth, &close_node](const Node* nd, int depth) {
+  node_traverse(nd, [&os, &last_depth, &close_node](const Node* nd, int depth) {
     close_node(nd, last_depth, depth);
     last_depth = depth;
 
-    os << std::string(depth * 2, ' ') << "<" << nd->className();
-    if (nd->nodeClass() == elementClassDefinition()) {
+    os << std::string(depth * 2, ' ') << "<" << nd->classname();
+    if (nd->node_class() == element_class_definition()) {
       os << " gi='" << nd->gi() << "'";
     }
     os << ">" << std::endl;
     for (const auto& prop : nd->properties()) {
-      if (prop.first != CommonProps::kChildren &&
-          prop.first != CommonProps::kGi &&
-          prop.first != CommonProps::kParent) {
+      if (prop.first != CommonProps::k_children &&
+          prop.first != CommonProps::k_gi &&
+          prop.first != CommonProps::k_parent) {
         os << std::string((depth + 1) * 2, ' ') << "<prop nm='" << prop.first
            << "'>";
         SerializeVisitor visitor(os, depth + 2);
@@ -344,7 +346,7 @@ void serialize(std::ostream& os, const Node* nd, int in_depth)
         os << "</prop>" << std::endl;
       }
     }
-    return TraverseRecursion::kRecurse;
+    return TraverseRecursion::k_recurse;
   }, in_depth);
 
   close_node(nd, last_depth, in_depth);

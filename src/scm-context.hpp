@@ -19,13 +19,13 @@ public:
   virtual ~ISchemeContext(){};
 
   virtual void
-  initialize(const std::vector<boost::filesystem::path>& modulePaths) = 0;
-  virtual bool loadModuleFile(const boost::filesystem::path& scriptFile) = 0;
-  virtual bool loadScript(const boost::filesystem::path& scriptFile) = 0;
+  initialize(const std::vector<boost::filesystem::path>& module_paths) = 0;
+  virtual bool load_module_file(const boost::filesystem::path& script_file) = 0;
+  virtual bool load_script(const boost::filesystem::path& script_file) = 0;
 
-  virtual std::unique_ptr<Sosofo> processRootNode(const Node* rootNode) = 0;
+  virtual std::unique_ptr<Sosofo> process_root_node(const Node* root_node) = 0;
 };
 
-std::unique_ptr<ISchemeContext> createSchemeContext();
+std::unique_ptr<ISchemeContext> create_scheme_context();
 
 } // ns eyestep

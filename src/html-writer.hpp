@@ -16,24 +16,24 @@ namespace eyestep {
 namespace html {
 
   struct Attr {
-    std::string mKey;
-    std::string mValue;
+    std::string _key;
+    std::string _value;
   };
   using Attrs = std::vector<Attr>;
 
   struct Doctype {
-    std::string mPublicId;
-    std::string mSystemId;
+    std::string _publicid;
+    std::string _systemid;
   };
 
-  extern const Doctype kXHTML_1_0_TRANSITIONAL_DTD;
-  extern const Doctype kXHTML_1_1_DTD;
+  extern const Doctype k_XHTML_1_0_TRANSITIONAL_DTD;
+  extern const Doctype k_XHTML_1_1_DTD;
 
   class Writer {
-    boost::filesystem::path mPath;
-    boost::filesystem::ofstream mStream;
-    Doctype mDoctype;
-    std::string mGenerator;
+    boost::filesystem::path _path;
+    boost::filesystem::ofstream _stream;
+    Doctype _doctype;
+    std::string _generator;
 
   public:
     Writer(const Doctype& doctype, const std::string& generator);
@@ -56,7 +56,7 @@ namespace html {
     void header(const std::string& title, const std::string& author,
                 const std::string& desc,
                 const std::function<void(std::ostream&)>& style_proc =
-                    [](std::ostream&) {});
+                  [](std::ostream&) {});
     void footer();
 
     void newln();
@@ -64,36 +64,36 @@ namespace html {
 
 
   class Tag {
-    Writer* mWriter = nullptr;
-    std::string mTag;
+    Writer* _writer = nullptr;
+    std::string _tag;
 
   public:
-    Tag() : mWriter(nullptr) {}
+    Tag() : _writer(nullptr) {}
 
     Tag(Writer& writer, const std::string& tag, const Attrs& attrs = {})
-        : mWriter(&writer), mTag(tag)
+      : _writer(&writer), _tag(tag)
     {
-      mWriter->open_tag(tag, attrs);
+      _writer->open_tag(tag, attrs);
     }
 
     Tag(Tag&& other)
-        : mWriter(std::move(other.mWriter)), mTag(std::move(other.mTag))
+      : _writer(std::move(other._writer)), _tag(std::move(other._tag))
     {
-      other.mWriter = nullptr;
+      other._writer = nullptr;
     }
 
     Tag& operator=(Tag&& other)
     {
-      mWriter = std::move(other.mWriter);
-      mTag = std::move(other.mTag);
-      other.mWriter = nullptr;
+      _writer = std::move(other._writer);
+      _tag = std::move(other._tag);
+      other._writer = nullptr;
       return *this;
     }
 
     ~Tag()
     {
-      if (mWriter) {
-        mWriter->close_tag(mTag);
+      if (_writer) {
+        _writer->close_tag(_tag);
       }
     }
   };

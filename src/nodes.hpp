@@ -32,39 +32,39 @@ class Grove;
 
 
 struct CommonProps {
-  static const std::string kParent;
-  static const std::string kGi;
-  static const std::string kChildren;
-  static const std::string kData;
+  static const std::string k_parent;
+  static const std::string k_gi;
+  static const std::string k_children;
+  static const std::string k_data;
 };
 
 
 class Node {
-  Properties mProperties;
-  Grove* mGrove;
-  const NodeClass* mClass;
+  Properties _properties;
+  Grove* _grove;
+  const NodeClass* _class;
 
 public:
   Node();
-  Node(const NodeClass* nodeClass);
+  Node(const NodeClass* node_class);
   Node(const Node& other) = default;
   Node(Node&& other) = default;
   Node& operator=(const Node& other) = default;
   Node& operator=(Node&& other) = default;
 
-  const std::string& className() const;
-  const NodeClass* nodeClass() const;
+  const std::string& classname() const;
+  const NodeClass* node_class() const;
   std::string gi() const;
   Node* parent() const;
   Grove* grove() const;
 
-  const PropertyValue operator[](const std::string& propName) const;
+  const PropertyValue operator[](const std::string& propname) const;
 
   template <typename T>
-  T property(const std::string& propName) const
+  T property(const std::string& propname) const
   {
-    auto i_find = mProperties.find(propName);
-    if (i_find != mProperties.end()) {
+    auto i_find = _properties.find(propname);
+    if (i_find != _properties.end()) {
       if (const T* value = boost::get<T>(&i_find->second)) {
         return *value;
       }
@@ -73,16 +73,16 @@ public:
     return T();
   }
 
-  bool hasProperty(const std::string& propName) const;
+  bool has_property(const std::string& propname) const;
 
-  void setProperty(const std::string& propName, int value);
-  void setProperty(const std::string& propName, const std::string& value);
+  void set_property(const std::string& propname, int value);
+  void set_property(const std::string& propname, const std::string& value);
 
-  void setProperty(const std::string& propName, const Nodes& nl);
-  void setProperty(const std::string& propName, Node* nd);
+  void set_property(const std::string& propname, const Nodes& nl);
+  void set_property(const std::string& propname, Node* nd);
 
-  void addChildNode(Node* child);
-  void addNode(const std::string& propName, Node* child);
+  void add_child_node(Node* child);
+  void add_node(const std::string& propname, Node* child);
 
   const Properties& properties() const;
 
@@ -96,30 +96,30 @@ std::ostream& operator<<(std::ostream& os, const Nodes&);
 
 
 class Grove {
-  std::vector<std::unique_ptr<Node>> mNodes;
+  std::vector<std::unique_ptr<Node>> _nodes;
 
 public:
-  Node* makeNode(const NodeClass* nodeClass);
-  Node* makeEltNode(const std::string& gi);
-  Node* makeTextNode(const std::string& data);
+  Node* make_node(const NodeClass* node_class);
+  Node* make_elt_node(const std::string& gi);
+  Node* make_text_node(const std::string& data);
 
-  Node* setRootNode(const NodeClass* nodeClass);
-  Node* rootNode() const;
+  Node* set_root_node(const NodeClass* node_class);
+  Node* root_node() const;
 };
 
 
 enum class TraverseRecursion {
-  kBreak,
-  kContinue,
-  kRecurse,
+  k_break,
+  k_continue,
+  k_recurse,
 };
 
 using TraverseNodeVisitor =
-    std::function<TraverseRecursion(const Node*, int depth)>;
+  std::function<TraverseRecursion(const Node*, int depth)>;
 
-TraverseRecursion nodeTraverse(const Node* root,
-                               const TraverseNodeVisitor& functor,
-                               int depth = 0);
+TraverseRecursion node_traverse(const Node* root,
+                                const TraverseNodeVisitor& functor,
+                                int depth = 0);
 
 void serialize(std::ostream& os, const Node* nd, int depth = 0);
 

@@ -25,34 +25,33 @@ namespace fo {
   };
 
   struct Dimen {
-    Dimen() : mValue(0), mUnit(k_pt), mMin(0), mMax(0) {}
+    Dimen() : _value(0), _unit(k_pt), _min(0), _max(0) {}
     Dimen(double value, Unit unit, boost::optional<double> min = boost::none,
           boost::optional<double> max = boost::none)
-        : mValue(value), mUnit(unit), mMin(min != boost::none ? *min : value),
-          mMax(max != boost::none ? *max : value)
+      : _value(value), _unit(unit), _min(min != boost::none ? *min : value),
+        _max(max != boost::none ? *max : value)
     {
     }
 
     Dimen(const Dimen& other)
-      : mValue(other.mValue),
-        mUnit(other.mUnit),
-        mMin(other.mMin),
-        mMax(other.mMax)
-    {}
+      : _value(other._value), _unit(other._unit), _min(other._min),
+        _max(other._max)
+    {
+    }
 
     Dimen& operator=(const Dimen& other)
     {
-      const_cast<double&>(mValue) = other.mValue;
-      const_cast<Unit&>(mUnit) = other.mUnit;
-      const_cast<double&>(mMin) = other.mMin;
-      const_cast<double&>(mMax) = other.mMax;
+      const_cast<double&>(_value) = other._value;
+      const_cast<Unit&>(_unit) = other._unit;
+      const_cast<double&>(_min) = other._min;
+      const_cast<double&>(_max) = other._max;
       return *this;
     }
 
-    const double mValue;
-    const Unit mUnit;
-    const double mMin;
-    const double mMax;
+    const double _value;
+    const Unit _unit;
+    const double _min;
+    const double _max;
   };
 
   std::ostream& operator<<(std::ostream& os, const Dimen& dimen);
@@ -60,53 +59,54 @@ namespace fo {
 
   class PropertySpec {
   public:
-    using ValueType = boost::variant<Dimen, bool, int, std::string, std::shared_ptr<Sosofo>>;
+    using ValueType =
+      boost::variant<Dimen, bool, int, std::string, std::shared_ptr<Sosofo>>;
 
     PropertySpec(std::string name, Dimen val)
-        : mName(std::move(name)), mValue(val)
+      : _name(std::move(name)), _value(val)
     {
     }
 
     PropertySpec(std::string name, bool val)
-        : mName(std::move(name)), mValue(val)
+      : _name(std::move(name)), _value(val)
     {
     }
 
     PropertySpec(std::string name, int val)
-        : mName(std::move(name)), mValue(val)
+      : _name(std::move(name)), _value(val)
     {
     }
 
     PropertySpec(std::string name, std::string val)
-        : mName(std::move(name)), mValue(std::move(val))
+      : _name(std::move(name)), _value(std::move(val))
     {
     }
 
     PropertySpec(std::string name, std::shared_ptr<Sosofo> val)
-        : mName(std::move(name)), mValue(std::move(val))
+      : _name(std::move(name)), _value(std::move(val))
     {
     }
 
     PropertySpec(const PropertySpec& other)
-      : mName(other.mName),
-        mValue(other.mValue)
-    {}
+      : _name(other._name), _value(other._value)
+    {
+    }
 
     PropertySpec& operator=(const PropertySpec& other)
     {
-      const_cast<std::string&>(mName) = other.mName;
-      const_cast<ValueType&>(mValue) = other.mValue;
+      const_cast<std::string&>(_name) = other._name;
+      const_cast<ValueType&>(_value) = other._value;
       return *this;
     }
 
-    const std::string mName;
-    const ValueType mValue;
+    const std::string _name;
+    const ValueType _value;
   };
 
   using PropertySpecOrNone = boost::optional<fo::PropertySpec>;
   using PropertySpecs = std::vector<PropertySpec>;
 
-  bool isPropertyBeInherited(const std::string& key);
+  bool is_property_be_inherited(const std::string& key);
 
 } // ns fo
 
@@ -115,24 +115,24 @@ public:
   virtual ~IFormattingObject() {}
 
   /*! Returns the class name for this FOs @p class. */
-  virtual std::string className() const = 0;
+  virtual std::string classname() const = 0;
 
   /*! Return the set of defined properties */
-  virtual const fo::PropertySpecs& defaultProperties() const = 0;
+  virtual const fo::PropertySpecs& default_properties() const = 0;
 
   virtual const fo::PropertySpecs& properties() const = 0;
 
   virtual const std::vector<std::string>& ports() const = 0;
 
   /*! Return a port by @p portName */
-  virtual const Sosofo& port(const std::string& portName) const = 0;
+  virtual const Sosofo& port(const std::string& portname) const = 0;
 };
 
 
 namespace fo {
   std::unique_ptr<IFormattingObject>
-  createFoByClassName(const std::string& className, const PropertySpecs& props,
-                      const Sosofo& sosofo);
+  create_fo_by_classname(const std::string& classname,
+                         const PropertySpecs& props, const Sosofo& sosofo);
 }
 
 } // ns eyestep

@@ -24,32 +24,32 @@ class IFoProcessor;
 template <typename ProcessorT>
 class AbstractProcessor : public IProcessor {
 protected:
-  boost::filesystem::path mOutputFile;
-  PropertiesStack mProps;
+  boost::filesystem::path _output_file;
+  PropertiesStack _props;
 
 public:
-  void setOutputFile(const boost::filesystem::path& outputFile) override;
-  void renderProcessedNode(const Sosofo* sosofo) override;
+  void set_output_file(const boost::filesystem::path& output_file) override;
+  void render_processed_node(const Sosofo* sosofo) override;
 
-  void renderSosofo(const Sosofo* sosofo) override;
-  void renderFo(const IFormattingObject* fo) override;
+  void render_sosofo(const Sosofo* sosofo) override;
+  void render_fo(const IFormattingObject* fo) override;
 
   virtual const IFoProcessor<ProcessorT>*
-  lookupFoProcessor(const std::string& foClassName) const = 0;
+  lookup_fo_processor(const std::string& fo_class_name) const = 0;
 
-  virtual void beforeRendering();
-  virtual void afterRendering();
+  virtual void before_rendering();
+  virtual void after_rendering();
 
   fo::PropertySpecOrNone property(const IFormattingObject* fo,
                                   const std::string& key) const override;
 
   template <typename T>
   T property(const IFormattingObject* fo, const std::string& key,
-             T defaultValue) const;
+             T default_value) const;
 
   template <typename T>
-  boost::optional<T> propertyOrNone(const IFormattingObject* fo,
-                                    const std::string& key) const;
+  boost::optional<T> property_or_none(const IFormattingObject* fo,
+                                      const std::string& key) const;
 };
 
 } // ns eyestep

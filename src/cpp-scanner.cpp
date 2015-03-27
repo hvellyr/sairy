@@ -27,20 +27,20 @@ namespace fs = boost::filesystem;
 namespace {
 
   struct ParseContext {
-    ParseContext(Grove& grove) : mGrove(grove) {}
+    ParseContext(Grove& grove) : _grove(grove) {}
 
-    Grove& mGrove;
-    Node* mDocumentNode;
+    Grove& _grove;
+    Node* _document_node;
   };
 
 
   Node* make_type_node(Grove* grove, std::string gi, Type type)
   {
-    Node* nd = grove->makeNode(elementClassDefinition());
+    Node* nd = grove->make_node(element_class_definition());
 
-    nd->setProperty("gi", std::move(gi));
-    nd->setProperty("name", type.spelling());
-    nd->setProperty("const?", type.isConst());
+    nd->set_property("gi", std::move(gi));
+    nd->set_property("name", type.spelling());
+    nd->set_property("const?", type.is_const());
 
     return nd;
   }
@@ -48,39 +48,40 @@ namespace {
 
   Node* make_function_node(Grove* grove, Cursor ecursor)
   {
-    Node* nd = grove->makeNode(elementClassDefinition());
+    Node* nd = grove->make_node(element_class_definition());
 
-    nd->setProperty("gi", "function");
+    nd->set_property("gi", "function");
 
     std::string nm = ecursor.spelling();
 
     std::vector<std::tuple<std::string, Type>> args_nm;
 
-    visitChildren(ecursor, [&args_nm](Cursor ec, Cursor ep) {
+    visit_children(ecursor, [&args_nm](Cursor ec, Cursor ep) {
       args_nm.push_back(std::make_tuple(ec.spelling(), ec.type()));
       return CXChildVisit_Continue;
     });
 
     Type type = ecursor.type();
-    assert(args_nm.size() == type.numArgTypes());
+    assert(args_nm.size() == type.num_arg_types());
 
-    nd->setProperty("name", nm);
-    nd->setProperty("source", ecursor.location().format());
+    nd->set_property("name", nm);
+    nd->set_property("source", ecursor.location().format());
 
-    nd->addChildNode(make_type_node(grove, "return-type", type.resultType()));
+    nd->add_child_node(
+      make_type_node(grove, "return-type", type.result_type()));
 
-    auto* parameters = grove->makeNode(elementClassDefinition());
-    parameters->setProperty("gi", "parameters");
+    auto* parameters = grove->make_node(element_class_definition());
+    parameters->set_property("gi", "parameters");
 
-    nd->addChildNode(parameters);
+    nd->add_child_node(parameters);
 
-    for (int i = 0; i < type.numArgTypes(); i++) {
-      Node* param = grove->makeNode(elementClassDefinition());
-      param->setProperty("gi", "parameter");
-      param->setProperty("name", std::get<0>(args_nm[i]));
-      param->addChildNode(make_type_node(grove, "type",
-                                         std::get<1>(args_nm[i])));
-      parameters->addChildNode(param);
+    for (int i = 0; i < type.num_arg_types(); i++) {
+      Node* param = grove->make_node(element_class_definition());
+      param->set_property("gi", "parameter");
+      param->set_property("name", std::get<0>(args_nm[i]));
+      param->add_child_node(
+        make_type_node(grove, "type", std::get<1>(args_nm[i])));
+      parameters->add_child_node(param);
     }
 
     return nd;
@@ -100,11 +101,11 @@ namespace {
     std::string nm = ecursor.spelling();
 
     SourceLocation loc = ecursor.location();
-    if (loc.isFromMainFile()) {
+    if (loc.is_from_main_file()) {
       if (clang_isDeclaration(kind)) {
         if (kind == CXCursor_FunctionDecl) {
-          Node* nd = make_function_node(ctx->mDocumentNode->grove(), ecursor);
-          ctx->mDocumentNode->addChildNode(nd);
+          Node* nd = make_function_node(ctx->_document_node->grove(), ecursor);
+          ctx->_document_node->add_child_node(nd);
 
           retval = CXChildVisit_Recurse;
         }
@@ -129,14 +130,14 @@ namespace {
 
 namespace {
 
-  int computeDataSize(const std::vector<std::string>& values, const char* opt,
-                      bool isSep)
+  int compute_data_size(const std::vector<std::string>& values, const char* opt,
+                        bool is_sep)
   {
     int totalsize = 0;
     int optlen = strlen(opt);
 
     for (const auto& str : values) {
-      if (!isSep) {
+      if (!is_sep) {
         totalsize += optlen;
       }
 
@@ -147,16 +148,17 @@ namespace {
   }
 
 
-  int appendOptions(int in_argc, const std::vector<std::string>& values,
-                    const char* opt, bool isSep, std::vector<const char*>& args,
-                    std::vector<char>& argsdata)
+  int append_options(int in_argc, const std::vector<std::string>& values,
+                     const char* opt, bool is_sep,
+                     std::vector<const char*>& args,
+                     std::vector<char>& argsdata)
   {
     int argc = in_argc;
     for (const auto& str : values) {
       std::string arg;
       int ofs = argsdata.size();
 
-      if (isSep) {
+      if (is_sep) {
         args.push_back(opt);
         argc++;
 
@@ -180,23 +182,23 @@ namespace {
 } // ns anon
 
 
-//----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 const std::string CppScanner::kId = "cpp";
 
-Node* CppScanner::scanFile(eyestep::Grove& grove, const fs::path& srcfile,
-                           const std::vector<std::string>& incls,
-                           const std::vector<std::string>& defs)
+Node* CppScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile,
+                            const std::vector<std::string>& incls,
+                            const std::vector<std::string>& defs)
 {
   CXIndex idx;
   CXTranslationUnit tu;
 
   ParseContext ctx(grove);
 
-  ctx.mDocumentNode = grove.makeNode(documentClassDefinition());
+  ctx._document_node = grove.make_node(document_class_definition());
 
-  ctx.mDocumentNode->setProperty("source", srcfile.string());
-  ctx.mDocumentNode->setProperty("app-info", "cpp");
+  ctx._document_node->set_property("source", srcfile.string());
+  ctx._document_node->set_property("app-info", "cpp");
 
   // excludeDeclsFromPCH = 1, displayDiagnostics=1
   idx = clang_createIndex(1, 1);
@@ -204,13 +206,13 @@ Node* CppScanner::scanFile(eyestep::Grove& grove, const fs::path& srcfile,
   std::vector<const char*> args;
   std::vector<char> argsdata;
 
-  int totalsize =
-      computeDataSize(incls, "-I", true) + computeDataSize(incls, "-D", false);
+  int totalsize = compute_data_size(incls, "-I", true) +
+                  compute_data_size(incls, "-D", false);
   argsdata.resize(totalsize);
 
   int argc = 0;
-  argc = appendOptions(argc, incls, "-I", true, args, argsdata);
-  argc = appendOptions(argc, defs, "-D", false, args, argsdata);
+  argc = append_options(argc, incls, "-I", true, args, argsdata);
+  argc = append_options(argc, defs, "-D", false, args, argsdata);
 
   args.push_back("-x");
   argc++;
@@ -233,7 +235,7 @@ Node* CppScanner::scanFile(eyestep::Grove& grove, const fs::path& srcfile,
                       (CXCursorVisitor)scan_hierarchy_visitor, &ctx);
   clang_disposeTranslationUnit(tu);
 
-  return ctx.mDocumentNode;
+  return ctx._document_node;
 }
 
 } // ns eyestep

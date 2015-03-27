@@ -8,7 +8,7 @@ namespace eyestep {
 class IFormattingObject;
 
 
-template<typename ProcessorT>
+template <typename ProcessorT>
 class IFoProcessor {
 public:
   virtual ~IFoProcessor() {}

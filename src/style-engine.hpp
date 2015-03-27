@@ -16,16 +16,16 @@ class ISchemeContext;
 
 
 class StyleEngine {
-  std::unique_ptr<ISchemeContext> mCtx;
-  std::string mBackendId;
+  std::unique_ptr<ISchemeContext> _ctx;
+  std::string _backend_id;
 
 public:
   StyleEngine(const std::vector<boost::filesystem::path>& prefix_paths,
-              const std::string& backendId);
+              const std::string& backend_id);
 
-  bool loadStyle(const boost::filesystem::path& path);
+  bool load_style(const boost::filesystem::path& path);
 
-  std::unique_ptr<Sosofo> processNode(const Node* node);
+  std::unique_ptr<Sosofo> process_node(const Node* node);
 };
 
 } // ns eyestep
