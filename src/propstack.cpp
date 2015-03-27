@@ -27,12 +27,12 @@ PropertiesStack::get(const std::string& key,
                      const fo::PropertySpecs& defaults) const
 {
   const auto lookupKey =
-      [](const fo::PropertySpecs& props, const std::string& key) {
-    return std::find_if(props.begin(), props.end(),
-                        [&key](const fo::PropertySpec& spec) {
-                          return spec.mName == key;
-                        });
-  };
+    [](const fo::PropertySpecs& props, const std::string& key) {
+      return std::find_if(props.begin(), props.end(),
+                          [&key](const fo::PropertySpec& spec) {
+                            return spec.mName == key;
+                          });
+    };
 
   auto i_current = mStack.begin();
 

@@ -115,7 +115,7 @@ enum class TraverseRecursion {
 };
 
 using TraverseNodeVisitor =
-    std::function<TraverseRecursion(const Node*, int depth)>;
+  std::function<TraverseRecursion(const Node*, int depth)>;
 
 TraverseRecursion nodeTraverse(const Node* root,
                                const TraverseNodeVisitor& functor,

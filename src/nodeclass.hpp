@@ -15,7 +15,7 @@ enum class PropertyType { kInt, kString, kNode, kNodeList };
 class Property {
 public:
   Property(const std::string& nm, PropertyType ty, bool req)
-      : name(nm), type(ty), isRequired(req)
+    : name(nm), type(ty), isRequired(req)
   {
   }
 
@@ -30,7 +30,7 @@ class NodeClass {
 public:
   NodeClass(const std::string& cnm, const PropertySet& propSpec,
             const NodeClass* super)
-      : className(cnm), propertiesSpec(propSpec), superClass(super)
+    : className(cnm), propertiesSpec(propSpec), superClass(super)
   {
   }
 

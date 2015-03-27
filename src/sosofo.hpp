@@ -21,7 +21,7 @@ public:
   /*! Creates a sosofo with exactly one formatting object */
   Sosofo(std::shared_ptr<IFormattingObject> FO);
 
-  /*! Returns a new sosofo with all FOs from @p other appended */ 
+  /*! Returns a new sosofo with all FOs from @p other appended */
   Sosofo concat(const Sosofo& other) const;
 
   bool empty() const;

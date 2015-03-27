@@ -18,7 +18,7 @@ public:
   Source(const boost::filesystem::path& srcfile,
          const std::vector<std::string>& locIncls,
          const std::vector<std::string>& locDefines)
-      : mSrcfile(srcfile), mLocIncls(locIncls), mLocDefs(locDefines)
+    : mSrcfile(srcfile), mLocIncls(locIncls), mLocDefs(locDefines)
   {
   }
 

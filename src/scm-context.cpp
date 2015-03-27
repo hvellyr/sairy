@@ -433,7 +433,8 @@ namespace {
 
     public:
       SexpPropVisitor(sexp ctx, sexp self, sexp propName, sexp default_value)
-        : mCtx(ctx), mSelf(self), mPropName(propName), mDefaultValue(default_value)
+        : mCtx(ctx), mSelf(self), mPropName(propName),
+          mDefaultValue(default_value)
       {
       }
 
@@ -510,8 +511,8 @@ namespace {
         }
       }
       else {
-        result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
-                                     nodeArg);
+        result = sexp_user_exception(ctx, self,
+                                     "not a node/singleton node-list", nodeArg);
       }
     }
 
@@ -1071,7 +1072,7 @@ namespace {
     if (sexp_pairp(argsArg)) {
       sexp ls = argsArg;
 
-      for ( ; sexp_pairp(ls); ls = sexp_cdr(ls)) {
+      for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
         sexp ref = sexp_car(ls);
         auto key = string_from_keyword_or_none(ctx, ref);
 
@@ -1098,12 +1099,13 @@ namespace {
         ls = sexp_cdr(ls);
       }
 
-      for ( ; sexp_pairp(ls); ls = sexp_cdr(ls)) {
+      for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
         sexp ref = sexp_car(ls);
         auto key = string_from_keyword_or_none(ctx, ref);
 
         if (key) {
-          result = sexp_user_exception(ctx, self, "unexpeced keyword in make body", ref);
+          result = sexp_user_exception(ctx, self,
+                                       "unexpeced keyword in make body", ref);
           break;
         }
         obj = ref;

@@ -167,8 +167,8 @@ const Node* NodesNodeListStrategy::head() const
 NodeList NodesNodeListStrategy::rest() const
 {
   if (mStart + 1 < int(mNodes.size())) {
-    return NodeList(std::move(
-      estd::make_unique<NodesNodeListStrategy>(mNodes, mStart + 1)));
+    return NodeList(
+      std::move(estd::make_unique<NodesNodeListStrategy>(mNodes, mStart + 1)));
   }
   return NodeList();
 }

@@ -28,17 +28,16 @@ namespace fo {
     Dimen() : mValue(0), mUnit(k_pt), mMin(0), mMax(0) {}
     Dimen(double value, Unit unit, boost::optional<double> min = boost::none,
           boost::optional<double> max = boost::none)
-        : mValue(value), mUnit(unit), mMin(min != boost::none ? *min : value),
-          mMax(max != boost::none ? *max : value)
+      : mValue(value), mUnit(unit), mMin(min != boost::none ? *min : value),
+        mMax(max != boost::none ? *max : value)
     {
     }
 
     Dimen(const Dimen& other)
-      : mValue(other.mValue),
-        mUnit(other.mUnit),
-        mMin(other.mMin),
+      : mValue(other.mValue), mUnit(other.mUnit), mMin(other.mMin),
         mMax(other.mMax)
-    {}
+    {
+    }
 
     Dimen& operator=(const Dimen& other)
     {
@@ -60,37 +59,38 @@ namespace fo {
 
   class PropertySpec {
   public:
-    using ValueType = boost::variant<Dimen, bool, int, std::string, std::shared_ptr<Sosofo>>;
+    using ValueType =
+      boost::variant<Dimen, bool, int, std::string, std::shared_ptr<Sosofo>>;
 
     PropertySpec(std::string name, Dimen val)
-        : mName(std::move(name)), mValue(val)
+      : mName(std::move(name)), mValue(val)
     {
     }
 
     PropertySpec(std::string name, bool val)
-        : mName(std::move(name)), mValue(val)
+      : mName(std::move(name)), mValue(val)
     {
     }
 
     PropertySpec(std::string name, int val)
-        : mName(std::move(name)), mValue(val)
+      : mName(std::move(name)), mValue(val)
     {
     }
 
     PropertySpec(std::string name, std::string val)
-        : mName(std::move(name)), mValue(std::move(val))
+      : mName(std::move(name)), mValue(std::move(val))
     {
     }
 
     PropertySpec(std::string name, std::shared_ptr<Sosofo> val)
-        : mName(std::move(name)), mValue(std::move(val))
+      : mName(std::move(name)), mValue(std::move(val))
     {
     }
 
     PropertySpec(const PropertySpec& other)
-      : mName(other.mName),
-        mValue(other.mValue)
-    {}
+      : mName(other.mName), mValue(other.mValue)
+    {
+    }
 
     PropertySpec& operator=(const PropertySpec& other)
     {

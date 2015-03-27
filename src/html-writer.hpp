@@ -56,7 +56,7 @@ namespace html {
     void header(const std::string& title, const std::string& author,
                 const std::string& desc,
                 const std::function<void(std::ostream&)>& style_proc =
-                    [](std::ostream&) {});
+                  [](std::ostream&) {});
     void footer();
 
     void newln();
@@ -71,13 +71,13 @@ namespace html {
     Tag() : mWriter(nullptr) {}
 
     Tag(Writer& writer, const std::string& tag, const Attrs& attrs = {})
-        : mWriter(&writer), mTag(tag)
+      : mWriter(&writer), mTag(tag)
     {
       mWriter->open_tag(tag, attrs);
     }
 
     Tag(Tag&& other)
-        : mWriter(std::move(other.mWriter)), mTag(std::move(other.mTag))
+      : mWriter(std::move(other.mWriter)), mTag(std::move(other.mTag))
     {
       other.mWriter = nullptr;
     }

@@ -78,8 +78,8 @@ namespace {
       Node* param = grove->makeNode(elementClassDefinition());
       param->setProperty("gi", "parameter");
       param->setProperty("name", std::get<0>(args_nm[i]));
-      param->addChildNode(make_type_node(grove, "type",
-                                         std::get<1>(args_nm[i])));
+      param->addChildNode(
+        make_type_node(grove, "type", std::get<1>(args_nm[i])));
       parameters->addChildNode(param);
     }
 
@@ -205,7 +205,7 @@ Node* CppScanner::scanFile(eyestep::Grove& grove, const fs::path& srcfile,
   std::vector<char> argsdata;
 
   int totalsize =
-      computeDataSize(incls, "-I", true) + computeDataSize(incls, "-D", false);
+    computeDataSize(incls, "-I", true) + computeDataSize(incls, "-D", false);
   argsdata.resize(totalsize);
 
   int argc = 0;

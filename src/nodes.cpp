@@ -320,7 +320,8 @@ void serialize(std::ostream& os, const Node* nd, int in_depth)
 
   auto close_node = [&os](const Node* n, int lastd, int depth) {
     for (int i = lastd; i >= depth; --i) {
-      os << std::string(i * 2, ' ') << "</" << n->className() << ">" << std::endl;
+      os << std::string(i * 2, ' ') << "</" << n->className() << ">"
+         << std::endl;
     }
   };
 

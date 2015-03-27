@@ -183,6 +183,5 @@ namespace fo {
   };
 
 
-
 } // ns fo
 } // ns eyestep

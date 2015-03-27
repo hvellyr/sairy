@@ -14,7 +14,8 @@ namespace eyestep {
 
 class Sosofo;
 class IFormattingObject;
-template<typename T> class IFoProcessor;
+template <typename T>
+class IFoProcessor;
 
 
 class DebugProcessor : public AbstractProcessor<DebugProcessor> {

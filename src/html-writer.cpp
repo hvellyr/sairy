@@ -65,15 +65,15 @@ namespace html {
 
 
   const Doctype kXHTML_1_0_TRANSITIONAL_DTD =
-      {"-//W3C//DTD XHTML 1.0 Transitional//EN",
-       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"};
+    {"-//W3C//DTD XHTML 1.0 Transitional//EN",
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"};
   const Doctype kXHTML_1_1_DTD =
-      {"-//W3C//DTD XHTML 1.1//EN",
-       "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"};
+    {"-//W3C//DTD XHTML 1.1//EN",
+     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"};
 
 
   Writer::Writer(const Doctype& doctype, const std::string& generator)
-      : mDoctype(doctype), mGenerator(generator)
+    : mDoctype(doctype), mGenerator(generator)
   {
   }
 
@@ -82,7 +82,7 @@ namespace html {
   {
     mPath = path;
     mStream.open(path.string(), std::ios_base::out | std::ios_base::binary |
-                                    std::ios_base::trunc);
+                                  std::ios_base::trunc);
 
     if (mStream.fail()) {
       std::cerr << "Opening file '" << mPath << "' failed" << std::endl;
@@ -159,9 +159,11 @@ namespace html {
   void Writer::write_style(const std::string& text)
   {
     if (mStream.is_open()) {
-      open_tag("style", {{"type", "text/css"}}); newln();
+      open_tag("style", {{"type", "text/css"}});
+      newln();
       mStream << text;
-      close_tag("style"); newln();
+      close_tag("style");
+      newln();
     }
   }
 
@@ -182,28 +184,37 @@ namespace html {
   {
     if (mStream.is_open()) {
       doctype();
-      open_tag("html", {Attr{"xmlns", "http://www.w3.org/1999/xhtml"}}); newln();
+      open_tag("html", {Attr{"xmlns", "http://www.w3.org/1999/xhtml"}});
+      newln();
 
-      open_tag("head"); newln();
-      text_tag("title", title); newln();
+      open_tag("head");
+      newln();
+      text_tag("title", title);
+      newln();
       empty_tag("meta", {Attr{"http-equiv", "Content-Type"},
-                         Attr{"content", "text/html; charset=UTF-8"}}); newln();
+                         Attr{"content", "text/html; charset=UTF-8"}});
+      newln();
       if (!author.empty()) {
         empty_tag("meta", {Attr{"name", "author"},
-                           Attr{"content", escape_attr_str(author)}}); newln();
+                           Attr{"content", escape_attr_str(author)}});
+        newln();
       }
       if (!desc.empty()) {
         empty_tag("meta", {Attr{"name", "description"},
-                           Attr{"content", escape_attr_str(desc)}}); newln();
+                           Attr{"content", escape_attr_str(desc)}});
+        newln();
       }
 
       empty_tag("meta",
-                {Attr{"name", "generator"}, Attr{"content", mGenerator}}); newln();
+                {Attr{"name", "generator"}, Attr{"content", mGenerator}});
+      newln();
 
       style_proc(mStream);
 
-      close_tag("head"); newln();
-      open_tag("body"); newln();
+      close_tag("head");
+      newln();
+      open_tag("body");
+      newln();
     }
   }
 
@@ -211,8 +222,10 @@ namespace html {
   void Writer::footer()
   {
     if (mStream.is_open()) {
-      close_tag("body"); newln();
-      close_tag("html"); newln();
+      close_tag("body");
+      newln();
+      close_tag("html");
+      newln();
     }
   }
 

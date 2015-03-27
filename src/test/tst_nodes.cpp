@@ -106,10 +106,8 @@ TEST_CASE("Traverse", "[nodes]")
       return eyestep::TraverseRecursion::kRecurse;
     });
 
-    REQUIRE(gis == (ExpectedGiType{GiType{"foo", 0},
-                                   GiType{"title", 1},
-                                   GiType{"args", 1},
-                                   GiType{"type", 1}}));
+    REQUIRE(gis == (ExpectedGiType{GiType{"foo", 0}, GiType{"title", 1},
+                                   GiType{"args", 1}, GiType{"type", 1}}));
   }
 
   SECTION("Only siblings")
@@ -181,27 +179,27 @@ TEST_CASE("Serialize", "[nodes]")
   nd->addNode("types", type);
 
   const std::string exptected_output =
-      "<element gi='foo'>\n"
-      "  <prop nm='name'>bar</prop>\n"
-      "  <prop nm='size'>42</prop>\n"
-      "  <prop nm='types'>\n"
-      "    <element gi='type'>\n"
-      "      <prop nm='const?'>1</prop>\n"
-      "    </element>\n"
-      "  </prop>\n"
-      "  <element gi='title'>\n"
-      "  </element>\n"
-      "  <element gi='args'>\n"
-      "    <prop nm='params'>\n"
-      "      <element gi='p1'>\n"
-      "      </element>\n"
-      "      <element gi='p2'>\n"
-      "      </element>\n"
-      "      <element gi='p3'>\n"
-      "      </element>\n"
-      "    </prop>\n"
-      "  </element>\n"
-      "</element>\n";
+    "<element gi='foo'>\n"
+    "  <prop nm='name'>bar</prop>\n"
+    "  <prop nm='size'>42</prop>\n"
+    "  <prop nm='types'>\n"
+    "    <element gi='type'>\n"
+    "      <prop nm='const?'>1</prop>\n"
+    "    </element>\n"
+    "  </prop>\n"
+    "  <element gi='title'>\n"
+    "  </element>\n"
+    "  <element gi='args'>\n"
+    "    <prop nm='params'>\n"
+    "      <element gi='p1'>\n"
+    "      </element>\n"
+    "      <element gi='p2'>\n"
+    "      </element>\n"
+    "      <element gi='p3'>\n"
+    "      </element>\n"
+    "    </prop>\n"
+    "  </element>\n"
+    "</element>\n";
 
   std::stringstream ss;
   serialize(ss, grove.rootNode());

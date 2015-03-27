@@ -23,8 +23,8 @@ namespace {
     auto ctx = createSchemeContext();
 
     auto paths = boost::copy_range<std::vector<fs::path>>(
-        prefix_paths | boost::adaptors::transformed(
-                           [](const fs::path& path) { return path / "lib"; }));
+      prefix_paths | boost::adaptors::transformed(
+                       [](const fs::path& path) { return path / "lib"; }));
 
     ctx->initialize(paths);
 
@@ -42,7 +42,7 @@ namespace {
 
 StyleEngine::StyleEngine(const std::vector<fs::path>& prefix_paths,
                          const std::string& backendId)
-    : mBackendId(backendId)
+  : mBackendId(backendId)
 {
   mCtx = setup_scheme_context(prefix_paths);
 }
