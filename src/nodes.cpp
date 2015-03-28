@@ -58,6 +58,7 @@ const std::string CommonProps::k_attrs = "attributes";
 const std::string CommonProps::k_children = "children";
 const std::string CommonProps::k_data = "data";
 const std::string CommonProps::k_gi = "gi";
+const std::string CommonProps::k_id = "id";
 const std::string CommonProps::k_parent = "parent";
 const std::string CommonProps::k_source = "source";
 

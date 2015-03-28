@@ -30,6 +30,29 @@ target_compile_options(cppscanner
 
 
 #------------------------------------------------------------------------------
+add_library(textbook-parser
+  textbook-model.hpp
+  textbook-parser.cpp
+  textbook-parser.hpp
+)
+target_include_directories(textbook-parser
+  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_compile_options(textbook-parser
+  PUBLIC ${cxx11_options} ${warning_options})
+
+
+#------------------------------------------------------------------------------
+add_library(textbook-scanner
+  textbook-scanner.cpp
+  textbook-scanner.hpp
+)
+target_include_directories(textbook-scanner
+  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_compile_options(textbook-scanner
+  PUBLIC ${cxx11_options} ${warning_options})
+
+
+#------------------------------------------------------------------------------
 add_library(fo
   fo.hpp
   fos.cpp
@@ -104,12 +127,14 @@ target_include_directories(sairy
 
 target_link_libraries(sairy
   cppscanner
+  textbook-scanner
   debug-processor
   fo
   grove
   html-processor
   processor-base
   scheme
+  textbook-parser
   ${LibClang_LIBRARIES}
   ${Boost_LIBRARIES})
 
