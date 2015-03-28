@@ -387,7 +387,7 @@ namespace {
 
     if (const Node* node = node_from_arg(ctx, node_arg)) {
       if (const Node* p = node->parent()) {
-        result = make_node(ctx, p);
+        result = make_nodelist(ctx, new NodeList(ConstNodes{p}));
       }
     }
     else {
@@ -527,7 +527,7 @@ namespace {
 
   sexp func_grove_root(sexp ctx, sexp self, sexp_sint_t n)
   {
-    return make_node(ctx, root_node());
+    return make_nodelist(ctx, new NodeList(ConstNodes{root_node()}));
   }
 
 
@@ -619,6 +619,8 @@ namespace {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
+    result = SEXP_VOID;
+
     if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
       const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
       result = sexp_make_boolean(nl->empty());
@@ -660,7 +662,7 @@ namespace {
     if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
       const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
       const Node* node = nl->head();
-      result = node ? make_node(ctx, node) : SEXP_NULL;
+      result = make_nodelist(ctx, node ? new NodeList({node}) : new NodeList());
     }
     else {
       result = sexp_user_exception(ctx, self, "not a node-list", nl_arg);
