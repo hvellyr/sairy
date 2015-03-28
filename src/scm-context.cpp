@@ -225,6 +225,9 @@ namespace {
   }
 
 
+  sexp make_nodelist(sexp ctx, const NodeList* obj);
+
+
   //------------------------------------------------------------------------------
 
   sexp make_dimen(sexp ctx, fo::Dimen dim)
@@ -459,14 +462,12 @@ namespace {
 
       sexp operator()(Node* nd)
       {
-        // TODO
-        return SEXP_VOID;
+        return make_nodelist(_ctx, new NodeList(Nodes{nd}));
       }
 
       sexp operator()(const Nodes& nl)
       {
-        // TODO
-        return SEXP_VOID;
+        return make_nodelist(_ctx, new NodeList(nl));
       }
     };
 

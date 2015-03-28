@@ -26,20 +26,6 @@ namespace detail {
     virtual NodeList rest() const = 0;
   };
 
-  class NodesNodeListStrategy : public INodeListStrategy {
-  public:
-    NodesNodeListStrategy(const std::vector<const Node*>& nodes, int start);
-
-    std::unique_ptr<INodeListStrategy> clone() const override;
-    bool empty() const override;
-    int length() const override;
-    const Node* head() const override;
-    NodeList rest() const override;
-
-    std::vector<const Node*> _nodes;
-    int _start;
-  };
-
   class SiblingsNodeListStrategy : public INodeListStrategy {
   public:
     SiblingsNodeListStrategy(const Node* node, int start, int end);
@@ -119,7 +105,8 @@ public:
   NodeList();
   NodeList(const Node* nd, Kind kind);
   NodeList(const std::vector<NodeList>& nl);
-  NodeList(const std::vector<const Node*>& nodes);
+  NodeList(const Nodes& nodes);
+  NodeList(const ConstNodes& nodes);
 
   // internal
   NodeList(std::unique_ptr<detail::INodeListStrategy> strategy);

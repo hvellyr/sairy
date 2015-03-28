@@ -21,6 +21,7 @@ class Node;
 class NodeClass;
 
 using Nodes = std::vector<Node*>;
+using ConstNodes = std::vector<const Node*>;
 
 struct Undefined {
 };
