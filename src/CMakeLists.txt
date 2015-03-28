@@ -87,6 +87,8 @@ add_definitions(-DSEXP_USE_KEYWORDS=1)
 
 add_executable(sairy
   main.cpp
+  scanner-setup.cpp
+  scanner-setup.hpp
   scanner.hpp
   scm-context.cpp
   scm-context.hpp
