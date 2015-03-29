@@ -226,3 +226,10 @@
 (define-syntax dimen
   (syntax-rules ()
     ((dimen real unit) (%make-dimen real 'unit))))
+
+;; register a default text mapping
+(text
+ (literal (node-property 'data (current-node) default: "")))
+
+(default
+  (process-children))
