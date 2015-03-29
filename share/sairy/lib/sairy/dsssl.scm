@@ -185,33 +185,32 @@
 
 (define *current-node* (empty-node-list))
 
-;; Returns a singleton node-list.  This node is the one currently matched.
+;; @doc Returns a singleton node-list.  This node is the one currently matched.
 (define (current-node) *current-node*)
 
-;; Returns the sosofo that results from appending the sosofos that result from
-;; processing the members of the @prm{nl} in order.
+
+(define (process-current-node node)
+  ;; (parameterize ((current-node node))
+  ;;               (process-node (current-mode)
+  ;;                             node)))
+  (let ((cn (current-node)))
+    (set! *current-node* node)
+    (let ((res (process-node (current-mode)
+                             node)))
+      (set! *current-node* cn)
+      res)))
+
+
+;; @doc Returns the sosofo that results from appending the sosofos that result
+;; from processing the members of the @prm{nl} in order.
 (define (process-node-list nl)
-  (let loop ((p nl)
-             (sosofo (empty-sosofo)))
-    (if (node-list-empty? p)
-        sosofo
-        (let* ((node (node-list-first p))
-               ;; (result-sosofo (parameterize ((current-node node))
-               ;;                              (process-node (current-mode)
-               ;;                                            node))) )
-               (result-sosofo (let ((cn (current-node)))
-                                (set! *current-node* node)
-                                (let ((res (process-node (current-mode)
-                                                         node)))
-                                  (set! *current-node* cn)
-                                  res))) )
-          (loop (node-list-rest p)
-                (sosofo-append sosofo result-sosofo))
-          ))))
+  (node-list-reduce nl
+                    (lambda (sosofo snl)
+                      (sosofo-append sosofo (process-current-node snl)))
+                    (empty-sosofo)))
 
-
-;; Returns the sosofo that results from appending the sosofos that result from
-;; processing in order the children of the current node.
+;; @doc Returns the sosofo that results from appending the sosofos that result
+;; from processing in order the children of the current node.
 (define (process-children)
   (process-node-list (children (current-node))))
 
