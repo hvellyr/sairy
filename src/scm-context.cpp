@@ -35,9 +35,6 @@ namespace {
   const Node* root_node() { return s_root_node; }
 
 
-#define NODE_TAG "<node>"
-#define NODE_TAG_SIZE 6
-
 #define NODELIST_TAG "<node-list>"
 #define NODELIST_TAG_SIZE 11
 
@@ -92,25 +89,6 @@ namespace {
   }
 
 
-  int node_tag_p(sexp ctx)
-  {
-    int retv = 0;
-    sexp_gc_var2(ty, nm);
-    sexp_gc_preserve2(ctx, ty, nm);
-
-    ty =
-      sexp_env_ref(ctx, sexp_context_env(ctx),
-                   nm = sexp_intern(ctx, NODE_TAG, NODE_TAG_SIZE), SEXP_VOID);
-    if (sexp_typep(ty)) {
-      retv = sexp_type_tag(ty);
-    }
-
-    sexp_gc_release2(ctx);
-
-    return retv;
-  }
-
-
   int nodelist_tag_p(sexp ctx)
   {
     int retv = 0;
@@ -149,12 +127,9 @@ namespace {
   }
 
 
-  const Node* node_from_arg(sexp ctx, sexp arg)
+  const Node* singleton_node_from_list(sexp ctx, sexp arg)
   {
-    if (sexp_check_tag(arg, node_tag_p(ctx))) {
-      return (const Node*)(sexp_cpointer_value(arg));
-    }
-    else if (sexp_check_tag(arg, nodelist_tag_p(ctx))) {
+    if (sexp_check_tag(arg, nodelist_tag_p(ctx))) {
       const NodeList* nl = (const NodeList*)(sexp_cpointer_value(arg));
       if (nl->length() == 1) {
         return nl->head();
@@ -223,6 +198,9 @@ namespace {
 
     return fo::k_pt;
   }
+
+
+  sexp make_nodelist(sexp ctx, const NodeList* obj);
 
 
   //------------------------------------------------------------------------------
@@ -326,32 +304,6 @@ namespace {
 
   //------------------------------------------------------------------------------
 
-  sexp make_node(sexp ctx, const Node* obj)
-  {
-    assert(obj);
-    sexp_gc_var4(ty, tmp, result, nm);
-    sexp_gc_preserve4(ctx, ty, tmp, result, nm);
-
-    ty =
-      sexp_env_ref(ctx, sexp_context_env(ctx),
-                   nm = sexp_intern(ctx, NODE_TAG, NODE_TAG_SIZE), SEXP_VOID);
-
-    if (sexp_typep(ty)) {
-      result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
-      sexp_cpointer_freep(result) = 0;
-      sexp_cpointer_length(result) = 0;
-      sexp_cpointer_value(result) = (void*)obj;
-    }
-    else {
-      result = SEXP_VOID;
-    }
-
-    sexp_gc_release4(ctx);
-
-    return result;
-  }
-
-
   sexp func_gi(sexp ctx, sexp self, sexp n, sexp node_arg)
   {
     sexp_gc_var2(result, str);
@@ -359,14 +311,14 @@ namespace {
 
     result = SEXP_VOID;
 
-    if (const Node* node = node_from_arg(ctx, node_arg)) {
+    if (const Node* node = singleton_node_from_list(ctx, node_arg)) {
       result =
         sexp_string_to_symbol(ctx,
                               str = sexp_c_string(ctx, node->gi().c_str(), -1));
     }
     else {
-      result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
-                                   node_arg);
+      result =
+        sexp_user_exception(ctx, self, "not a singleton node-list", node_arg);
     }
 
     sexp_gc_release2(ctx);
@@ -382,14 +334,14 @@ namespace {
 
     result = SEXP_NULL;
 
-    if (const Node* node = node_from_arg(ctx, node_arg)) {
+    if (const Node* node = singleton_node_from_list(ctx, node_arg)) {
       if (const Node* p = node->parent()) {
-        result = make_node(ctx, p);
+        result = make_nodelist(ctx, new NodeList(ConstNodes{p}));
       }
     }
     else {
-      result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
-                                   node_arg);
+      result =
+        sexp_user_exception(ctx, self, "not a singleton node-list", node_arg);
     }
 
     sexp_gc_release1(ctx);
@@ -405,7 +357,7 @@ namespace {
 
     result = SEXP_VOID;
 
-    if (const Node* node = node_from_arg(ctx, node_arg)) {
+    if (const Node* node = singleton_node_from_list(ctx, node_arg)) {
       result =
         sexp_string_to_symbol(ctx,
                               str =
@@ -413,8 +365,8 @@ namespace {
                                               -1));
     }
     else {
-      result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
-                                   node_arg);
+      result =
+        sexp_user_exception(ctx, self, "not a singleton node-list", node_arg);
     }
 
     sexp_gc_release2(ctx);
@@ -459,14 +411,12 @@ namespace {
 
       sexp operator()(Node* nd)
       {
-        // TODO
-        return SEXP_VOID;
+        return make_nodelist(_ctx, new NodeList(Nodes{nd}));
       }
 
       sexp operator()(const Nodes& nl)
       {
-        // TODO
-        return SEXP_VOID;
+        return make_nodelist(_ctx, new NodeList(nl));
       }
     };
 
@@ -500,7 +450,7 @@ namespace {
     }
 
     if (result == SEXP_VOID) {
-      if (const Node* node = node_from_arg(ctx, node_arg)) {
+      if (const Node* node = singleton_node_from_list(ctx, node_arg)) {
         auto propname = string_from_symbol_sexp_or_none(ctx, propname_arg);
         if (!propname) {
           result = sexp_user_exception(ctx, self, "not a symbol", propname_arg);
@@ -513,8 +463,7 @@ namespace {
       }
       else {
         result =
-          sexp_user_exception(ctx, self, "not a node/singleton node-list",
-                              node_arg);
+          sexp_user_exception(ctx, self, "not a singleton node-list", node_arg);
       }
     }
 
@@ -526,35 +475,56 @@ namespace {
 
   sexp func_grove_root(sexp ctx, sexp self, sexp_sint_t n)
   {
-    return make_node(ctx, root_node());
+    return make_nodelist(ctx, new NodeList(ConstNodes{root_node()}));
   }
 
 
-  sexp finalize_node(sexp ctx, sexp self, sexp_sint_t n, sexp node_arg)
+  sexp func_named_node(sexp ctx, sexp self, sexp_sint_t n, sexp string_arg,
+                       sexp nnl_arg)
   {
-    sexp_cpointer_value(node_arg) = nullptr;
-    return SEXP_VOID;
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_VOID;
+
+    std::string key;
+    if (sexp_stringp(string_arg)) {
+      key = std::string(sexp_string_data(string_arg));
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a string", string_arg);
+    }
+
+    if (result == SEXP_VOID) {
+      if (sexp_check_tag(nnl_arg, nodelist_tag_p(ctx))) {
+        const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nnl_arg));
+
+        ConstNodes nodes;
+
+        NodeList p(nl->clone());
+        while (!p.empty()) {
+          auto* nd = p.head();
+          if (nd->has_property(CommonProps::k_attr_name)) {
+            nodes.push_back(nd);
+          }
+          p = p.rest();
+        }
+
+        result = make_nodelist(ctx, new NodeList(nodes));
+      }
+      else {
+        result = sexp_user_exception(ctx, self, "not a node-list", nnl_arg);
+      }
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
   }
 
 
   void init_node_functions(sexp ctx)
   {
-    sexp_gc_var3(nm, ty, op);
-    sexp_gc_preserve3(ctx, nm, ty, op);
-
-    // register qobject type
-    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "node", -1),
-                              &finalize_node);
-
-    sexp_env_cell_define(ctx, sexp_context_env(ctx),
-                         nm = sexp_intern(ctx, NODE_TAG, NODE_TAG_SIZE), ty,
-                         NULL);
-    op =
-      sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "node?", -1), ty);
-    sexp_env_define(ctx, sexp_context_env(ctx),
-                    nm = sexp_intern(ctx, "node?", -1), op);
-
-    // register functions
     sexp_define_foreign(ctx, sexp_context_env(ctx), "gi", 1, &func_gi);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "parent", 1, &func_parent);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "class", 1, &func_class);
@@ -565,8 +535,8 @@ namespace {
 
     sexp_define_foreign(ctx, sexp_context_env(ctx), "grove-root", 0,
                         &func_grove_root);
-
-    sexp_gc_release3(ctx);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "named-node", 2,
+                        &func_named_node);
   }
 
 
@@ -618,6 +588,8 @@ namespace {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
+    result = SEXP_VOID;
+
     if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
       const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
       result = sexp_make_boolean(nl->empty());
@@ -659,7 +631,7 @@ namespace {
     if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
       const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
       const Node* node = nl->head();
-      result = node ? make_node(ctx, node) : SEXP_NULL;
+      result = make_nodelist(ctx, node ? new NodeList({node}) : new NodeList());
     }
     else {
       result = sexp_user_exception(ctx, self, "not a node-list", nl_arg);
@@ -703,11 +675,7 @@ namespace {
       for (sexp ls = args_arg; sexp_pairp(ls); ls = sexp_cdr(ls)) {
         sexp ref = sexp_car(ls);
 
-        if (sexp_check_tag(ref, node_tag_p(ctx))) {
-          const Node* nd = (const Node*)(sexp_cpointer_value(ref));
-          nodelist.emplace_back(NodeList(std::vector<const Node*>{nd}));
-        }
-        else if (sexp_check_tag(ref, nodelist_tag_p(ctx))) {
+        if (sexp_check_tag(ref, nodelist_tag_p(ctx))) {
           const NodeList* nl = (const NodeList*)(sexp_cpointer_value(ref));
           nodelist.emplace_back(nl->clone());
         }
@@ -731,12 +699,12 @@ namespace {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
-    if (const Node* node = node_from_arg(ctx, nl_arg)) {
+    if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
       result = make_nodelist(ctx, new NodeList(node, kind));
     }
     else {
-      result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
-                                   nl_arg);
+      result =
+        sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
     }
 
     sexp_gc_release1(ctx);
@@ -788,7 +756,35 @@ namespace {
 
     result = SEXP_FALSE;
 
-    if (const Node* node = node_from_arg(ctx, nl_arg)) {
+    if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
+      const Node* parent = node->parent();
+      if (parent) {
+        auto siblings = parent->property<Nodes>(CommonProps::k_children);
+        if (!siblings.empty()) {
+          result = siblings[0] == node ? SEXP_TRUE : SEXP_FALSE;
+        }
+      }
+    }
+    else {
+      result =
+        sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_abs_first_element_sibling_p(sexp ctx, sexp self, sexp_sint_t n,
+                                        sexp nl_arg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_FALSE;
+
+    if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
       const Node* parent = node->parent();
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
@@ -801,8 +797,8 @@ namespace {
       }
     }
     else {
-      result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
-                                   nl_arg);
+      result =
+        sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
     }
 
     sexp_gc_release1(ctx);
@@ -818,7 +814,37 @@ namespace {
 
     result = SEXP_FALSE;
 
-    if (const Node* node = node_from_arg(ctx, nl_arg)) {
+    if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
+      const Node* parent = node->parent();
+      if (parent) {
+        auto siblings = parent->property<Nodes>(CommonProps::k_children);
+        std::reverse(siblings.begin(), siblings.end());
+
+        if (!siblings.empty()) {
+          result = siblings[0] == node ? SEXP_TRUE : SEXP_FALSE;
+        }
+      }
+    }
+    else {
+      result =
+        sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_abs_last_element_sibling_p(sexp ctx, sexp self, sexp_sint_t n,
+                                       sexp nl_arg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_FALSE;
+
+    if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
       const Node* parent = node->parent();
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
@@ -833,8 +859,8 @@ namespace {
       }
     }
     else {
-      result = sexp_user_exception(ctx, self, "not a node/singleton node-list",
-                                   nl_arg);
+      result =
+        sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
     }
 
     sexp_gc_release1(ctx);
@@ -889,6 +915,13 @@ namespace {
                         1, &func_abs_first_sibling_p);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "absolute-last-sibling?", 1,
                         &func_abs_last_sibling_p);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx),
+                        "absolute-first-element-sibling?", 1,
+                        &func_abs_first_element_sibling_p);
+    sexp_define_foreign(ctx, sexp_context_env(ctx),
+                        "absolute-last-element-sibling?", 1,
+                        &func_abs_last_element_sibling_p);
 
     sexp_gc_release3(ctx);
   }
@@ -1147,8 +1180,8 @@ namespace {
   void init_builtins(sexp ctx)
   {
     init_dimen_functions(ctx);
-    init_node_functions(ctx);
     init_nodelist_functions(ctx);
+    init_node_functions(ctx);
     init_sosofo_functions(ctx);
     init_make_functions(ctx);
   }

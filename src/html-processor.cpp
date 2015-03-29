@@ -271,7 +271,7 @@ namespace {
     set_css_attr(map, "margin-right", endindent);
     set_css_attr(map, "margin-top", spacebefore);
     set_css_attr(map, "margin-bottom", spaceafter);
-    set_css_attr(map, "first-line-start-indent", firstline_startindent);
+    set_css_attr(map, "text-indent", firstline_startindent);
   }
 
 

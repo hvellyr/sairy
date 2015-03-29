@@ -21,6 +21,7 @@ class Node;
 class NodeClass;
 
 using Nodes = std::vector<Node*>;
+using ConstNodes = std::vector<const Node*>;
 
 struct Undefined {
 };
@@ -32,10 +33,13 @@ class Grove;
 
 
 struct CommonProps {
-  static const std::string k_parent;
-  static const std::string k_gi;
+  static const std::string k_attr_name;
+  static const std::string k_attrs;
   static const std::string k_children;
   static const std::string k_data;
+  static const std::string k_gi;
+  static const std::string k_parent;
+  static const std::string k_source;
 };
 
 

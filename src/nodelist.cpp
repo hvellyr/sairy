@@ -12,12 +12,54 @@
 namespace eyestep {
 
 using detail::INodeListStrategy;
-using detail::NodesNodeListStrategy;
 using detail::SiblingsNodeListStrategy;
 using detail::AncestorsNodeListStrategy;
 using detail::DescendantsNodeListStrategy;
 using detail::CompositeNodeListStrategy;
 
+
+//------------------------------------------------------------------------------
+
+namespace detail {
+
+  template <typename T>
+  class NodesNodeListStrategy : public INodeListStrategy {
+    T _nodes;
+    int _start;
+
+  public:
+    NodesNodeListStrategy(const T& nodes, int start)
+      : _nodes(nodes), _start(start)
+    {
+    }
+
+    std::unique_ptr<INodeListStrategy> clone() const override
+    {
+      return estd::make_unique<NodesNodeListStrategy>(_nodes, _start);
+    }
+
+    bool empty() const override { return int(_nodes.size()) - _start == 0; }
+
+    int length() const override { return int(_nodes.size()) - _start; }
+
+    const Node* head() const override
+    {
+      assert(_start < int(_nodes.size()));
+      return _nodes[_start];
+    }
+
+    NodeList rest() const override
+    {
+      if (_start + 1 < int(_nodes.size())) {
+        return NodeList(std::move(
+          estd::make_unique<NodesNodeListStrategy>(_nodes, _start + 1)));
+      }
+      return NodeList();
+    }
+  };
+} // detail ns
+
+using detail::NodesNodeListStrategy;
 
 //------------------------------------------------------------------------------
 
@@ -99,8 +141,14 @@ NodeList::NodeList(std::unique_ptr<INodeListStrategy> strategy)
 }
 
 
-NodeList::NodeList(const std::vector<const Node*>& nodes)
-  : _strategy(estd::make_unique<NodesNodeListStrategy>(nodes, 0))
+NodeList::NodeList(const Nodes& nodes)
+  : _strategy(estd::make_unique<NodesNodeListStrategy<Nodes>>(nodes, 0))
+{
+}
+
+
+NodeList::NodeList(const ConstNodes& nodes)
+  : _strategy(estd::make_unique<NodesNodeListStrategy<ConstNodes>>(nodes, 0))
 {
 }
 
@@ -132,45 +180,6 @@ const Node* NodeList::head() const
 NodeList NodeList::rest() const
 {
   return _strategy ? _strategy->rest() : NodeList();
-}
-
-
-//------------------------------------------------------------------------------
-
-NodesNodeListStrategy::NodesNodeListStrategy(
-  const std::vector<const Node*>& nodes, int start)
-  : _nodes(nodes), _start(start)
-{
-}
-
-std::unique_ptr<INodeListStrategy> NodesNodeListStrategy::clone() const
-{
-  return estd::make_unique<NodesNodeListStrategy>(_nodes, _start);
-}
-
-bool NodesNodeListStrategy::empty() const
-{
-  return int(_nodes.size()) - _start == 0;
-}
-
-int NodesNodeListStrategy::length() const
-{
-  return int(_nodes.size()) - _start;
-}
-
-const Node* NodesNodeListStrategy::head() const
-{
-  assert(_start < int(_nodes.size()));
-  return _nodes[_start];
-}
-
-NodeList NodesNodeListStrategy::rest() const
-{
-  if (_start + 1 < int(_nodes.size())) {
-    return NodeList(
-      std::move(estd::make_unique<NodesNodeListStrategy>(_nodes, _start + 1)));
-  }
-  return NodeList();
 }
 
 
@@ -309,7 +318,8 @@ const Node* DescendantsNodeListStrategy::head() const
 NodeList DescendantsNodeListStrategy::rest() const
 {
   if (_start < _end) {
-    Node* newnode = _node->property<Nodes>(CommonProps::k_children)[_start];
+    const Node* newnode =
+      _node->property<Nodes>(CommonProps::k_children)[_start];
 
     const Nodes& children = newnode->property<Nodes>(CommonProps::k_children);
     if (children.size() > 0) {

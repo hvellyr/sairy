@@ -185,35 +185,52 @@
 
 (define *current-node* (empty-node-list))
 
-;; Returns a singleton node-list.  This node is the one currently matched.
+;; @doc Returns a singleton node-list.  This node is the one currently matched.
 (define (current-node) *current-node*)
 
-;; Returns the sosofo that results from appending the sosofos that result from
-;; processing the members of the @prm{nl} in order.
+
+(define (process-current-node node)
+  ;; (parameterize ((current-node node))
+  ;;               (process-node (current-mode)
+  ;;                             node)))
+  (let ((cn (current-node)))
+    (set! *current-node* node)
+    (let ((res (process-node (current-mode)
+                             node)))
+      (set! *current-node* cn)
+      res)))
+
+
+;; @doc Returns the sosofo that results from appending the sosofos that result
+;; from processing the members of the @prm{nl} in order.
 (define (process-node-list nl)
-  (let loop ((p nl)
-             (sosofo (empty-sosofo)))
-    (if (node-list-empty? p)
-        sosofo
-        (let* ((node (node-list-first p))
-               ;; (result-sosofo (parameterize ((current-node node))
-               ;;                              (process-node (current-mode)
-               ;;                                            node))) )
-               (result-sosofo (let ((cn (current-node)))
-                                (set! *current-node* node)
-                                (let ((res (process-node (current-mode)
-                                                         node)))
-                                  (set! *current-node* cn)
-                                  res))) )
-          (loop (node-list-rest p)
-                (sosofo-append sosofo result-sosofo))
-          ))))
+  (node-list-reduce nl
+                    (lambda (sosofo snl)
+                      (sosofo-append sosofo (process-current-node snl)))
+                    (empty-sosofo)))
 
-
-;; Returns the sosofo that results from appending the sosofos that result from
-;; processing in order the children of the current node.
+;; @doc Returns the sosofo that results from appending the sosofos that result
+;; from processing in order the children of the current node.
 (define (process-children)
   (process-node-list (children (current-node))))
+
+;; @doc Returns the sosofo that results from appending the sosofos that result
+;; from processing in order the children of the current node after removing any
+;; leading and trailing whitespace from leading and trailing text nodes.
+(define (process-children-trim)
+  (node-list-reduce (children (current-node))
+                    (lambda (sosofo snl)
+                      (if (equal? (class snl) 'text)
+                          (let* ((data (node-property 'data snl default: ""))
+                                 (data1 (if (absolute-first-sibling? snl)
+                                            (string-trim data)
+                                            data))
+                                 (data2 (if (absolute-last-sibling? snl)
+                                            (string-trim-right data1)
+                                            data1)) )
+                            (sosofo-append sosofo (literal data2)))
+                          (sosofo-append sosofo (process-current-node snl))))
+                    (empty-sosofo)))
 
 
 ;; (hash-table-walk *registry*
@@ -226,3 +243,10 @@
 (define-syntax dimen
   (syntax-rules ()
     ((dimen real unit) (%make-dimen real 'unit))))
+
+;; register a default text mapping
+(text
+ (literal (node-property 'data (current-node) default: "")))
+
+(default
+  (process-children))

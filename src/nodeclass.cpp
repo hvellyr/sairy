@@ -1,8 +1,9 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
-#include "nodeclass.hpp"
 #include "estd/memory.hpp"
+#include "nodeclass.hpp"
+#include "nodes.hpp"
 
 #include <algorithm>
 #include <string>
@@ -13,7 +14,10 @@ namespace eyestep {
 
 const NodeClass* any_class_definition()
 {
-  static NodeClass any_class{"any", PropertySet(), nullptr};
+  static NodeClass any_class{"any",
+                             PropertySet({{CommonProps::k_attr_name,
+                                           PropertyType::k_string, false}}),
+                             nullptr};
   return &any_class;
 }
 
@@ -32,9 +36,11 @@ const NodeClass* document_class_definition()
 {
   static NodeClass doc_class{"document",
                              PropertySet{
-                               {"source", PropertyType::k_string, false},
+                               {CommonProps::k_source, PropertyType::k_string,
+                                false},
                                {"app-info", PropertyType::k_string, false},
-                               {"children", PropertyType::k_nodelist,
+                               {CommonProps::k_children,
+                                PropertyType::k_nodelist,
                                 true}, // conprop=content
                              },
                              any_class_definition()};
@@ -44,15 +50,16 @@ const NodeClass* document_class_definition()
 
 const NodeClass* element_class_definition()
 {
-  static NodeClass elt_class{"element",
-                             PropertySet{
-                               {"source", PropertyType::k_string, false},
-                               {"children", PropertyType::k_nodelist,
-                                true}, // conprop=content
-                               {"gi", PropertyType::k_string, true},
-                               {"id", PropertyType::k_string, false},
-                             },
-                             any_class_definition()};
+  static NodeClass
+    elt_class{"element",
+              PropertySet{
+                {CommonProps::k_source, PropertyType::k_string, false},
+                {CommonProps::k_children, PropertyType::k_nodelist,
+                 true}, // conprop=content
+                {CommonProps::k_gi, PropertyType::k_string, true},
+                {CommonProps::k_id, PropertyType::k_string, false},
+              },
+              any_class_definition()};
   return &elt_class;
 }
 
@@ -61,7 +68,8 @@ const NodeClass* text_class_definition()
 {
   static NodeClass elt_class{"text",
                              PropertySet{
-                               {"data", PropertyType::k_string, false},
+                               {CommonProps::k_data, PropertyType::k_string,
+                                false},
                              },
                              any_class_definition()};
   return &elt_class;
