@@ -214,6 +214,24 @@
 (define (process-children)
   (process-node-list (children (current-node))))
 
+;; @doc Returns the sosofo that results from appending the sosofos that result
+;; from processing in order the children of the current node after removing any
+;; leading and trailing whitespace from leading and trailing text nodes.
+(define (process-children-trim)
+  (node-list-reduce (children (current-node))
+                    (lambda (sosofo snl)
+                      (if (equal? (class snl) 'text)
+                          (let* ((data (node-property 'data snl default: ""))
+                                 (data1 (if (absolute-first-sibling? snl)
+                                            (string-trim data)
+                                            data))
+                                 (data2 (if (absolute-last-sibling? snl)
+                                            (string-trim-right data1)
+                                            data1)) )
+                            (sosofo-append sosofo (literal data2)))
+                          (sosofo-append sosofo (process-current-node snl))))
+                    (empty-sosofo)))
+
 
 ;; (hash-table-walk *registry*
 ;;                  (lambda (key value)

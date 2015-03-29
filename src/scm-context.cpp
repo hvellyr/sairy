@@ -760,6 +760,34 @@ namespace {
       const Node* parent = node->parent();
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
+        if (!siblings.empty()) {
+          result = siblings[0] == node ? SEXP_TRUE : SEXP_FALSE;
+        }
+      }
+    }
+    else {
+      result =
+        sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_abs_first_element_sibling_p(sexp ctx, sexp self, sexp_sint_t n,
+                                        sexp nl_arg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_FALSE;
+
+    if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
+      const Node* parent = node->parent();
+      if (parent) {
+        auto siblings = parent->property<Nodes>(CommonProps::k_children);
         auto i_find = boost::find_if(siblings, [&node](const Node* lnd) {
           return lnd->node_class() == element_class_definition();
         });
@@ -780,6 +808,36 @@ namespace {
 
 
   sexp func_abs_last_sibling_p(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_FALSE;
+
+    if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
+      const Node* parent = node->parent();
+      if (parent) {
+        auto siblings = parent->property<Nodes>(CommonProps::k_children);
+        std::reverse(siblings.begin(), siblings.end());
+
+        if (!siblings.empty()) {
+          result = siblings[0] == node ? SEXP_TRUE : SEXP_FALSE;
+        }
+      }
+    }
+    else {
+      result =
+        sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_abs_last_element_sibling_p(sexp ctx, sexp self, sexp_sint_t n,
+                                       sexp nl_arg)
   {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
@@ -857,6 +915,13 @@ namespace {
                         1, &func_abs_first_sibling_p);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "absolute-last-sibling?", 1,
                         &func_abs_last_sibling_p);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx),
+                        "absolute-first-element-sibling?", 1,
+                        &func_abs_first_element_sibling_p);
+    sexp_define_foreign(ctx, sexp_context_env(ctx),
+                        "absolute-last-element-sibling?", 1,
+                        &func_abs_last_element_sibling_p);
 
     sexp_gc_release3(ctx);
   }
