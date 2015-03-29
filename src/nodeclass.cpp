@@ -14,7 +14,10 @@ namespace eyestep {
 
 const NodeClass* any_class_definition()
 {
-  static NodeClass any_class{"any", PropertySet(), nullptr};
+  static NodeClass any_class{"any",
+                             PropertySet({{CommonProps::k_attr_name,
+                                           PropertyType::k_string, false}}),
+                             nullptr};
   return &any_class;
 }
 

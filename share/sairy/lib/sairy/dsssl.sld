@@ -7,7 +7,12 @@
           select-elements match-element?
           node-list
           sosofo-append
+          node-list-property node-list-reduce node-list-map node-list->list
+          node-list-reverse node-list-ref node-list-tail node-list-sublist
+          named-node-list-names
+          attributes attribute
           )
+  (include "nodelist.scm")
   (include "fo.scm")
   (include "dsssl.scm")
   (include "query.scm")

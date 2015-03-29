@@ -479,6 +479,50 @@ namespace {
   }
 
 
+  sexp func_named_node(sexp ctx, sexp self, sexp_sint_t n, sexp string_arg,
+                       sexp nnl_arg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_VOID;
+
+    std::string key;
+    if (sexp_stringp(string_arg)) {
+      key = std::string(sexp_string_data(string_arg));
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a string", string_arg);
+    }
+
+    if (result == SEXP_VOID) {
+      if (sexp_check_tag(nnl_arg, nodelist_tag_p(ctx))) {
+        const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nnl_arg));
+
+        ConstNodes nodes;
+
+        NodeList p(nl->clone());
+        while (!p.empty()) {
+          auto* nd = p.head();
+          if (nd->has_property(CommonProps::k_attr_name)) {
+            nodes.push_back(nd);
+          }
+          p = p.rest();
+        }
+
+        result = make_nodelist(ctx, new NodeList(nodes));
+      }
+      else {
+        result = sexp_user_exception(ctx, self, "not a node-list", nnl_arg);
+      }
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
   void init_node_functions(sexp ctx)
   {
     sexp_define_foreign(ctx, sexp_context_env(ctx), "gi", 1, &func_gi);
@@ -491,6 +535,8 @@ namespace {
 
     sexp_define_foreign(ctx, sexp_context_env(ctx), "grove-root", 0,
                         &func_grove_root);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "named-node", 2,
+                        &func_named_node);
   }
 
 

@@ -33,6 +33,8 @@ class Grove;
 
 
 struct CommonProps {
+  static const std::string k_attr_name;
+  static const std::string k_attrs;
   static const std::string k_children;
   static const std::string k_data;
   static const std::string k_gi;

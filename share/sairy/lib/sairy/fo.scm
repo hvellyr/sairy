@@ -14,13 +14,6 @@
     ))
 
 
-(define-syntax node-list
-  (syntax-rules ()
-    ((node-list) (empty-node-list))
-    ((node-list args ...) (%node-list (list args ...)))
-    ))
-
-
 (define-syntax sosofo-append
   (syntax-rules ()
     ((sosofo-append) (empty-sosofo))

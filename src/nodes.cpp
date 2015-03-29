@@ -53,6 +53,8 @@ std::ostream& operator<<(std::ostream& os, const Node& node)
 
 //------------------------------------------------------------------------------
 
+const std::string CommonProps::k_attr_name = "#attr-name";
+const std::string CommonProps::k_attrs = "attributes";
 const std::string CommonProps::k_children = "children";
 const std::string CommonProps::k_data = "data";
 const std::string CommonProps::k_gi = "gi";
