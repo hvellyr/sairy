@@ -109,8 +109,14 @@ public:
 
   Node* set_root_node(const NodeClass* node_class);
   Node* root_node() const;
+
+  /*! removes the node from the grove and hands it back to the caller.  The node
+    must be referenced by any other node except for its own children! */
+  std::unique_ptr<Node> remove_node(Node* nd);
 };
 
+/*! Reset the parent reference of all @p nodes.  Use with care. */
+void unparent_nodes(Nodes& nodes);
 
 enum class TraverseRecursion {
   k_break,
