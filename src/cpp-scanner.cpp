@@ -65,19 +65,19 @@ namespace {
     assert(args_nm.size() == type.num_arg_types());
 
     nd->set_property("name", nm);
-    nd->set_property("source", ecursor.location().format());
+    nd->set_property(CommonProps::k_source, ecursor.location().format());
 
     nd->add_child_node(
       make_type_node(grove, "return-type", type.result_type()));
 
     auto* parameters = grove->make_node(element_class_definition());
-    parameters->set_property("gi", "parameters");
+    parameters->set_property(CommonProps::k_gi, "parameters");
 
     nd->add_child_node(parameters);
 
     for (int i = 0; i < type.num_arg_types(); i++) {
       Node* param = grove->make_node(element_class_definition());
-      param->set_property("gi", "parameter");
+      param->set_property(CommonProps::k_gi, "parameter");
       param->set_property("name", std::get<0>(args_nm[i]));
       param->add_child_node(
         make_type_node(grove, "type", std::get<1>(args_nm[i])));
@@ -206,7 +206,7 @@ Node* CppScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile,
 
   ctx._document_node = grove.make_node(document_class_definition());
 
-  ctx._document_node->set_property("source", srcfile.string());
+  ctx._document_node->set_property(CommonProps::k_source, srcfile.string());
   ctx._document_node->set_property("app-info", "cpp");
 
   // excludeDeclsFromPCH = 1, displayDiagnostics=1

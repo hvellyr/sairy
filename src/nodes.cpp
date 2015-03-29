@@ -53,10 +53,11 @@ std::ostream& operator<<(std::ostream& os, const Node& node)
 
 //------------------------------------------------------------------------------
 
-const std::string CommonProps::k_parent = "parent";
-const std::string CommonProps::k_gi = "gi";
 const std::string CommonProps::k_children = "children";
 const std::string CommonProps::k_data = "data";
+const std::string CommonProps::k_gi = "gi";
+const std::string CommonProps::k_parent = "parent";
+const std::string CommonProps::k_source = "source";
 
 
 //------------------------------------------------------------------------------
