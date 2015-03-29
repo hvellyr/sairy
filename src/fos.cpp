@@ -565,9 +565,10 @@ namespace fo {
   template <typename FoClass>
   void register_fo_class_factory_props()
   {
-    register_fo_class_factory<FoClass>([](const PropertySpecs& p, const Sosofo&) {
-      return estd::make_unique<FoClass>(p);
-    });
+    register_fo_class_factory<FoClass>(
+      [](const PropertySpecs& p, const Sosofo&) {
+        return estd::make_unique<FoClass>(p);
+      });
   }
 
 
