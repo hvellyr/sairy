@@ -210,6 +210,39 @@
                     (empty-sosofo)))
 
 ;; @doc Returns the sosofo that results from appending the sosofos that result
+;; from processing @prm{nl} in order after removing any leading and trailing
+;; whitespace from leading and trailing text nodes.
+(define (process-node-list-trim nl)
+  (define (left-trim first? str)
+    (if first? (string-trim str) str))
+
+  (define (right-trim last? str)
+    (if last? (string-trim-right str) str))
+
+  (define (process-with-trim first? last? snl)
+    (if (equal? (class snl) 'text)
+        (literal
+         (left-trim first?
+                    (right-trim last?
+                                (node-property 'data snl default: ""))))
+        (process-current-node snl)))
+
+  (let loop ((p nl)
+             (first? #t)
+             (sosofo (empty-sosofo)))
+    (if (node-list-empty? p)
+        sosofo
+        (let ((rest (node-list-rest p)))
+          (loop rest
+                #f
+                (sosofo-append
+                 sosofo
+                 (process-with-trim first?
+                                    (node-list-empty? rest)
+                                    (node-list-first p))) ))
+        )))
+
+;; @doc Returns the sosofo that results from appending the sosofos that result
 ;; from processing in order the children of the current node.
 (define (process-children)
   (process-node-list (children (current-node))))
@@ -218,26 +251,7 @@
 ;; from processing in order the children of the current node after removing any
 ;; leading and trailing whitespace from leading and trailing text nodes.
 (define (process-children-trim)
-  (node-list-reduce (children (current-node))
-                    (lambda (sosofo snl)
-                      (if (equal? (class snl) 'text)
-                          (let* ((data (node-property 'data snl default: ""))
-                                 (data1 (if (absolute-first-sibling? snl)
-                                            (string-trim data)
-                                            data))
-                                 (data2 (if (absolute-last-sibling? snl)
-                                            (string-trim-right data1)
-                                            data1)) )
-                            (sosofo-append sosofo (literal data2)))
-                          (sosofo-append sosofo (process-current-node snl))))
-                    (empty-sosofo)))
-
-
-;; (hash-table-walk *registry*
-;;                  (lambda (key value)
-;;                    (display (format "MODE ~a~%" key))
-;;                    (match-node-display value)
-;;                    (display (format "------------------------------------------------~%"))))
+  (process-node-list-trim (children (current-node))))
 
 
 (define-syntax dimen

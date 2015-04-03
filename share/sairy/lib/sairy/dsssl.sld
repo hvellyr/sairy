@@ -3,7 +3,8 @@
           (sairy string-lib))
   (export current-mode register-default-rule register-root-rule register-element-rule
           default element root mode text
-          process-node-list process-children process-children-trim current-node
+          process-node-list process-node-list-trim
+          process-children process-children-trim current-node
           make literal dimen
           select-elements match-element?
           node-list
