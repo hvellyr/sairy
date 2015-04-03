@@ -18,6 +18,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <unordered_set>
 #include <sstream>
 #include <string>
 
@@ -130,6 +131,17 @@ namespace {
   }
 
 
+  bool css_attribute_is_inherited(const std::string& prop)
+  {
+    static const std::unordered_set<std::string> not_inherited =
+      {"padding-left", "padding-bottom", "padding-right", "padding-top",
+       "padding", "height", "width", "bottom", "left", "right", "top",
+       "display", "margin", "margin-left", "margin-right", "margin-bottom",
+       "margin-top"};
+    return not_inherited.find(prop) == not_inherited.end();
+  }
+
+
   detail::StyleAttrs intersect_css_attrs(const detail::HtmlRenderContext& ctx,
                                          const detail::StyleAttrs& attrs)
   {
@@ -137,7 +149,8 @@ namespace {
 
     for (const auto& pair : attrs._css_map) {
       auto val = ctx.css_property(pair.first);
-      if (!val || *val != pair.second) {
+      if (!val || *val != pair.second ||
+          !css_attribute_is_inherited(pair.first)) {
         result[pair.first] = pair.second;
       }
     }
@@ -251,6 +264,7 @@ namespace {
   {
     detail::StyleAttrs extAttrs(attrs);
     extAttrs._css_map["display"] = "inline-block";
+    extAttrs._css_map["text-indent"] = "0em";
 
     if (!extAttrs._css_map.empty()) {
       return std::move(html::Tag(processor->ctx().port(), "span",
