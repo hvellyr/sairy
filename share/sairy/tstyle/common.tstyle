@@ -1,0 +1,37 @@
+;;; Copyright (c) 2015 Gregor Klinke
+;;; All rights reserved.
+
+;; @doc format list in 'italic font-posture.  If @prm{seq} is a sosofo it is
+;; taken asis, otherwise it is processed.
+(define (format-em seq)
+  (make sequence
+    font-posture: 'italic
+    (if (sosofo? seq)
+        seq
+        (process-node-list seq))))
+
+;; @doc format list in 'bold font-weight.  If @prm{seq} is a sosofo it is taken
+;; asis, otherwise it is processed.
+(define (format-bold seq)
+  (make sequence
+    font-weight: 'bold
+    (if (sosofo? seq)
+        seq
+        (process-node-list seq))))
+
+
+;; @doc return a sosofo with @prm{before} and @prm{after} put around @prm{seq}.
+;; If @prm{seq} is a sosofo it is taken asis, otherwise it is processed.  If
+;; @prm{before} or @prm{after} are sosofos they are taken asis, otherwise they
+;; are expected to strings and are handed to @fun{literal}.
+(define (enclose before seq after)
+  (sosofo-append
+   (if (sosofo? before)
+       before
+       (literal before))
+   (if (sosofo? seq)
+       seq
+       (process-node-list seq))
+   (if (sosofo? after)
+       after
+       (literal after))))

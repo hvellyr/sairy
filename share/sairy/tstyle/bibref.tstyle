@@ -1,0 +1,91 @@
+;;; Copyright (c) 2015 Gregor Klinke
+;;; All rights reserved.
+
+(import (srfi 28))
+
+(use 'common)
+
+(define (format-bibref snl)
+  (define (process-list nl def before-first before-each after-each)
+    (let loop ((p nl)
+               (first? #t)
+               (sosofo def))
+      (if (node-list-empty? p)
+          sosofo
+          (loop (node-list-rest p)
+                #f
+                (let ((snl (node-list-first p)))
+                  (sosofo-append
+                   sosofo
+                   (if first?
+                       (if before-first (literal before-first) (empty-sosofo))
+                       (if before-each
+                           (literal before-each)
+                           (empty-sosofo)))
+                   (process-node-list-trim (attribute "text" snl))
+                   (if after-each (literal after-each) (empty-sosofo))
+                   ))
+                ))))
+
+  (let* ((snlc (children snl))
+         (authors (select-elements snlc 'author))
+         (titles (select-elements snlc 'title))
+         (arttitles (select-elements snlc 'arttitle))
+         (places (select-elements snlc 'place))
+         (publs (select-elements snlc 'publ))
+         (dates (select-elements snlc 'date))
+         (journals (select-elements snlc 'journal))
+         (issuenos (select-elements snlc 'issueno))
+         (pages (select-elements snlc 'pages))
+         (volumes (select-elements snlc 'volume)))
+    (sosofo-append
+     (node-list-reduce authors
+                       (lambda (sosofo snl)
+                         (sosofo-append
+                          sosofo
+                          (process-node-list (attribute "name" snl))
+                          (literal ", ")))
+                       (empty-sosofo))
+
+     (if (not (node-list-empty? arttitles))
+         (sosofo-append
+          (node-list-reduce arttitles
+                            (lambda (sosofo snl)
+                              (sosofo-append sosofo (format-em (attribute "text" snl))))
+                            (empty-sosofo))
+          (if (not (node-list-empty? titles))
+              (node-list-reduce titles
+                                (lambda (sosofo snl)
+                                  (sosofo-append sosofo (format-em (attribute "text" snl))))
+                                (literal ", in: "))
+              (empty-sosofo))
+          (if (node-list-empty? journals)
+              (empty-sosofo)
+              (sosofo-append
+               (process-list journals (empty-sosofo) ", " ", " #f)
+               (process-list volumes (empty-sosofo)  ", " ", " #f)
+               (process-list issuenos (empty-sosofo) ", " ", " #f)
+               (enclose " ("
+                        (process-list dates (empty-sosofo) "" "/" #f)
+                        ")") ))
+          )
+         ;; else
+         (sosofo-append
+          (node-list-reduce titles
+                            (lambda (sosofo snl)
+                              (sosofo-append sosofo (format-em (attribute "text" snl))))
+                            (empty-sosofo))
+          (process-list volumes (empty-sosofo) ", " ", " #f)
+          (process-list places (empty-sosofo)  ", " ", " #f)
+          (if (not (node-list-empty? publs))
+              (sosofo-append
+               (literal ": ")
+               (process-list publs (empty-sosofo) #f   ", " #f)
+               (process-list dates (empty-sosofo) ", " ", " #f))
+              ;; else
+              (sosofo-append
+               (literal " ")
+               (process-list dates (empty-sosofo) #f ", " #f)) )
+          ))
+     (process-list pages (empty-sosofo) ", " ", " #f)
+     )))
