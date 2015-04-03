@@ -494,6 +494,56 @@ namespace {
     }
   };
 
+
+  const std::string k_left = "left";
+  const std::string k_center = "center";
+  const std::string k_right = "right";
+
+  class HtmlLineFieldFoProcessor : public IFoProcessor<HtmlProcessor> {
+  public:
+    void render(HtmlProcessor* processor,
+                const IFormattingObject* fo) const override
+    {
+      detail::StyleAttrs attrs;
+      set_font_characteristics(attrs, processor, fo);
+
+      auto field_width =
+        processor->property_or_none<fo::Dimen>(fo, "field-width");
+      auto field_align =
+        processor->property_or_none<std::string>(fo, "field-align");
+
+      set_attr(attrs, "width", field_width);
+      if (field_align) {
+        if (*field_align == k_left || *field_align == k_center ||
+            *field_align == k_right) {
+          set_attr(attrs, "text-align", *field_align);
+        }
+      }
+
+      {
+        auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
+
+        html::Tag span_tag(field_width
+                             ? optional_inline_block_tag(processor, d_attrs)
+                             : optional_span_tag(processor, d_attrs));
+        StyleScope style_scope(processor->ctx(), d_attrs);
+
+        html::Tag b_tag(std::move(
+          optional_tag(processor, "b",
+                       processor->property_or_none<std::string>(fo,
+                                                                "font-weight"),
+                       "bold")));
+        html::Tag i_tag(std::move(
+          optional_tag(processor, "i",
+                       processor->property_or_none<std::string>(fo,
+                                                                "font-posture"),
+                       "italic")));
+
+        processor->render_sosofo(&fo->port("text"));
+      }
+    }
+  };
+
 } // ns anon
 
 
@@ -525,6 +575,7 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
       {"#simple-page-sequence",
        std::make_shared<HtmlSimplePageSequenceFoProcessor>()},
       {"#sequence", std::make_shared<HtmlSequenceFoProcessor>()},
+      {"#line-field", std::make_shared<HtmlLineFieldFoProcessor>()},
     };
 
   auto i_find = procs.find(fo_classname);
