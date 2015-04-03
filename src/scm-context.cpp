@@ -1264,6 +1264,22 @@ namespace {
     }
 
 
+    void define_variable(const std::string& name, const std::string& value) override
+    {
+      sexp_gc_var3(sym, str, val);
+      sexp_gc_preserve3(_ctx, sym, str, val);
+
+      sym =
+        sexp_string_to_symbol(_ctx,
+                              str = sexp_c_string(_ctx, name.c_str(), -1));
+      val = sexp_c_string(_ctx, value.c_str(), value.size());
+
+      sexp_env_define(_ctx, sexp_context_env(_ctx), sym, val);
+
+      sexp_gc_release3(_ctx);
+    }
+
+
     std::unique_ptr<Sosofo> process_root_node(const Node* root_node) override
     {
       std::unique_ptr<Sosofo> result;

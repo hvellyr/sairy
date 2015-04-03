@@ -52,12 +52,13 @@ bool StyleEngine::load_style(const boost::filesystem::path& path)
 {
   assert(_ctx);
 
+  _ctx->define_variable("%style-path%", path.string());
+  _ctx->define_variable("%backend%", _backend_id);
+
   if (!_ctx->load_script(path)) {
     std::cerr << "Could not read " << path.string() << std::endl;
     return false;
   }
-
-  // _ctx->defineVariable("%backend%", path.string());
 
   return true;
 }

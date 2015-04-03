@@ -23,6 +23,8 @@ public:
   virtual bool load_module_file(const boost::filesystem::path& script_file) = 0;
   virtual bool load_script(const boost::filesystem::path& script_file) = 0;
 
+  virtual void define_variable(const std::string& name, const std::string& value) = 0;
+
   virtual std::unique_ptr<Sosofo> process_root_node(const Node* root_node) = 0;
 };
 
