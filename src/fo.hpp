@@ -22,6 +22,7 @@ namespace fo {
     k_m,
     k_mm,
     k_pt,
+    k_px,
   };
 
   struct Dimen {

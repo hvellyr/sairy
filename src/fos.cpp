@@ -52,7 +52,7 @@ namespace fo {
     {"quadding", true},                // Keyw: left, right, center, justify
     {"space-after", false},            // Dimen
     {"space-before", false},           // Dimen
-    {"start-indent", true},            // Dimen
+    {"start-indent", false},           // Dimen
     {"start-margin", false},           // Dimen
     {"title", false},                  // Sosofo
     {"keep-with-previous?", false},    // Bool
@@ -612,6 +612,8 @@ namespace fo {
       switch (un) {
       case k_pt:
         return "pt";
+      case k_px:
+        return "px";
       case k_m:
         return "m";
       case k_mm:

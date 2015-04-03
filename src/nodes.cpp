@@ -58,6 +58,7 @@ const std::string CommonProps::k_attrs = "attributes";
 const std::string CommonProps::k_children = "children";
 const std::string CommonProps::k_data = "data";
 const std::string CommonProps::k_gi = "gi";
+const std::string CommonProps::k_id = "id";
 const std::string CommonProps::k_parent = "parent";
 const std::string CommonProps::k_source = "source";
 
@@ -153,9 +154,11 @@ void Node::set_property(const std::string& propname, Node* nd)
 {
   assert(find_property(_class, propname) == nullptr ||
          find_property(_class, propname)->_type == PropertyType::k_node);
-  assert(nd->_grove == _grove);
+  assert(!nd || nd->_grove == _grove);
 
-  nd->_properties[CommonProps::k_parent] = this;
+  if (nd) {
+    nd->_properties[CommonProps::k_parent] = this;
+  }
   _properties[propname] = nd;
 }
 
@@ -257,6 +260,28 @@ Node* Grove::root_node() const
     return _nodes[0].get();
   }
   return nullptr;
+}
+
+
+std::unique_ptr<Node> Grove::remove_node(Node* nd)
+{
+  auto i_find = std::find_if(_nodes.begin(), _nodes.end(),
+                             [&nd](const std::unique_ptr<Node>& node) {
+                               return node.get() == nd;
+                             });
+  if (i_find != _nodes.end()) {
+    return std::move(*i_find);
+  }
+
+  return nullptr;
+}
+
+
+void unparent_nodes(Nodes& nodes)
+{
+  for (auto& nd : nodes) {
+    nd->set_property(CommonProps::k_parent, nullptr);
+  }
 }
 
 

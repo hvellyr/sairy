@@ -1,0 +1,72 @@
+;;-*-dsssl-*-
+
+(import (srfi 28))
+
+;;;-----------------------------------------------------------------------------
+
+;; (default
+;;   (display (format "ANY ~s:~s~%" (class (current-node)) (gi (current-node)))))
+;;   (make paragraph
+;;     quadding: 'justify
+;;     numbered-lines?: #t
+;;     asis-wrap-indent: 42
+;;     line-spacing: (dimen 3/4 pt)
+;;     font-size: (dimen 14.4 pt)
+;;     (sosofo-append
+;;      (make literal)
+;;      (process-children))
+;;     )
+;;   )
+
+(root
+  (make simple-page-sequence
+    metadata:title: "Test"
+    metadata:author: "N.N."
+    (process-children)))
+
+(text
+ (literal (node-property 'data (current-node) default: "")))
+
+
+(element book
+  (make display-group
+    (make paragraph
+      (sosofo-append (literal "book")
+                     (process-children)))))
+
+(element titlepage
+  (make display-group
+    (make paragraph
+      (sosofo-append (literal "titlepage")
+                     (process-children))))
+  )
+
+(element title
+  (make display-group
+    (make paragraph
+      font-size: (dimen 48 pt)
+      (sosofo-append (literal "title")
+                     (process-children)))))
+
+(element subtitle
+  (make display-group
+    (make paragraph
+      (sosofo-append (literal "subtitle")
+                     (process-children)))))
+
+(element info
+  (make display-group
+    (make paragraph
+      (sosofo-append (literal "info")
+                     (process-children)))))
+
+(element chapter
+  (make display-group
+    (make paragraph
+      (sosofo-append (literal "chapter")
+                     (process-children)))))
+
+(element p
+  (make display-group
+    (make paragraph
+      (process-children))))

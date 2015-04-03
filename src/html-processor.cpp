@@ -18,6 +18,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <unordered_set>
 #include <sstream>
 #include <string>
 
@@ -28,7 +29,8 @@ namespace fs = boost::filesystem;
 
 const std::string k_SAIRY_GENERATOR = "Sairy HTML Processor";
 
-detail::HtmlRenderContext::HtmlRenderContext() : _caps(detail::k_normal_caps)
+
+detail::HtmlRenderContext::HtmlRenderContext()
 {
 }
 
@@ -45,9 +47,7 @@ boost::filesystem::path detail::HtmlRenderContext::current_path()
 void detail::HtmlRenderContext::push_port(std::unique_ptr<html::Writer> port,
                                           const fs::path& path)
 {
-  _ports.push_front(
-    std::tuple<std::unique_ptr<html::Writer>, fs::path>(std::move(_port),
-                                                        _path));
+  _ports.push_front(std::make_tuple(std::move(_port), _path));
   _port = std::move(port);
   _path = path;
 }
@@ -65,34 +65,32 @@ void detail::HtmlRenderContext::pop_port()
 
 detail::CapsStyle detail::HtmlRenderContext::capsstyle()
 {
-  return _caps;
+  if (!_styles_stack.empty()) {
+    return _styles_stack.front()._caps;
+  }
+
+  return k_normal_caps;
 }
 
-void detail::HtmlRenderContext::set_capsstyle(CapsStyle capsstyle)
+void detail::HtmlRenderContext::push_styles(const StyleAttrs& styles)
 {
-  _caps = capsstyle;
+  _styles_stack.push_front(styles);
 }
 
 
-void detail::HtmlRenderContext::push_cssmap(const CssAttrMap& map)
+void detail::HtmlRenderContext::pop_styles()
 {
-  _css_stack.push_front(map);
-}
-
-
-void detail::HtmlRenderContext::pop_cssmap()
-{
-  if (!_css_stack.empty()) {
-    _css_stack.pop_front();
+  if (!_styles_stack.empty()) {
+    _styles_stack.pop_front();
   }
 }
 
 boost::optional<std::string>
 detail::HtmlRenderContext::css_property(const std::string& key) const
 {
-  for (const auto& map : _css_stack) {
-    const auto i_find = map.find(key);
-    if (i_find != map.end()) {
+  for (const auto& styles : _styles_stack) {
+    const auto i_find = styles._css_map.find(key);
+    if (i_find != styles._css_map.end()) {
       return i_find->second;
     }
   }
@@ -104,20 +102,29 @@ detail::HtmlRenderContext::css_property(const std::string& key) const
 //------------------------------------------------------------------------------
 
 namespace {
+  const std::string k_pt = "pt";
+  const std::string k_px = "px";
+  const std::string k_em = "em";
+  const std::string k_m = "m";
+  const std::string k_mm = "mm";
+  const std::string k_cm = "cm";
+
   std::string dimen2css(const fo::Dimen& dim)
   {
     auto unit_name = [](fo::Unit un) {
       switch (un) {
       case fo::k_pt:
-        return "pt";
+        return k_pt;
+      case fo::k_px:
+        return k_px;
       case fo::k_m:
-        return "m";
+        return k_m;
       case fo::k_mm:
-        return "mm";
+        return k_mm;
       case fo::k_cm:
-        return "cm";
+        return k_cm;
       case fo::k_em:
-        return "em";
+        return k_em;
       }
     };
 
@@ -127,79 +134,101 @@ namespace {
   }
 
 
-  detail::CssAttrMap new_css_attrs(const detail::HtmlRenderContext& ctx,
-                                   const detail::CssAttrMap& attrs)
+  bool css_attribute_is_inherited(const std::string& prop)
+  {
+    static const std::unordered_set<std::string> not_inherited =
+      {"padding-left", "padding-bottom", "padding-right", "padding-top",
+       "padding", "height", "width", "bottom", "left", "right", "top",
+       "display", "margin", "margin-left", "margin-right", "margin-bottom",
+       "margin-top"};
+    return not_inherited.find(prop) == not_inherited.end();
+  }
+
+
+  detail::StyleAttrs intersect_css_attrs(const detail::HtmlRenderContext& ctx,
+                                         const detail::StyleAttrs& attrs)
   {
     detail::CssAttrMap result;
 
-    for (const auto& pair : attrs) {
+    for (const auto& pair : attrs._css_map) {
       auto val = ctx.css_property(pair.first);
-      if (!val || *val != pair.second) {
+      if (!val || *val != pair.second ||
+          !css_attribute_is_inherited(pair.first)) {
         result[pair.first] = pair.second;
       }
     }
 
-    return result;
+    return detail::StyleAttrs{attrs._caps, result};
   }
 
 
-  std::string css_attr_to_string(const detail::CssAttrMap& map)
+  std::string attrs_to_string(const detail::StyleAttrs& attrs)
   {
     std::stringstream ss;
-    for (const auto& pair : map) {
-      ss << pair.first << ": " << pair.second << "; ";
+    for (const auto& pair : attrs._css_map) {
+      if (!pair.first.empty()) {
+        ss << pair.first << ": " << pair.second << "; ";
+      }
     }
     return ss.str();
   }
 
 
   template <typename T>
-  void set_css_attr(detail::CssAttrMap& map, const std::string& key,
-                    boost::optional<T> val_or_none)
+  void set_attr(detail::StyleAttrs& attrs, const std::string& key,
+                boost::optional<T> val_or_none)
   {
     if (val_or_none) {
-      map[key] = *val_or_none;
+      attrs._css_map[key] = *val_or_none;
     }
   }
 
 
-  void set_css_attr(detail::CssAttrMap& map, const std::string& key,
-                    boost::optional<fo::Dimen> val_or_none)
+  void set_attr(detail::StyleAttrs& attrs, const std::string& key,
+                boost::optional<fo::Dimen> val_or_none)
   {
     if (val_or_none) {
-      map[key] = dimen2css(*val_or_none);
+      attrs._css_map[key] = dimen2css(*val_or_none);
     }
   }
 
 
-  void set_css_attr(detail::CssAttrMap& map, const std::string& key,
-                    const std::string& val)
+  void set_attr(detail::StyleAttrs& attrs, const std::string& key,
+                const std::string& val)
   {
-    map[key] = val;
+    attrs._css_map[key] = val;
   }
 
 
-  void set_css_capsstyle(detail::CssAttrMap& map, HtmlProcessor* processor,
-                         boost::optional<std::string> val_or_none)
+  const std::string k_normal = "normal";
+  const std::string k_lower = "lower";
+  const std::string k_caps = "caps";
+  const std::string k_small_caps = "small-caps";
+
+  void set_capsstyle(detail::StyleAttrs& attrs,
+                     boost::optional<std::string> val_or_none)
   {
     if (val_or_none) {
-      if (*val_or_none == std::string("normal")) {
-        processor->ctx().set_capsstyle(detail::k_normal_caps);
+      if (*val_or_none == k_normal) {
+        attrs._caps = detail::k_normal_caps;
       }
-      else if (*val_or_none == std::string("caps")) {
-        processor->ctx().set_capsstyle(detail::k_upper_caps);
+      else if (*val_or_none == k_lower) {
+        attrs._caps = detail::k_lower_caps;
       }
-      else if (*val_or_none == std::string("small-caps")) {
-        processor->ctx().set_capsstyle(detail::k_small_caps);
-        map["font-variant"] = "small-caps";
+      else if (*val_or_none == k_caps) {
+        attrs._caps = detail::k_upper_caps;
+      }
+      else if (*val_or_none == k_small_caps) {
+        attrs._caps = detail::k_small_caps;
+        attrs._css_map["font-variant"] = k_small_caps;
       }
     }
   }
 
 
-  html::Tag css_optional_tag(HtmlProcessor* processor, const std::string& tag,
-                             boost::optional<std::string> val_or_none,
-                             const std::string& exp_val)
+  html::Tag optional_tag(HtmlProcessor* processor, const std::string& tag,
+                         boost::optional<std::string> val_or_none,
+                         const std::string& exp_val)
   {
     if (val_or_none) {
       if (*val_or_none == exp_val) {
@@ -222,21 +251,36 @@ namespace {
   }
 
 
-  html::Tag css_optional_span_tag(HtmlProcessor* processor,
-                                  const detail::CssAttrMap& attrs)
+  html::Tag optional_span_tag(HtmlProcessor* processor,
+                              const detail::StyleAttrs& attrs)
   {
-    if (!attrs.empty()) {
+    if (!attrs._css_map.empty()) {
       return std::move(html::Tag(processor->ctx().port(), "span",
-                                 style_str2attrs(css_attr_to_string(attrs))));
+                                 style_str2attrs(attrs_to_string(attrs))));
+    }
+
+    return std::move(html::Tag());
+  }
+
+  html::Tag optional_inline_block_tag(HtmlProcessor* processor,
+                                      const detail::StyleAttrs& attrs)
+  {
+    detail::StyleAttrs extAttrs(attrs);
+    extAttrs._css_map["display"] = "inline-block";
+    extAttrs._css_map["text-indent"] = "0em";
+
+    if (!extAttrs._css_map.empty()) {
+      return std::move(html::Tag(processor->ctx().port(), "span",
+                                 style_str2attrs(attrs_to_string(extAttrs))));
     }
 
     return std::move(html::Tag());
   }
 
 
-  void set_css_font_characteristics(detail::CssAttrMap& map,
-                                    HtmlProcessor* processor,
-                                    const IFormattingObject* fo)
+  void set_font_characteristics(detail::StyleAttrs& attrs,
+                                HtmlProcessor* processor,
+                                const IFormattingObject* fo)
   {
     auto fontsize = processor->property_or_none<fo::Dimen>(fo, "font-size");
     // auto fontWeight =
@@ -247,16 +291,16 @@ namespace {
     auto posptshift =
       processor->property_or_none<fo::Dimen>(fo, "position-point-shift");
 
-    set_css_attr(map, "font-size", fontsize);
-    set_css_capsstyle(map, processor, fontcaps);
-    set_css_attr(map, "position", "relative");
-    set_css_attr(map, "top", posptshift);
+    set_attr(attrs, "font-size", fontsize);
+    set_capsstyle(attrs, fontcaps);
+    set_attr(attrs, "position", "relative");
+    set_attr(attrs, "top", posptshift);
   }
 
 
-  void set_css_space_characteristics(detail::CssAttrMap& map,
-                                     HtmlProcessor* processor,
-                                     const IFormattingObject* fo)
+  void set_space_characteristics(detail::StyleAttrs& attrs,
+                                 HtmlProcessor* processor,
+                                 const IFormattingObject* fo)
   {
     auto startindent =
       processor->property_or_none<fo::Dimen>(fo, "start-indent");
@@ -267,12 +311,26 @@ namespace {
       processor->property_or_none<fo::Dimen>(fo, "space-before");
     auto spaceafter = processor->property_or_none<fo::Dimen>(fo, "space-after");
 
-    set_css_attr(map, "margin-left", startindent);
-    set_css_attr(map, "margin-right", endindent);
-    set_css_attr(map, "margin-top", spacebefore);
-    set_css_attr(map, "margin-bottom", spaceafter);
-    set_css_attr(map, "text-indent", firstline_startindent);
+    set_attr(attrs, "padding-left", startindent);
+    set_attr(attrs, "margin-right", endindent);
+    set_attr(attrs, "margin-top", spacebefore);
+    set_attr(attrs, "margin-bottom", spaceafter);
+    set_attr(attrs, "text-indent", firstline_startindent);
   }
+
+
+  class StyleScope {
+    detail::HtmlRenderContext& _ctx;
+
+  public:
+    StyleScope(detail::HtmlRenderContext& ctx, const detail::StyleAttrs& attrs)
+      : _ctx(ctx)
+    {
+      _ctx.push_styles(attrs);
+    }
+
+    ~StyleScope() { _ctx.pop_styles(); }
+  };
 
 
   template <typename Functor>
@@ -308,6 +366,9 @@ namespace {
       if (capsstyle == detail::k_normal_caps) {
         processor->ctx().port().write_text(str);
       }
+      else if (capsstyle == detail::k_lower_caps) {
+        processor->ctx().port().write_text(boost::to_upper_copy(str));
+      }
       else if (capsstyle == detail::k_upper_caps) {
         processor->ctx().port().write_text(boost::to_upper_copy(str));
       }
@@ -326,29 +387,28 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      detail::CssAttrMap map;
-      set_css_font_characteristics(map, processor, fo);
-      set_css_space_characteristics(map, processor, fo);
+      detail::StyleAttrs attrs;
+      set_font_characteristics(attrs, processor, fo);
+      set_space_characteristics(attrs, processor, fo);
 
       {
-        auto css_attrs = new_css_attrs(processor->ctx(), map);
+        auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
         html::Tag with_tag(processor->ctx().port(), "p",
-                           style_str2attrs(css_attr_to_string(css_attrs)));
-        processor->ctx().push_cssmap(css_attrs);
+                           style_str2attrs(attrs_to_string(d_attrs)));
+        StyleScope style_scope(processor->ctx(), d_attrs);
 
         html::Tag b_tag(std::move(
-          css_optional_tag(processor, "b",
-                           processor
-                             ->property_or_none<std::string>(fo, "font-weight"),
-                           "bold")));
+          optional_tag(processor, "b",
+                       processor->property_or_none<std::string>(fo,
+                                                                "font-weight"),
+                       "bold")));
         html::Tag i_tag(std::move(
-          css_optional_tag(processor, "i", processor->property_or_none<
-                                             std::string>(fo, "font-posture"),
-                           "italic")));
+          optional_tag(processor, "i",
+                       processor->property_or_none<std::string>(fo,
+                                                                "font-posture"),
+                       "italic")));
 
         processor->render_sosofo(&fo->port("text"));
-
-        processor->ctx().pop_cssmap();
       }
       processor->ctx().port().newln();
     }
@@ -371,20 +431,18 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      detail::CssAttrMap map;
-      set_css_font_characteristics(map, processor, fo);
-      set_css_space_characteristics(map, processor, fo);
+      detail::StyleAttrs attrs;
+      set_font_characteristics(attrs, processor, fo);
+      set_space_characteristics(attrs, processor, fo);
 
       {
-        auto css_attrs = new_css_attrs(processor->ctx(), map);
+        auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
         html::Tag with_tag(processor->ctx().port(), "div",
-                           style_str2attrs(css_attr_to_string(css_attrs)));
-        processor->ctx().push_cssmap(css_attrs);
+                           style_str2attrs(attrs_to_string(d_attrs)));
+        StyleScope style_scope(processor->ctx(), d_attrs);
 
         processor->ctx().port().newln();
         processor->render_sosofo(&fo->port("text"));
-
-        processor->ctx().pop_cssmap();
       }
       processor->ctx().port().newln();
     }
@@ -396,15 +454,24 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      auto title = processor->property(fo, "metadata:title", std::string());
-      auto author = processor->property(fo, "metadata:author", std::string());
-      auto desc = processor->property(fo, "metadata:desc", std::string());
+      auto title = processor->property(fo, "metadata.title", std::string());
+      auto author = processor->property(fo, "metadata.author", std::string());
+      auto desc = processor->property(fo, "metadata.desc", std::string());
+      auto html_width =
+        processor->property_or_none<fo::Dimen>(fo, "html.width");
 
       withHtmlFile(processor, processor->ctx().current_path(), title, author,
-                   desc, html::k_XHTML_1_1_DTD, [fo](HtmlProcessor* processor) {
+                   desc, html::k_XHTML_1_1_DTD,
+                   [fo, html_width](HtmlProcessor* processor) {
                      {
+                       detail::StyleAttrs attrs;
+                       set_attr(attrs, "width", html_width);
+
                        html::Tag with_tag(processor->ctx().port(), "div",
-                                          {html::Attr{"class", "page"}});
+                                          style_str2attrs(
+                                            attrs_to_string(attrs)));
+                       StyleScope style_scope(processor->ctx(), attrs);
+
                        processor->ctx().port().newln();
 
                        processor->render_sosofo(&fo->port("text"));
@@ -420,27 +487,76 @@ namespace {
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      detail::CssAttrMap map;
-      set_css_font_characteristics(map, processor, fo);
+      detail::StyleAttrs attrs;
+      set_font_characteristics(attrs, processor, fo);
 
       {
-        auto css_attrs = new_css_attrs(processor->ctx(), map);
-        html::Tag span_tag(css_optional_span_tag(processor, css_attrs));
-        processor->ctx().push_cssmap(css_attrs);
+        auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
+        html::Tag span_tag(optional_span_tag(processor, d_attrs));
+        StyleScope style_scope(processor->ctx(), d_attrs);
 
         html::Tag b_tag(std::move(
-          css_optional_tag(processor, "b",
-                           processor
-                             ->property_or_none<std::string>(fo, "font-weight"),
-                           "bold")));
+          optional_tag(processor, "b",
+                       processor->property_or_none<std::string>(fo,
+                                                                "font-weight"),
+                       "bold")));
         html::Tag i_tag(std::move(
-          css_optional_tag(processor, "i", processor->property_or_none<
-                                             std::string>(fo, "font-posture"),
-                           "italic")));
+          optional_tag(processor, "i",
+                       processor->property_or_none<std::string>(fo,
+                                                                "font-posture"),
+                       "italic")));
 
         processor->render_sosofo(&fo->port("text"));
+      }
+    }
+  };
 
-        processor->ctx().pop_cssmap();
+
+  const std::string k_left = "left";
+  const std::string k_center = "center";
+  const std::string k_right = "right";
+
+  class HtmlLineFieldFoProcessor : public IFoProcessor<HtmlProcessor> {
+  public:
+    void render(HtmlProcessor* processor,
+                const IFormattingObject* fo) const override
+    {
+      detail::StyleAttrs attrs;
+      set_font_characteristics(attrs, processor, fo);
+
+      auto field_width =
+        processor->property_or_none<fo::Dimen>(fo, "field-width");
+      auto field_align =
+        processor->property_or_none<std::string>(fo, "field-align");
+
+      set_attr(attrs, "width", field_width);
+      if (field_align) {
+        if (*field_align == k_left || *field_align == k_center ||
+            *field_align == k_right) {
+          set_attr(attrs, "text-align", *field_align);
+        }
+      }
+
+      {
+        auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
+
+        html::Tag span_tag(field_width
+                             ? optional_inline_block_tag(processor, d_attrs)
+                             : optional_span_tag(processor, d_attrs));
+        StyleScope style_scope(processor->ctx(), d_attrs);
+
+        html::Tag b_tag(std::move(
+          optional_tag(processor, "b",
+                       processor->property_or_none<std::string>(fo,
+                                                                "font-weight"),
+                       "bold")));
+        html::Tag i_tag(std::move(
+          optional_tag(processor, "i",
+                       processor->property_or_none<std::string>(fo,
+                                                                "font-posture"),
+                       "italic")));
+
+        processor->render_sosofo(&fo->port("text"));
       }
     }
   };
@@ -476,6 +592,7 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
       {"#simple-page-sequence",
        std::make_shared<HtmlSimplePageSequenceFoProcessor>()},
       {"#sequence", std::make_shared<HtmlSequenceFoProcessor>()},
+      {"#line-field", std::make_shared<HtmlLineFieldFoProcessor>()},
     };
 
   auto i_find = procs.find(fo_classname);

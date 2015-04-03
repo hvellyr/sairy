@@ -1,0 +1,22 @@
+@c -*-textbook-*-
+@book
+
+@titlepage
+@c @cover{cover.png}
+@title{Dead land from here to the near moon}
+@subtitle{A long journey home}
+@end titlepage
+
+@info
+@author{The author}
+@end info
+
+@chapter{Hello world}
+
+Hello world
+
+@em{@r{a}@r{a1}@r{a2}}@em{b}@em{c}
+
+@end chapter
+
+@end book

@@ -1,0 +1,31 @@
+@c -*-mode: textbook-*-
+@manpage{bibref}{examples for using bibref formats}{7}
+@info
+@author{Gregor Klinke}{gck@@eyestep.org}
+@copyright{Copyright (c) 2015 Gregor Klinke. All Rights Reserved.}
+@end info
+
+@seealso
+@bibref
+@author{Gregor Klinke}
+@title{Herschel – Programming language specification}
+@place{Berlin}
+@publ{editon gothique}
+@date{2012}
+@end bibref
+
+@bibref
+@author{A. Toshiba}
+@author{N. Ijime}
+@arttitle{Logical neoligsms}
+@journal{Art today}
+@volume{viii}
+@issueno{52}
+@pages{pp. 5–23}
+@date{1978}@date{1979}
+@end bibref
+
+@xref{http://www.eyestep.org/herschel-spec.pdf}
+@end seealso
+
+@end manpage

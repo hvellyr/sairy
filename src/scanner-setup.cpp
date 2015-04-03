@@ -6,6 +6,7 @@
 #include "scanner.hpp"
 
 #include "cpp-scanner.hpp"
+#include "textbook-scanner.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -54,6 +55,7 @@ std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file)
 {
   if (s_scanner_factory_map.empty()) {
     register_scanner_factory<CppScanner>();
+    register_scanner_factory<TextbookScanner>();
   }
 
   auto ext = file.extension().string();

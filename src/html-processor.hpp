@@ -30,23 +30,36 @@ class IFoProcessor;
 namespace detail {
   enum CapsStyle {
     k_normal_caps,
+    k_lower_caps,
     k_upper_caps,
     k_small_caps,
   };
 
   using CssAttrMap = std::map<std::string, std::string>;
 
+  struct StyleAttrs {
+    StyleAttrs() : _caps(k_normal_caps) {}
+
+    StyleAttrs(CapsStyle caps, const CssAttrMap& map)
+      : _caps(caps), _css_map(map)
+    {
+    }
+
+    CapsStyle _caps;
+    CssAttrMap _css_map;
+  };
+
   using RefRegistry = std::unordered_map<std::string, std::string>;
+  using PortTuple = std::tuple<std::unique_ptr<html::Writer>,
+                               boost::filesystem::path>;
 
   class HtmlRenderContext {
     std::unique_ptr<html::Writer> _port;
     boost::filesystem::path _path;
-    std::list<std::tuple<std::unique_ptr<html::Writer>,
-                         boost::filesystem::path>> _ports;
-    CapsStyle _caps;
+    std::list<PortTuple> _ports;
     RefRegistry _ref_registry;
     // std::list<Sosofo> _foot_notes;
-    std::list<CssAttrMap> _css_stack;
+    std::list<StyleAttrs> _styles_stack;
 
   public:
     HtmlRenderContext();
@@ -59,10 +72,9 @@ namespace detail {
     void pop_port();
 
     CapsStyle capsstyle();
-    void set_capsstyle(CapsStyle capsstyle);
 
-    void push_cssmap(const CssAttrMap& map);
-    void pop_cssmap();
+    void push_styles(const StyleAttrs& map);
+    void pop_styles();
 
     boost::optional<std::string> css_property(const std::string& key) const;
   };

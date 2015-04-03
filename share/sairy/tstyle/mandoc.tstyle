@@ -1,0 +1,297 @@
+;;; Copyright (c) 2015 Gregor Klinke
+;;; All rights reserved.
+
+(use 'common)
+(use 'bibref)
+
+(define (node-list-data nl)
+  "")
+
+
+(element opt
+  (format-bold (attribute "text" (current-node))))
+
+(element op
+  (format-bold (attribute "text" (current-node))))
+
+(element app
+  (format-bold (attribute "text" (current-node))))
+
+(element val
+  (format-em (attribute "text" (current-node))))
+
+(element file
+  (format-em (attribute "text" (current-node))))
+
+(element em
+  (format-em (attribute "text" (current-node))))
+
+(element acr
+  (process-node-list-trim (attribute "text" (current-node))))
+
+
+(element section
+  (sosofo-append
+   ;; head
+   (make paragraph
+     font-caps: 'small-caps
+     font-size: (dimen 14 pt)
+     font-weight: 'bold
+     break-after?: #f
+     keep-with-next?: #t
+     first-line-start-indent: (dimen 0 em)
+     space-before: (dimen 14 pt)
+     space-after: (dimen 7 pt)
+     (process-node-list (attribute "title" (current-node))))
+
+   ;; body
+   (make display-group
+     start-indent: (dimen 2 em)
+     (sosofo-append
+      (make paragraph
+        first-line-start-indent: (dimen 0 em)
+        (process-node-list-trim (node-list-first (children (current-node)))))
+      (process-node-list-trim (node-list-rest (children (current-node)))))
+     ))
+  )
+
+
+(element synopsis
+  (sosofo-append
+   (make paragraph
+     mandoc.section: "synopsis"
+     font-caps: 'small-caps
+     font-size: (dimen 14 pt)
+     font-weight: 'bold
+     break-after?: #f
+     space-before: (dimen 14 pt)
+     space-after: (dimen 7 pt)
+     keep-with-next?: #t
+     first-line-start-indent: (dimen 0 em)
+     (literal "Synopsis"))
+   (make display-group
+     start-indent: (dimen 2 em)
+     (process-children-trim))))
+
+
+(element (manpage info)
+  (empty-sosofo))
+
+(element manpage
+  (let* ((info (select-elements (children (current-node)) 'info))
+         (authors (select-elements (children info) 'author))
+         (author-first (if (> (node-list-length authors) 0)
+                           (node-list-first authors)
+                           (node-list)))
+         (manpage-title (node-property 'data (attribute "name" (current-node))
+                                       default: ""))
+         (manpage-desc (node-property 'data (attribute "desc" (current-node))
+                                      default: ""))
+         (author-as-string (node-property 'data (attribute "name" author-first)
+                                          default: "N.N."))
+         )
+
+    (make simple-page-sequence
+      font-size: (dimen 10 pt)
+      line-spacing: (dimen 14 pt)
+      metadata.author: author-as-string
+      metadata.desc: manpage-desc
+      metadata.title: manpage-title
+      html.width: (dimen 600 px)
+
+      (sosofo-append
+       (make display-group
+         mandoc.name: (node-list-data (attribute "name" (current-node)))
+         mandoc.description: (node-list-data (attribute "desc" (current-node)))
+         mandoc.section: (node-list-data (attribute "section" (current-node)))
+         mandoc.author: (node-list-data author-first)
+
+         (sosofo-append
+          (make paragraph
+            font-weight: 'bold
+            break-after?: #f
+            space-before: (dimen 0 pt)
+            space-after: (dimen 7 pt)
+            keep-with-next?: #t
+            first-line-start-indent: (dimen 0 em)
+            (sosofo-append
+             (process-node-list (attribute "name" (current-node)))
+             (literal "(")
+             (process-node-list (attribute "section" (current-node)))
+             (literal ")")))
+          (make paragraph
+            mandoc.section: "name"
+            font-caps: 'small-caps
+            font-size: (dimen 14 pt)
+            line-spacing: (dimen 17 pt)
+            font-weight: 'bold
+            break-after?: #f
+            space-before: (dimen 20 pt)
+            space-after: (dimen 7 pt)
+            keep-with-next?: #t
+            first-line-start-indent: (dimen 0 em)
+            (literal "Name"))
+          (make display-group
+            start-indent: (dimen 2 em)
+            (make paragraph
+              first-line-start-indent: (dimen 0 em)
+              (sosofo-append
+               (process-node-list (attribute "name" (current-node)))
+               (literal " - ")
+               (process-node-list (attribute "desc" (current-node))))))
+          ))
+
+       (process-children)
+
+       (if (not (node-list-empty? authors))
+           (sosofo-append
+            (make paragraph
+              mandoc.section: "authors"
+              font-caps: 'small-caps
+              font-size: (dimen 14 pt)
+              line-spacing: (dimen 17 pt)
+              font-weight: 'bold
+              break-after?: #f
+              space-before: (dimen 20 pt)
+              space-after: (dimen 7 pt)
+              keep-with-next?: #t
+              first-line-start-indent: (dimen 0 em)
+              (literal "Authors"))
+            (make display-group
+              start-indent: (dimen 2 em)
+              (process-node-list authors)))
+           (empty-sosofo))
+       )) ))
+
+
+;; #-----------------------------------------------------------------------------
+;; # definitions and lists
+
+(element definitions
+  (make display-group
+    space-before: (dimen 7 pt)
+    space-after: (dimen 7 pt)
+    (process-children-trim)))
+
+(element (definitions p item)
+  (make line-field
+    field-width: (dimen 6 em)
+    field-align: 'left
+    (process-node-list-trim (attribute "text" (current-node)))))
+
+(element (definitions p)
+  (let ((item (node-list-first (children (current-node)))))
+    (if (equal? (gi item) 'item)
+        (make paragraph
+          first-line-start-indent: (dimen -6 em)
+          start-indent: (dimen 6 em)
+          (sosofo-append
+           (process-node-list (node-list-first (children (current-node))))
+           (process-node-list-trim (node-list-rest (children (current-node))))))
+        (make paragraph
+          first-line-start-indent: (dimen 0 em)
+          start-indent: (dimen 6 em)
+          (process-children-trim)
+          ) ))
+  )
+
+
+(element itemize
+  (make display-group
+    space-before: (dimen 7 pt)
+    space-after: (dimen 7 pt)
+    (process-children-trim)))
+
+(element (itemize p item)
+  (make line-field
+    field-width: (dimen 1 em)
+    field-align: 'left
+    (let ((txt (attribute "text" (current-node))))
+      (if (node-list-empty? txt)
+          (literal "•")
+          (process-node-list-trim txt) )) ))
+
+(element (itemize p)
+  (let ((item (node-list-first (children (current-node)))))
+    (if (equal? (gi item) 'item)
+        (make paragraph
+          first-line-start-indent: (dimen -1 em)
+          start-indent: (dimen 1 em)
+          (sosofo-append
+           (process-node-list (node-list-first (children (current-node))))
+           (process-node-list-trim (node-list-rest (children (current-node))))))
+        (make paragraph
+          first-line-start-indent: (dimen 0 em)
+          start-indent: (dimen 1 em)
+          (process-children-trim)
+          ) ))
+  )
+
+
+;; #-----------------------------------------------------------------------------
+;; # metainfo support
+
+(element author
+  (let ((email (attribute "email" (current-node))))
+    (make paragraph
+      first-line-start-indent: (dimen 0 pt)
+      (sosofo-append
+       (process-node-list (attribute "name" (current-node)))
+       (if (not (node-list-empty? email))
+           (sosofo-append
+            (literal " <")
+            (process-node-list email)
+            (literal ">"))))
+      )))
+
+
+;; #-----------------------------------------------------------------------------
+;; # references
+
+(element seealso
+  (sosofo-append
+   (make paragraph
+     font-caps: 'small-caps
+     font-size: (dimen 14 pt)
+     font-weight: 'bold
+     break-after?: #f
+     space-before: (dimen 14 pt)
+     space-after: (dimen 7 pt)
+     keep-with-next?: #t
+     (literal "See Also"))
+   (make display-group
+     start-indent: (dimen 2 em)
+     (process-children))))
+
+(element (seealso mref)
+  (make paragraph
+    first-line-start-indent: (dimen 0 pt)
+    (sosofo-append
+     (process-node-list (attribute "name" (current-node)))
+     (literal " (")
+     (process-node-list (attribute "section" (current-node)))
+     (literal ")")
+     )))
+
+
+(element (seealso xref)
+  (make paragraph
+    first-line-start-indent: (dimen 0 pt)
+    (process-node-list (attribute "ref" (current-node)))))
+
+
+(element (seealso bibref)
+  (make paragraph
+    first-line-start-indent: (dimen -2 em)
+    start-indent: (dimen 2 em)
+    (format-bibref (current-node))))
+
+
+(element p
+  (make paragraph
+    mandoc.section: "para"
+    first-line-start-indent: (dimen 0 em)
+    (process-children)))
+
+(root
+    (process-children))
