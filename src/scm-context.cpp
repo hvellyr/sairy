@@ -1184,8 +1184,51 @@ namespace {
 
   //----------------------------------------------------------------------------
 
+  sexp func_use(sexp ctx, sexp self, sexp_sint_t n, sexp res_arg)
+  {
+    sexp_gc_var3(result, source, nm);
+    sexp_gc_preserve3(ctx, result, source, nm);
+
+    result = SEXP_VOID;
+
+    auto resource = string_from_symbol_sexp_or_none(ctx, res_arg);
+    if (resource) {
+      sexp path = sexp_env_ref(ctx, sexp_context_env(ctx),
+                               nm = sexp_intern(ctx, "%style-parent-path%", -1),
+                               SEXP_VOID);
+      if (sexp_stringp(path)) {
+        auto parent_path = std::string(sexp_string_data(path));
+        auto src_path = (fs::path(parent_path) / *resource)
+                          .replace_extension(".tstyle")
+                          .string();
+        source = sexp_c_string(ctx, src_path.c_str(), src_path.size());
+        result = sexp_load(ctx, source, sexp_context_env(ctx));
+      }
+      else {
+        result =
+          sexp_user_exception(ctx, self, "%style-parent-path% not set?", path);
+      }
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a symbol", res_arg);
+    }
+
+    sexp_gc_release3(ctx);
+
+    return result;
+  }
+
+  void init_registry_functions(sexp ctx)
+  {
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "use", 1, &func_use);
+  }
+
+
+  //----------------------------------------------------------------------------
+
   void init_builtins(sexp ctx)
   {
+    init_registry_functions(ctx);
     init_dimen_functions(ctx);
     init_nodelist_functions(ctx);
     init_node_functions(ctx);
@@ -1252,6 +1295,9 @@ namespace {
 
     bool load_script(const fs::path& script_file) override
     {
+      define_variable("%style-parent-path%",
+                      script_file.parent_path().string());
+
       sexp_gc_var2(obj1, res);
       sexp_gc_preserve2(_ctx, obj1, res);
 
@@ -1264,19 +1310,17 @@ namespace {
     }
 
 
-    void define_variable(const std::string& name, const std::string& value) override
+    void define_variable(const std::string& name,
+                         const std::string& value) override
     {
-      sexp_gc_var3(sym, str, val);
-      sexp_gc_preserve3(_ctx, sym, str, val);
+      sexp_gc_var2(sym, val);
+      sexp_gc_preserve2(_ctx, sym, val);
 
-      sym =
-        sexp_string_to_symbol(_ctx,
-                              str = sexp_c_string(_ctx, name.c_str(), -1));
-      val = sexp_c_string(_ctx, value.c_str(), value.size());
+      sexp_env_define(_ctx, sexp_context_env(_ctx),
+                      sym = sexp_intern(_ctx, name.c_str(), name.size()),
+                      val = sexp_c_string(_ctx, value.c_str(), value.size()));
 
-      sexp_env_define(_ctx, sexp_context_env(_ctx), sym, val);
-
-      sexp_gc_release3(_ctx);
+      sexp_gc_release2(_ctx);
     }
 
 
