@@ -103,6 +103,7 @@ detail::HtmlRenderContext::css_property(const std::string& key) const
 
 namespace {
   const std::string k_pt = "pt";
+  const std::string k_px = "px";
   const std::string k_em = "em";
   const std::string k_m = "m";
   const std::string k_mm = "mm";
@@ -114,6 +115,8 @@ namespace {
       switch (un) {
       case fo::k_pt:
         return k_pt;
+      case fo::k_px:
+        return k_px;
       case fo::k_m:
         return k_m;
       case fo::k_mm:

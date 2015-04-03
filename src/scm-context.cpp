@@ -183,6 +183,9 @@ namespace {
     if (nm == "pt") {
       return fo::k_pt;
     }
+    else if (nm == "px") {
+      return fo::k_px;
+    }
     else if (nm == "cm") {
       return fo::k_cm;
     }
