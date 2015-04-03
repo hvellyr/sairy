@@ -505,12 +505,19 @@ namespace {
         while (!p.empty()) {
           auto* nd = p.head();
           if (nd->has_property(CommonProps::k_attr_name)) {
-            nodes.push_back(nd);
+            if (nd->property<std::string>(CommonProps::k_attr_name) == key) {
+              nodes.push_back(nd);
+            }
           }
           p = p.rest();
         }
 
-        result = make_nodelist(ctx, new NodeList(nodes));
+        if (nodes.empty()) {
+          result = make_nodelist(ctx, new NodeList);
+        }
+        else {
+          result = make_nodelist(ctx, new NodeList(nodes));
+        }
       }
       else {
         result = sexp_user_exception(ctx, self, "not a node-list", nnl_arg);
