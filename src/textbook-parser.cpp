@@ -209,6 +209,7 @@ namespace textbook {
 
 
     std::unique_ptr<DocSpec> read_model(const fs::path& path,
+                                        const std::vector<fs::path>& catalog_path,
                                         bool is_verbose = false)
     {
       eyestep::Grove grove;
@@ -220,6 +221,7 @@ namespace textbook {
       VariableEnv vars;
 
       auto p = Parser(grove, gb, vars, catalog, nullptr,
+                      catalog_path,
                       false, // mixed content
                       is_verbose);
 
@@ -401,8 +403,9 @@ namespace textbook {
 
   Parser::Parser(eyestep::Grove& grove, GroveBuilder& grovebuilder,
                  VariableEnv& vars, Catalog& catalog, DocSpec* docspec,
+                 const std::vector<fs::path>& catalog_path,
                  bool is_mixed_content, bool is_verbose)
-    : _verbose(is_verbose), _catalog_path({fs::path("share/sairy/textbook/spec")}),
+    : _verbose(is_verbose), _catalog_path(catalog_path),
       _grove(grove), _grovebuilder(grovebuilder), _vars(vars),
       _catalog(catalog), _docspec(docspec), _current_p_nd(nullptr),
       _is_mixed_content(is_mixed_content)
@@ -651,7 +654,7 @@ namespace textbook {
       }
       else {
         GroveBuilder gb(_grove.make_elt_node("<root>"));
-        auto p = Parser(_grove, gb, _vars, _catalog, _docspec, true);
+        auto p = Parser(_grove, gb, _vars, _catalog, _docspec, _catalog_path, true);
         auto nd = p.parse_stream(
           std::make_shared<Stream>(arg, _stream->fpath(), lineno_at_start));
 
@@ -948,7 +951,7 @@ namespace textbook {
     else {
       auto path = find_model_spec(tag, _catalog_path);
       if (path) {
-        auto docspec = read_model(*path, _verbose);
+        auto docspec = read_model(*path, _catalog_path, _verbose);
         if (docspec.get()) {
           _catalog[tag] = std::move(docspec);
           _docspec = _catalog[tag].get();

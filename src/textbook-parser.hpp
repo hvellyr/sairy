@@ -103,6 +103,7 @@ namespace textbook {
   public:
     Parser(eyestep::Grove& grove, GroveBuilder& grovebuilder,
            VariableEnv& _vars, Catalog& catalog, DocSpec* docspec,
+           const std::vector<fs::path>& catalog_path,
            bool is_mixed_content = false, bool is_verbose = false);
 
     std::string doctype() const;

@@ -6,7 +6,11 @@
 #include "nodeclass.hpp"
 #include "textbook-parser.hpp"
 #include "textbook-model.hpp"
+#include "utils.hpp"
 
+#include <boost/range/iterator.hpp>
+#include <boost/range/iterator_range.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 #include <boost/filesystem.hpp>
 
 #include <algorithm>
@@ -34,6 +38,12 @@ TextbookScanner::TextbookScanner(
   : _debug(false)
 {
   if (!args.empty()) {
+    _prefix_path = utils::split_paths(args["sairy-prefix"].as<std::string>());
+
+    _catalog_path = boost::copy_range<std::vector<fs::path>>(
+      _prefix_path | boost::adaptors::transformed([](const fs::path& path) {
+        return path / "textbook" / "spec";
+      }));
 
     _debug = args["debug"].as<bool>();
   }
@@ -72,8 +82,9 @@ Node* TextbookScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile)
   textbook::Catalog catalog;
   auto parser = textbook::Parser(grove, grove_builder, vars, catalog,
                                  nullptr, // docspec
-                                 false,   // mixed content
-                                 false    // verbose
+                                 _catalog_path,
+                                 false, // mixed content
+                                 false  // verbose
                                  );
 
   parser.parse_file(srcfile);
