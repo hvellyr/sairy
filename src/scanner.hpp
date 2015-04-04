@@ -4,6 +4,7 @@
 #pragma once
 
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 
 #include <string>
 #include <vector>
@@ -24,9 +25,9 @@ public:
   virtual std::string scanner_id() const = 0;
   virtual std::unordered_set<std::string> supported_extensions() const = 0;
 
-  virtual Node* scan_file(eyestep::Grove& grove, const fs::path& srcfile,
-                          const std::vector<std::string>& incls,
-                          const std::vector<std::string>& defs) = 0;
+  virtual boost::program_options::options_description program_options() const = 0;
+
+  virtual Node* scan_file(eyestep::Grove& grove, const fs::path& srcfile) = 0;
 };
 
 } // ns eyestep

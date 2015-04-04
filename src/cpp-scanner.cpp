@@ -3,8 +3,9 @@
 
 #include "cpp-lang.hpp"
 #include "cpp-scanner.hpp"
-#include "nodes.hpp"
 #include "nodeclass.hpp"
+#include "nodes.hpp"
+#include "utils.hpp"
 
 #include "clang-c/Index.h"
 
@@ -184,6 +185,44 @@ namespace {
 
 //------------------------------------------------------------------------------
 
+CppScanner::CppScanner() : _verbose(false)
+{
+}
+
+CppScanner::CppScanner(const boost::program_options::variables_map& args)
+  : _verbose(false)
+{
+  if (!args.empty()) {
+
+    std::vector<std::string> incl_paths;
+    if (args.count("include-path")) {
+      incl_paths = args["include-path"].as<std::vector<std::string>>();
+    }
+
+    if (args.count("isystem")) {
+      auto v = args["isystem"].as<std::vector<std::string>>();
+      incl_paths.insert(incl_paths.end(), v.begin(), v.end());
+    }
+
+    std::vector<std::string> defs;
+    if (args.count("defs")) {
+      defs = args["defs"].as<std::vector<std::string>>();
+    }
+
+    _incl_paths.swap(incl_paths);
+    _defs.swap(defs);
+
+    _verbose = args["verbose"].as<bool>();
+    if (_verbose) {
+      std::cout << "Cpp scanner:" << std::endl
+                << "incl paths  : " << eyestep::utils::join(incl_paths, " ")
+                << std::endl
+                << "defs        : " << eyestep::utils::join(defs, " ")
+                << std::endl;
+    }
+  }
+}
+
 std::string CppScanner::scanner_id() const
 {
   return "cpp";
@@ -195,9 +234,32 @@ std::unordered_set<std::string> CppScanner::supported_extensions() const
           ".hpp", ".hxx", ".ipp", ".m", ".mm"};
 }
 
-Node* CppScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile,
-                            const std::vector<std::string>& incls,
-                            const std::vector<std::string>& defs)
+
+boost::program_options::options_description CppScanner::program_options() const
+{
+  namespace po = boost::program_options;
+
+  std::string opts_title =
+    std::string("C++ parser [selector: '") + scanner_id() + "']";
+  po::options_description desc(opts_title);
+
+  // clang-format off
+  desc.add_options()
+    ("include-path,I", po::value<std::vector<std::string>>()->composing(),
+                       "add include path to C parser")
+    ("defs,D",         po::value<std::vector<std::string>>()->composing(),
+                       "add preprocessor defines")
+    ("isysroot",       po::value<std::vector<std::string>>()->composing(),
+                       "ignored")
+    ("isystem",        po::value<std::vector<std::string>>()->composing(),
+                       "-isystem arg, like -I")
+    ;
+  // clang-format on
+
+  return desc;
+}
+
+Node* CppScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile)
 {
   CXIndex idx;
   CXTranslationUnit tu;
@@ -215,13 +277,13 @@ Node* CppScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile,
   std::vector<const char*> args;
   std::vector<char> argsdata;
 
-  int totalsize = compute_data_size(incls, "-I", true) +
-                  compute_data_size(incls, "-D", false);
+  int totalsize = compute_data_size(_incl_paths, "-I", true) +
+                  compute_data_size(_defs, "-D", false);
   argsdata.resize(totalsize);
 
   int argc = 0;
-  argc = append_options(argc, incls, "-I", true, args, argsdata);
-  argc = append_options(argc, defs, "-D", false, args, argsdata);
+  argc = append_options(argc, _incl_paths, "-I", true, args, argsdata);
+  argc = append_options(argc, _defs, "-D", false, args, argsdata);
 
   args.push_back("-x");
   argc++;

@@ -25,6 +25,20 @@ namespace fs = boost::filesystem;
 
 //----------------------------------------------------------------------------------------
 
+TextbookScanner::TextbookScanner() : _debug(false)
+{
+}
+
+TextbookScanner::TextbookScanner(
+  const boost::program_options::variables_map& args)
+  : _debug(false)
+{
+  if (!args.empty()) {
+
+    _debug = args["debug"].as<bool>();
+  }
+}
+
 std::string TextbookScanner::scanner_id() const
 {
   return "textbook";
@@ -35,9 +49,18 @@ std::unordered_set<std::string> TextbookScanner::supported_extensions() const
   return {".tb", ".textbook"};
 }
 
-Node* TextbookScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile,
-                                 const std::vector<std::string>& incls,
-                                 const std::vector<std::string>& defs)
+boost::program_options::options_description
+TextbookScanner::program_options() const
+{
+  namespace po = boost::program_options;
+
+  std::string opts_title =
+    std::string("Textbook parser [selector: '") + scanner_id() + "']";
+  po::options_description desc(opts_title);
+  return desc;
+}
+
+Node* TextbookScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile)
 {
   Node* doc_node = grove.make_node(document_class_definition());
 
@@ -54,6 +77,10 @@ Node* TextbookScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile,
                                  );
 
   parser.parse_file(srcfile);
+
+  if (_debug) {
+    serialize(std::cerr, doc_node);
+  }
 
   return doc_node;
 }

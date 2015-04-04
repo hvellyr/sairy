@@ -2,6 +2,17 @@
 # All rights reserved.
 
 #------------------------------------------------------------------------------
+add_library(sairy-utils
+  utils.cpp
+  utils.hpp
+)
+target_include_directories(sairy-utils
+  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_compile_options(sairy-utils
+  PUBLIC ${cxx11_options} ${warning_options})
+
+
+#------------------------------------------------------------------------------
 add_library(grove
   nodeclass.cpp
   nodeclass.hpp
@@ -115,12 +126,8 @@ add_executable(sairy
   scanner.hpp
   scm-context.cpp
   scm-context.hpp
-  source.cpp
-  source.hpp
   style-engine.cpp
   style-engine.hpp
-  utils.cpp
-  utils.hpp
 )
 target_include_directories(sairy
   PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>;${PROJECT_SOURCE_DIR}/third-party/chibi-scheme/include")
@@ -135,6 +142,7 @@ target_link_libraries(sairy
   processor-base
   scheme
   textbook-parser
+  sairy-utils
   ${LibClang_LIBRARIES}
   ${Boost_LIBRARIES})
 
