@@ -37,13 +37,12 @@ namespace {
   };
 
 
-  Node* make_type_node(Grove* grove, std::string gi, Type type)
+  Node* make_type_node(Grove* grove, const std::string& gi, Type type)
   {
-    Node* nd = grove->make_node(element_class_definition());
+    Node* nd = grove->make_elt_node(gi);
 
-    nd->set_property("gi", std::move(gi));
-    nd->set_property("name", type.spelling());
-    nd->set_property("const?", type.is_const());
+    nd->add_attribute("name", type.spelling());
+    nd->add_attribute("const?", type.is_const());
 
     return nd;
   }
@@ -51,9 +50,8 @@ namespace {
 
   Node* make_function_node(Grove* grove, Cursor ecursor)
   {
-    Node* nd = grove->make_node(element_class_definition());
-
-    nd->set_property("gi", "function");
+    Node* nd = grove->make_elt_node("function");
+    nd->set_property(CommonProps::k_source, ecursor.location().format());
 
     std::string nm = ecursor.spelling();
 
@@ -67,23 +65,17 @@ namespace {
     Type type = ecursor.type();
     assert(args_nm.size() == type.num_arg_types());
 
-    nd->set_property("name", nm);
-    nd->set_property(CommonProps::k_source, ecursor.location().format());
+    nd->add_attribute("name", nm);
 
-    nd->add_child_node(
-      make_type_node(grove, "return-type", type.result_type()));
+    nd->add_child_node(make_type_node(grove, "return-type", type.result_type()));
 
-    auto* parameters = grove->make_node(element_class_definition());
-    parameters->set_property(CommonProps::k_gi, "parameters");
-
+    auto* parameters = grove->make_elt_node("parameters");
     nd->add_child_node(parameters);
 
     for (int i = 0; i < type.num_arg_types(); i++) {
-      Node* param = grove->make_node(element_class_definition());
-      param->set_property(CommonProps::k_gi, "parameter");
-      param->set_property("name", std::get<0>(args_nm[i]));
-      param->add_child_node(
-        make_type_node(grove, "type", std::get<1>(args_nm[i])));
+      Node* param = grove->make_elt_node("parameter");
+      param->add_attribute("name", std::get<0>(args_nm[i]));
+      param->add_child_node(make_type_node(grove, "type", std::get<1>(args_nm[i])));
       parameters->add_child_node(param);
     }
 
@@ -189,8 +181,7 @@ CppScanner::CppScanner() : _verbose(false)
 {
 }
 
-CppScanner::CppScanner(const po::variables_map& args)
-  : _verbose(false)
+CppScanner::CppScanner(const po::variables_map& args) : _verbose(false)
 {
   if (!args.empty()) {
 
