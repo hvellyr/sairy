@@ -76,6 +76,18 @@ const NodeClass* text_class_definition()
 }
 
 
+const NodeClass* int_class_definition()
+{
+  static NodeClass elt_class{"int",
+                             PropertySet{
+                               {CommonProps::k_value, PropertyType::k_int,
+                                false},
+                             },
+                             any_class_definition()};
+  return &elt_class;
+}
+
+
 const Property* find_property(const NodeClass* node_class,
                               const std::string& propname)
 {

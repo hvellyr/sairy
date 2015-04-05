@@ -47,6 +47,7 @@ const NodeClass* root_class_definition();
 const NodeClass* document_class_definition();
 const NodeClass* element_class_definition();
 const NodeClass* text_class_definition();
+const NodeClass* int_class_definition();
 
 const Property* find_property(const NodeClass* node_class,
                               const std::string& propname);

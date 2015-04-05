@@ -61,6 +61,7 @@ const std::string CommonProps::k_gi = "gi";
 const std::string CommonProps::k_id = "id";
 const std::string CommonProps::k_parent = "parent";
 const std::string CommonProps::k_source = "source";
+const std::string CommonProps::k_value = "value";
 
 
 //------------------------------------------------------------------------------
@@ -189,6 +190,11 @@ void Node::add_attribute(const std::string& attrname, const std::string& value)
   add_attribute(attrname, grove()->make_text_node(value));
 }
 
+void Node::add_attribute(const std::string& attrname, int value)
+{
+  add_attribute(attrname, grove()->make_int_node(value));
+}
+
 void Node::add_attribute(const std::string& attrname, const Nodes& nl)
 {
   for (auto* nd : nl) {
@@ -311,6 +317,14 @@ Node* Grove::make_text_node(const std::string& data)
 {
   auto* nd = make_node(text_class_definition());
   nd->set_property(CommonProps::k_data, data);
+  return nd;
+}
+
+
+Node* Grove::make_int_node(int value)
+{
+  auto* nd = make_node(int_class_definition());
+  nd->set_property(CommonProps::k_value, value);
   return nd;
 }
 

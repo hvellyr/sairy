@@ -41,6 +41,7 @@ struct CommonProps {
   static const std::string k_id;
   static const std::string k_parent;
   static const std::string k_source;
+  static const std::string k_value;
 };
 
 
@@ -92,6 +93,7 @@ public:
   Nodes attributes() const;
   void add_attribute(const std::string& attrname, Node* nd);
   void add_attribute(const std::string& attrname, const std::string& value);
+  void add_attribute(const std::string& attrname, int value);
   void add_attribute(const std::string& attrname, const Nodes& nl);
 
   void set_attributes(const Nodes& nl);
@@ -117,6 +119,7 @@ public:
   Node* make_node(const NodeClass* node_class);
   Node* make_elt_node(const std::string& gi);
   Node* make_text_node(const std::string& data);
+  Node* make_int_node(int value);
 
   Node* set_root_node(const NodeClass* node_class);
   Node* root_node() const;
