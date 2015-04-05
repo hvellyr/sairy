@@ -80,12 +80,12 @@ Node* TextbookScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile)
   textbook::GroveBuilder grove_builder(doc_node);
   textbook::VariableEnv vars;
   textbook::Catalog catalog;
-  auto parser = textbook::Parser(grove, grove_builder, vars, catalog,
-                                 nullptr, // docspec
-                                 _catalog_path,
-                                 false, // mixed content
-                                 false  // verbose
-                                 );
+  textbook::Parser parser(grove, grove_builder, vars, catalog,
+                          nullptr, // docspec
+                          _catalog_path,
+                          false, // mixed content
+                          false  // verbose
+                          );
 
   parser.parse_file(srcfile);
 

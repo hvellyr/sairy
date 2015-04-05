@@ -220,10 +220,10 @@ namespace textbook {
 
       VariableEnv vars;
 
-      auto p = Parser(grove, gb, vars, catalog, nullptr,
-                      catalog_path,
-                      false, // mixed content
-                      is_verbose);
+      Parser p(grove, gb, vars, catalog, nullptr,
+               catalog_path,
+               false, // mixed content
+               is_verbose);
 
       auto nd = p.parse_file(path);
       if (is_verbose) {
@@ -510,13 +510,11 @@ namespace textbook {
         push_p_nd();
         _grovebuilder.add_node(_grove.make_text_node(text));
 
-        std::stringstream ss;
-        _text.swap(ss);
+        _text.clear();
       }
     }
     else {
-      std::stringstream ss;
-      _text.swap(ss);
+      _text.clear();
     }
   }
 
@@ -654,7 +652,7 @@ namespace textbook {
       }
       else {
         GroveBuilder gb(_grove.make_elt_node("<root>"));
-        auto p = Parser(_grove, gb, _vars, _catalog, _docspec, _catalog_path, true);
+        Parser p(_grove, gb, _vars, _catalog, _docspec, _catalog_path, true);
         auto nd = p.parse_stream(
           std::make_shared<Stream>(arg, _stream->fpath(), lineno_at_start));
 
