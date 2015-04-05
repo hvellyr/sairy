@@ -464,7 +464,6 @@ namespace textbook {
       char c = currentc();
 
       if (c == '@') {
-        push_text();
         parse_at_form();
       }
       else if (c == '\n') {
@@ -714,12 +713,14 @@ namespace textbook {
       parse_closebrace();
       break;
     case '=':
+      push_text();
       parse_varlookup();
       break;
     case '-':
       // NOP
       break;
     default:
+      push_text();
       if (is_symbol1(c)) { // @abc
         parse_tag();
       }
