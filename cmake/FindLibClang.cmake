@@ -24,7 +24,9 @@ include(FindPackageHandleStandardArgs)
 if (NOT LibClang_ROOT_DIR)
   find_path(LibClang_ROOT_DIR
     NAMES include/clang include/clang-c
-    PATHS /usr/lib/llvm-3.5 /usr/local/lib/llvm-3.5 /opt/local/lib/llvm-3.5
+    PATHS /usr/lib/llvm-3.7 /usr/local/lib/llvm-3.7 /opt/local/lib/llvm-3.7
+          /usr/lib/llvm-3.6 /usr/local/lib/llvm-3.6 /opt/local/lib/llvm-3.6
+          /usr/lib/llvm-3.5 /usr/local/lib/llvm-3.5 /opt/local/lib/llvm-3.5
           /usr /usr/local /opt/local
       ENV LibClang_ROOT_DIR
     NO_DEFAULT_PATH
@@ -32,13 +34,7 @@ if (NOT LibClang_ROOT_DIR)
 endif()
 
 find_path(LibClang_INCLUDE_DIR
-    NAMES clang/Analysis clang/ARCMigrate
-    lang/AST clang/ASTMatchers clang/Basic
-    clang/CodeGen clang/Config clang/Driver
-    clang/Edit clang/Frontend clang/FrontendTool
-    clang/Lex clang/Parse clang/Rewrite clang/Sema
-    clang/Serialization clang/StaticAnalyzer clang/Tooling
-    clang-c/Index.h
+    NAME clang-c/Index.h
     HINTS ${LibClang_ROOT_DIR}
     PATH_SUFFIXES include
     DOC "libclang include directory")
