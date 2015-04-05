@@ -4,16 +4,18 @@
 #include "estd/memory.hpp"
 #include "scanner-setup.hpp"
 #include "scanner.hpp"
+#include "utils.hpp"
 
 #include "cpp-scanner.hpp"
 #include "textbook-scanner.hpp"
 
 #include <boost/filesystem.hpp>
 
-#include <unordered_map>
-#include <string>
 #include <cassert>
 #include <iostream>
+#include <map>
+#include <string>
+#include <unordered_map>
 
 
 namespace eyestep {
@@ -25,7 +27,7 @@ namespace {
   using ScannerFactoryFunc =
     std::function<std::unique_ptr<IScanner>(const po::variables_map& args)>;
   using ScannerClassFactoryMap =
-    std::unordered_map<std::string, ScannerFactoryFunc>;
+    std::map<std::string, ScannerFactoryFunc>;
 
   using ScannerExtensionMap = std::unordered_map<std::string, std::string>;
 
@@ -64,15 +66,24 @@ namespace {
 } // anon ns
 
 
-std::vector<po::options_description> scanner_options()
+po::options_description scanner_options()
 {
-  std::vector<po::options_description> result;
+  std::vector<std::string> parsers;
+  std::vector<po::options_description> options;
 
   for (const auto& reg : scanner_registry()) {
     auto scanner = reg.second(po::variables_map{});
     if (scanner) {
-      result.push_back(scanner->program_options());
+      parsers.push_back(scanner->scanner_id());
+      options.push_back(scanner->program_options());
     }
+  }
+
+  std::string title = std::string("PARSERS [") + utils::join(parsers, ", ") + "]";
+  po::options_description result(title);
+
+  for (const auto& opt : options) {
+    result.add(opt);
   }
 
   return result;

@@ -136,10 +136,8 @@ int main(int argc, char** argv)
     all_options.add(desc).add(hidden);
     visible_options.add(desc);
 
-    for (const auto& opts : eyestep::scanner_options()) {
-      all_options.add(opts);
-      visible_options.add(opts);
-    }
+    all_options.add(eyestep::scanner_options());
+    visible_options.add(eyestep::scanner_options());
 
 
     po::positional_options_description p;
