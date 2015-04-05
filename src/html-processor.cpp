@@ -564,7 +564,8 @@ namespace {
 } // ns anon
 
 
-HtmlProcessor::HtmlProcessor()
+HtmlProcessor::HtmlProcessor(
+  const boost::program_options::variables_map& /*args*/)
 {
 }
 

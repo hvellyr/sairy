@@ -6,6 +6,7 @@
 #include "abstract-processor.hpp"
 
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 
 #include <string>
 
@@ -22,6 +23,8 @@ class DebugProcessor : public AbstractProcessor<DebugProcessor> {
   using Super = AbstractProcessor;
 
 public:
+  DebugProcessor(const boost::program_options::variables_map& args);
+
   std::string proc_id() const override;
   std::string default_output_extension() const override;
 

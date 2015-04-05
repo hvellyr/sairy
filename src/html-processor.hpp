@@ -9,6 +9,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/optional/optional.hpp>
+#include <boost/program_options.hpp>
 
 #include <list>
 #include <map>
@@ -85,7 +86,7 @@ class HtmlProcessor : public AbstractProcessor<HtmlProcessor> {
   detail::HtmlRenderContext _ctx;
 
 public:
-  HtmlProcessor();
+  HtmlProcessor(const boost::program_options::variables_map& args);
 
   std::string proc_id() const override;
   std::string default_output_extension() const override;

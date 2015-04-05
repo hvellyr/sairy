@@ -76,6 +76,11 @@ namespace {
 } // ns anon
 
 
+DebugProcessor::DebugProcessor(
+  const boost::program_options::variables_map& /*args*/)
+{
+}
+
 std::string DebugProcessor::proc_id() const
 {
   return "#debug-processor";

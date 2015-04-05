@@ -69,13 +69,15 @@ eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
   return grove;
 }
 
-std::unique_ptr<eyestep::IProcessor> find_processor(const std::string& backend)
+std::unique_ptr<eyestep::IProcessor>
+find_processor(const std::string& backend,
+               const boost::program_options::variables_map& args)
 {
   if (backend == "debug") {
-    return estd::make_unique<eyestep::DebugProcessor>();
+    return estd::make_unique<eyestep::DebugProcessor>(args);
   }
   else if (backend == "html") {
-    return estd::make_unique<eyestep::HtmlProcessor>();
+    return estd::make_unique<eyestep::HtmlProcessor>(args);
   }
 
   return nullptr;
@@ -187,7 +189,7 @@ int main(int argc, char** argv)
     }
 
     if (!templ_path.empty()) {
-      auto processor = find_processor(backend);
+      auto processor = find_processor(backend, vm);
       if (processor) {
         processor->set_output_file(
           deduce_output_file(outf, sources,
