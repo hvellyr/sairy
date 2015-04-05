@@ -263,3 +263,33 @@ TEST_CASE("Attributes add nodelist", "[nodes, attributes]")
     REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) == texts[i]);
   }
 }
+
+
+TEST_CASE("Attributes setting attributes removes previous attributes", "[nodes, attributes]")
+{
+  Grove grove;
+
+  auto* nd = grove.make_elt_node("foo");
+  nd->add_attribute("gaz", "fieps");
+
+  REQUIRE(nd->attributes().size() == 1);
+
+  const auto texts = std::vector<std::string>{ "hello", " ", "world!" };
+  const auto attrnms = std::vector<std::string>{ "a", "b", "c" };
+
+  Nodes nodes;
+  int ai = 0;
+  for (const auto txt : texts) {
+    auto* txtnd = grove.make_text_node(txt);
+    txtnd->set_property(CommonProps::k_attr_name, attrnms[ai++]);
+    nodes.push_back(txtnd);
+  }
+  nd->set_attributes(nodes);
+
+  REQUIRE(nd->attributes().size() == texts.size());
+  for (auto i : boost::irange(0, int(texts.size()))) {
+    REQUIRE(nd->attributes()[i]->classname() == "text");
+    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_attr_name) == attrnms[i]);
+    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) == texts[i]);
+  }
+}

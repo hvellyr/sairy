@@ -196,6 +196,16 @@ void Node::add_attribute(const std::string& attrname, const Nodes& nl)
   }
 }
 
+void Node::set_attributes(const Nodes& nl)
+{
+#ifndef NDEBUG
+  for (const auto nd : nl) {
+    assert(nd->has_property(CommonProps::k_attr_name));
+  }
+#endif
+  set_property(CommonProps::k_attrs, nl);
+}
+
 void Node::add_child_node(Node* child)
 {
   add_node(CommonProps::k_children, child);

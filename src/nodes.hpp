@@ -94,6 +94,8 @@ public:
   void add_attribute(const std::string& attrname, const std::string& value);
   void add_attribute(const std::string& attrname, const Nodes& nl);
 
+  void set_attributes(const Nodes& nl);
+
   const Properties& properties() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Node& node);
