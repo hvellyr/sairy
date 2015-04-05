@@ -1,4 +1,4 @@
-https://travis-ci.org/hvellyr/sairy.svg?branch=master
+[![Build Status](https://travis-ci.org/hvellyr/sairy.svg?branch=master)](https://travis-ci.org/hvellyr/sairy)
 
 Sairy is an experimental documentation preparation and extraction facility.  It
 will use a pluggable and extensible architecture.
