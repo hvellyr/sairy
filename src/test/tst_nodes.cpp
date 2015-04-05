@@ -6,6 +6,8 @@
 #include "../nodeclass.hpp"
 #include "../nodes.hpp"
 
+#include <boost/range/irange.hpp>
+
 #include <string>
 #include <sstream>
 #include <tuple>
@@ -207,4 +209,57 @@ TEST_CASE("Serialize", "[nodes]")
   std::stringstream ss;
   serialize(ss, grove.root_node());
   REQUIRE(ss.str() == exptected_output);
+}
+
+
+TEST_CASE("Attributes add text nodes", "[nodes, attributes]")
+{
+  Grove grove;
+
+  auto* nd = grove.make_elt_node("foo");
+  nd->add_attribute("gaz", "fieps");
+
+  REQUIRE(nd->attributes().size() == 1);
+  REQUIRE(nd->attributes()[0]->classname() == "text");
+  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_attr_name) == "gaz");
+  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_data) == "fieps");
+}
+
+
+TEST_CASE("Attributes add nodes", "[nodes, attributes]")
+{
+  Grove grove;
+
+  auto* nd = grove.make_elt_node("foo");
+
+  auto* boo = grove.make_elt_node("boo");
+  nd->add_attribute("gaz", boo);
+
+  REQUIRE(nd->attributes().size() == 1);
+  REQUIRE(nd->attributes()[0]->classname() == "element");
+  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_attr_name) == "gaz");
+  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_gi) == "boo");
+}
+
+
+TEST_CASE("Attributes add nodelist", "[nodes, attributes]")
+{
+  Grove grove;
+
+  auto* nd = grove.make_elt_node("foo");
+
+  const auto texts = std::vector<std::string>{ "hello", " ", "world!" };
+
+  Nodes nodes;
+  for (const auto txt : texts) {
+    nodes.push_back(grove.make_text_node(txt));
+  }
+  nd->add_attribute("gaz", nodes);
+
+  REQUIRE(nd->attributes().size() == texts.size());
+  for (auto i : boost::irange(0, int(texts.size()))) {
+    REQUIRE(nd->attributes()[i]->classname() == "text");
+    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_attr_name) == "gaz");
+    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) == texts[i]);
+  }
 }

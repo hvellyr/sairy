@@ -163,6 +163,39 @@ void Node::set_property(const std::string& propname, Node* nd)
 }
 
 
+Nodes Node::attributes() const
+{
+  return property<Nodes>(CommonProps::k_attrs);
+}
+
+void Node::add_attribute(const std::string& attrname, Node* nd)
+{
+  nd->set_property(CommonProps::k_attr_name, attrname);
+
+  if (!has_property(CommonProps::k_attrs)) {
+    Nodes nl;
+    nl.push_back(nd);
+    set_property(CommonProps::k_attrs, nl);
+  }
+  else {
+    if (Nodes* nds = boost::get<Nodes>(&_properties[CommonProps::k_attrs])) {
+      nds->push_back(nd);
+    }
+  }
+}
+
+void Node::add_attribute(const std::string& attrname, const std::string& value)
+{
+  add_attribute(attrname, grove()->make_text_node(value));
+}
+
+void Node::add_attribute(const std::string& attrname, const Nodes& nl)
+{
+  for (auto* nd : nl) {
+    add_attribute(attrname, nd);
+  }
+}
+
 void Node::add_child_node(Node* child)
 {
   add_node(CommonProps::k_children, child);

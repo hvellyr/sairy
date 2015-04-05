@@ -89,6 +89,11 @@ public:
   void add_child_node(Node* child);
   void add_node(const std::string& propname, Node* child);
 
+  Nodes attributes() const;
+  void add_attribute(const std::string& attrname, Node* nd);
+  void add_attribute(const std::string& attrname, const std::string& value);
+  void add_attribute(const std::string& attrname, const Nodes& nl);
+
   const Properties& properties() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Node& node);
