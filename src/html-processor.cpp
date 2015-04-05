@@ -26,6 +26,7 @@
 namespace eyestep {
 
 namespace fs = boost::filesystem;
+namespace po = boost::program_options;
 
 const std::string k_SAIRY_GENERATOR = "Sairy HTML Processor";
 
@@ -564,21 +565,34 @@ namespace {
 } // ns anon
 
 
-HtmlProcessor::HtmlProcessor(
-  const boost::program_options::variables_map& /*args*/)
+HtmlProcessor::HtmlProcessor()
+{
+}
+
+
+HtmlProcessor::HtmlProcessor(const po::variables_map& args)
 {
 }
 
 
 std::string HtmlProcessor::proc_id() const
 {
-  return "#html-processor";
+  return "html";
 }
 
 
 std::string HtmlProcessor::default_output_extension() const
 {
   return ".html";
+}
+
+po::options_description HtmlProcessor::program_options() const
+{
+  std::string opts_title =
+    std::string("HTML renderer [selector: '") + proc_id() + "']";
+  po::options_description desc(opts_title);
+
+  return desc;
 }
 
 const IFoProcessor<HtmlProcessor>*

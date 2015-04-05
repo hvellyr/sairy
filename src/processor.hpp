@@ -6,6 +6,7 @@
 #include "fo.hpp"
 
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 
 #include <string>
 
@@ -21,6 +22,7 @@ public:
 
   virtual void set_output_file(const boost::filesystem::path& output_file) = 0;
   virtual std::string default_output_extension() const = 0;
+  virtual boost::program_options::options_description program_options() const = 0;
 
   virtual std::string proc_id() const = 0;
   virtual void render_processed_node(const Sosofo* sosofo) = 0;
