@@ -11,23 +11,26 @@
 #include <tuple>
 
 
+using namespace eyestep;
+
+
 TEST_CASE("Base node creation", "[nodes]")
 {
-  eyestep::Node nd(eyestep::element_class_definition());
+  Node nd(element_class_definition());
   REQUIRE(nd.classname() == "element");
 }
 
 
 TEST_CASE("Default node as no gi", "[nodes]")
 {
-  eyestep::Node nd;
+  Node nd;
   REQUIRE(nd.gi().empty());
 }
 
 
 TEST_CASE("Set properties", "[nodes]")
 {
-  eyestep::Node nd;
+  Node nd;
   nd.set_property("name", "foo");
   nd.set_property("size", 42);
 
@@ -38,7 +41,7 @@ TEST_CASE("Set properties", "[nodes]")
 
 TEST_CASE("Unknown properties report as default", "[nodes]")
 {
-  eyestep::Node nd;
+  Node nd;
 
   REQUIRE(nd.property<std::string>("name").empty());
   REQUIRE(!nd.has_property("name"));
@@ -47,29 +50,29 @@ TEST_CASE("Unknown properties report as default", "[nodes]")
 
 TEST_CASE("Add node", "[nodes]")
 {
-  eyestep::Grove grove;
-  eyestep::Node* nd = grove.make_node(eyestep::document_class_definition());
+  Grove grove;
+  Node* nd = grove.make_node(document_class_definition());
 
   nd->add_node("kids", grove.make_elt_node("foo"));
   nd->add_node("kids", grove.make_elt_node("bar"));
 
-  REQUIRE(nd->property<eyestep::Nodes>("kids").size() == 2u);
-  REQUIRE(nd->property<eyestep::Nodes>("kids")[0]->gi() == "foo");
-  REQUIRE(nd->property<eyestep::Nodes>("kids")[1]->gi() == "bar");
+  REQUIRE(nd->property<Nodes>("kids").size() == 2u);
+  REQUIRE(nd->property<Nodes>("kids")[0]->gi() == "foo");
+  REQUIRE(nd->property<Nodes>("kids")[1]->gi() == "bar");
 }
 
 
 TEST_CASE("Parent property", "[nodes]")
 {
-  eyestep::Grove grove;
-  auto* a = grove.set_root_node(eyestep::root_class_definition());
+  Grove grove;
+  auto* a = grove.set_root_node(root_class_definition());
   auto* b = grove.make_elt_node("b");
 
   a->add_child_node(b);
 
   REQUIRE(b->gi() == "b");
 
-  REQUIRE(b->property<eyestep::Node*>("parent")->classname() == "root");
+  REQUIRE(b->property<Node*>("parent")->classname() == "root");
   REQUIRE(b->parent()->classname() == "root");
   REQUIRE(b->parent() == a);
 }
@@ -77,7 +80,7 @@ TEST_CASE("Parent property", "[nodes]")
 
 TEST_CASE("Traverse", "[nodes]")
 {
-  eyestep::Grove grove;
+  Grove grove;
   auto* nd = grove.make_elt_node("foo");
 
   nd->set_property("name", "bar");
@@ -101,9 +104,9 @@ TEST_CASE("Traverse", "[nodes]")
     using ExpectedGiType = std::vector<GiType>;
     ExpectedGiType gis;
 
-    eyestep::node_traverse(nd, [&gis](const eyestep::Node* n, int depth) {
+    node_traverse(nd, [&gis](const Node* n, int depth) {
       gis.emplace_back(std::make_tuple(n->gi(), depth));
-      return eyestep::TraverseRecursion::k_recurse;
+      return TraverseRecursion::k_recurse;
     });
 
     REQUIRE(gis == (ExpectedGiType{GiType{"foo", 0}, GiType{"title", 1},
@@ -113,9 +116,9 @@ TEST_CASE("Traverse", "[nodes]")
   SECTION("Only siblings")
   {
     std::vector<std::string> gis;
-    eyestep::node_traverse(nd, [&gis](const eyestep::Node* nd, int depth) {
+    node_traverse(nd, [&gis](const Node* nd, int depth) {
       gis.emplace_back(nd->gi());
-      return eyestep::TraverseRecursion::k_continue;
+      return TraverseRecursion::k_continue;
     });
 
     REQUIRE(gis == (std::vector<std::string>{"foo"}));
@@ -124,13 +127,13 @@ TEST_CASE("Traverse", "[nodes]")
   SECTION("Mixed recursion/siblings")
   {
     std::vector<std::string> gis;
-    eyestep::node_traverse(nd, [&gis](const eyestep::Node* nd, int depth) {
+    node_traverse(nd, [&gis](const Node* nd, int depth) {
       gis.emplace_back(nd->gi());
       if (nd->gi() == "foo") {
-        return eyestep::TraverseRecursion::k_recurse;
+        return TraverseRecursion::k_recurse;
       }
       else {
-        return eyestep::TraverseRecursion::k_continue;
+        return TraverseRecursion::k_continue;
       }
     });
 
@@ -140,16 +143,16 @@ TEST_CASE("Traverse", "[nodes]")
   SECTION("breaks")
   {
     std::vector<std::string> gis;
-    eyestep::node_traverse(nd, [&gis](const eyestep::Node* nd, int depth) {
+    node_traverse(nd, [&gis](const Node* nd, int depth) {
       gis.emplace_back(nd->gi());
       if (nd->gi() == "foo") {
-        return eyestep::TraverseRecursion::k_recurse;
+        return TraverseRecursion::k_recurse;
       }
       else if (nd->gi() == "args") {
-        return eyestep::TraverseRecursion::k_break;
+        return TraverseRecursion::k_break;
       }
       else {
-        return eyestep::TraverseRecursion::k_continue;
+        return TraverseRecursion::k_continue;
       }
     });
 
@@ -160,7 +163,7 @@ TEST_CASE("Traverse", "[nodes]")
 
 TEST_CASE("Serialize", "[nodes]")
 {
-  eyestep::Grove grove;
+  Grove grove;
 
   auto* nd = grove.make_elt_node("foo");
   nd->set_property("name", "bar");
