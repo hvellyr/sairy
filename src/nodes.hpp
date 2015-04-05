@@ -96,6 +96,9 @@ public:
 
   void set_attributes(const Nodes& nl);
 
+  bool has_attribute(const std::string& attrname) const;
+  const Node* attribute(const std::string& attrname) const;
+
   const Properties& properties() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Node& node);

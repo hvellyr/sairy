@@ -206,6 +206,31 @@ void Node::set_attributes(const Nodes& nl)
   set_property(CommonProps::k_attrs, nl);
 }
 
+
+bool Node::has_attribute(const std::string& attrname) const
+{
+  for (const auto& attr : attributes()) {
+    if (attr->has_property(CommonProps::k_attr_name) &&
+        attr->property<std::string>(CommonProps::k_attr_name) == attrname) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+const Node* Node::attribute(const std::string& attrname) const
+{
+  for (const auto attrnd : attributes()) {
+    if (attrnd->has_property(CommonProps::k_attr_name) &&
+        attrnd->property<std::string>(CommonProps::k_attr_name) == attrname) {
+      return attrnd;
+    }
+  }
+  return nullptr;
+}
+
+
 void Node::add_child_node(Node* child)
 {
   add_node(CommonProps::k_children, child);
