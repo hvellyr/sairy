@@ -120,7 +120,7 @@ namespace textbook {
 
       for (const auto* tagnd : nd->property<Nodes>(CommonProps::k_children)) {
         if (tagnd->gi() == k_tag_tag) {
-          auto attrs = tagnd->property<Nodes>(CommonProps::k_attrs);
+          auto attrs = tagnd->attributes();
 
           if (attrs.size() >= 3) {
             auto gi_spec = boost::trim_copy(node_data(attrs[0]));
@@ -208,9 +208,9 @@ namespace textbook {
     }
 
 
-    std::unique_ptr<DocSpec> read_model(const fs::path& path,
-                                        const std::vector<fs::path>& catalog_path,
-                                        bool is_verbose = false)
+    std::unique_ptr<DocSpec>
+    read_model(const fs::path& path, const std::vector<fs::path>& catalog_path,
+               bool is_verbose = false)
     {
       eyestep::Grove grove;
       GroveBuilder gb(grove.make_node(document_class_definition()));
@@ -220,8 +220,7 @@ namespace textbook {
 
       VariableEnv vars;
 
-      Parser p(grove, gb, vars, catalog, nullptr,
-               catalog_path,
+      Parser p(grove, gb, vars, catalog, nullptr, catalog_path,
                false, // mixed content
                is_verbose);
 
@@ -235,7 +234,7 @@ namespace textbook {
         if (!children.empty()) {
           auto textbook_nd = children[0];
           if (textbook_nd) {
-            auto attrs = textbook_nd->property<Nodes>(CommonProps::k_attrs);
+            auto attrs = textbook_nd->attributes();
             if (!attrs.empty() &&
                 boost::trim_copy(node_data(attrs[0])) == "1.0") {
               return make_docspec(nd);
@@ -405,9 +404,9 @@ namespace textbook {
                  VariableEnv& vars, Catalog& catalog, DocSpec* docspec,
                  const std::vector<fs::path>& catalog_path,
                  bool is_mixed_content, bool is_verbose)
-    : _verbose(is_verbose), _catalog_path(catalog_path),
-      _grove(grove), _grovebuilder(grovebuilder), _vars(vars),
-      _catalog(catalog), _docspec(docspec), _current_p_nd(nullptr),
+    : _verbose(is_verbose), _catalog_path(catalog_path), _grove(grove),
+      _grovebuilder(grovebuilder), _vars(vars), _catalog(catalog),
+      _docspec(docspec), _current_p_nd(nullptr),
       _is_mixed_content(is_mixed_content)
   {
   }
@@ -667,7 +666,10 @@ namespace textbook {
           }
         }
         else if (children.empty()) {
-          nl.push_back(_grove.make_text_node(""));
+          auto* txtnd = _grove.make_text_node("");
+          txtnd->set_property(CommonProps::k_attr_name,
+                              attrspecs[attrc].name());
+          nl.push_back(txtnd);
         }
         else {
           unparent_nodes(children);
@@ -873,7 +875,7 @@ namespace textbook {
         // Don't create explicit "@p" tags
         if (tag != k_p_tag) {
           auto nd = _grove.make_elt_node(tag);
-          nd->set_property(CommonProps::k_attrs, nl);
+          nd->set_attributes(nl);
           if (idstr) {
             nd->set_property(CommonProps::k_id, *idstr);
           }
@@ -889,7 +891,7 @@ namespace textbook {
         finish_paragraph();
 
         auto nd = _grove.make_elt_node(tag);
-        nd->set_property(CommonProps::k_attrs, nl);
+        nd->set_attributes(nl);
         if (idstr) {
           nd->set_property(CommonProps::k_id, *idstr);
         }
@@ -906,7 +908,7 @@ namespace textbook {
         }
 
         auto nd = _grove.make_elt_node(tag);
-        nd->set_property(CommonProps::k_attrs, nl);
+        nd->set_attributes(nl);
         if (idstr) {
           nd->set_property(CommonProps::k_id, *idstr);
         }
