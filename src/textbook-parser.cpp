@@ -468,19 +468,19 @@ namespace textbook {
         parse_at_form();
       }
       else if (c == '\n') {
-        auto text = _text.str();
+        auto text = _text._stream.str();
 
         if (!text.empty() && text.back() == '\n') {
           finish_paragraph();
           skip_ws();
         }
         else {
-          _text << c;
+          _text._stream << c;
           nextc();
         }
       }
       else {
-        _text << c;
+        _text._stream << c;
         nextc();
       }
     }
@@ -505,16 +505,16 @@ namespace textbook {
   void Parser::push_text()
   {
     if (_is_mixed_content) {
-      auto text = _text.str();
+      auto text = _text._stream.str();
       if (!text.empty()) {
         push_p_nd();
         _grovebuilder.add_node(_grove.make_text_node(text));
 
-        _text.clear();
+        _text = TextBuffer();
       }
     }
     else {
-      _text.clear();
+      _text = TextBuffer();
     }
   }
 
@@ -730,19 +730,19 @@ namespace textbook {
 
   void Parser::parse_at()
   {
-    _text << '@';
+    _text._stream << '@';
     nextc();
   }
 
   void Parser::parse_openbrace()
   {
-    _text << '{';
+    _text._stream << '{';
     nextc();
   }
 
   void Parser::parse_closebrace()
   {
-    _text << '}';
+    _text._stream << '}';
     nextc();
   }
 

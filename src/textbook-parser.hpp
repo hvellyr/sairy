@@ -81,6 +81,10 @@ namespace textbook {
   };
 
 
+  struct TextBuffer {
+    std::stringstream _stream;
+  };
+
   using VariableEnv = std::map<std::string, std::string>;
   using Catalog = std::unordered_map<std::string, std::unique_ptr<DocSpec>>;
 
@@ -89,7 +93,7 @@ namespace textbook {
     std::vector<fs::path> _catalog_path;
     std::shared_ptr<Stream> _stream;
     std::list<std::shared_ptr<Stream>> _stream_stack;
-    std::stringstream _text;
+    TextBuffer _text;
     eyestep::Grove& _grove;
     GroveBuilder& _grovebuilder;
     VariableEnv& _vars;
