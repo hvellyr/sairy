@@ -12,7 +12,7 @@ namespace eyestep {
 
 class IScanner;
 
-std::vector<boost::program_options::options_description> scanner_options();
+boost::program_options::options_description scanner_options();
 
 std::unique_ptr<eyestep::IScanner>
 make_scanner_for_file(const boost::filesystem::path& file,

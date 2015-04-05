@@ -121,6 +121,8 @@ add_definitions(-DSEXP_USE_KEYWORDS=1)
 
 add_executable(sairy
   main.cpp
+  processor-setup.cpp
+  processor-setup.hpp
   scanner-setup.cpp
   scanner-setup.hpp
   scanner.hpp

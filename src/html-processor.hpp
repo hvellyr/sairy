@@ -9,6 +9,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/optional/optional.hpp>
+#include <boost/program_options.hpp>
 
 #include <list>
 #include <map>
@@ -50,8 +51,8 @@ namespace detail {
   };
 
   using RefRegistry = std::unordered_map<std::string, std::string>;
-  using PortTuple = std::tuple<std::unique_ptr<html::Writer>,
-                               boost::filesystem::path>;
+  using PortTuple =
+    std::tuple<std::unique_ptr<html::Writer>, boost::filesystem::path>;
 
   class HtmlRenderContext {
     std::unique_ptr<html::Writer> _port;
@@ -83,12 +84,15 @@ namespace detail {
 
 class HtmlProcessor : public AbstractProcessor<HtmlProcessor> {
   detail::HtmlRenderContext _ctx;
+  bool _verbose;
 
 public:
   HtmlProcessor();
+  HtmlProcessor(const boost::program_options::variables_map& args);
 
   std::string proc_id() const override;
   std::string default_output_extension() const override;
+  boost::program_options::options_description program_options() const override;
 
   const IFoProcessor<HtmlProcessor>*
   lookup_fo_processor(const std::string& fo_classname) const override;
@@ -98,6 +102,8 @@ public:
 
   detail::HtmlRenderContext& ctx();
   html::Writer& writer();
+
+  bool is_verbose() const;
 };
 
 

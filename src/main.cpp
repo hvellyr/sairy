@@ -12,8 +12,7 @@
 #include "style-engine.hpp"
 #include "utils.hpp"
 
-#include "debug-processor.hpp"
-#include "html-processor.hpp"
+#include "processor-setup.hpp"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
@@ -69,18 +68,6 @@ eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
   return grove;
 }
 
-std::unique_ptr<eyestep::IProcessor> find_processor(const std::string& backend)
-{
-  if (backend == "debug") {
-    return estd::make_unique<eyestep::DebugProcessor>();
-  }
-  else if (backend == "html") {
-    return estd::make_unique<eyestep::HtmlProcessor>();
-  }
-
-  return nullptr;
-}
-
 fs::path deduce_output_file(const std::string& outf,
                             const std::vector<fs::path>& sources,
                             const std::string& default_ext)
@@ -134,11 +121,11 @@ int main(int argc, char** argv)
     all_options.add(desc).add(hidden);
     visible_options.add(desc);
 
-    for (const auto& opts : eyestep::scanner_options()) {
-      all_options.add(opts);
-      visible_options.add(opts);
-    }
+    all_options.add(eyestep::scanner_options());
+    visible_options.add(eyestep::scanner_options());
 
+    all_options.add(eyestep::processor_options());
+    visible_options.add(eyestep::processor_options());
 
     po::positional_options_description p;
     p.add("input-file", -1);
@@ -187,7 +174,7 @@ int main(int argc, char** argv)
     }
 
     if (!templ_path.empty()) {
-      auto processor = find_processor(backend);
+      auto processor = eyestep::make_processor_for_file(backend, vm);
       if (processor) {
         processor->set_output_file(
           deduce_output_file(outf, sources,

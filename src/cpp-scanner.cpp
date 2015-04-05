@@ -24,6 +24,8 @@
 namespace eyestep {
 
 namespace fs = boost::filesystem;
+namespace po = boost::program_options;
+
 
 namespace {
 
@@ -189,7 +191,7 @@ CppScanner::CppScanner() : _verbose(false)
 {
 }
 
-CppScanner::CppScanner(const boost::program_options::variables_map& args)
+CppScanner::CppScanner(const po::variables_map& args)
   : _verbose(false)
 {
   if (!args.empty()) {
@@ -235,10 +237,8 @@ std::unordered_set<std::string> CppScanner::supported_extensions() const
 }
 
 
-boost::program_options::options_description CppScanner::program_options() const
+po::options_description CppScanner::program_options() const
 {
-  namespace po = boost::program_options;
-
   std::string opts_title =
     std::string("C++ parser [selector: '") + scanner_id() + "']";
   po::options_description desc(opts_title);
