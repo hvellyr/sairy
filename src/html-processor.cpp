@@ -284,10 +284,6 @@ namespace {
                                 const IFormattingObject* fo)
   {
     auto fontsize = processor->property_or_none<fo::Dimen>(fo, "font-size");
-    // auto fontWeight =
-    //   processor->property_or_none<std::string>(fo, "font-weight");
-    // auto fontPosture =
-    //   processor->property_or_none<std::string>(fo, "font-posture");
     auto fontcaps = processor->property_or_none<std::string>(fo, "font-caps");
     auto posptshift =
       processor->property_or_none<fo::Dimen>(fo, "position-point-shift");
@@ -340,6 +336,11 @@ namespace {
                     const std::string& desc, const html::Doctype& doctype,
                     Functor functor)
   {
+    if (processor->is_verbose()) {
+      std::cout << processor->proc_id() << ": Create output file: '"
+                << path.string() << "'" << std::endl;
+    }
+
     detail::HtmlRenderContext& ctx = processor->ctx();
 
     auto port = estd::make_unique<html::Writer>(doctype, k_SAIRY_GENERATOR);
@@ -374,9 +375,6 @@ namespace {
         processor->ctx().port().write_text(boost::to_upper_copy(str));
       }
       else if (capsstyle == detail::k_small_caps) {
-        // html::Tag with_Tag(processor->ctx().port(), "span",
-        //                    {html::Attr{"style", "font-variant:
-        //                    small-caps;"}});
         processor->ctx().port().write_text(str);
       }
     }
@@ -565,13 +563,16 @@ namespace {
 } // ns anon
 
 
-HtmlProcessor::HtmlProcessor()
+HtmlProcessor::HtmlProcessor() : _verbose(false)
 {
 }
 
 
-HtmlProcessor::HtmlProcessor(const po::variables_map& args)
+HtmlProcessor::HtmlProcessor(const po::variables_map& args) : _verbose(false)
 {
+  if (!args.empty()) {
+    _verbose = args["verbose"].as<bool>();
+  }
 }
 
 
@@ -640,5 +641,10 @@ html::Writer& HtmlProcessor::writer()
   return _ctx.port();
 }
 
+
+bool HtmlProcessor::is_verbose() const
+{
+  return _verbose;
+}
 
 } // ns eyestep

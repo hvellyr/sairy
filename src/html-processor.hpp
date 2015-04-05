@@ -51,8 +51,8 @@ namespace detail {
   };
 
   using RefRegistry = std::unordered_map<std::string, std::string>;
-  using PortTuple = std::tuple<std::unique_ptr<html::Writer>,
-                               boost::filesystem::path>;
+  using PortTuple =
+    std::tuple<std::unique_ptr<html::Writer>, boost::filesystem::path>;
 
   class HtmlRenderContext {
     std::unique_ptr<html::Writer> _port;
@@ -84,6 +84,7 @@ namespace detail {
 
 class HtmlProcessor : public AbstractProcessor<HtmlProcessor> {
   detail::HtmlRenderContext _ctx;
+  bool _verbose;
 
 public:
   HtmlProcessor();
@@ -101,6 +102,8 @@ public:
 
   detail::HtmlRenderContext& ctx();
   html::Writer& writer();
+
+  bool is_verbose() const;
 };
 
 
