@@ -61,6 +61,7 @@ const std::string CommonProps::k_gi = "gi";
 const std::string CommonProps::k_id = "id";
 const std::string CommonProps::k_parent = "parent";
 const std::string CommonProps::k_source = "source";
+const std::string CommonProps::k_value = "value";
 
 
 //------------------------------------------------------------------------------
@@ -163,6 +164,79 @@ void Node::set_property(const std::string& propname, Node* nd)
 }
 
 
+Nodes Node::attributes() const
+{
+  return property<Nodes>(CommonProps::k_attrs);
+}
+
+void Node::add_attribute(const std::string& attrname, Node* nd)
+{
+  nd->set_property(CommonProps::k_attr_name, attrname);
+
+  if (!has_property(CommonProps::k_attrs)) {
+    Nodes nl;
+    nl.push_back(nd);
+    set_property(CommonProps::k_attrs, nl);
+  }
+  else {
+    if (Nodes* nds = boost::get<Nodes>(&_properties[CommonProps::k_attrs])) {
+      nds->push_back(nd);
+    }
+  }
+}
+
+void Node::add_attribute(const std::string& attrname, const std::string& value)
+{
+  add_attribute(attrname, grove()->make_text_node(value));
+}
+
+void Node::add_attribute(const std::string& attrname, int value)
+{
+  add_attribute(attrname, grove()->make_int_node(value));
+}
+
+void Node::add_attribute(const std::string& attrname, const Nodes& nl)
+{
+  for (auto* nd : nl) {
+    add_attribute(attrname, nd);
+  }
+}
+
+void Node::set_attributes(const Nodes& nl)
+{
+#ifndef NDEBUG
+  for (const auto nd : nl) {
+    assert(nd->has_property(CommonProps::k_attr_name));
+  }
+#endif
+  set_property(CommonProps::k_attrs, nl);
+}
+
+
+bool Node::has_attribute(const std::string& attrname) const
+{
+  for (const auto& attr : attributes()) {
+    if (attr->has_property(CommonProps::k_attr_name) &&
+        attr->property<std::string>(CommonProps::k_attr_name) == attrname) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+const Node* Node::attribute(const std::string& attrname) const
+{
+  for (const auto attrnd : attributes()) {
+    if (attrnd->has_property(CommonProps::k_attr_name) &&
+        attrnd->property<std::string>(CommonProps::k_attr_name) == attrname) {
+      return attrnd;
+    }
+  }
+  return nullptr;
+}
+
+
 void Node::add_child_node(Node* child)
 {
   add_node(CommonProps::k_children, child);
@@ -243,6 +317,14 @@ Node* Grove::make_text_node(const std::string& data)
 {
   auto* nd = make_node(text_class_definition());
   nd->set_property(CommonProps::k_data, data);
+  return nd;
+}
+
+
+Node* Grove::make_int_node(int value)
+{
+  auto* nd = make_node(int_class_definition());
+  nd->set_property(CommonProps::k_value, value);
   return nd;
 }
 
