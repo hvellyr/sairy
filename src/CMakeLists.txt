@@ -31,6 +31,8 @@ target_compile_options(grove
 
 #------------------------------------------------------------------------------
 add_library(cppscanner
+  cpp-comments.cpp
+  cpp-comments.hpp
   cpp-lang.cpp
   cpp-lang.hpp
   cpp-scanner.cpp
