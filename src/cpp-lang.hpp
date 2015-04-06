@@ -104,6 +104,11 @@ public:
   }
 
   Type type() const { return Type(clang_getCursorType(_cursor)); }
+
+  std::string raw_comment() const
+  {
+    return to_string(clang_Cursor_getRawCommentText(_cursor));
+  }
 };
 
 
