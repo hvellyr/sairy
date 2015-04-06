@@ -65,7 +65,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 if(DEFINED Boost_INCLUDE_DIR)
   get_filename_component(Boost_INCLUDE_DIR ${Boost_INCLUDE_DIR} ABSOLUTE)
 endif()
-find_package(Boost 1.54 REQUIRED COMPONENTS program_options system filesystem date_time)
+find_package(Boost 1.54
+  REQUIRED COMPONENTS program_options system filesystem date_time regex)
 
 find_package(LibClang 3.6 REQUIRED)
 
