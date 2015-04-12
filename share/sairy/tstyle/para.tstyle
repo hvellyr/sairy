@@ -1,0 +1,75 @@
+;;; Copyright (c) 2015 Gregor Klinke
+;;; All rights reserved.
+
+(use 'common)
+
+
+;; #-----------------------------------------------------------------------------
+;; # definitions and lists
+
+(element definitions
+  (make display-group
+    space-before: (dimen 7 pt)
+    space-after: (dimen 7 pt)
+    (process-children-trim)))
+
+(element (definitions p item)
+  (make line-field
+    field-width: (dimen 6 em)
+    field-align: 'left
+    (process-node-list-trim (attribute "text" (current-node)))))
+
+(element (definitions p)
+  (let ((item (node-list-first (children (current-node)))))
+    (if (equal? (gi item) 'item)
+        (make paragraph
+          first-line-start-indent: (dimen -6 em)
+          start-indent: (dimen 6 em)
+          (sosofo-append
+           (process-node-list (node-list-first (children (current-node))))
+           (process-node-list-trim (node-list-rest (children (current-node))))))
+        (make paragraph
+          first-line-start-indent: (dimen 0 em)
+          start-indent: (dimen 6 em)
+          (process-children-trim)
+          ) ))
+  )
+
+
+(element itemize
+  (make display-group
+    space-before: (dimen 7 pt)
+    space-after: (dimen 7 pt)
+    (process-children-trim)))
+
+(element (itemize p item)
+  (make line-field
+    field-width: (dimen 1 em)
+    field-align: 'left
+    (let ((txt (attribute "text" (current-node))))
+      (if (node-list-empty? txt)
+          (literal "•")
+          (process-node-list-trim txt) )) ))
+
+(element (itemize p)
+  (let ((item (node-list-first (children (current-node)))))
+    (if (equal? (gi item) 'item)
+        (make paragraph
+          first-line-start-indent: (dimen -1 em)
+          start-indent: (dimen 1 em)
+          (sosofo-append
+           (process-node-list (node-list-first (children (current-node))))
+           (process-node-list-trim (node-list-rest (children (current-node))))))
+        (make paragraph
+          first-line-start-indent: (dimen 0 em)
+          start-indent: (dimen 1 em)
+          (process-children-trim)
+          ) ))
+  )
+
+
+(element p
+  (make paragraph
+    mandoc.section: "para"
+    first-line-start-indent: (dimen 0 em)
+    (process-children)))
