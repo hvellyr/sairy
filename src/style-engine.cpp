@@ -4,6 +4,7 @@
 #include "scm-context.hpp"
 #include "sosofo.hpp"
 #include "style-engine.hpp"
+#include "utils.hpp"
 
 #include <boost/range/adaptor/transformed.hpp>
 
@@ -18,12 +19,13 @@ namespace fs = boost::filesystem;
 
 namespace {
   std::unique_ptr<ISchemeContext>
-  setup_scheme_context(const std::vector<fs::path>& prefix_paths)
+  setup_scheme_context(const std::string& prefix_path)
   {
     auto ctx = create_scheme_context();
 
     auto paths = boost::copy_range<std::vector<fs::path>>(
-      prefix_paths | boost::adaptors::transformed(
+      eyestep::utils::split_paths(prefix_path)
+      | boost::adaptors::transformed(
                        [](const fs::path& path) { return path / "lib"; }));
 
     ctx->initialize(paths);
@@ -40,11 +42,12 @@ namespace {
 } // ns anon
 
 
-StyleEngine::StyleEngine(const std::vector<fs::path>& prefix_paths,
+StyleEngine::StyleEngine(const std::string& prefix_path,
                          const std::string& backend_id)
   : _backend_id(backend_id)
 {
-  _ctx = setup_scheme_context(prefix_paths);
+  _ctx = setup_scheme_context(prefix_path);
+  _ctx->define_variable("%sairy-prefix-paths%", prefix_path);
 }
 
 

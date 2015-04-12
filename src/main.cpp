@@ -180,8 +180,7 @@ int main(int argc, char** argv)
           deduce_output_file(outf, sources,
                              processor->default_output_extension()));
 
-        eyestep::StyleEngine engine(eyestep::utils::split_paths(prefix_path),
-                                    backend);
+        eyestep::StyleEngine engine(prefix_path, backend);
         if (engine.load_style(templ_path)) {
           auto sosofo = std::move(engine.process_node(grove.root_node()));
 

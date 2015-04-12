@@ -8,6 +8,7 @@
 #include "nodes.hpp"
 #include "scm-context.hpp"
 #include "sosofo.hpp"
+#include "utils.hpp"
 
 #include "chibi/eval.h"
 #include "chibi/sexp.h"
@@ -16,6 +17,7 @@
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 
 #include <iostream>
 #include <memory>
@@ -1187,10 +1189,36 @@ namespace {
 
   //----------------------------------------------------------------------------
 
+  std::vector<fs::path> prepare_tstyle_search_path(const std::string& prefix_path)
+  {
+    return boost::copy_range<std::vector<fs::path>>(
+      eyestep::utils::split_paths(prefix_path)
+      | boost::adaptors::transformed(
+        [](const fs::path& path) { return path / "tstyle"; }));
+  }
+
+  boost::optional<fs::path> search_in_path(const std::string& resource,
+                                           const fs::path& parent_path,
+                                           const std::string& prefix_path)
+  {
+    std::vector<fs::path> paths(prepare_tstyle_search_path(prefix_path));
+    paths.insert(paths.begin(), parent_path);
+
+    for (const auto& p : paths) {
+      auto src_path = (fs::path(p) / resource).replace_extension(".tstyle");
+      //std::cout << "test " << src_path << std::endl;
+      if (fs::exists(src_path)) {
+        return src_path;
+      }
+    }
+
+    return boost::none;
+  }
+
   sexp func_use(sexp ctx, sexp self, sexp_sint_t n, sexp res_arg)
   {
-    sexp_gc_var3(result, source, nm);
-    sexp_gc_preserve3(ctx, result, source, nm);
+    sexp_gc_var4(result, source, nm, nm2);
+    sexp_gc_preserve4(ctx, result, source, nm, nm2);
 
     result = SEXP_VOID;
 
@@ -1200,12 +1228,25 @@ namespace {
                                nm = sexp_intern(ctx, "%style-parent-path%", -1),
                                SEXP_VOID);
       if (sexp_stringp(path)) {
-        auto parent_path = std::string(sexp_string_data(path));
-        auto src_path = (fs::path(parent_path) / *resource)
-                          .replace_extension(".tstyle")
-                          .string();
-        source = sexp_c_string(ctx, src_path.c_str(), src_path.size());
-        result = sexp_load(ctx, source, sexp_context_env(ctx));
+        sexp tstyle_paths =
+          sexp_env_ref(ctx, sexp_context_env(ctx),
+                       nm2 = sexp_intern(ctx, "%sairy-prefix-paths%", -1),
+                       SEXP_VOID);
+        auto tstyle_paths_str = sexp_stringp(tstyle_paths)
+                                  ? std::string(sexp_string_data(tstyle_paths))
+                                  : std::string();
+
+        auto src_path =
+          search_in_path(*resource, std::string(sexp_string_data(path)),
+                         tstyle_paths_str);
+        if (src_path) {
+          auto src_str = src_path->string();
+          source = sexp_c_string(ctx, src_str.c_str(), src_str.size());
+          result = sexp_load(ctx, source, sexp_context_env(ctx));
+        }
+        else {
+          result = sexp_user_exception(ctx, self, "no such file", path);
+        }
       }
       else {
         result =
@@ -1216,7 +1257,7 @@ namespace {
       result = sexp_user_exception(ctx, self, "not a symbol", res_arg);
     }
 
-    sexp_gc_release3(ctx);
+    sexp_gc_release4(ctx);
 
     return result;
   }
