@@ -1,0 +1,146 @@
+;;; Copyright (c) 2015 Gregor Klinke
+;;; All rights reserved.
+
+(use 'common)
+
+(element type
+  (let ((nm (attribute "name" (current-node)))
+        (const? (attribute "const?" (current-node))))
+    (sosofo-append
+     (if (equal? const? 1)
+         (literal "const ")
+         (empty-sosofo))
+     (process-node-list-trim nm))))
+
+(element return-type
+  (let ((nm (attribute "name" (current-node)))
+        (const? (attribute "const?" (current-node))))
+    (sosofo-append
+     (if (equal? const? 1)
+         (literal "const ")
+         (empty-sosofo))
+     (process-node-list-trim nm))))
+
+(element (parameters parameter)
+  (let ((nm (attribute "name" (current-node)))
+        (ty (select-elements (children (current-node)) 'type)))
+    (sosofo-append
+     (process-node-list ty)
+     (literal " ")
+     (make sequence
+       font-posture: 'italic
+       (process-node-list nm)))))
+
+(element parameters
+  (node-list-reduce (select-elements (children (current-node)) 'parameter)
+                    (lambda (sosofo snl)
+                      (sosofo-append sosofo
+                                     (if (not (absolute-first-element-sibling? snl))
+                                         (literal ", ")
+                                         (empty-sosofo))
+                                     (process-node-list snl)))
+                    (empty-sosofo)))
+
+(element function
+  (let* ((nm (attribute "name" (current-node)))
+         (namespaces (attribute "namespaces" (current-node)))
+         (snlc (children (current-node)))
+         (rettype (select-elements snlc 'return-type))
+         (params (select-elements snlc 'parameters))
+         (desc (select-elements snlc 'desc)))
+    (make display-group
+      space-before: 10pt
+
+      (sosofo-append
+       (make paragraph
+         (sosofo-append
+          (process-node-list rettype)
+          (literal " ")
+          (make sequence
+            font-weight: 'bold
+            (process-node-list-trim nm))
+          (literal "(")
+          (process-node-list params)
+          (literal ")")))
+       (if (node-list-empty? namespaces)
+           (empty-sosofo)
+           (make paragraph
+             start-indent: 40pt
+             (sosofo-append
+              (literal "in namespace: ")
+              (process-node-list namespaces))))
+       (make display-group
+         start-indent: 10pt
+         (with-mode desc-mode
+           (process-node-list desc))))
+    )))
+
+
+(element namespace
+  (let* ((nm (attribute "name" (current-node)))
+         (namespaces (attribute "namespaces" (current-node)))
+         (snlc (children (current-node)))
+         (desc (select-elements snlc 'desc)))
+    (make display-group
+      space-before: 10pt
+
+      (sosofo-append
+       (make paragraph
+         (sosofo-append
+          (literal "namespace ")
+          (make sequence
+            font-weight: 'bold
+            (process-node-list-trim nm))
+          ))
+       (if (node-list-empty? namespaces)
+           (empty-sosofo)
+           (make paragraph
+             start-indent: 40pt
+             (sosofo-append
+              (literal "in namespace: ")
+              (process-node-list namespaces))))
+       (make display-group
+         start-indent: 10pt
+         (with-mode desc-mode
+           (process-node-list desc))))
+    )))
+
+
+(element variable
+  (let* ((nm (attribute "name" (current-node)))
+         (namespaces (attribute "namespaces" (current-node)))
+         (snlc (children (current-node)))
+         (type (select-elements snlc 'type))
+         (desc (select-elements snlc 'desc)))
+    (make display-group
+      space-before: 10pt
+
+      (sosofo-append
+       (make paragraph
+         (sosofo-append
+          (process-node-list type)
+          (literal " ")
+          (make sequence
+            font-weight: 'bold
+            (process-node-list-trim nm))
+          ))
+       (if (node-list-empty? namespaces)
+           (empty-sosofo)
+           (make paragraph
+             start-indent: 40pt
+             (sosofo-append
+              (literal "in namespace: ")
+              (process-node-list namespaces))))
+       (make display-group
+         start-indent: 10pt
+         (with-mode desc-mode
+           (process-node-list desc))))
+      )))
+
+(mode desc-mode
+  (element prm
+    (format-bold (attribute "text" (current-node))))
+
+  (element val
+    (format-bold (attribute "text" (current-node))))
+  )
