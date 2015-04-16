@@ -1267,11 +1267,12 @@ namespace {
 
   //----------------------------------------------------------------------------
 
-  std::vector<fs::path> prepare_tstyle_search_path(const std::string& prefix_path)
+  std::vector<fs::path>
+  prepare_tstyle_search_path(const std::string& prefix_path)
   {
     return boost::copy_range<std::vector<fs::path>>(
-      eyestep::utils::split_paths(prefix_path)
-      | boost::adaptors::transformed(
+      eyestep::utils::split_paths(prefix_path) |
+      boost::adaptors::transformed(
         [](const fs::path& path) { return path / "tstyle"; }));
   }
 
@@ -1284,7 +1285,7 @@ namespace {
 
     for (const auto& p : paths) {
       auto src_path = (fs::path(p) / resource).replace_extension(".tstyle");
-      //std::cout << "test " << src_path << std::endl;
+      // std::cout << "test " << src_path << std::endl;
       if (fs::exists(src_path)) {
         return src_path;
       }

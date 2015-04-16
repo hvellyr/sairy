@@ -1,8 +1,6 @@
 ;;; Copyright (c) 2015 Gregor Klinke
 ;;; All rights reserved.
 
-(import (srfi 28))
-
 (use 'common)
 
 (define (format-bibref snl)
