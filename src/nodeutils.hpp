@@ -29,4 +29,6 @@ void serialize(std::ostream& os, const Node* nd, bool pretty_printing = true,
 
 std::string node_data(const Node* nd);
 
+ConstNodes elements_with_id(const Grove* grove, const std::string& id);
+
 } // ns eyestep

@@ -593,7 +593,7 @@ namespace {
 
   sexp func_empty_node_list(sexp ctx, sexp self, sexp_sint_t n)
   {
-    return make_nodelist(ctx, new NodeList());
+    return make_nodelist(ctx, new NodeList);
   }
 
 
@@ -883,6 +883,47 @@ namespace {
   }
 
 
+  sexp func_elements_with_id(sexp ctx, sexp self, sexp_sint_t n, sexp id_arg,
+                             sexp nl_arg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_VOID;
+
+    std::string key;
+    if (sexp_stringp(id_arg)) {
+      auto id = std::string(sexp_string_data(id_arg));
+
+      if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
+        ConstNodes nl_result = elements_with_id(node->grove(), id);
+
+        if (!nl_result.empty()) {
+          result = make_nodelist(ctx, new NodeList(nl_result));
+        }
+        else {
+          result = make_nodelist(ctx, new NodeList);
+        }
+      }
+      else {
+        result =
+          sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
+      }
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a string", id_arg);
+    }
+
+    if (result == SEXP_VOID) {
+      result = make_nodelist(ctx, new NodeList);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
   sexp func_data(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
   {
     sexp_gc_var1(result);
@@ -966,6 +1007,9 @@ namespace {
     sexp_define_foreign(ctx, sexp_context_env(ctx),
                         "absolute-last-element-sibling?", 1,
                         &func_abs_last_element_sibling_p);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "elements-with-id", 2,
+                        &func_elements_with_id);
 
     sexp_define_foreign(ctx, sexp_context_env(ctx), "data", 1, &func_data);
 
