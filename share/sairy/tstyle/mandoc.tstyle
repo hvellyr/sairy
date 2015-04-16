@@ -221,6 +221,28 @@
     (format-bibref (current-node))))
 
 
+(define (render-ref-to-node idref nd)
+  (case (gi nd)
+    ((section) (make sequence
+                 html.ref: idref
+                 (sosofo-append
+                  (literal "Section “")
+                  (process-node-list (attribute "title" nd))
+                  (literal "”"))))
+    (else (empty-sosofo))))
+
+(element ref
+  (let* ((idref (data (attribute "ref" (current-node))))
+         (nl (if (> (string-length idref) 0)
+                 (elements-with-id idref (current-node))
+                 (empty-sosofo))))
+    (node-list-reduce nl
+                      (lambda (sosofo snl)
+                        (sosofo-append sosofo
+                                       (render-ref-to-node idref snl)))
+                      (empty-sosofo))
+    ))
+
 
 (root
     (process-children))
