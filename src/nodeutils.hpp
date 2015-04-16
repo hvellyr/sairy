@@ -26,4 +26,7 @@ TraverseRecursion node_traverse(const Node* root,
 void serialize(std::ostream& os, const Node* nd, bool pretty_printing = true,
                int depth = 0);
 
+
+std::string node_data(const Node* nd);
+
 } // ns eyestep

@@ -5,9 +5,6 @@
 (use 'bibref)
 (use 'para)
 
-(define (node-list-data nl)
-  "")
-
 
 (element opt
   (format-bold (attribute "text" (current-node))))
@@ -102,10 +99,10 @@
 
       (sosofo-append
        (make display-group
-         mandoc.name: (node-list-data (attribute "name" (current-node)))
-         mandoc.description: (node-list-data (attribute "desc" (current-node)))
-         mandoc.section: (node-list-data (attribute "section" (current-node)))
-         mandoc.author: (node-list-data author-first)
+         mandoc.name: (data (attribute "name" (current-node)))
+         mandoc.description: (data (attribute "desc" (current-node)))
+         mandoc.section: (data (attribute "section" (current-node)))
+         mandoc.author: (data author-first)
 
          (sosofo-append
           (make paragraph

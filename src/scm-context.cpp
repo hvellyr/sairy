@@ -6,6 +6,7 @@
 #include "nodeclass.hpp"
 #include "nodelist.hpp"
 #include "nodes.hpp"
+#include "nodeutils.hpp"
 #include "scm-context.hpp"
 #include "sosofo.hpp"
 #include "utils.hpp"
@@ -20,6 +21,7 @@
 #include <boost/range/adaptor/transformed.hpp>
 
 #include <iostream>
+#include <sstream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -881,6 +883,36 @@ namespace {
   }
 
 
+  sexp func_data(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_VOID;
+
+    if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
+      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
+
+      std::stringstream ss;
+      NodeList p = nl->clone();
+      while (!p.empty()) {
+        ss << node_data(p.head());
+        p = p.rest();
+      }
+
+      auto data = ss.str();
+      result = sexp_c_string(ctx, data.c_str(), data.size());
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a node-list", nl_arg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
   void init_nodelist_functions(sexp ctx)
   {
     sexp_gc_var3(nm, ty, op);
@@ -934,6 +966,8 @@ namespace {
     sexp_define_foreign(ctx, sexp_context_env(ctx),
                         "absolute-last-element-sibling?", 1,
                         &func_abs_last_element_sibling_p);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "data", 1, &func_data);
 
     sexp_gc_release3(ctx);
   }

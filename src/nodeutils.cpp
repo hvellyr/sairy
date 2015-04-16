@@ -7,6 +7,7 @@
 #include "nodeclass.hpp"
 
 #include <iostream>
+#include <sstream>
 #include <string>
 
 
@@ -223,6 +224,21 @@ void serialize(std::ostream& os, const Node* nd, bool pretty_printing,
 {
   auto pp = JsPrinter{os, pretty_printing};
   serialize(pp, nd, depth);
+}
+
+
+//------------------------------------------------------------------------------
+
+std::string node_data(const Node* base_nd)
+{
+  std::stringstream ss;
+
+  node_traverse(base_nd, [&ss](const Node* nd, int /*depth*/) {
+    ss << nd->property<std::string>(CommonProps::k_data);
+    return TraverseRecursion::k_recurse;
+  }, 0);
+
+  return ss.str();
 }
 
 

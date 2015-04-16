@@ -4,6 +4,7 @@
 #include "estd/memory.hpp"
 #include "nodeclass.hpp"
 #include "nodes.hpp"
+#include "nodeutils.hpp"
 #include "textbook-model.hpp"
 #include "textbook-parser.hpp"
 #include "utils.hpp"
@@ -92,12 +93,6 @@ namespace textbook {
       }
 
       return boost::none;
-    }
-
-
-    std::string node_data(const Node* nd)
-    {
-      return nd->property<std::string>(CommonProps::k_data);
     }
 
 
