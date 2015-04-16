@@ -2,10 +2,11 @@
 // All rights reserved.
 
 #include "textbook-scanner.hpp"
-#include "nodes.hpp"
 #include "nodeclass.hpp"
-#include "textbook-parser.hpp"
+#include "nodes.hpp"
+#include "nodeutils.hpp"
 #include "textbook-model.hpp"
+#include "textbook-parser.hpp"
 #include "utils.hpp"
 
 #include <boost/range/iterator.hpp>

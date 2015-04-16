@@ -4,6 +4,7 @@
 #include "estd/memory.hpp"
 #include "nodeclass.hpp"
 #include "nodes.hpp"
+#include "nodeutils.hpp"
 #include "processor.hpp"
 #include "scanner-setup.hpp"
 #include "scanner.hpp"

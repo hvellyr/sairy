@@ -5,6 +5,7 @@
 
 #include "../nodeclass.hpp"
 #include "../nodes.hpp"
+#include "../nodeutils.hpp"
 
 #include <boost/range/irange.hpp>
 
