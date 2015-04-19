@@ -90,8 +90,10 @@ TEST_CASE("Attributes add text nodes", "[nodes, attributes]")
 
   REQUIRE(nd->attributes().size() == 1);
   REQUIRE(nd->attributes()[0]->classname() == "text");
-  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_attr_name) == "gaz");
-  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_data) == "fieps");
+  REQUIRE(nd->attributes()[0]->property<std::string>(
+            CommonProps::k_attr_name) == "gaz");
+  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_data) ==
+          "fieps");
 
   REQUIRE(nd->has_attribute("gaz"));
   REQUIRE(!nd->has_attribute("boo"));
@@ -109,8 +111,10 @@ TEST_CASE("Attributes add nodes", "[nodes, attributes]")
 
   REQUIRE(nd->attributes().size() == 1);
   REQUIRE(nd->attributes()[0]->classname() == "element");
-  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_attr_name) == "gaz");
-  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_gi) == "boo");
+  REQUIRE(nd->attributes()[0]->property<std::string>(
+            CommonProps::k_attr_name) == "gaz");
+  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_gi) ==
+          "boo");
 
   REQUIRE(nd->has_attribute("gaz"));
   REQUIRE(!nd->has_attribute("boo"));
@@ -123,7 +127,7 @@ TEST_CASE("Attributes add nodelist", "[nodes, attributes]")
 
   auto* nd = grove.make_elt_node("foo");
 
-  const auto texts = std::vector<std::string>{ "hello", " ", "world!" };
+  const auto texts = std::vector<std::string>{"hello", " ", "world!"};
 
   Nodes nodes;
   for (const auto txt : texts) {
@@ -134,8 +138,10 @@ TEST_CASE("Attributes add nodelist", "[nodes, attributes]")
   REQUIRE(nd->attributes().size() == texts.size());
   for (auto i : boost::irange(0, int(texts.size()))) {
     REQUIRE(nd->attributes()[i]->classname() == "text");
-    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_attr_name) == "gaz");
-    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) == texts[i]);
+    REQUIRE(nd->attributes()[i]->property<std::string>(
+              CommonProps::k_attr_name) == "gaz");
+    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) ==
+            texts[i]);
   }
 
   REQUIRE(nd->has_attribute("gaz"));
@@ -153,8 +159,8 @@ TEST_CASE("Attributes setting attributes removes previous attributes", "[nodes, 
   REQUIRE(nd->attributes().size() == 1);
   REQUIRE(nd->has_attribute("gaz"));
 
-  const auto texts = std::vector<std::string>{ "hello", " ", "world!" };
-  const auto attrnms = std::vector<std::string>{ "a", "b", "c" };
+  const auto texts = std::vector<std::string>{"hello", " ", "world!"};
+  const auto attrnms = std::vector<std::string>{"a", "b", "c"};
 
   Nodes nodes;
   int ai = 0;
@@ -168,8 +174,10 @@ TEST_CASE("Attributes setting attributes removes previous attributes", "[nodes, 
   REQUIRE(nd->attributes().size() == texts.size());
   for (auto i : boost::irange(0, int(texts.size()))) {
     REQUIRE(nd->attributes()[i]->classname() == "text");
-    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_attr_name) == attrnms[i]);
-    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) == texts[i]);
+    REQUIRE(nd->attributes()[i]->property<std::string>(
+              CommonProps::k_attr_name) == attrnms[i]);
+    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) ==
+            texts[i]);
   }
 
   REQUIRE(!nd->has_attribute("gaz"));
@@ -185,8 +193,8 @@ TEST_CASE("Attributes access", "[nodes, attributes]")
 
   auto* nd = grove.make_elt_node("foo");
 
-  const auto texts = std::vector<std::string>{ "hello", " ", "world!" };
-  const auto attrnms = std::vector<std::string>{ "a", "b", "c" };
+  const auto texts = std::vector<std::string>{"hello", " ", "world!"};
+  const auto attrnms = std::vector<std::string>{"a", "b", "c"};
 
   Nodes nodes;
   int ai = 0;
