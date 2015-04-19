@@ -20,6 +20,8 @@ add_library(grove
   nodelist.hpp
   nodes.cpp
   nodes.hpp
+  nodeutils.cpp
+  nodeutils.hpp
 )
 target_include_directories(grove
   PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")

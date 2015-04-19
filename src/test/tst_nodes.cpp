@@ -5,6 +5,7 @@
 
 #include "../nodeclass.hpp"
 #include "../nodes.hpp"
+#include "../nodeutils.hpp"
 
 #include <boost/range/irange.hpp>
 
@@ -80,139 +81,7 @@ TEST_CASE("Parent property", "[nodes]")
 }
 
 
-TEST_CASE("Traverse", "[nodes]")
-{
-  Grove grove;
-  auto* nd = grove.make_elt_node("foo");
-
-  nd->set_property("name", "bar");
-  nd->set_property("size", 42);
-
-  auto* type = grove.make_elt_node("type");
-  type->set_property("const?", true);
-
-  auto* args = grove.make_elt_node("args");
-  args->add_node("params", grove.make_elt_node("p1"));
-  args->add_node("params", grove.make_elt_node("p2"));
-  args->add_node("params", grove.make_elt_node("p3"));
-
-  nd->add_child_node(grove.make_elt_node("title"));
-  nd->add_child_node(args);
-  nd->add_child_node(type);
-
-  SECTION("Full recursion")
-  {
-    using GiType = std::tuple<std::string, int>;
-    using ExpectedGiType = std::vector<GiType>;
-    ExpectedGiType gis;
-
-    node_traverse(nd, [&gis](const Node* n, int depth) {
-      gis.emplace_back(std::make_tuple(n->gi(), depth));
-      return TraverseRecursion::k_recurse;
-    });
-
-    REQUIRE(gis == (ExpectedGiType{GiType{"foo", 0}, GiType{"title", 1},
-                                   GiType{"args", 1}, GiType{"type", 1}}));
-  }
-
-  SECTION("Only siblings")
-  {
-    std::vector<std::string> gis;
-    node_traverse(nd, [&gis](const Node* nd, int depth) {
-      gis.emplace_back(nd->gi());
-      return TraverseRecursion::k_continue;
-    });
-
-    REQUIRE(gis == (std::vector<std::string>{"foo"}));
-  }
-
-  SECTION("Mixed recursion/siblings")
-  {
-    std::vector<std::string> gis;
-    node_traverse(nd, [&gis](const Node* nd, int depth) {
-      gis.emplace_back(nd->gi());
-      if (nd->gi() == "foo") {
-        return TraverseRecursion::k_recurse;
-      }
-      else {
-        return TraverseRecursion::k_continue;
-      }
-    });
-
-    REQUIRE(gis == (std::vector<std::string>{"foo", "title", "args", "type"}));
-  }
-
-  SECTION("breaks")
-  {
-    std::vector<std::string> gis;
-    node_traverse(nd, [&gis](const Node* nd, int depth) {
-      gis.emplace_back(nd->gi());
-      if (nd->gi() == "foo") {
-        return TraverseRecursion::k_recurse;
-      }
-      else if (nd->gi() == "args") {
-        return TraverseRecursion::k_break;
-      }
-      else {
-        return TraverseRecursion::k_continue;
-      }
-    });
-
-    REQUIRE(gis == (std::vector<std::string>{"foo", "title", "args"}));
-  }
-}
-
-
-TEST_CASE("Serialize", "[nodes]")
-{
-  Grove grove;
-
-  auto* nd = grove.make_elt_node("foo");
-  nd->set_property("name", "bar");
-  nd->set_property("size", 42);
-
-  auto* type = grove.make_elt_node("type");
-  type->set_property("const?", true);
-
-  auto* args = grove.make_elt_node("args");
-  args->add_node("params", grove.make_elt_node("p1"));
-  args->add_node("params", grove.make_elt_node("p2"));
-  args->add_node("params", grove.make_elt_node("p3"));
-
-  nd->add_child_node(grove.make_elt_node("title"));
-  nd->add_child_node(args);
-  nd->add_node("types", type);
-
-  const std::string exptected_output =
-    "<element gi='foo'>\n"
-    "  <prop nm='name'>bar</prop>\n"
-    "  <prop nm='size'>42</prop>\n"
-    "  <prop nm='types'>\n"
-    "    <element gi='type'>\n"
-    "      <prop nm='const?'>1</prop>\n"
-    "    </element>\n"
-    "  </prop>\n"
-    "  <element gi='title'>\n"
-    "  </element>\n"
-    "  <element gi='args'>\n"
-    "    <prop nm='params'>\n"
-    "      <element gi='p1'>\n"
-    "      </element>\n"
-    "      <element gi='p2'>\n"
-    "      </element>\n"
-    "      <element gi='p3'>\n"
-    "      </element>\n"
-    "    </prop>\n"
-    "  </element>\n"
-    "</element>\n";
-
-  std::stringstream ss;
-  serialize(ss, grove.root_node());
-  REQUIRE(ss.str() == exptected_output);
-}
-
-
-TEST_CASE("Attributes add text nodes", "[nodes, attributes]")
+TEST_CASE("Attributes add text nodes", "[nodes][attributes]")
 {
   Grove grove;
 
@@ -221,15 +90,17 @@ TEST_CASE("Attributes add text nodes", "[nodes, attributes]")
 
   REQUIRE(nd->attributes().size() == 1);
   REQUIRE(nd->attributes()[0]->classname() == "text");
-  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_attr_name) == "gaz");
-  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_data) == "fieps");
+  REQUIRE(nd->attributes()[0]->property<std::string>(
+            CommonProps::k_attr_name) == "gaz");
+  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_data) ==
+          "fieps");
 
   REQUIRE(nd->has_attribute("gaz"));
   REQUIRE(!nd->has_attribute("boo"));
 }
 
 
-TEST_CASE("Attributes add nodes", "[nodes, attributes]")
+TEST_CASE("Attributes add nodes", "[nodes][attributes]")
 {
   Grove grove;
 
@@ -240,21 +111,23 @@ TEST_CASE("Attributes add nodes", "[nodes, attributes]")
 
   REQUIRE(nd->attributes().size() == 1);
   REQUIRE(nd->attributes()[0]->classname() == "element");
-  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_attr_name) == "gaz");
-  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_gi) == "boo");
+  REQUIRE(nd->attributes()[0]->property<std::string>(
+            CommonProps::k_attr_name) == "gaz");
+  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_gi) ==
+          "boo");
 
   REQUIRE(nd->has_attribute("gaz"));
   REQUIRE(!nd->has_attribute("boo"));
 }
 
 
-TEST_CASE("Attributes add nodelist", "[nodes, attributes]")
+TEST_CASE("Attributes add nodelist", "[nodes][attributes]")
 {
   Grove grove;
 
   auto* nd = grove.make_elt_node("foo");
 
-  const auto texts = std::vector<std::string>{ "hello", " ", "world!" };
+  const auto texts = std::vector<std::string>{"hello", " ", "world!"};
 
   Nodes nodes;
   for (const auto txt : texts) {
@@ -265,8 +138,10 @@ TEST_CASE("Attributes add nodelist", "[nodes, attributes]")
   REQUIRE(nd->attributes().size() == texts.size());
   for (auto i : boost::irange(0, int(texts.size()))) {
     REQUIRE(nd->attributes()[i]->classname() == "text");
-    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_attr_name) == "gaz");
-    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) == texts[i]);
+    REQUIRE(nd->attributes()[i]->property<std::string>(
+              CommonProps::k_attr_name) == "gaz");
+    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) ==
+            texts[i]);
   }
 
   REQUIRE(nd->has_attribute("gaz"));
@@ -274,7 +149,8 @@ TEST_CASE("Attributes add nodelist", "[nodes, attributes]")
 }
 
 
-TEST_CASE("Attributes setting attributes removes previous attributes", "[nodes, attributes]")
+TEST_CASE("Attributes setting attributes removes previous attributes",
+          "[nodes][attributes]")
 {
   Grove grove;
 
@@ -284,8 +160,8 @@ TEST_CASE("Attributes setting attributes removes previous attributes", "[nodes, 
   REQUIRE(nd->attributes().size() == 1);
   REQUIRE(nd->has_attribute("gaz"));
 
-  const auto texts = std::vector<std::string>{ "hello", " ", "world!" };
-  const auto attrnms = std::vector<std::string>{ "a", "b", "c" };
+  const auto texts = std::vector<std::string>{"hello", " ", "world!"};
+  const auto attrnms = std::vector<std::string>{"a", "b", "c"};
 
   Nodes nodes;
   int ai = 0;
@@ -299,8 +175,10 @@ TEST_CASE("Attributes setting attributes removes previous attributes", "[nodes, 
   REQUIRE(nd->attributes().size() == texts.size());
   for (auto i : boost::irange(0, int(texts.size()))) {
     REQUIRE(nd->attributes()[i]->classname() == "text");
-    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_attr_name) == attrnms[i]);
-    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) == texts[i]);
+    REQUIRE(nd->attributes()[i]->property<std::string>(
+              CommonProps::k_attr_name) == attrnms[i]);
+    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) ==
+            texts[i]);
   }
 
   REQUIRE(!nd->has_attribute("gaz"));
@@ -310,14 +188,14 @@ TEST_CASE("Attributes setting attributes removes previous attributes", "[nodes, 
 }
 
 
-TEST_CASE("Attributes access", "[nodes, attributes]")
+TEST_CASE("Attributes access", "[nodes][attributes]")
 {
   Grove grove;
 
   auto* nd = grove.make_elt_node("foo");
 
-  const auto texts = std::vector<std::string>{ "hello", " ", "world!" };
-  const auto attrnms = std::vector<std::string>{ "a", "b", "c" };
+  const auto texts = std::vector<std::string>{"hello", " ", "world!"};
+  const auto attrnms = std::vector<std::string>{"a", "b", "c"};
 
   Nodes nodes;
   int ai = 0;
