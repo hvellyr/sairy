@@ -81,7 +81,7 @@ TEST_CASE("Parent property", "[nodes]")
 }
 
 
-TEST_CASE("Attributes add text nodes", "[nodes, attributes]")
+TEST_CASE("Attributes add text nodes", "[nodes][attributes]")
 {
   Grove grove;
 
@@ -100,7 +100,7 @@ TEST_CASE("Attributes add text nodes", "[nodes, attributes]")
 }
 
 
-TEST_CASE("Attributes add nodes", "[nodes, attributes]")
+TEST_CASE("Attributes add nodes", "[nodes][attributes]")
 {
   Grove grove;
 
@@ -121,7 +121,7 @@ TEST_CASE("Attributes add nodes", "[nodes, attributes]")
 }
 
 
-TEST_CASE("Attributes add nodelist", "[nodes, attributes]")
+TEST_CASE("Attributes add nodelist", "[nodes][attributes]")
 {
   Grove grove;
 
@@ -149,7 +149,8 @@ TEST_CASE("Attributes add nodelist", "[nodes, attributes]")
 }
 
 
-TEST_CASE("Attributes setting attributes removes previous attributes", "[nodes, attributes]")
+TEST_CASE("Attributes setting attributes removes previous attributes",
+          "[nodes][attributes]")
 {
   Grove grove;
 
@@ -187,7 +188,7 @@ TEST_CASE("Attributes setting attributes removes previous attributes", "[nodes, 
 }
 
 
-TEST_CASE("Attributes access", "[nodes, attributes]")
+TEST_CASE("Attributes access", "[nodes][attributes]")
 {
   Grove grove;
 
