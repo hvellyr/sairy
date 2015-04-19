@@ -35,76 +35,195 @@ TraverseRecursion node_traverse(const Node* root,
 
 
 namespace {
-  class SerializeVisitor : public boost::static_visitor<> {
+  std::ostream& escape(std::ostream& os, const std::string& str)
+  {
+    for (const auto c : str) {
+      switch (c) {
+      case '\n':
+        os << "\\n";
+        break;
+      case '\r':
+        os << "\\r";
+        break;
+      case '\t':
+        os << "\\t";
+        break;
+      case '"':
+        os << "\\\"";
+        break;
+      default:
+        os << c;
+      }
+    }
+
+    return os;
+  }
+
+  class JsPrinter {
     std::ostream& _os;
+    bool _do_indent;
+
+  public:
+    JsPrinter(std::ostream& os, bool do_indent) : _os(os), _do_indent(do_indent)
+    {
+    }
+
+    const JsPrinter& newln() const
+    {
+      if (_do_indent) {
+        _os << std::endl;
+      }
+      return *this;
+    }
+
+    const JsPrinter& indent(int depth, int ofs) const
+    {
+      if (_do_indent) {
+        _os << std::string(depth * 4 + ofs * 2, ' ');
+      }
+      return *this;
+    }
+
+    const JsPrinter& sep() const
+    {
+      _os << ",";
+      return newln();
+    }
+
+    const JsPrinter& open_obj() const
+    {
+      _os << "{";
+      if (_do_indent) {
+        _os << " ";
+      }
+      return *this;
+    }
+
+    const JsPrinter& close_obj() const
+    {
+      _os << "}";
+      return *this;
+    }
+
+    const JsPrinter& open_array() const
+    {
+      _os << "[";
+      return newln();
+    }
+
+    const JsPrinter& close_array() const
+    {
+      _os << "]";
+      return *this;
+    }
+
+    const JsPrinter& empty_array() const
+    {
+      _os << "[]";
+      return *this;
+    }
+
+    const JsPrinter& print_attrnm(const std::string& nm) const
+    {
+      _os << "\"" << nm << "\":";
+      if (_do_indent) {
+        _os << " ";
+      }
+      return *this;
+    }
+
+    const JsPrinter& print_value(const std::string& val) const
+    {
+      _os << "\"";
+      escape(_os, val) << "\"";
+      return *this;
+    }
+
+    const JsPrinter& print_value(int val) const
+    {
+      _os << val;
+      return *this;
+    }
+  };
+
+  void serialize(const JsPrinter& pp, const Node* nd, int depth);
+
+  class SerializeVisitor : public boost::static_visitor<> {
+    JsPrinter _pp;
     int _depth;
 
   public:
-    SerializeVisitor(std::ostream& os, int depth) : _os(os), _depth(depth) {}
+    SerializeVisitor(const JsPrinter& pp, int depth) : _pp(pp), _depth(depth) {}
 
     void operator()(const Undefined&) {}
 
-    void operator()(const int& val) { _os << val; }
+    void operator()(const int& val) { _pp.print_value(val); }
 
-    void operator()(const std::string& val) { _os << val; }
+    void operator()(const std::string& val) { _pp.print_value(val); }
 
     void operator()(const Node* nd)
     {
-      _os << std::endl;
-      serialize(_os, nd, _depth);
-      _os << std::string((_depth - 1) * 2, ' ');
+      _pp.newln();
+      serialize(_pp, nd, _depth);
     }
 
     void operator()(const Nodes& nl)
     {
       if (!nl.empty()) {
-        _os << std::endl;
+        _pp.open_array();
+        bool first = true;
         for (auto* nd : nl) {
-          serialize(_os, nd, _depth);
+          if (!first) {
+            _pp.sep();
+          }
+          else {
+            first = false;
+          }
+          serialize(_pp, nd, _depth);
         }
-        _os << std::string((_depth - 1) * 2, ' ');
+        _pp.newln().indent(_depth, -1).close_array();
+      }
+      else {
+        _pp.empty_array();
       }
     }
   };
+
+  void serialize(const JsPrinter& pp, const Node* nd, int depth)
+  {
+    pp.indent(depth, 0).open_obj().print_attrnm("type").print_value(
+      nd->classname());
+
+    if (nd->node_class() == element_class_definition()) {
+      pp.sep().indent(depth, 1).print_attrnm("gi").print_value(nd->gi());
+    }
+
+    for (const auto& prop : nd->properties()) {
+      if (prop.first != CommonProps::k_gi &&
+          prop.first != CommonProps::k_parent) {
+        pp.sep().indent(depth, 1).print_attrnm(prop.first);
+
+        SerializeVisitor visitor(pp, depth + 1);
+        boost::apply_visitor(visitor, prop.second);
+      }
+    }
+
+    pp.newln().indent(depth, 0).close_obj();
+
+    if (depth == 0) {
+      pp.newln();
+    }
+  }
 
 } // ns anon
 
 
-void serialize(std::ostream& os, const Node* nd, int in_depth)
+void serialize(std::ostream& os, const Node* nd, bool pretty_printing,
+               int depth)
 {
-  int last_depth = in_depth - 1;
-
-  auto close_node = [&os](const Node* n, int lastd, int depth) {
-    for (int i = lastd; i >= depth; --i) {
-      os << std::string(i * 2, ' ') << "</" << n->classname() << ">"
-         << std::endl;
-    }
-  };
-
-  node_traverse(nd, [&os, &last_depth, &close_node](const Node* nd, int depth) {
-    close_node(nd, last_depth, depth);
-    last_depth = depth;
-
-    os << std::string(depth * 2, ' ') << "<" << nd->classname();
-    if (nd->node_class() == element_class_definition()) {
-      os << " gi='" << nd->gi() << "'";
-    }
-    os << ">" << std::endl;
-    for (const auto& prop : nd->properties()) {
-      if (prop.first != CommonProps::k_children &&
-          prop.first != CommonProps::k_gi &&
-          prop.first != CommonProps::k_parent) {
-        os << std::string((depth + 1) * 2, ' ') << "<prop nm='" << prop.first
-           << "'>";
-        SerializeVisitor visitor(os, depth + 2);
-        boost::apply_visitor(visitor, prop.second);
-        os << "</prop>" << std::endl;
-      }
-    }
-    return TraverseRecursion::k_recurse;
-  }, in_depth);
-
-  close_node(nd, last_depth, in_depth);
+  auto pp = JsPrinter{os, pretty_printing};
+  serialize(pp, nd, depth);
 }
+
 
 } // ns eyestep

@@ -174,6 +174,7 @@ TEST_CASE("Serialize", "[nodes]")
 
   auto* type = grove.make_elt_node("type");
   type->set_property("const?", true);
+  type->add_child_node(grove.make_text_node("text with \"quots\" and\nnewline"));
 
   auto* args = grove.make_elt_node("args");
   args->add_node("params", grove.make_elt_node("p1"));
@@ -185,30 +186,108 @@ TEST_CASE("Serialize", "[nodes]")
   nd->add_node("types", type);
 
   const std::string exptected_output =
-    "<element gi='foo'>\n"
-    "  <prop nm='name'>bar</prop>\n"
-    "  <prop nm='size'>42</prop>\n"
-    "  <prop nm='types'>\n"
-    "    <element gi='type'>\n"
-    "      <prop nm='const?'>1</prop>\n"
-    "    </element>\n"
-    "  </prop>\n"
-    "  <element gi='title'>\n"
-    "  </element>\n"
-    "  <element gi='args'>\n"
-    "    <prop nm='params'>\n"
-    "      <element gi='p1'>\n"
-    "      </element>\n"
-    "      <element gi='p2'>\n"
-    "      </element>\n"
-    "      <element gi='p3'>\n"
-    "      </element>\n"
-    "    </prop>\n"
-    "  </element>\n"
-    "</element>\n";
+    "{ \"type\": \"element\",\n"
+    "  \"gi\": \"foo\",\n"
+    "  \"children\": [\n"
+    "    { \"type\": \"element\",\n"
+    "      \"gi\": \"title\"\n"
+    "    },\n"
+    "    { \"type\": \"element\",\n"
+    "      \"gi\": \"args\",\n"
+    "      \"params\": [\n"
+    "        { \"type\": \"element\",\n"
+    "          \"gi\": \"p1\"\n"
+    "        },\n"
+    "        { \"type\": \"element\",\n"
+    "          \"gi\": \"p2\"\n"
+    "        },\n"
+    "        { \"type\": \"element\",\n"
+    "          \"gi\": \"p3\"\n"
+    "        }\n"
+    "      ]\n"
+    "    }\n"
+    "  ],\n"
+    "  \"name\": \"bar\",\n"
+    "  \"size\": 42,\n"
+    "  \"types\": [\n"
+    "    { \"type\": \"element\",\n"
+    "      \"gi\": \"type\",\n"
+    "      \"children\": [\n"
+    "        { \"type\": \"text\",\n"
+    "          \"data\": \"text with \\\"quots\\\" and\\nnewline\"\n"
+    "        }\n"
+    "      ],\n"
+    "      \"const?\": 1\n"
+    "    }\n"
+    "  ]\n"
+    "}\n";
 
   std::stringstream ss;
   serialize(ss, grove.root_node());
+  REQUIRE(ss.str() == exptected_output);
+}
+
+
+TEST_CASE("Serialize without pretty printing", "[nodes]")
+{
+  Grove grove;
+
+  auto* nd = grove.make_elt_node("foo");
+  nd->set_property("name", "bar");
+  nd->set_property("size", 42);
+
+  auto* type = grove.make_elt_node("type");
+  type->set_property("const?", true);
+  type->add_child_node(grove.make_text_node("text with \"quots\" and\nnewline"));
+
+  auto* args = grove.make_elt_node("args");
+  args->add_node("params", grove.make_elt_node("p1"));
+  args->add_node("params", grove.make_elt_node("p2"));
+  args->add_node("params", grove.make_elt_node("p3"));
+
+  nd->add_child_node(grove.make_elt_node("title"));
+  nd->add_child_node(args);
+  nd->add_node("types", type);
+
+  const std::string exptected_output =
+    "{\"type\":\"element\","
+    "\"gi\":\"foo\","
+    "\"children\":["
+    "{\"type\":\"element\","
+    "\"gi\":\"title\""
+    "},"
+    "{\"type\":\"element\","
+    "\"gi\":\"args\","
+    "\"params\":["
+    "{\"type\":\"element\","
+    "\"gi\":\"p1\""
+    "},"
+    "{\"type\":\"element\","
+    "\"gi\":\"p2\""
+    "},"
+    "{\"type\":\"element\","
+    "\"gi\":\"p3\""
+    "}"
+    "]"
+    "}"
+    "],"
+    "\"name\":\"bar\","
+    "\"size\":42,"
+    "\"types\":["
+    "{\"type\":\"element\","
+    "\"gi\":\"type\","
+    "\"children\":["
+    "{\"type\":\"text\","
+    "\"data\":\"text with \\\"quots\\\" and\\nnewline\""
+    "}"
+    "],"
+    "\"const?\":1"
+    "}"
+    "]"
+    "}";
+
+  std::stringstream ss;
+  serialize(ss, grove.root_node(), false);
   REQUIRE(ss.str() == exptected_output);
 }
 
