@@ -150,6 +150,27 @@ target_link_libraries(sairy
   ${LibClang_LIBRARIES}
   ${Boost_LIBRARIES})
 
+set(sairy_app "${PROJECT_BINARY_DIR}/app")
+set_target_properties(sairy
+  PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${sairy_app}")
+set_target_properties(sairy
+  PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG "${sairy_app}")
+set_target_properties(sairy
+  PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE "${sairy_app}")
+
+
+if(POLICY CMP0026)
+cmake_policy(PUSH)
+cmake_policy(SET CMP0026 OLD)
+endif()
+
+get_property(sairy_executable_path TARGET sairy PROPERTY LOCATION)
+configure_file("${PROJECT_SOURCE_DIR}/bin/sairy.in" "${PROJECT_SOURCE_DIR}/bin/sairy"
+               @ONLY)
+
+if(POLICY CMP0026)
+cmake_policy(POP)
+endif()
 
 #------------------------------------------------------------------------------
 add_subdirectory(test)
