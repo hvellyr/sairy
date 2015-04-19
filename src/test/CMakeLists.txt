@@ -7,9 +7,33 @@ add_executable(nodes_test
   tst_nodelist.cpp
   tst_nodeutils.cpp
 )
+target_include_directories(nodes_test
+  PUBLIC "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}"
+)
 
 target_link_libraries(nodes_test
-  cppscanner
-  grove)
+  sairy-utils
+  grove
+)
 
-add_test(nodes_test_case nodes_test)
+add_executable(textbook_test
+  tst_main.cpp
+  tst_textbook_parser.cpp
+)
+target_include_directories(textbook_test
+  PUBLIC "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}"
+)
+
+target_link_libraries(textbook_test
+  grove
+  textbook-parser
+  sairy-utils
+  ${Boost_LIBRARIES}
+)
+
+add_test(NAME nodes_test_case
+         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+         COMMAND nodes_test)
+add_test(NAME textbook_test_case
+         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+         COMMAND textbook_test)
