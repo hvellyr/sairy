@@ -20,7 +20,7 @@ class StyleEngine {
   std::string _backend_id;
 
 public:
-  StyleEngine(const std::vector<boost::filesystem::path>& prefix_paths,
+  StyleEngine(const std::string& prefix_path,
               const std::string& backend_id);
 
   bool load_style(const boost::filesystem::path& path);
