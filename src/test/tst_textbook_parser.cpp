@@ -8,19 +8,22 @@
 #include "../textbook-model.hpp"
 #include "../textbook-parser.hpp"
 
+#include "catch/catch.hpp"
+
 #include <boost/filesystem.hpp>
 
-#include <string>
+#include <functional>
 #include <iostream>
 #include <sstream>
-#include "catch/catch.hpp"
+#include <string>
 
 
 using namespace eyestep;
 namespace fs = boost::filesystem;
 
 namespace {
-Node* scan_text(Grove& grove, const std::string& text)
+Node* with_parser_scan(Grove& grove,
+                       const std::function<void(textbook::Parser&)>& proc)
 {
   Node* doc_node = grove.make_node(document_class_definition());
 
@@ -37,17 +40,21 @@ Node* scan_text(Grove& grove, const std::string& text)
                           false  // verbose
                           );
 
-  parser.parse_string(text);
+  proc(parser);
 
   return doc_node;
 }
+
 } // anon ns
 
 
 TEST_CASE("Basic textbook parsing works", "[textbook][parser]")
 {
   Grove grove;
-  auto* nd = scan_text(grove, "@doc Hello world @end{doc}");
+  auto* nd = with_parser_scan(grove, [](textbook::Parser& parser) {
+    parser.parse_string("@doc Hello world @end{doc}");
+  });
+
   REQUIRE(nd != nullptr);
 
   std::stringstream buf;

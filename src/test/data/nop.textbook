@@ -1,0 +1,16 @@
+@book
+Some text
+
+@poem
+@ln in these dark waters
+@ln{2} drawn up from my frozen well ...
+@ln glittering of spring
+
+@stanza
+
+@ln standing still at dusk
+@ln{2} listen ... in far distances
+@ln the song of froglings!
+@end poem
+
+@end book

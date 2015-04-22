@@ -1,0 +1,10 @@
+@book
+Some text
+
+@poem
+@ln in these dark waters
+@ln{2} drawn up from my frozen well ...
+@ln glittering of spring
+@end poem
+
+@end book

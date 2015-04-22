@@ -16,6 +16,13 @@ target_link_libraries(nodes_test
   grove
 )
 
+add_test(NAME nodes_test_case
+         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+         COMMAND nodes_test)
+
+
+# ------------------------------------------------------------------------------
+
 add_executable(textbook_test
   tst_main.cpp
   tst_textbook_parser.cpp
@@ -31,9 +38,27 @@ target_link_libraries(textbook_test
   ${Boost_LIBRARIES}
 )
 
-add_test(NAME nodes_test_case
-         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-         COMMAND nodes_test)
 add_test(NAME textbook_test_case
          WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
          COMMAND textbook_test)
+
+
+# ------------------------------------------------------------------------------
+
+add_executable(parser_test
+  parser_test.cpp
+)
+target_include_directories(parser_test
+  PUBLIC "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}"
+)
+
+target_link_libraries(parser_test
+  grove
+  textbook-parser
+  sairy-utils
+  ${Boost_LIBRARIES}
+)
+
+add_test(NAME parser_test_case
+         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+         COMMAND parser_test -v "${PROJECT_SOURCE_DIR}/src/test/data/")
