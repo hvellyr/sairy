@@ -6,6 +6,7 @@
 #include "nodes.hpp"
 #include "textbook-model.hpp"
 #include "textbook-parser.hpp"
+#include "utils.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -64,14 +65,15 @@ namespace textbook {
       return result.str();
     }
 
-    fs::path path_rel_to_dir(const fs::path& basepath, const fs::path& fpath)
+    fs::path path_rel_to_cwd(const fs::path& basepath, const fs::path& fpath)
     {
       if (!fpath.string().empty()) {
         if (fpath.is_absolute()) {
           return fpath;
         }
 
-        return basepath.parent_path() /= fpath;
+        auto abspath = basepath.parent_path() /= fpath;
+        return utils::make_relative(fs::current_path(), abspath);
       }
 
       return fs::path();
@@ -645,8 +647,10 @@ namespace textbook {
         }
       }
       else if (attrspecs[attrc].type() == k_attr_fref) {
-        auto abspath = path_rel_to_dir(_stream->fpath(), boost::trim_copy(arg));
-        nl.push_back(_grove.make_text_node(abspath.string()));
+        auto abspath = path_rel_to_cwd(_stream->fpath(), boost::trim_copy(arg));
+        auto textnd = _grove.make_text_node(abspath.string());
+        textnd->set_property(CommonProps::k_attr_name, attrspecs[attrc].name());
+        nl.push_back(textnd);
       }
       else {
         GroveBuilder gb(_grove.make_elt_node("<root>"));

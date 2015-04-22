@@ -1,0 +1,7 @@
+@book
+Lala
+
+@cover{assets/one.png}
+
+Lulu
+@end book
