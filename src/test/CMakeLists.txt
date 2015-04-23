@@ -23,6 +23,25 @@ add_test(NAME nodes_test_case
 
 # ------------------------------------------------------------------------------
 
+add_executable(utils_test
+  tst_main.cpp
+  tst_utils.cpp
+)
+target_include_directories(utils_test
+  PUBLIC "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}"
+)
+target_link_libraries(utils_test
+  sairy-utils
+  ${Boost_LIBRARIES}
+)
+
+add_test(NAME utils_test_case
+         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+         COMMAND utils_test)
+
+
+# ------------------------------------------------------------------------------
+
 add_executable(textbook_test
   tst_main.cpp
   tst_textbook_parser.cpp

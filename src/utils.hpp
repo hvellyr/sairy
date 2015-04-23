@@ -19,5 +19,8 @@ namespace utils {
 
   std::vector<boost::filesystem::path> split_paths(const std::string& path);
 
+  boost::filesystem::path make_relative(const boost::filesystem::path& from,
+                                        const boost::filesystem::path& to);
+
 } // ns utils
 } // ns eyestep
