@@ -1,0 +1,12 @@
+@doc
+Some text
+
+@itemize
+@item first item
+@item second item which spans a row
+and contains @em{some} embedded tags.
+@item{+} and a last, custom item
+@end itemize
+
+Some more text
+@end doc

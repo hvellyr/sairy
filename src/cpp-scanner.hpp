@@ -12,8 +12,6 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
-
 class Node;
 class Grove;
 
@@ -30,7 +28,8 @@ public:
   std::unordered_set<std::string> supported_extensions() const override;
   boost::program_options::options_description program_options() const override;
 
-  Node* scan_file(eyestep::Grove& grove, const fs::path& srfile) override;
+  Node* scan_file(eyestep::Grove& grove,
+                  const boost::filesystem::path& srfile) override;
 };
 
 } // ns eyestep

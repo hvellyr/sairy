@@ -11,8 +11,6 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
-
 class Source {
 public:
   Source(const boost::filesystem::path& srcfile,
@@ -27,6 +25,6 @@ public:
   std::vector<std::string> _locdefs;
 };
 
-std::vector<Source> read_scan_db(const fs::path& file);
+std::vector<Source> read_scan_db(const boost::filesystem::path& file);
 
 } // ns eyestep

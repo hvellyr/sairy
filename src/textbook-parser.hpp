@@ -20,8 +20,6 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
-
 class Node;
 class Grove;
 
@@ -65,15 +63,16 @@ namespace textbook {
     char _current_c;
     size_t _nc;
     size_t _line_no;
-    fs::path _fpath;
+    boost::filesystem::path _fpath;
     std::string _data;
 
   public:
-    Stream(boost::optional<std::string> data, boost::optional<fs::path> path,
+    Stream(boost::optional<std::string> data,
+           boost::optional<boost::filesystem::path> path,
            size_t start_line_no = 0);
     char current_c() const;
     size_t line_no() const;
-    fs::path fpath() const;
+    boost::filesystem::path fpath() const;
     std::string srcpos() const;
     char read();
     char unread(const std::string& buf);
@@ -86,7 +85,7 @@ namespace textbook {
 
   class Parser {
     bool _verbose;
-    std::vector<fs::path> _catalog_path;
+    std::vector<boost::filesystem::path> _catalog_path;
     std::shared_ptr<Stream> _stream;
     std::list<std::shared_ptr<Stream>> _stream_stack;
     std::stringstream _text;
@@ -103,12 +102,12 @@ namespace textbook {
   public:
     Parser(eyestep::Grove& grove, GroveBuilder& grovebuilder,
            VariableEnv& _vars, Catalog& catalog, DocSpec* docspec,
-           const std::vector<fs::path>& catalog_path,
+           const std::vector<boost::filesystem::path>& catalog_path,
            bool is_mixed_content = false, bool is_verbose = false);
 
     std::string doctype() const;
 
-    Node* parse_file(const fs::path& fpath);
+    Node* parse_file(const boost::filesystem::path& fpath);
     Node* parse_string(const std::string& buf, size_t start_line_no = 0);
     Node* parse_stream(std::shared_ptr<Stream> stream);
 
@@ -141,7 +140,8 @@ namespace textbook {
     void parse_varlookup();
     void parse_endtag();
     void parse_let();
-    fs::path path_for_include(const fs::path& fpath);
+    boost::filesystem::path
+    path_for_include(const boost::filesystem::path& fpath);
     void parse_include();
     void parse_tag_with_params(const std::string& tag);
     void parse_tag();

@@ -1,0 +1,3 @@
+@doc
+Test with @em{probably @val{nested}} tags.
+@end doc
