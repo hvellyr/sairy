@@ -7,6 +7,7 @@
 #include "../nodeutils.hpp"
 #include "../textbook-model.hpp"
 #include "../textbook-parser.hpp"
+#include "../cpp-scanner.hpp"
 
 #include "json_spirit/json_spirit_value.h"
 #include "json_spirit/json_spirit_reader_template.h"
@@ -28,8 +29,9 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
 namespace {
-Node* with_parser_scan(Grove& grove,
-                       const std::function<void(textbook::Parser&)>& proc)
+Node* with_parser_tb_scan(Grove& grove,
+                          const po::variables_map& vm,
+                          const std::function<void(textbook::Parser&)>& proc)
 {
   Node* doc_node = grove.make_node(document_class_definition());
 
@@ -43,7 +45,7 @@ Node* with_parser_scan(Grove& grove,
                           nullptr, // docspec
                           _catalog_path,
                           false, // mixed content
-                          false  // verbose
+                          vm["verbose"].as<bool>()
                           );
 
   proc(parser);
@@ -72,38 +74,84 @@ void serialize_node_if_missing(Node* nd, const fs::path& path,
   }
 }
 
+
+Node* test_tb_file(const fs::path& path, const po::variables_map& vm,
+                   Grove& grove)
+{
+  Node* nd = nullptr;
+
+  try {
+    nd = with_parser_tb_scan(grove, vm, [&path](textbook::Parser& parser) {
+      parser.parse_file(path);
+    });
+    if (nd == nullptr) {
+      std::cerr << "FAILED" << std::endl
+                << "    parsing of source file failed" << std::endl;
+      return nullptr;
+    }
+  }
+  catch (const eyestep::textbook::ParseException& e) {
+    std::cerr << "FAILED" << std::endl
+              << "    parsing of source file failed: " << e.what() << std::endl;
+    return nullptr;
+  }
+  catch (const std::exception& e) {
+    std::cerr << "FAILED" << std::endl
+              << "    parsing of source file failed: " << e.what() << std::endl;
+    return nullptr;
+  }
+
+  return nd;
+}
+
+
+Node* test_cpp_file(const fs::path& path, const po::variables_map& vm,
+                    Grove& grove)
+{
+  Node* nd = nullptr;
+
+  try {
+    CppScanner scanner(vm);
+    nd = scanner.scan_file(grove, path);
+    if (nd == nullptr) {
+      std::cerr << "FAILED" << std::endl
+                << "    parsing of source file failed" << std::endl;
+      return nullptr;
+    }
+  }
+  catch (const std::exception& e) {
+    std::cerr << "FAILED" << std::endl
+              << "    parsing of source file failed: " << e.what() << std::endl;
+    return nullptr;
+  }
+
+  return nd;
+}
+
+
 bool test_file(const fs::path& path, const po::variables_map& vm)
 {
-  if (path.extension() == ".textbook" && fs::is_regular_file(path)) {
-    std::cerr << "Testing input file " << path << " ...";
-    std::cerr.flush();
-
+  if (fs::is_regular_file(path)) {
     Grove grove;
     Node* nd = nullptr;
 
-    try {
-      nd = with_parser_scan(grove, [&path](textbook::Parser& parser) {
-        parser.parse_file(path);
-      });
-      if (nd == nullptr) {
-        std::cerr << "FAILED" << std::endl
-                  << "    parsing of source file failed" << std::endl;
-        return false;
-      }
+    if (path.extension() == ".textbook") {
+      std::cerr << "Testing input file " << path << " ...";
+      std::cerr.flush();
+      nd = test_tb_file(path, vm, grove);
     }
-    catch (const eyestep::textbook::ParseException& e) {
-      std::cerr << "FAILED" << std::endl
-                << "    parsing of source file failed: " << e.what()
-                << std::endl;
-      return false;
+    else if (path.extension() == ".hpp" || path.extension() == ".h") {
+      std::cerr << "Testing input file " << path << " ...";
+      std::cerr.flush();
+      nd = test_cpp_file(path, vm, grove);
     }
-    catch (const std::exception& e) {
-      std::cerr << "FAILED" << std::endl
-                << "    parsing of source file failed: " << e.what()
-                << std::endl;
-      return false;
+    else {
+      return true;
     }
 
+    if (!nd) {
+      return false;
+    }
 
     auto excp_path = path;
     excp_path.replace_extension(".js");
@@ -131,7 +179,7 @@ bool test_file(const fs::path& path, const po::variables_map& vm)
 
       std::cerr << "FAILED" << std::endl
                 << "    parsed and expected outcome differ" << std::endl;
-      if (vm["verbose"].as<bool>()) {
+      if (vm["dev"].as<bool>()) {
         std::cerr << "EXPECTED:" << std::endl;
         json_spirit::write_stream(expected_root_elt, std::cerr, true);
         std::cerr << std::endl
@@ -209,6 +257,7 @@ int main(int argc, char** argv)
   all_options.add_options()
     ("help,h",         po::bool_switch(), "produce help message")
     ("verbose,v",      po::bool_switch(), "being verbose")
+    ("dev",            po::bool_switch(), "development mode (being more verbose)")
     ("serialize,S",    po::bool_switch(), "parse & print json to stdout")
     ("input-file",     po::value<std::vector<std::string>>(),
                        "input file")

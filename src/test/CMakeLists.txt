@@ -74,10 +74,12 @@ target_include_directories(parser_test
 target_link_libraries(parser_test
   grove
   textbook-parser
+  cppscanner
   sairy-utils
+  ${LibClang_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 
 add_test(NAME parser_test_case
          WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-         COMMAND parser_test -v "${PROJECT_SOURCE_DIR}/src/test/data/")
+         COMMAND parser_test --dev "${PROJECT_SOURCE_DIR}/src/test/data/")
