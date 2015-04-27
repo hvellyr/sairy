@@ -45,6 +45,7 @@ namespace {
   enum Kind {
     k_function = 0,
     k_ns,
+    k_var,
   };
 
   std::string make_id(const std::string& dialect, Kind kind,
@@ -52,7 +53,8 @@ namespace {
                       const std::string& args = "",
                       const std::string& annotation = "")
   {
-    static const auto kind2nm = std::vector<std::string>{"function", "ns"};
+    static const auto kind2nm =
+      std::vector<std::string>{"function", "ns", "var"};
 
     std::stringstream ss;
     ss << dialect << "/" << kind2nm[kind] << "/";
@@ -253,6 +255,34 @@ namespace {
   }
 
 
+  void scan_var(ParseContext* ctx, Cursor ecursor, Cursor eparent)
+  {
+    Grove* grove = ctx->_document_node->grove();
+    auto* desc_node = make_desc_node(ctx, grove, ecursor);
+
+    if (desc_node) {
+      auto nm = ecursor.spelling();
+      Node* nd = grove->make_elt_node("variable");
+      nd->set_property(CommonProps::k_source,
+                       path_rel_to_cwd(ecursor.location()));
+
+      nd->add_attribute("name", nm);
+
+      std::string nss;
+      if (!ctx->_namespaces.empty()) {
+        nss = utils::join(ctx->_namespaces, "::");
+        nd->add_attribute("namespaces", nss);
+      }
+      nd->set_property(CommonProps::k_id, make_id("cpp", k_var, nss, nm));
+
+      nd->add_child_node(make_type_node(grove, "type", ecursor.type()));
+      nd->add_child_node(desc_node);
+
+      ctx->_document_node->add_child_node(nd);
+    }
+  }
+
+
   CXChildVisitResult scan_hierarchy_visitor(ParseContext* ctx, Cursor ecursor,
                                             Cursor eparent)
   {
@@ -273,6 +303,10 @@ namespace {
         }
         else if (kind == CXCursor_Namespace) {
           scan_namespace(ctx, ecursor, eparent);
+          retval = CXChildVisit_Continue;
+        }
+        else if (kind == CXCursor_VarDecl) {
+          scan_var(ctx, ecursor, eparent);
           retval = CXChildVisit_Continue;
         }
         else {
