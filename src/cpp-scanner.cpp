@@ -39,21 +39,26 @@ namespace {
 
     Grove& _grove;
     Node* _document_node;
+    std::vector<std::string> _namespaces;
   };
 
   enum Kind {
     k_function = 0,
+    k_ns,
   };
 
   std::string make_id(const std::string& dialect, Kind kind,
-                      const std::string& nm,
+                      const std::string& namespaces, const std::string& nm,
                       const std::string& args = "",
                       const std::string& annotation = "")
   {
-    static const auto kind2nm = std::vector<std::string>{"function"};
+    static const auto kind2nm = std::vector<std::string>{"function", "ns"};
 
     std::stringstream ss;
     ss << dialect << "/" << kind2nm[kind] << "/";
+    if (!namespaces.empty()) {
+      ss << namespaces << "::";
+    }
     ss << nm;
 
     if (kind == k_function) {
@@ -145,9 +150,19 @@ namespace {
     std::string nm = ecursor.spelling();
 
     std::vector<std::tuple<std::string, Type>> args_nm;
+    std::vector<std::string> nm_spaces;
 
-    visit_children(ecursor, [&args_nm](Cursor ec, Cursor ep) {
-      args_nm.push_back(std::make_tuple(ec.spelling(), ec.type()));
+    visit_children(ecursor, [&args_nm, &nm_spaces](Cursor ec, Cursor ep) {
+      if (ec.kind() == CXCursor_ParmDecl) {
+        args_nm.push_back(std::make_tuple(ec.spelling(), ec.type()));
+      }
+      else if (ec.kind() == CXCursor_NamespaceRef) {
+        // std::cout << "namespace reference: " << ec.spelling() << std::endl;
+        nm_spaces.push_back(ec.spelling());
+      }
+      else {
+        std::cout << "!" << kind2str(ec.kind()) << std::endl;
+      }
       return CXChildVisit_Continue;
     });
 
@@ -157,8 +172,17 @@ namespace {
     nd->add_attribute("name", nm);
     nd->add_attribute("dialect", "cpp");
 
+    std::string nss;
+    if (!nm_spaces.empty()) {
+      nss = utils::join(nm_spaces, "::");
+    }
+    else if (!ctx->_namespaces.empty()) {
+      nss = utils::join(ctx->_namespaces, "::");
+    }
+    nd->add_attribute("namespaces", nss);
+
     nd->set_property(CommonProps::k_id,
-                     make_id("cpp", k_function, nm,
+                     make_id("cpp", k_function, nss, nm,
                              utils::join(boost::copy_range<
                                            std::vector<std::string>>(
                                            args_nm |
@@ -193,26 +217,63 @@ namespace {
   }
 
 
-  CXChildVisitResult scan_hierarchy_visitor(CXCursor cursor, CXCursor parent,
-                                            CXClientData client_data)
-  {
-    Cursor ecursor(cursor);
+  CXChildVisitResult scan_hierarchy_visitor(ParseContext* ctx, Cursor ecursor,
+                                            Cursor eparent);
 
+  void scan_namespace(ParseContext* ctx, Cursor ecursor, Cursor eparent)
+  {
+    Grove* grove = ctx->_document_node->grove();
+    auto* desc_node = make_desc_node(ctx, grove, ecursor);
+
+    if (desc_node) {
+      auto nm = ecursor.spelling();
+      Node* nd = grove->make_elt_node("namespace");
+      nd->set_property(CommonProps::k_source,
+                       path_rel_to_cwd(ecursor.location()));
+      nd->add_attribute("name", nm);
+
+      std::string nss;
+      if (!ctx->_namespaces.empty()) {
+        nss = utils::join(ctx->_namespaces, "::");
+      }
+      nd->add_attribute("namespaces", nss);
+
+      nd->set_property(CommonProps::k_id, make_id("cpp", k_ns, nss, nm));
+      nd->add_child_node(desc_node);
+      ctx->_document_node->add_child_node(nd);
+    }
+
+    ctx->_namespaces.push_back(ecursor.spelling());
+
+    visit_children(ecursor, [&ctx](Cursor ec, Cursor ep) {
+      return scan_hierarchy_visitor(ctx, ec, ep);
+    });
+
+    ctx->_namespaces.pop_back();
+  }
+
+
+  CXChildVisitResult scan_hierarchy_visitor(ParseContext* ctx, Cursor ecursor,
+                                            Cursor eparent)
+  {
     CXChildVisitResult retval = CXChildVisit_Continue;
 
-    ParseContext* ctx = static_cast<ParseContext*>(client_data);
     CXCursorKind kind = ecursor.kind();
-
     std::string nm = ecursor.spelling();
 
     SourceLocation loc = ecursor.location();
     if (loc.is_from_main_file()) {
       if (clang_isDeclaration(kind)) {
         if (kind == CXCursor_FunctionDecl) {
-          Node* nd = make_function_node(ctx->_document_node->grove(), ecursor);
+          Node* nd =
+            make_function_node(ctx, ctx->_document_node->grove(), ecursor);
           ctx->_document_node->add_child_node(nd);
 
-          retval = CXChildVisit_Recurse;
+          retval = CXChildVisit_Continue;
+        }
+        else if (kind == CXCursor_Namespace) {
+          scan_namespace(ctx, ecursor, eparent);
+          retval = CXChildVisit_Continue;
         }
         else {
           printf("UNHANDLED DECL TYPE %s %s (%s)\n", kind2str(kind), nm.c_str(),
@@ -224,6 +285,14 @@ namespace {
       }
     }
     return retval;
+  }
+
+
+  CXChildVisitResult scan_hierarchy_visitor(CXCursor cursor, CXCursor parent,
+                                            CXClientData client_data)
+  {
+    ParseContext* ctx = static_cast<ParseContext*>(client_data);
+    return scan_hierarchy_visitor(ctx, Cursor(cursor), Cursor(parent));
   }
 
 } // end anon namespace
