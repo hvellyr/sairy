@@ -14,6 +14,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -39,6 +40,30 @@ namespace {
     Grove& _grove;
     Node* _document_node;
   };
+
+  enum Kind {
+    k_function = 0,
+  };
+
+  std::string make_id(const std::string& dialect, Kind kind,
+                      const std::string& nm,
+                      const std::string& args = "",
+                      const std::string& annotation = "")
+  {
+    static const auto kind2nm = std::vector<std::string>{"function"};
+
+    std::stringstream ss;
+    ss << dialect << "/" << kind2nm[kind] << "/";
+    ss << nm;
+
+    if (kind == k_function) {
+      ss << "(" << args << ")";
+    }
+    if (!annotation.empty()) {
+      ss << "/" << annotation;
+    }
+    return ss.str();
+  }
 
 
   std::string path_rel_to_cwd(const SourceLocation& loc)
@@ -131,6 +156,19 @@ namespace {
 
     nd->add_attribute("name", nm);
     nd->add_attribute("dialect", "cpp");
+
+    nd->set_property(CommonProps::k_id,
+                     make_id("cpp", k_function, nm,
+                             utils::join(boost::copy_range<
+                                           std::vector<std::string>>(
+                                           args_nm |
+                                           boost::adaptors::transformed([](
+                                             const std::tuple<std::string,
+                                                              Type>& tup) {
+                                             return std::get<1>(tup).spelling();
+                                           })),
+                                         ","),
+                             ""));
 
     nd->add_child_node(
       make_type_node(grove, "return-type", type.result_type()));
