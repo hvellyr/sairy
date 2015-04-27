@@ -6,9 +6,13 @@
 #include "nodeclass.hpp"
 #include "nodes.hpp"
 #include "utils.hpp"
+#include "cpp-comments.hpp"
+#include "textbook-parser.hpp"
+#include "textbook-model.hpp"
 
 #include "clang-c/Index.h"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
 #include <algorithm>
@@ -57,7 +61,57 @@ namespace {
   }
 
 
-  Node* make_function_node(Grove* grove, Cursor ecursor)
+  Node* make_desc_node(ParseContext* ctx, Grove* grove, const Cursor& ecursor)
+  {
+    Node* desc_node = nullptr;
+
+    auto comment = ecursor.raw_comment();
+    auto norm_comment = normalize_comment(comment);
+    if (boost::starts_with(norm_comment, "@doc")) {
+      auto comment2 = norm_comment + "\n@end doc";
+
+      Node* doc_node = grove->make_elt_node("doc");
+      textbook::GroveBuilder grove_builder(doc_node);
+      textbook::VariableEnv vars;
+      textbook::Catalog catalog;
+      textbook::Parser parser(*grove, grove_builder, vars, catalog,
+                              nullptr, // docspec
+                              {fs::path("share/sairy/textbook/spec")},
+                              false, // mixed content
+                              false  // verbose
+                              );
+
+      parser.parse_string(comment2);
+
+      auto nodes = doc_node->property<Nodes>(CommonProps::k_children);
+      if (!nodes.empty()) {
+        auto grand_children =
+          nodes[0]->property<Nodes>(CommonProps::k_children);
+        unparent_nodes(grand_children);
+
+        desc_node = grove->make_elt_node("desc");
+        for (auto* docnd : grand_children) {
+          desc_node->add_child_node(docnd);
+        }
+      }
+
+      grove->remove_node(doc_node);
+    }
+
+    return desc_node;
+  }
+
+
+  /*! results in:
+   *
+   * @tag{function}    {name}          {ANY}
+   * @tag{parameters}                  {ANY}
+   * @tag{parameter}   {name, const?}  {ANY}
+   * @tag{return-type} {name, const?}  {ANY}
+   * @tag{type}        {name, const?}  {ANY}
+   * @tag{desc}        {}              {TEXT|ANY}
+   */
+  Node* make_function_node(ParseContext* ctx, Grove* grove, Cursor ecursor)
   {
     Node* nd = grove->make_elt_node("function");
     nd->set_property(CommonProps::k_source,
@@ -76,8 +130,10 @@ namespace {
     assert(args_nm.size() == type.num_arg_types());
 
     nd->add_attribute("name", nm);
+    nd->add_attribute("dialect", "cpp");
 
-    nd->add_child_node(make_type_node(grove, "return-type", type.result_type()));
+    nd->add_child_node(
+      make_type_node(grove, "return-type", type.result_type()));
 
     auto* parameters = grove->make_elt_node("parameters");
     nd->add_child_node(parameters);
@@ -85,8 +141,14 @@ namespace {
     for (int i = 0; i < type.num_arg_types(); i++) {
       Node* param = grove->make_elt_node("parameter");
       param->add_attribute("name", std::get<0>(args_nm[i]));
-      param->add_child_node(make_type_node(grove, "type", std::get<1>(args_nm[i])));
+      param->add_child_node(
+        make_type_node(grove, "type", std::get<1>(args_nm[i])));
       parameters->add_child_node(param);
+    }
+
+    auto* desc_node = make_desc_node(ctx, grove, ecursor);
+    if (desc_node) {
+      nd->add_child_node(desc_node);
     }
 
     return nd;
