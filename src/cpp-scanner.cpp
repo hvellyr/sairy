@@ -113,15 +113,13 @@ namespace {
           retval = CXChildVisit_Recurse;
         }
         else {
-          printf("UNHANDLED DECL TYPE %s %s (%s)", kind2str(kind), nm.c_str(),
+          printf("UNHANDLED DECL TYPE %s %s (%s)\n", kind2str(kind), nm.c_str(),
                  loc.format().c_str());
         }
       }
       else {
-        printf("SOME OTHER KIND: %s ", kind2str(kind));
+        printf("SOME OTHER KIND: %s \n", kind2str(kind));
       }
-
-      printf("\n");
     }
     return retval;
   }
