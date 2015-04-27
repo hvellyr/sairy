@@ -65,7 +65,9 @@ public:
     _file = File(file);
   }
 
-  std::string fileName() const { return _file.filename(); }
+  std::string filename() const { return _file.filename(); }
+  int line() const { return _line; }
+  int column() const { return _column; }
 
   std::string format() const
   {

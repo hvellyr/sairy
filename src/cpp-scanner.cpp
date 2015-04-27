@@ -37,6 +37,15 @@ namespace {
   };
 
 
+  std::string path_rel_to_cwd(const SourceLocation& loc)
+  {
+    std::stringstream ss;
+    ss << utils::make_relative(fs::current_path(), loc.filename()).string()
+       << ":" << loc.line() << ":" << loc.column();
+    return ss.str();
+  }
+
+
   Node* make_type_node(Grove* grove, const std::string& gi, Type type)
   {
     Node* nd = grove->make_elt_node(gi);
@@ -51,7 +60,8 @@ namespace {
   Node* make_function_node(Grove* grove, Cursor ecursor)
   {
     Node* nd = grove->make_elt_node("function");
-    nd->set_property(CommonProps::k_source, ecursor.location().format());
+    nd->set_property(CommonProps::k_source,
+                     path_rel_to_cwd(ecursor.location()));
 
     std::string nm = ecursor.spelling();
 
@@ -257,7 +267,9 @@ Node* CppScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile)
 
   ctx._document_node = grove.make_node(document_class_definition());
 
-  ctx._document_node->set_property(CommonProps::k_source, srcfile.string());
+  ctx._document_node->set_property(CommonProps::k_source,
+                                   utils::make_relative(fs::current_path(),
+                                                        srcfile).string());
   ctx._document_node->set_property("app-info", "cpp");
 
   // excludeDeclsFromPCH = 1, displayDiagnostics=1
