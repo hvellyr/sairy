@@ -89,9 +89,18 @@ class Cursor {
   CXCursor _cursor;
 
 public:
+  Cursor() : _cursor(clang_getNullCursor()) { }
+
   Cursor(CXCursor cursor) : _cursor(cursor) {}
 
   CXCursor cxcursor() const { return _cursor; }
+
+  Cursor referenced_cursor() const
+  {
+    return Cursor(clang_getCursorReferenced(_cursor));
+  }
+
+  bool is_set() const { return !clang_Cursor_isNull(_cursor); }
 
   CXCursorKind kind() const { return clang_getCursorKind(_cursor); }
 
@@ -117,30 +126,20 @@ public:
     return clang_getCXXAccessSpecifier(_cursor);
   }
 
-  bool is_static_method() const
-  {
-    return clang_CXXMethod_isStatic(_cursor);
-  }
+  bool is_static_method() const { return clang_CXXMethod_isStatic(_cursor); }
 
-  bool is_virtual_method() const
-  {
-    return clang_CXXMethod_isVirtual(_cursor);
-  }
+  bool is_virtual_method() const { return clang_CXXMethod_isVirtual(_cursor); }
 
   bool is_pure_virtual_method() const
   {
     return clang_CXXMethod_isPureVirtual(_cursor);
   }
 
-  bool is_const_method() const
-  {
-    return clang_CXXMethod_isConst(_cursor);
-  }
+  bool is_const_method() const { return clang_CXXMethod_isConst(_cursor); }
 
-  CXLinkageKind linkage() const
-  {
-    return clang_getCursorLinkage(_cursor);
-  }
+  CXLinkageKind linkage() const { return clang_getCursorLinkage(_cursor); }
+
+  bool is_class_virtual_base() const { return clang_isVirtualBase(_cursor); }
 };
 
 

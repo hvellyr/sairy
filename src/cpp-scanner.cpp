@@ -56,7 +56,10 @@ namespace {
   {
     std::stringstream ss;
     if (!namespaces.empty()) {
-      ss << namespaces << "::";
+      ss << namespaces;
+      if (!nm.empty()) {
+        ss << "::";
+      }
     }
     ss << nm;
     return ss.str();
@@ -438,6 +441,7 @@ namespace {
 
       // @todo: use clang_getOverriddenCursors to find override methods and
       //      produce a idref list as an attribute on this node.
+      // @todo: clang_Type_getCXXRefQualifier
 
       auto details = scan_function_children(ecursor);
 
@@ -456,6 +460,49 @@ namespace {
     }
 
     return nullptr;
+  }
+
+  std::string create_node_id(Cursor ecursor)
+  {
+    auto nm = ecursor.spelling();
+    std::string nss;
+
+    if (ecursor.kind() == CXCursor_StructDecl) {
+      return make_id("cpp", k_struct, ecursor.type().spelling(), "");
+    }
+
+    return "";
+  }
+
+  Node* scan_base_specifier(ParseContext* ctx, Cursor ecursor, Cursor eparent)
+  {
+    Grove* grove = ctx->_document_node->grove();
+    auto* nd = grove->make_elt_node("inherit");
+
+    auto base_cursor = ecursor.referenced_cursor();
+    if (base_cursor.is_set()) {
+      nd->add_attribute("base-ref", create_node_id(base_cursor));
+    }
+
+    nd->add_attribute("name",
+                      ecursor.type().spelling());
+    nd->add_attribute("access",
+                      access_specifier_to_string(ecursor.access_specifier()));
+    nd->add_attribute("virtual?", int(ecursor.is_class_virtual_base()));
+
+    return nd;
+  }
+
+  void add_wrapped_child_nodes(Node* parent_nd, const std::string& container_nm,
+                               const std::vector<Node*>& nodes)
+  {
+    if (!nodes.empty()) {
+      Node* wrap_nd = parent_nd->grove()->make_elt_node(container_nm);
+      for (auto* nd : nodes) {
+        wrap_nd->add_child_node(nd);
+      }
+      parent_nd->add_child_node(wrap_nd);
+    }
   }
 
   void scan_struct(ParseContext* ctx, Cursor ecursor, Cursor eparent)
@@ -480,19 +527,22 @@ namespace {
 
       nss = join_ns(nss, nm);
 
-      std::vector<Node*> fields;
-      std::vector<Node*> meths;
-      visit_children(ecursor, [&ctx, &nd, &nss, &fields, &meths](Cursor ec,
-                                                                 Cursor ep) {
+      struct StructDefs {
+        std::vector<Node*> _fields;
+        std::vector<Node*> _meths;
+        std::vector<Node*> _bases;
+      } defs;
+
+      visit_children(ecursor, [&ctx, &nd, &nss, &defs](Cursor ec, Cursor ep) {
         if (ec.kind() == CXCursor_FieldDecl) {
           if (auto* field_nd = scan_field(ctx, ec, ep, nss)) {
-            fields.push_back(field_nd);
+            defs._fields.push_back(field_nd);
           }
         }
         else if (ec.kind() == CXCursor_VarDecl) {
           // static data members are reported as variables
           if (Node* var_nd = scan_static_field(ctx, ec, ep, nss)) {
-            fields.push_back(var_nd);
+            defs._fields.push_back(var_nd);
           }
         }
         else if (ec.kind() == CXCursor_Constructor) {
@@ -503,14 +553,16 @@ namespace {
         }
         else if (ec.kind() == CXCursor_CXXMethod) {
           if (auto* meth_nd = scan_method(ctx, ec, ep, nss)) {
-            meths.push_back(meth_nd);
+            defs._meths.push_back(meth_nd);
+          }
+        }
+        else if (ec.kind() == CXCursor_CXXBaseSpecifier) {
+          if (auto* base_nd = scan_base_specifier(ctx, ec, ep)) {
+            defs._bases.push_back(base_nd);
           }
         }
         else if (ec.kind() == CXCursor_CXXAccessSpecifier) {
           // nop, handled inside of the other scan handlers
-        }
-        else if (ec.kind() == CXCursor_CXXBaseSpecifier) {
-          // @todo
         }
         else {
           std::cout << "!{struct}" << kind2str(ec.kind()) << std::endl;
@@ -519,21 +571,9 @@ namespace {
         return CXChildVisit_Continue;
       });
 
-      if (!fields.empty()) {
-        Node* fields_nd = grove->make_elt_node("fields");
-        for (auto* fnd : fields) {
-          fields_nd->add_child_node(fnd);
-        }
-        nd->add_child_node(fields_nd);
-      }
-
-      if (!meths.empty()) {
-        Node* meth_nd = grove->make_elt_node("methods");
-        for (auto* mnd : meths) {
-          meth_nd->add_child_node(mnd);
-        }
-        nd->add_child_node(meth_nd);
-      }
+      add_wrapped_child_nodes(nd, "inherits", defs._bases);
+      add_wrapped_child_nodes(nd, "fields", defs._fields);
+      add_wrapped_child_nodes(nd, "methods", defs._meths);
 
       nd->add_child_node(desc_node);
 
@@ -573,6 +613,14 @@ namespace {
         else if (kind == CXCursor_StructDecl) {
           scan_struct(ctx, ecursor, eparent);
           retval = CXChildVisit_Continue;
+        }
+        else if (kind == CXCursor_UnexposedDecl) {
+          // this is triggered e.g. by a orphaned ; on top level
+          // nop
+        }
+        else if (kind == CXCursor_UsingDirective) {
+          // e.g. using namespace foo;
+          // nop
         }
         else {
           printf("UNHANDLED DECL TYPE %s %s (%s)\n", kind2str(kind), nm.c_str(),
