@@ -7,7 +7,16 @@ struct Foo {
 
   ~Foo();
 
+  virtual char* get_foo() const;
+  virtual char* get_foo2() = 0;
+
+protected:
+  int get_bar();
   int get_bar() const;
+  static char* set_moo(char* moo);
+
+private:
+  bool get_icon();
 
 private:
   char b;

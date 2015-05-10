@@ -117,9 +117,24 @@ public:
     return clang_getCXXAccessSpecifier(_cursor);
   }
 
-  bool is_static() const
+  bool is_static_method() const
   {
     return clang_CXXMethod_isStatic(_cursor);
+  }
+
+  bool is_virtual_method() const
+  {
+    return clang_CXXMethod_isVirtual(_cursor);
+  }
+
+  bool is_pure_virtual_method() const
+  {
+    return clang_CXXMethod_isPureVirtual(_cursor);
+  }
+
+  bool is_const_method() const
+  {
+    return clang_CXXMethod_isConst(_cursor);
   }
 
   CXLinkageKind linkage() const

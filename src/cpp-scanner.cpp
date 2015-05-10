@@ -42,7 +42,15 @@ namespace {
     std::vector<std::string> _namespaces;
   };
 
-  enum Kind { k_function = 0, k_ns, k_var, k_struct, k_field, k_last };
+  enum Kind {
+    k_function = 0,
+    k_ns,
+    k_var,
+    k_struct,
+    k_field,
+    k_method,
+    k_last
+  };
 
   std::string join_ns(const std::string& namespaces, const std::string& nm)
   {
@@ -60,14 +68,14 @@ namespace {
                       const std::string& annotation = "")
   {
     static const auto kind2nm =
-      std::vector<std::string>{"function", "ns", "var", "struct", "field"};
+      std::vector<std::string>{"function", "ns",    "var",
+                               "struct",   "field", "method"};
     assert(kind2nm.size() == k_last);
 
     std::stringstream ss;
-    ss << dialect << "/" << kind2nm[kind] << "/"
-       << join_ns(namespaces, nm);
+    ss << dialect << "/" << kind2nm[kind] << "/" << join_ns(namespaces, nm);
 
-    if (kind == k_function) {
+    if (kind == k_function || kind == k_method) {
       ss << "(" << args << ")";
     }
     if (!annotation.empty()) {
@@ -137,6 +145,80 @@ namespace {
     return desc_node;
   }
 
+  using ParameterTuple = std::tuple<std::string, Type>;
+
+  struct FunctionDetails {
+    std::vector<ParameterTuple> _parameters;
+    std::vector<std::string> _namespaces;
+    bool _override_anno = false;
+  };
+
+  FunctionDetails scan_function_children(Cursor ecursor)
+  {
+    FunctionDetails result;
+    std::vector<ParameterTuple> parameters;
+    std::vector<std::string> namespaces;
+
+    visit_children(ecursor, [&result](Cursor ec, Cursor ep) {
+      if (ec.kind() == CXCursor_ParmDecl) {
+        result._parameters.push_back(std::make_tuple(ec.spelling(), ec.type()));
+      }
+      else if (ec.kind() == CXCursor_NamespaceRef) {
+        result._namespaces.push_back(ec.spelling());
+      }
+      else if (ec.kind() == CXCursor_CXXOverrideAttr) {
+        result._override_anno = true;
+      }
+      else {
+        std::cout << "!{function}" << kind2str(ec.kind()) << std::endl;
+      }
+      return CXChildVisit_Continue;
+    });
+
+    return result;
+  };
+
+  Node* encode_function_params(Grove* grove, const Type& type,
+                               const std::vector<ParameterTuple>& params)
+  {
+    auto* parameters = grove->make_elt_node("parameters");
+
+    for (int i = 0; i < type.num_arg_types(); i++) {
+      Node* param = grove->make_elt_node("parameter");
+      param->add_attribute("name", std::get<0>(params[i]));
+      param->add_child_node(
+        make_type_node(grove, "type", std::get<1>(params[i])));
+      parameters->add_child_node(param);
+    }
+
+    return parameters;
+  }
+
+  void encode_function(Node* func_nd, ParseContext* ctx, Grove* grove,
+                       Cursor ecursor,
+                       const std::vector<ParameterTuple>& params)
+  {
+    Type type = ecursor.type();
+    assert(params.size() == type.num_arg_types());
+
+    func_nd->add_child_node(
+      make_type_node(grove, "return-type", type.result_type()));
+
+    if (auto* params_nd = encode_function_params(grove, type, params)) {
+      func_nd->add_child_node(params_nd);
+    }
+  }
+
+  std::string encode_args_for_id(const std::vector<ParameterTuple>& params)
+  {
+    return utils::join(boost::copy_range<std::vector<std::string>>(
+                         params | boost::adaptors::transformed(
+                                    [](const ParameterTuple& tup) {
+                                      return std::get<1>(tup).spelling();
+                                    })),
+                       ",");
+  }
+
 
   /*! results in:
    *
@@ -155,33 +237,14 @@ namespace {
                      path_rel_to_cwd(ecursor.location()));
 
     std::string nm = ecursor.spelling();
-
-    std::vector<std::tuple<std::string, Type>> args_nm;
-    std::vector<std::string> nm_spaces;
-
-    visit_children(ecursor, [&args_nm, &nm_spaces](Cursor ec, Cursor ep) {
-      if (ec.kind() == CXCursor_ParmDecl) {
-        args_nm.push_back(std::make_tuple(ec.spelling(), ec.type()));
-      }
-      else if (ec.kind() == CXCursor_NamespaceRef) {
-        // std::cout << "namespace reference: " << ec.spelling() << std::endl;
-        nm_spaces.push_back(ec.spelling());
-      }
-      else {
-        std::cout << "!" << kind2str(ec.kind()) << std::endl;
-      }
-      return CXChildVisit_Continue;
-    });
-
-    Type type = ecursor.type();
-    assert(args_nm.size() == type.num_arg_types());
-
     nd->add_attribute("name", nm);
     nd->add_attribute("dialect", "cpp");
 
+    auto details = scan_function_children(ecursor);
+
     std::string nss;
-    if (!nm_spaces.empty()) {
-      nss = utils::join(nm_spaces, "::");
+    if (!details._namespaces.empty()) {
+      nss = utils::join(details._namespaces, "::");
     }
     else if (!ctx->_namespaces.empty()) {
       nss = utils::join(ctx->_namespaces, "::");
@@ -190,30 +253,9 @@ namespace {
 
     nd->set_property(CommonProps::k_id,
                      make_id("cpp", k_function, nss, nm,
-                             utils::join(boost::copy_range<
-                                           std::vector<std::string>>(
-                                           args_nm |
-                                           boost::adaptors::transformed([](
-                                             const std::tuple<std::string,
-                                                              Type>& tup) {
-                                             return std::get<1>(tup).spelling();
-                                           })),
-                                         ","),
-                             ""));
+                             encode_args_for_id(details._parameters), ""));
 
-    nd->add_child_node(
-      make_type_node(grove, "return-type", type.result_type()));
-
-    auto* parameters = grove->make_elt_node("parameters");
-    nd->add_child_node(parameters);
-
-    for (int i = 0; i < type.num_arg_types(); i++) {
-      Node* param = grove->make_elt_node("parameter");
-      param->add_attribute("name", std::get<0>(args_nm[i]));
-      param->add_child_node(
-        make_type_node(grove, "type", std::get<1>(args_nm[i])));
-      parameters->add_child_node(param);
-    }
+    encode_function(nd, ctx, grove, ecursor, details._parameters);
 
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
     if (desc_node) {
@@ -342,15 +384,77 @@ namespace {
     if (ecursor.access_specifier() == CX_CXXPublic ||
         ecursor.access_specifier() == CX_CXXProtected) {
       if (auto* nd = scan_var_def(ctx, ecursor, eparent, false, "field")) {
-        nd->set_property(CommonProps::k_id,
-                         make_id("cpp", k_field, parent_nss, ecursor.spelling()));
-        nd->add_attribute("access",
-                          access_specifier_to_string(ecursor.access_specifier()));
+        nd->set_property(CommonProps::k_id, make_id("cpp", k_field, parent_nss,
+                                                    ecursor.spelling()));
+        nd->add_attribute("access", access_specifier_to_string(
+                                      ecursor.access_specifier()));
         nd->add_attribute("linkage", "static");
 
         return nd;
       }
     }
+    return nullptr;
+  }
+
+  std::string method_linkage(Cursor ecursor)
+  {
+    if (ecursor.is_static_method()) {
+      return "static";
+    }
+    else if (ecursor.is_pure_virtual_method()) {
+      return "pure-virtual";
+    }
+    else if (ecursor.is_virtual_method()) {
+      return "virtual";
+    }
+    else {
+      return "member";
+    }
+  }
+
+  std::string method_const_anno(Cursor ecursor)
+  {
+    return ecursor.is_const_method() ? "const" : "";
+  }
+
+  Node* scan_method(ParseContext* ctx, Cursor ecursor, Cursor eparent,
+                    const std::string& parent_nss)
+  {
+    if (ecursor.access_specifier() == CX_CXXPublic ||
+        ecursor.access_specifier() == CX_CXXProtected) {
+      Grove* grove = ctx->_document_node->grove();
+      auto* desc_node = make_desc_node(ctx, grove, ecursor);
+
+      auto nm = ecursor.spelling();
+      Node* nd = grove->make_elt_node("method");
+      nd->set_property(CommonProps::k_source,
+                       path_rel_to_cwd(ecursor.location()));
+
+      nd->add_attribute("name", nm);
+      nd->add_attribute("access",
+                        access_specifier_to_string(ecursor.access_specifier()));
+      nd->add_attribute("linkage", method_linkage(ecursor));
+      nd->add_attribute("const?", ecursor.is_const_method());
+
+      // @todo: use clang_getOverriddenCursors to find override methods and
+      //      produce a idref list as an attribute on this node.
+
+      auto details = scan_function_children(ecursor);
+
+      nd->set_property(CommonProps::k_id,
+                       make_id("cpp", k_method, parent_nss, nm,
+                               encode_args_for_id(details._parameters),
+                               method_const_anno(ecursor)));
+
+      encode_function(nd, ctx, grove, ecursor, details._parameters);
+
+      if (desc_node) {
+        nd->add_child_node(desc_node);
+      }
+
+      return nd;
+    }
+
     return nullptr;
   }
 
@@ -377,10 +481,11 @@ namespace {
       nss = join_ns(nss, nm);
 
       std::vector<Node*> fields;
-      visit_children(ecursor, [&ctx, &nd, &nss, &fields](Cursor ec, Cursor ep) {
+      std::vector<Node*> meths;
+      visit_children(ecursor, [&ctx, &nd, &nss, &fields, &meths](Cursor ec,
+                                                                 Cursor ep) {
         if (ec.kind() == CXCursor_FieldDecl) {
-          auto* field_nd = scan_field(ctx, ec, ep, nss);
-          if (field_nd) {
+          if (auto* field_nd = scan_field(ctx, ec, ep, nss)) {
             fields.push_back(field_nd);
           }
         }
@@ -391,17 +496,26 @@ namespace {
           }
         }
         else if (ec.kind() == CXCursor_Constructor) {
+          // @todo
         }
         else if (ec.kind() == CXCursor_Destructor) {
+          // @todo
         }
         else if (ec.kind() == CXCursor_CXXMethod) {
+          if (auto* meth_nd = scan_method(ctx, ec, ep, nss)) {
+            meths.push_back(meth_nd);
+          }
         }
         else if (ec.kind() == CXCursor_CXXAccessSpecifier) {
-          // nop
+          // nop, handled inside of the other scan handlers
+        }
+        else if (ec.kind() == CXCursor_CXXBaseSpecifier) {
+          // @todo
         }
         else {
-          std::cout << "!" << kind2str(ec.kind()) << std::endl;
+          std::cout << "!{struct}" << kind2str(ec.kind()) << std::endl;
         }
+
         return CXChildVisit_Continue;
       });
 
@@ -411,6 +525,14 @@ namespace {
           fields_nd->add_child_node(fnd);
         }
         nd->add_child_node(fields_nd);
+      }
+
+      if (!meths.empty()) {
+        Node* meth_nd = grove->make_elt_node("methods");
+        for (auto* mnd : meths) {
+          meth_nd->add_child_node(mnd);
+        }
+        nd->add_child_node(meth_nd);
       }
 
       nd->add_child_node(desc_node);
