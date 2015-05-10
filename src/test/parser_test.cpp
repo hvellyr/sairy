@@ -177,6 +177,8 @@ bool test_file(const fs::path& path, const po::variables_map& vm)
         return true;
       }
 
+      serialize_node_if_missing(nd, path, vm);
+
       std::cerr << "FAILED" << std::endl
                 << "    parsed and expected outcome differ" << std::endl;
       if (vm["dev"].as<bool>()) {
