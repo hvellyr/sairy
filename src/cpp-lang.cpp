@@ -321,7 +321,6 @@ const char* kind2str(enum CXCursorKind kind)
   }
 }
 
-
 std::string to_string(CXString cxstr)
 {
   std::string retval;
@@ -332,6 +331,16 @@ std::string to_string(CXString cxstr)
   clang_disposeString(cxstr);
 
   return retval;
+}
+
+std::string access_specifier_to_string(CX_CXXAccessSpecifier specifier)
+{
+  switch (specifier) {
+  case CX_CXXInvalidAccessSpecifier: return "invalid";
+  case CX_CXXPublic: return "public";
+  case CX_CXXProtected: return "protected";
+  case CX_CXXPrivate: return "private";
+  }
 }
 
 

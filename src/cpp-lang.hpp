@@ -13,9 +13,11 @@
 
 namespace eyestep {
 
-const char* kind2str(enum CXCursorKind kind);
+const char* kind2str(CXCursorKind kind);
+
 
 std::string to_string(CXString cxstr);
+std::string access_specifier_to_string(CX_CXXAccessSpecifier specifier);
 
 class Type {
   CXType _type;
@@ -108,6 +110,21 @@ public:
   std::string raw_comment() const
   {
     return to_string(clang_Cursor_getRawCommentText(_cursor));
+  }
+
+  CX_CXXAccessSpecifier access_specifier() const
+  {
+    return clang_getCXXAccessSpecifier(_cursor);
+  }
+
+  bool is_static() const
+  {
+    return clang_CXXMethod_isStatic(_cursor);
+  }
+
+  CXLinkageKind linkage() const
+  {
+    return clang_getCursorLinkage(_cursor);
   }
 };
 
