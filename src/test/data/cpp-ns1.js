@@ -7,10 +7,6 @@
         { "type": "text",
           "#attr-name": "name",
           "data": "foo"
-        },
-        { "type": "text",
-          "#attr-name": "namespaces",
-          "data": ""
         }
       ],
       "children": [

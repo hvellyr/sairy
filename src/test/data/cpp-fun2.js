@@ -11,10 +11,6 @@
         { "type": "text",
           "#attr-name": "dialect",
           "data": "cpp"
-        },
-        { "type": "text",
-          "#attr-name": "namespaces",
-          "data": ""
         }
       ],
       "children": [
@@ -102,10 +98,6 @@
         { "type": "text",
           "#attr-name": "dialect",
           "data": "cpp"
-        },
-        { "type": "text",
-          "#attr-name": "namespaces",
-          "data": ""
         }
       ],
       "children": [

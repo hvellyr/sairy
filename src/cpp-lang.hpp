@@ -89,7 +89,7 @@ class Cursor {
   CXCursor _cursor;
 
 public:
-  Cursor() : _cursor(clang_getNullCursor()) { }
+  Cursor() : _cursor(clang_getNullCursor()) {}
 
   Cursor(CXCursor cursor) : _cursor(cursor) {}
 
@@ -98,6 +98,11 @@ public:
   Cursor referenced_cursor() const
   {
     return Cursor(clang_getCursorReferenced(_cursor));
+  }
+
+  Cursor semantic_parent()
+  {
+    return Cursor(clang_getCursorSemanticParent(_cursor));
   }
 
   bool is_set() const { return !clang_Cursor_isNull(_cursor); }

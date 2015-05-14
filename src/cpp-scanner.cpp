@@ -39,7 +39,6 @@ namespace {
 
     Grove& _grove;
     Node* _document_node;
-    std::vector<std::string> _namespaces;
   };
 
   enum Kind {
@@ -87,6 +86,54 @@ namespace {
     return ss.str();
   }
 
+  std::string get_decl_namespace(Cursor ecursor)
+  {
+    std::vector<std::string> nss;
+    Cursor p = ecursor.semantic_parent();
+    while (p.is_set()) {
+      if (p.kind() == CXCursor_Namespace) {
+        nss.emplace_back(p.spelling());
+      }
+      else if (p.kind() == CXCursor_StructDecl) {
+        nss.emplace_back(p.spelling());
+      }
+
+      p = p.semantic_parent();
+    }
+
+    std::reverse(nss.begin(), nss.end());
+    return utils::join(nss, "::");
+  }
+
+  std::string create_node_id(Cursor ecursor)
+  {
+    auto nm = ecursor.spelling();
+    std::string nss;
+
+    if (ecursor.kind() == CXCursor_StructDecl) {
+      return make_id("cpp", k_struct, get_decl_namespace(ecursor),
+                     ecursor.spelling());
+    }
+    else if (ecursor.kind() == CXCursor_Namespace) {
+      return make_id("cpp", k_ns, get_decl_namespace(ecursor),
+                     ecursor.spelling());
+    }
+    else if (ecursor.kind() == CXCursor_VarDecl) {
+      return make_id("cpp", k_var, get_decl_namespace(ecursor),
+                     ecursor.spelling());
+    }
+
+    return "";
+  }
+
+
+  void set_namespaces_attribute(Node* nd, Cursor ecursor)
+  {
+    auto nss = get_decl_namespace(ecursor);
+    if (!nss.empty()) {
+      nd->add_attribute("namespaces", nss);
+    }
+  }
 
   std::string path_rel_to_cwd(const SourceLocation& loc)
   {
@@ -249,10 +296,12 @@ namespace {
     if (!details._namespaces.empty()) {
       nss = utils::join(details._namespaces, "::");
     }
-    else if (!ctx->_namespaces.empty()) {
-      nss = utils::join(ctx->_namespaces, "::");
+    else {
+      nss = get_decl_namespace(ecursor);
     }
-    nd->add_attribute("namespaces", nss);
+    if (!nss.empty()) {
+      nd->add_attribute("namespaces", nss);
+    }
 
     nd->set_property(CommonProps::k_id,
                      make_id("cpp", k_function, nss, nm,
@@ -284,24 +333,15 @@ namespace {
                        path_rel_to_cwd(ecursor.location()));
       nd->add_attribute("name", nm);
 
-      std::string nss;
-      if (!ctx->_namespaces.empty()) {
-        nss = utils::join(ctx->_namespaces, "::");
-      }
-      nd->add_attribute("namespaces", nss);
-
-      nd->set_property(CommonProps::k_id, make_id("cpp", k_ns, nss, nm));
+      set_namespaces_attribute(nd, ecursor);
+      nd->set_property(CommonProps::k_id, create_node_id(ecursor));
       nd->add_child_node(desc_node);
       ctx->_document_node->add_child_node(nd);
     }
 
-    ctx->_namespaces.push_back(ecursor.spelling());
-
     visit_children(ecursor, [&ctx](Cursor ec, Cursor ep) {
       return scan_hierarchy_visitor(ctx, ec, ep);
     });
-
-    ctx->_namespaces.pop_back();
   }
 
 
@@ -333,14 +373,8 @@ namespace {
   Node* scan_var(ParseContext* ctx, Cursor ecursor, Cursor eparent)
   {
     if (auto* nd = scan_var_def(ctx, ecursor, eparent, true, "variable")) {
-      std::string nss;
-
-      if (!ctx->_namespaces.empty()) {
-        nss = utils::join(ctx->_namespaces, "::");
-        nd->add_attribute("namespaces", nss);
-      }
-      nd->set_property(CommonProps::k_id,
-                       make_id("cpp", k_var, nss, ecursor.spelling()));
+      set_namespaces_attribute(nd, ecursor);
+      nd->set_property(CommonProps::k_id, create_node_id(ecursor));
       return nd;
     }
     return nullptr;
@@ -349,8 +383,7 @@ namespace {
 
   //----------------------------------------------------------------------------
 
-  Node* scan_field(ParseContext* ctx, Cursor ecursor, Cursor eparent,
-                   const std::string& parent_nss)
+  Node* scan_field(ParseContext* ctx, Cursor ecursor, Cursor eparent)
   {
     Grove* grove = ctx->_document_node->grove();
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
@@ -364,7 +397,8 @@ namespace {
       nd->set_property(CommonProps::k_source,
                        path_rel_to_cwd(ecursor.location()));
       nd->set_property(CommonProps::k_id,
-                       make_id("cpp", k_field, parent_nss, nm));
+                       make_id("cpp", k_field, get_decl_namespace(ecursor),
+                               nm));
       nd->add_attribute("access",
                         access_specifier_to_string(ecursor.access_specifier()));
       nd->add_attribute("linkage", "member");
@@ -381,14 +415,14 @@ namespace {
     return nullptr;
   }
 
-  Node* scan_static_field(ParseContext* ctx, Cursor ecursor, Cursor eparent,
-                          const std::string& parent_nss)
+  Node* scan_static_field(ParseContext* ctx, Cursor ecursor, Cursor eparent)
   {
     if (ecursor.access_specifier() == CX_CXXPublic ||
         ecursor.access_specifier() == CX_CXXProtected) {
       if (auto* nd = scan_var_def(ctx, ecursor, eparent, false, "field")) {
-        nd->set_property(CommonProps::k_id, make_id("cpp", k_field, parent_nss,
-                                                    ecursor.spelling()));
+        nd->set_property(CommonProps::k_id,
+                         make_id("cpp", k_field, get_decl_namespace(ecursor),
+                                 ecursor.spelling()));
         nd->add_attribute("access", access_specifier_to_string(
                                       ecursor.access_specifier()));
         nd->add_attribute("linkage", "static");
@@ -420,8 +454,7 @@ namespace {
     return ecursor.is_const_method() ? "const" : "";
   }
 
-  Node* scan_method(ParseContext* ctx, Cursor ecursor, Cursor eparent,
-                    const std::string& parent_nss)
+  Node* scan_method(ParseContext* ctx, Cursor ecursor, Cursor eparent)
   {
     if (ecursor.access_specifier() == CX_CXXPublic ||
         ecursor.access_specifier() == CX_CXXProtected) {
@@ -446,7 +479,7 @@ namespace {
       auto details = scan_function_children(ecursor);
 
       nd->set_property(CommonProps::k_id,
-                       make_id("cpp", k_method, parent_nss, nm,
+                       make_id("cpp", k_method, get_decl_namespace(ecursor), nm,
                                encode_args_for_id(details._parameters),
                                method_const_anno(ecursor)));
 
@@ -462,18 +495,6 @@ namespace {
     return nullptr;
   }
 
-  std::string create_node_id(Cursor ecursor)
-  {
-    auto nm = ecursor.spelling();
-    std::string nss;
-
-    if (ecursor.kind() == CXCursor_StructDecl) {
-      return make_id("cpp", k_struct, ecursor.type().spelling(), "");
-    }
-
-    return "";
-  }
-
   Node* scan_base_specifier(ParseContext* ctx, Cursor ecursor, Cursor eparent)
   {
     Grove* grove = ctx->_document_node->grove();
@@ -484,8 +505,7 @@ namespace {
       nd->add_attribute("base-ref", create_node_id(base_cursor));
     }
 
-    nd->add_attribute("name",
-                      ecursor.type().spelling());
+    nd->add_attribute("name", ecursor.type().spelling());
     nd->add_attribute("access",
                       access_specifier_to_string(ecursor.access_specifier()));
     nd->add_attribute("virtual?", int(ecursor.is_class_virtual_base()));
@@ -518,14 +538,8 @@ namespace {
 
       nd->add_attribute("name", nm);
 
-      std::string nss;
-      if (!ctx->_namespaces.empty()) {
-        nss = utils::join(ctx->_namespaces, "::");
-        nd->add_attribute("namespaces", nss);
-      }
-      nd->set_property(CommonProps::k_id, make_id("cpp", k_struct, nss, nm));
-
-      nss = join_ns(nss, nm);
+      set_namespaces_attribute(nd, ecursor);
+      nd->set_property(CommonProps::k_id, create_node_id(ecursor));
 
       struct StructDefs {
         std::vector<Node*> _fields;
@@ -533,15 +547,15 @@ namespace {
         std::vector<Node*> _bases;
       } defs;
 
-      visit_children(ecursor, [&ctx, &nd, &nss, &defs](Cursor ec, Cursor ep) {
+      visit_children(ecursor, [&ctx, &nd, &defs](Cursor ec, Cursor ep) {
         if (ec.kind() == CXCursor_FieldDecl) {
-          if (auto* field_nd = scan_field(ctx, ec, ep, nss)) {
+          if (auto* field_nd = scan_field(ctx, ec, ep)) {
             defs._fields.push_back(field_nd);
           }
         }
         else if (ec.kind() == CXCursor_VarDecl) {
           // static data members are reported as variables
-          if (Node* var_nd = scan_static_field(ctx, ec, ep, nss)) {
+          if (Node* var_nd = scan_static_field(ctx, ec, ep)) {
             defs._fields.push_back(var_nd);
           }
         }
@@ -552,7 +566,7 @@ namespace {
           // @todo
         }
         else if (ec.kind() == CXCursor_CXXMethod) {
-          if (auto* meth_nd = scan_method(ctx, ec, ep, nss)) {
+          if (auto* meth_nd = scan_method(ctx, ec, ep)) {
             defs._meths.push_back(meth_nd);
           }
         }
