@@ -45,18 +45,19 @@ namespace {
     TypeRefTuple _typeref;
   };
 
-
-  FunctionDetails scan_function_children(Cursor ecursor);
-  std::string encode_args_for_id(const std::vector<ParameterTuple>& params);
-  std::string method_const_anno(Cursor ecursor);
-
-
   struct ParseContext {
     ParseContext(Grove& grove) : _grove(grove) {}
 
     Grove& _grove;
     Node* _document_node;
   };
+
+
+  FunctionDetails scan_function_children(Cursor ecursor);
+  std::string encode_args_for_id(const std::vector<ParameterTuple>& params);
+  std::string method_const_anno(Cursor ecursor);
+  void attach_out_of_line_desc(ParseContext* ctx, Cursor ecursor);
+
 
   enum Kind {
     k_function = 0,
@@ -387,22 +388,38 @@ namespace {
                      bool only_if_documented, const std::string& node_nm)
   {
     Grove* grove = ctx->_document_node->grove();
-    auto* desc_node = make_desc_node(ctx, grove, ecursor);
 
-    if (desc_node || !only_if_documented) {
-      auto nm = ecursor.spelling();
-      Node* nd = grove->make_elt_node(node_nm);
-      nd->set_property(CommonProps::k_source,
-                       path_rel_to_cwd(ecursor.location()));
+    bool is_out_of_line = false;
+    visit_children(ecursor, [&is_out_of_line](Cursor ec, Cursor ep) {
+        if (ec.kind() == CXCursor_TypeRef) {
+          // This is a out-of-line definition of a (static?) member variable
+          is_out_of_line = true;
+        }
+        // else ignore.
+        return CXChildVisit_Continue;
+    });
 
-      nd->add_attribute("name", nm);
+    if (is_out_of_line) {
+      attach_out_of_line_desc(ctx, ecursor);
+    }
+    else {
+      auto* desc_node = make_desc_node(ctx, grove, ecursor);
 
-      nd->add_child_node(make_type_node(grove, "type", ecursor.type()));
-      if (desc_node) {
-        nd->add_child_node(desc_node);
+      if (desc_node || !only_if_documented) {
+        auto nm = ecursor.spelling();
+        Node* nd = grove->make_elt_node(node_nm);
+        nd->set_property(CommonProps::k_source,
+                         path_rel_to_cwd(ecursor.location()));
+
+        nd->add_attribute("name", nm);
+
+        nd->add_child_node(make_type_node(grove, "type", ecursor.type()));
+        if (desc_node) {
+          nd->add_child_node(desc_node);
+        }
+
+        return nd;
       }
-
-      return nd;
     }
 
     return nullptr;
