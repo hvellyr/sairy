@@ -13,6 +13,8 @@
 
 namespace eyestep {
 
+class Cursor;
+
 const char* kind2str(CXCursorKind kind);
 
 
@@ -37,6 +39,8 @@ public:
   Type arg_type(size_t idx) const { return Type(clang_getArgType(_type, idx)); }
 
   bool is_const() const { return clang_isConstQualifiedType(_type) != 0; }
+
+  Cursor declaration() const;
 };
 
 
@@ -120,6 +124,11 @@ public:
   }
 
   Type type() const { return Type(clang_getCursorType(_cursor)); }
+
+  Type typedef_underlying_type() const
+  {
+    return Type(clang_getTypedefDeclUnderlyingType(_cursor));
+  }
 
   std::string raw_comment() const
   {

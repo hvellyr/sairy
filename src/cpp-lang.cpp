@@ -336,10 +336,14 @@ std::string to_string(CXString cxstr)
 std::string access_specifier_to_string(CX_CXXAccessSpecifier specifier)
 {
   switch (specifier) {
-  case CX_CXXInvalidAccessSpecifier: return "invalid";
-  case CX_CXXPublic: return "public";
-  case CX_CXXProtected: return "protected";
-  case CX_CXXPrivate: return "private";
+  case CX_CXXInvalidAccessSpecifier:
+    return "invalid";
+  case CX_CXXPublic:
+    return "public";
+  case CX_CXXProtected:
+    return "protected";
+  case CX_CXXPrivate:
+    return "private";
   }
 }
 
@@ -357,6 +361,11 @@ bool visit_children(Cursor cursor,
                                  return (*f)(Cursor(c), Cursor(parent));
                                },
                              &functor) != 0;
+}
+
+Cursor Type::declaration() const
+{
+  return Cursor(clang_getTypeDeclaration(_type));
 }
 
 } // namespace eyestep

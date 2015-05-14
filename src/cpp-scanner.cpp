@@ -67,6 +67,7 @@ namespace {
     k_class,
     k_field,
     k_method,
+    k_alias,
     k_last
   };
 
@@ -89,8 +90,8 @@ namespace {
                       const std::string& annotation = "")
   {
     static const auto kind2nm =
-      std::vector<std::string>{"function", "ns",    "var",   "struct",
-                               "class",    "field", "method"};
+      std::vector<std::string>{"function", "ns",    "var",    "struct",
+                               "class",    "field", "method", "alias"};
     assert(kind2nm.size() == k_last);
 
     std::stringstream ss;
@@ -153,6 +154,10 @@ namespace {
                      encode_args_for_id(
                        scan_function_children(ecursor)._parameters),
                      method_const_anno(ecursor));
+    case CXCursor_TypeAliasDecl:
+    case CXCursor_TypedefDecl:
+      return make_id("cpp", k_alias, get_decl_namespace(ecursor),
+                     ecursor.spelling());
     default:
       assert(false);
     }
@@ -603,11 +608,57 @@ namespace {
     }
   }
 
+  Node* scan_typealias(ParseContext* ctx, Cursor ecursor, Cursor eparent,
+                       bool inner)
+  {
+    if (inner && ecursor.access_specifier() != CX_CXXPublic &&
+        ecursor.access_specifier() != CX_CXXProtected) {
+      return nullptr;
+    }
+
+    Grove* grove = ctx->_document_node->grove();
+    auto* desc_node = make_desc_node(ctx, grove, ecursor);
+
+    if (desc_node) {
+      auto* nd = grove->make_elt_node("type-alias");
+      nd->set_property(CommonProps::k_source,
+                       path_rel_to_cwd(ecursor.location()));
+
+      nd->add_attribute("name", ecursor.spelling());
+      if (inner) {
+        nd->add_attribute("access", access_specifier_to_string(
+                                      ecursor.access_specifier()));
+      }
+
+      set_namespaces_attribute(nd, ecursor);
+      nd->set_property(CommonProps::k_id, create_node_id(ecursor));
+
+      nd->add_attribute("referenced-type-name",
+                        ecursor.typedef_underlying_type().spelling());
+
+      auto decl_cursor = ecursor.typedef_underlying_type().declaration();
+      if (decl_cursor.kind() != CXCursor_NoDeclFound) {
+        auto decl_ns = get_decl_namespace(decl_cursor);
+        auto type_id = create_node_id(decl_cursor);
+
+        auto nodes = elements_with_id(grove, type_id);
+        if (!nodes.empty()) {
+          nd->add_attribute("type-ref", type_id);
+        }
+      }
+
+      nd->add_child_node(desc_node);
+      return nd;
+    }
+
+    return nullptr;
+  }
+
+
   Node* scan_struct(ParseContext* ctx, Cursor ecursor, Cursor eparent,
                     const std::string& eltnm, bool inner)
   {
-    if (inner &&
-        ecursor.access_specifier() != CX_CXXPublic &&
+    if (inner && ecursor.access_specifier() != CX_CXXPublic &&
         ecursor.access_specifier() != CX_CXXProtected) {
       return nullptr;
     }
@@ -753,6 +804,11 @@ namespace {
                  kind == CXCursor_Constructor) {
           attach_out_of_line_desc(ctx, ecursor);
         }
+        else if (kind == CXCursor_TypeAliasDecl || kind == CXCursor_TypedefDecl) {
+          if (auto* alias_nd = scan_typealias(ctx, ecursor, eparent, false)) {
+            ctx->_document_node->add_child_node(alias_nd);
+          }
+        }
         else if (kind == CXCursor_UnexposedDecl) {
           // this is triggered e.g. by a orphaned ; on top level
           // nop
@@ -765,6 +821,9 @@ namespace {
           printf("UNHANDLED DECL TYPE %s %s (%s)\n", kind2str(kind), nm.c_str(),
                  loc.format().c_str());
         }
+      }
+      else if (kind == CXCursor_InclusionDirective) {
+        // nop
       }
       else {
         printf("SOME OTHER KIND: %s \n", kind2str(kind));
