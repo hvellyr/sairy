@@ -60,6 +60,7 @@ namespace {
   std::string method_const_anno(Cursor ecursor);
   void attach_out_of_line_desc(ParseContext* ctx, Cursor ecursor);
   std::string path_rel_to_cwd(const SourceLocation& loc);
+  Node* scan_enum(ParseContext* ctx, Cursor ecursor, Cursor eparent, bool inner);
 
 
   std::string get_unique_id_for_file_location(ParseContext* ctx,
@@ -782,6 +783,11 @@ namespace {
             defs._types.emplace_back(alias_nd);
           }
         }
+        else if (ec.kind() == CXCursor_EnumDecl) {
+          if (auto* enum_nd = scan_enum(ctx, ec, ep, true)) {
+            defs._types.emplace_back(enum_nd);
+          }
+        }
         else if (ec.kind() == CXCursor_CXXAccessSpecifier) {
           // nop, handled inside of the other scan handlers
         }
@@ -816,9 +822,9 @@ namespace {
 
     Grove* grove = ctx->_document_node->grove();
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
+    auto nm = ecursor.spelling();
 
-    if (desc_node) {
-      auto nm = ecursor.spelling();
+    if (desc_node || nm.empty()) {
       Node* nd = grove->make_elt_node("enum");
       nd->set_property(CommonProps::k_source,
                        path_rel_to_cwd(ecursor.location()));
