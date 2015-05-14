@@ -46,6 +46,7 @@ namespace {
     k_ns,
     k_var,
     k_struct,
+    k_class,
     k_field,
     k_method,
     k_last
@@ -70,8 +71,8 @@ namespace {
                       const std::string& annotation = "")
   {
     static const auto kind2nm =
-      std::vector<std::string>{"function", "ns",    "var",
-                               "struct",   "field", "method"};
+      std::vector<std::string>{"function", "ns",    "var",   "struct",
+                               "class",    "field", "method"};
     assert(kind2nm.size() == k_last);
 
     std::stringstream ss;
@@ -91,11 +92,14 @@ namespace {
     std::vector<std::string> nss;
     Cursor p = ecursor.semantic_parent();
     while (p.is_set()) {
-      if (p.kind() == CXCursor_Namespace) {
+      switch (p.kind()) {
+      case CXCursor_Namespace:
+      case CXCursor_StructDecl:
+      case CXCursor_ClassDecl:
         nss.emplace_back(p.spelling());
-      }
-      else if (p.kind() == CXCursor_StructDecl) {
-        nss.emplace_back(p.spelling());
+        break;
+      default:
+        ;
       }
 
       p = p.semantic_parent();
@@ -112,6 +116,10 @@ namespace {
 
     if (ecursor.kind() == CXCursor_StructDecl) {
       return make_id("cpp", k_struct, get_decl_namespace(ecursor),
+                     ecursor.spelling());
+    }
+    else if (ecursor.kind() == CXCursor_ClassDecl) {
+      return make_id("cpp", k_class, get_decl_namespace(ecursor),
                      ecursor.spelling());
     }
     else if (ecursor.kind() == CXCursor_Namespace) {
@@ -529,14 +537,15 @@ namespace {
     }
   }
 
-  void scan_struct(ParseContext* ctx, Cursor ecursor, Cursor eparent)
+  void scan_struct(ParseContext* ctx, Cursor ecursor, Cursor eparent,
+                   const std::string& eltnm)
   {
     Grove* grove = ctx->_document_node->grove();
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
 
     if (desc_node) {
       auto nm = ecursor.spelling();
-      Node* nd = grove->make_elt_node("struct");
+      Node* nd = grove->make_elt_node(eltnm);
       nd->set_property(CommonProps::k_source,
                        path_rel_to_cwd(ecursor.location()));
 
@@ -637,7 +646,11 @@ namespace {
           retval = CXChildVisit_Continue;
         }
         else if (kind == CXCursor_StructDecl) {
-          scan_struct(ctx, ecursor, eparent);
+          scan_struct(ctx, ecursor, eparent, "struct");
+          retval = CXChildVisit_Continue;
+        }
+        else if (kind == CXCursor_ClassDecl) {
+          scan_struct(ctx, ecursor, eparent, "class");
           retval = CXChildVisit_Continue;
         }
         else if (kind == CXCursor_UnexposedDecl) {
