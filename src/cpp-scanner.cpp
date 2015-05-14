@@ -251,8 +251,11 @@ namespace {
     Type type = ecursor.type();
     assert(params.size() == type.num_arg_types());
 
-    func_nd->add_child_node(
-      make_type_node(grove, "return-type", type.result_type()));
+    if (ecursor.kind() != CXCursor_Constructor &&
+        ecursor.kind() != CXCursor_Destructor) {
+      func_nd->add_child_node(
+        make_type_node(grove, "return-type", type.result_type()));
+    }
 
     if (auto* params_nd = encode_function_params(grove, type, params)) {
       func_nd->add_child_node(params_nd);
@@ -454,7 +457,8 @@ namespace {
     return ecursor.is_const_method() ? "const" : "";
   }
 
-  Node* scan_method(ParseContext* ctx, Cursor ecursor, Cursor eparent)
+  Node* scan_method(ParseContext* ctx, Cursor ecursor, Cursor eparent,
+                    const std::string& eltnm)
   {
     if (ecursor.access_specifier() == CX_CXXPublic ||
         ecursor.access_specifier() == CX_CXXProtected) {
@@ -462,7 +466,7 @@ namespace {
       auto* desc_node = make_desc_node(ctx, grove, ecursor);
 
       auto nm = ecursor.spelling();
-      Node* nd = grove->make_elt_node("method");
+      Node* nd = grove->make_elt_node(eltnm);
       nd->set_property(CommonProps::k_source,
                        path_rel_to_cwd(ecursor.location()));
 
@@ -544,6 +548,8 @@ namespace {
       struct StructDefs {
         std::vector<Node*> _fields;
         std::vector<Node*> _meths;
+        std::vector<Node*> _ctors;
+        std::vector<Node*> _dtors;
         std::vector<Node*> _bases;
       } defs;
 
@@ -560,13 +566,17 @@ namespace {
           }
         }
         else if (ec.kind() == CXCursor_Constructor) {
-          // @todo
+          if (auto* meth_nd = scan_method(ctx, ec, ep, "constructor")) {
+            defs._ctors.push_back(meth_nd);
+          }
         }
         else if (ec.kind() == CXCursor_Destructor) {
-          // @todo
+          if (auto* meth_nd = scan_method(ctx, ec, ep, "destructor")) {
+            defs._dtors.push_back(meth_nd);
+          }
         }
         else if (ec.kind() == CXCursor_CXXMethod) {
-          if (auto* meth_nd = scan_method(ctx, ec, ep)) {
+          if (auto* meth_nd = scan_method(ctx, ec, ep, "method")) {
             defs._meths.push_back(meth_nd);
           }
         }
@@ -587,6 +597,8 @@ namespace {
 
       add_wrapped_child_nodes(nd, "inherits", defs._bases);
       add_wrapped_child_nodes(nd, "fields", defs._fields);
+      add_wrapped_child_nodes(nd, "constructors", defs._ctors);
+      add_wrapped_child_nodes(nd, "destructors", defs._dtors);
       add_wrapped_child_nodes(nd, "methods", defs._meths);
 
       nd->add_child_node(desc_node);

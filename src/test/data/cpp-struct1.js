@@ -50,6 +50,126 @@
           ]
         },
         { "type": "element",
+          "gi": "constructors",
+          "children": [
+            { "type": "element",
+              "gi": "constructor",
+              "attributes": [
+                { "type": "text",
+                  "#attr-name": "name",
+                  "data": "Foo"
+                },
+                { "type": "text",
+                  "#attr-name": "access",
+                  "data": "public"
+                },
+                { "type": "text",
+                  "#attr-name": "linkage",
+                  "data": "member"
+                },
+                { "type": "int",
+                  "#attr-name": "const?",
+                  "value": 0
+                }
+              ],
+              "children": [
+                { "type": "element",
+                  "gi": "parameters"
+                }
+              ],
+              "id": "cpp/method/Foo::Foo()",
+              "source": "src/test/data/cpp-struct1.hpp:4:3"
+            },
+            { "type": "element",
+              "gi": "constructor",
+              "attributes": [
+                { "type": "text",
+                  "#attr-name": "name",
+                  "data": "Foo"
+                },
+                { "type": "text",
+                  "#attr-name": "access",
+                  "data": "public"
+                },
+                { "type": "text",
+                  "#attr-name": "linkage",
+                  "data": "member"
+                },
+                { "type": "int",
+                  "#attr-name": "const?",
+                  "value": 0
+                }
+              ],
+              "children": [
+                { "type": "element",
+                  "gi": "parameters",
+                  "children": [
+                    { "type": "element",
+                      "gi": "parameter",
+                      "attributes": [
+                        { "type": "text",
+                          "#attr-name": "name",
+                          "data": "b"
+                        }
+                      ],
+                      "children": [
+                        { "type": "element",
+                          "gi": "type",
+                          "attributes": [
+                            { "type": "text",
+                              "#attr-name": "name",
+                              "data": "int"
+                            },
+                            { "type": "int",
+                              "#attr-name": "const?",
+                              "value": 0
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "id": "cpp/method/Foo::Foo(int)",
+              "source": "src/test/data/cpp-struct1.hpp:6:3"
+            }
+          ]
+        },
+        { "type": "element",
+          "gi": "destructors",
+          "children": [
+            { "type": "element",
+              "gi": "destructor",
+              "attributes": [
+                { "type": "text",
+                  "#attr-name": "name",
+                  "data": "~Foo"
+                },
+                { "type": "text",
+                  "#attr-name": "access",
+                  "data": "public"
+                },
+                { "type": "text",
+                  "#attr-name": "linkage",
+                  "data": "member"
+                },
+                { "type": "int",
+                  "#attr-name": "const?",
+                  "value": 0
+                }
+              ],
+              "children": [
+                { "type": "element",
+                  "gi": "parameters"
+                }
+              ],
+              "id": "cpp/method/Foo::~Foo()",
+              "source": "src/test/data/cpp-struct1.hpp:8:3"
+            }
+          ]
+        },
+        { "type": "element",
           "gi": "methods",
           "children": [
             { "type": "element",
