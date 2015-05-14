@@ -391,12 +391,12 @@ namespace {
 
     bool is_out_of_line = false;
     visit_children(ecursor, [&is_out_of_line](Cursor ec, Cursor ep) {
-        if (ec.kind() == CXCursor_TypeRef) {
-          // This is a out-of-line definition of a (static?) member variable
-          is_out_of_line = true;
-        }
-        // else ignore.
-        return CXChildVisit_Continue;
+      if (ec.kind() == CXCursor_TypeRef) {
+        // This is a out-of-line definition of a (static?) member variable
+        is_out_of_line = true;
+      }
+      // else ignore.
+      return CXChildVisit_Continue;
     });
 
     if (is_out_of_line) {
@@ -603,9 +603,15 @@ namespace {
     }
   }
 
-  void scan_struct(ParseContext* ctx, Cursor ecursor, Cursor eparent,
-                   const std::string& eltnm)
+  Node* scan_struct(ParseContext* ctx, Cursor ecursor, Cursor eparent,
+                    const std::string& eltnm, bool inner)
   {
+    if (inner &&
+        ecursor.access_specifier() != CX_CXXPublic &&
+        ecursor.access_specifier() != CX_CXXProtected) {
+      return nullptr;
+    }
+
     Grove* grove = ctx->_document_node->grove();
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
 
@@ -616,6 +622,10 @@ namespace {
                        path_rel_to_cwd(ecursor.location()));
 
       nd->add_attribute("name", nm);
+      if (inner) {
+        nd->add_attribute("access", access_specifier_to_string(
+                                      ecursor.access_specifier()));
+      }
 
       set_namespaces_attribute(nd, ecursor);
       nd->set_property(CommonProps::k_id, create_node_id(ecursor));
@@ -626,6 +636,7 @@ namespace {
         std::vector<Node*> _ctors;
         std::vector<Node*> _dtors;
         std::vector<Node*> _bases;
+        std::vector<Node*> _types;
       } defs;
 
       visit_children(ecursor, [&ctx, &nd, &defs](Cursor ec, Cursor ep) {
@@ -660,6 +671,16 @@ namespace {
             defs._bases.push_back(base_nd);
           }
         }
+        else if (ec.kind() == CXCursor_StructDecl) {
+          if (auto* type_nd = scan_struct(ctx, ec, ep, "struct", true)) {
+            defs._types.emplace_back(type_nd);
+          }
+        }
+        else if (ec.kind() == CXCursor_ClassDecl) {
+          if (auto* type_nd = scan_struct(ctx, ec, ep, "class", true)) {
+            defs._types.emplace_back(type_nd);
+          }
+        }
         else if (ec.kind() == CXCursor_CXXAccessSpecifier) {
           // nop, handled inside of the other scan handlers
         }
@@ -671,6 +692,7 @@ namespace {
       });
 
       add_wrapped_child_nodes(nd, "inherits", defs._bases);
+      add_wrapped_child_nodes(nd, "types", defs._types);
       add_wrapped_child_nodes(nd, "fields", defs._fields);
       add_wrapped_child_nodes(nd, "constructors", defs._ctors);
       add_wrapped_child_nodes(nd, "destructors", defs._dtors);
@@ -678,8 +700,10 @@ namespace {
 
       nd->add_child_node(desc_node);
 
-      ctx->_document_node->add_child_node(nd);
+      return nd;
     }
+
+    return nullptr;
   }
 
 
@@ -712,11 +736,17 @@ namespace {
           retval = CXChildVisit_Continue;
         }
         else if (kind == CXCursor_StructDecl) {
-          scan_struct(ctx, ecursor, eparent, "struct");
+          if (auto* struct_nd =
+                scan_struct(ctx, ecursor, eparent, "struct", false)) {
+            ctx->_document_node->add_child_node(struct_nd);
+          }
           retval = CXChildVisit_Continue;
         }
         else if (kind == CXCursor_ClassDecl) {
-          scan_struct(ctx, ecursor, eparent, "class");
+          if (auto* class_nd =
+                scan_struct(ctx, ecursor, eparent, "class", false)) {
+            ctx->_document_node->add_child_node(class_nd);
+          }
           retval = CXChildVisit_Continue;
         }
         else if (kind == CXCursor_CXXMethod || kind == CXCursor_Destructor ||
