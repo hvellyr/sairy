@@ -174,8 +174,20 @@ std::string normalize_comment(const std::string& orig)
 {
   auto com = boost::trim_copy(orig);
 
-  if (boost::starts_with(com, "/**")) {
+  if (boost::starts_with(com, "/**<")) {
+    return normalize_c_style(com, boost::regex("^(/\\*\\*<)(\\s*).*"),
+                             boost::regex("^(\\s*\\*)(\\s*).*"),
+                             boost::regex("^(\\s*\\*/)"),
+                             boost::regex("^(.*)\\*/"));
+  }
+  else if (boost::starts_with(com, "/**")) {
     return normalize_c_style(com, boost::regex("^(/\\*\\*)(\\s*).*"),
+                             boost::regex("^(\\s*\\*)(\\s*).*"),
+                             boost::regex("^(\\s*\\*/)"),
+                             boost::regex("^(.*)\\*/"));
+  }
+  else if (boost::starts_with(com, "/*!<")) {
+    return normalize_c_style(com, boost::regex("^(/\\*!<)(\\s*).*"),
                              boost::regex("^(\\s*\\*)(\\s*).*"),
                              boost::regex("^(\\s*\\*/)"),
                              boost::regex("^(.*)\\*/"));
@@ -186,8 +198,14 @@ std::string normalize_comment(const std::string& orig)
                              boost::regex("^(\\s*\\*/)"),
                              boost::regex("^(.*)\\*/"));
   }
+  else if (boost::starts_with(com, "///<")) {
+    return normalize_cpp_style(com, boost::regex("^(///<)(\\s*).*"));
+  }
   else if (boost::starts_with(com, "///")) {
     return normalize_cpp_style(com, boost::regex("^(///)(\\s*).*"));
+  }
+  else if (boost::starts_with(com, "//!<")) {
+    return normalize_cpp_style(com, boost::regex("^(//!<)(\\s*).*"));
   }
   else if (boost::starts_with(com, "//!")) {
     return normalize_cpp_style(com, boost::regex("^(//!)(\\s*).*"));

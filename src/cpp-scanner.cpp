@@ -20,10 +20,10 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
-#include <map>
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 
@@ -50,13 +50,34 @@ namespace {
 
     Grove& _grove;
     Node* _document_node;
+    int _unique_id_counter = 0;
+    std::unordered_map<std::string, std::string> _file_location_to_id_map;
   };
 
 
-  FunctionDetails scan_function_children(Cursor ecursor);
+  FunctionDetails scan_function_children(ParseContext* ctx, Cursor ecursor);
   std::string encode_args_for_id(const std::vector<ParameterTuple>& params);
   std::string method_const_anno(Cursor ecursor);
   void attach_out_of_line_desc(ParseContext* ctx, Cursor ecursor);
+  std::string path_rel_to_cwd(const SourceLocation& loc);
+
+
+  std::string get_unique_id_for_file_location(ParseContext* ctx,
+                                              const std::string& prefix,
+                                              const SourceLocation& loc)
+  {
+    auto path = path_rel_to_cwd(loc);
+    auto i_find = ctx->_file_location_to_id_map.find(path);
+    if (i_find != ctx->_file_location_to_id_map.end()) {
+      return i_find->second;
+    }
+
+    std::stringstream ss;
+    ss << prefix << "." << ++ctx->_unique_id_counter;
+    auto next_nm = ss.str();
+    ctx->_file_location_to_id_map[path] = next_nm;
+    return next_nm;
+  }
 
 
   enum Kind {
@@ -68,6 +89,8 @@ namespace {
     k_field,
     k_method,
     k_alias,
+    k_enum,
+    k_enum_const,
     k_last
   };
 
@@ -90,8 +113,9 @@ namespace {
                       const std::string& annotation = "")
   {
     static const auto kind2nm =
-      std::vector<std::string>{"function", "ns",    "var",    "struct",
-                               "class",    "field", "method", "alias"};
+      std::vector<std::string>{"function", "ns",        "var",    "struct",
+                               "class",    "field",     "method", "alias",
+                               "enum",     "enum-const"};
     assert(kind2nm.size() == k_last);
 
     std::stringstream ss;
@@ -106,7 +130,17 @@ namespace {
     return ss.str();
   }
 
-  std::string get_decl_namespace(Cursor ecursor)
+  std::string get_enum_name(ParseContext* ctx, Cursor ecursor)
+  {
+    auto nm = ecursor.spelling();
+    if (nm.empty()) {
+      nm = get_unique_id_for_file_location(ctx, "enum", ecursor.location());
+    }
+
+    return nm;
+  }
+
+  std::string get_decl_namespace(ParseContext* ctx, Cursor ecursor)
   {
     std::vector<std::string> nss;
     Cursor p = ecursor.semantic_parent();
@@ -116,6 +150,9 @@ namespace {
       case CXCursor_StructDecl:
       case CXCursor_ClassDecl:
         nss.emplace_back(p.spelling());
+        break;
+      case CXCursor_EnumDecl:
+        nss.emplace_back(get_enum_name(ctx, p));
         break;
       default:
         ;
@@ -128,35 +165,41 @@ namespace {
     return utils::join(nss, "::");
   }
 
-  std::string create_node_id(Cursor ecursor)
+  std::string create_node_id(ParseContext* ctx, Cursor ecursor)
   {
     auto nm = ecursor.spelling();
     std::string nss;
 
     switch (ecursor.kind()) {
     case CXCursor_StructDecl:
-      return make_id("cpp", k_struct, get_decl_namespace(ecursor),
+      return make_id("cpp", k_struct, get_decl_namespace(ctx, ecursor),
                      ecursor.spelling());
     case CXCursor_ClassDecl:
-      return make_id("cpp", k_class, get_decl_namespace(ecursor),
+      return make_id("cpp", k_class, get_decl_namespace(ctx, ecursor),
                      ecursor.spelling());
     case CXCursor_Namespace:
-      return make_id("cpp", k_ns, get_decl_namespace(ecursor),
+      return make_id("cpp", k_ns, get_decl_namespace(ctx, ecursor),
                      ecursor.spelling());
     case CXCursor_VarDecl:
-      return make_id("cpp", k_var, get_decl_namespace(ecursor),
+      return make_id("cpp", k_var, get_decl_namespace(ctx, ecursor),
                      ecursor.spelling());
     case CXCursor_CXXMethod:
     case CXCursor_Destructor:
     case CXCursor_Constructor:
-      return make_id("cpp", k_method, get_decl_namespace(ecursor),
+      return make_id("cpp", k_method, get_decl_namespace(ctx, ecursor),
                      ecursor.spelling(),
                      encode_args_for_id(
-                       scan_function_children(ecursor)._parameters),
+                       scan_function_children(ctx, ecursor)._parameters),
                      method_const_anno(ecursor));
     case CXCursor_TypeAliasDecl:
     case CXCursor_TypedefDecl:
-      return make_id("cpp", k_alias, get_decl_namespace(ecursor),
+      return make_id("cpp", k_alias, get_decl_namespace(ctx, ecursor),
+                     ecursor.spelling());
+    case CXCursor_EnumDecl:
+      return make_id("cpp", k_enum, get_decl_namespace(ctx, ecursor),
+                     get_enum_name(ctx, ecursor));
+    case CXCursor_EnumConstantDecl:
+      return make_id("cpp", k_enum_const, get_decl_namespace(ctx, ecursor),
                      ecursor.spelling());
     default:
       assert(false);
@@ -166,9 +209,9 @@ namespace {
   }
 
 
-  void set_namespaces_attribute(Node* nd, Cursor ecursor)
+  void set_namespaces_attribute(ParseContext* ctx, Node* nd, Cursor ecursor)
   {
-    auto nss = get_decl_namespace(ecursor);
+    auto nss = get_decl_namespace(ctx, ecursor);
     if (!nss.empty()) {
       nd->add_attribute("namespaces", nss);
     }
@@ -234,13 +277,13 @@ namespace {
     return desc_node;
   }
 
-  FunctionDetails scan_function_children(Cursor ecursor)
+  FunctionDetails scan_function_children(ParseContext* ctx, Cursor ecursor)
   {
     FunctionDetails result;
     std::vector<ParameterTuple> parameters;
     std::vector<std::string> namespaces;
 
-    visit_children(ecursor, [&result](Cursor ec, Cursor ep) {
+    visit_children(ecursor, [&ctx, &result](Cursor ec, Cursor ep) {
       if (ec.kind() == CXCursor_ParmDecl) {
         result._parameters.push_back(std::make_tuple(ec.spelling(), ec.type()));
       }
@@ -254,7 +297,7 @@ namespace {
         auto type_cursor = ec.referenced_cursor();
         if (type_cursor.is_set()) {
           result._typeref = std::make_tuple(type_cursor.spelling(),
-                                            create_node_id(type_cursor));
+                                            create_node_id(ctx, type_cursor));
         }
         else {
           result._typeref = std::make_tuple(ec.spelling(), std::string());
@@ -334,14 +377,14 @@ namespace {
     nd->add_attribute("name", nm);
     nd->add_attribute("dialect", "cpp");
 
-    auto details = scan_function_children(ecursor);
+    auto details = scan_function_children(ctx, ecursor);
 
     std::string nss;
     if (!details._namespaces.empty()) {
       nss = utils::join(details._namespaces, "::");
     }
     else {
-      nss = get_decl_namespace(ecursor);
+      nss = get_decl_namespace(ctx, ecursor);
     }
     if (!nss.empty()) {
       nd->add_attribute("namespaces", nss);
@@ -377,8 +420,8 @@ namespace {
                        path_rel_to_cwd(ecursor.location()));
       nd->add_attribute("name", nm);
 
-      set_namespaces_attribute(nd, ecursor);
-      nd->set_property(CommonProps::k_id, create_node_id(ecursor));
+      set_namespaces_attribute(ctx, nd, ecursor);
+      nd->set_property(CommonProps::k_id, create_node_id(ctx, ecursor));
       nd->add_child_node(desc_node);
       ctx->_document_node->add_child_node(nd);
     }
@@ -433,8 +476,8 @@ namespace {
   Node* scan_var(ParseContext* ctx, Cursor ecursor, Cursor eparent)
   {
     if (auto* nd = scan_var_def(ctx, ecursor, eparent, true, "variable")) {
-      set_namespaces_attribute(nd, ecursor);
-      nd->set_property(CommonProps::k_id, create_node_id(ecursor));
+      set_namespaces_attribute(ctx, nd, ecursor);
+      nd->set_property(CommonProps::k_id, create_node_id(ctx, ecursor));
       return nd;
     }
     return nullptr;
@@ -457,7 +500,7 @@ namespace {
       nd->set_property(CommonProps::k_source,
                        path_rel_to_cwd(ecursor.location()));
       nd->set_property(CommonProps::k_id,
-                       make_id("cpp", k_field, get_decl_namespace(ecursor),
+                       make_id("cpp", k_field, get_decl_namespace(ctx, ecursor),
                                nm));
       nd->add_attribute("access",
                         access_specifier_to_string(ecursor.access_specifier()));
@@ -481,7 +524,8 @@ namespace {
         ecursor.access_specifier() == CX_CXXProtected) {
       if (auto* nd = scan_var_def(ctx, ecursor, eparent, false, "field")) {
         nd->set_property(CommonProps::k_id,
-                         make_id("cpp", k_field, get_decl_namespace(ecursor),
+                         make_id("cpp", k_field,
+                                 get_decl_namespace(ctx, ecursor),
                                  ecursor.spelling()));
         nd->add_attribute("access", access_specifier_to_string(
                                       ecursor.access_specifier()));
@@ -537,9 +581,9 @@ namespace {
       //      produce a idref list as an attribute on this node.
       // @todo: clang_Type_getCXXRefQualifier
 
-      auto details = scan_function_children(ecursor);
+      auto details = scan_function_children(ctx, ecursor);
 
-      nd->set_property(CommonProps::k_id, create_node_id(ecursor));
+      nd->set_property(CommonProps::k_id, create_node_id(ctx, ecursor));
 
       encode_function(nd, ctx, grove, ecursor, details._parameters);
 
@@ -561,7 +605,7 @@ namespace {
       auto* desc_node = make_desc_node(ctx, grove, ecursor);
 
       if (desc_node) {
-        auto id = create_node_id(ecursor);
+        auto id = create_node_id(ctx, ecursor);
 
         auto nodes = elements_with_id(grove, id);
         if (!nodes.empty()) {
@@ -585,7 +629,7 @@ namespace {
 
     auto base_cursor = ecursor.referenced_cursor();
     if (base_cursor.is_set()) {
-      nd->add_attribute("base-ref", create_node_id(base_cursor));
+      nd->add_attribute("base-ref", create_node_id(ctx, base_cursor));
     }
 
     nd->add_attribute("name", ecursor.type().spelling());
@@ -630,16 +674,16 @@ namespace {
                                       ecursor.access_specifier()));
       }
 
-      set_namespaces_attribute(nd, ecursor);
-      nd->set_property(CommonProps::k_id, create_node_id(ecursor));
+      set_namespaces_attribute(ctx, nd, ecursor);
+      nd->set_property(CommonProps::k_id, create_node_id(ctx, ecursor));
 
       nd->add_attribute("referenced-type-name",
                         ecursor.typedef_underlying_type().spelling());
 
       auto decl_cursor = ecursor.typedef_underlying_type().declaration();
       if (decl_cursor.kind() != CXCursor_NoDeclFound) {
-        auto decl_ns = get_decl_namespace(decl_cursor);
-        auto type_id = create_node_id(decl_cursor);
+        auto decl_ns = get_decl_namespace(ctx, decl_cursor);
+        auto type_id = create_node_id(ctx, decl_cursor);
 
         auto nodes = elements_with_id(grove, type_id);
         if (!nodes.empty()) {
@@ -678,8 +722,8 @@ namespace {
                                       ecursor.access_specifier()));
       }
 
-      set_namespaces_attribute(nd, ecursor);
-      nd->set_property(CommonProps::k_id, create_node_id(ecursor));
+      set_namespaces_attribute(ctx, nd, ecursor);
+      nd->set_property(CommonProps::k_id, create_node_id(ctx, ecursor));
 
       struct StructDefs {
         std::vector<Node*> _fields;
@@ -763,6 +807,76 @@ namespace {
     return nullptr;
   }
 
+  Node* scan_enum(ParseContext* ctx, Cursor ecursor, Cursor eparent, bool inner)
+  {
+    if (inner && ecursor.access_specifier() != CX_CXXPublic &&
+        ecursor.access_specifier() != CX_CXXProtected) {
+      return nullptr;
+    }
+
+    Grove* grove = ctx->_document_node->grove();
+    auto* desc_node = make_desc_node(ctx, grove, ecursor);
+
+    if (desc_node) {
+      auto nm = ecursor.spelling();
+      Node* nd = grove->make_elt_node("enum");
+      nd->set_property(CommonProps::k_source,
+                       path_rel_to_cwd(ecursor.location()));
+
+      nd->add_attribute("name", nm);
+      if (inner) {
+        nd->add_attribute("access", access_specifier_to_string(
+                                      ecursor.access_specifier()));
+      }
+
+      set_namespaces_attribute(ctx, nd, ecursor);
+      nd->set_property(CommonProps::k_id, create_node_id(ctx, ecursor));
+
+      using EnumConstTuple =
+        std::tuple<std::string, SourceLocation, std::string, Node*>;
+      std::vector<EnumConstTuple> enumConsts;
+
+      visit_children(ecursor, [&ctx, &grove, &enumConsts](Cursor ec,
+                                                          Cursor ep) {
+        if (ec.kind() == CXCursor_EnumConstantDecl) {
+          auto* const_desc_node = make_desc_node(ctx, grove, ec);
+          enumConsts.emplace_back(ec.spelling(), ec.location(),
+                                  create_node_id(ctx, ec), const_desc_node);
+        }
+        else {
+          std::cout << "!{enum}" << kind2str(ec.kind()) << std::endl;
+        }
+        return CXChildVisit_Continue;
+      });
+
+      for (const auto& tup : enumConsts) {
+        Node* enum_const_nd = grove->make_elt_node("enum-const");
+        enum_const_nd->add_attribute("name", std::get<0>(tup));
+        enum_const_nd->set_property(CommonProps::k_source,
+                                    path_rel_to_cwd(std::get<1>(tup)));
+        enum_const_nd->set_property(CommonProps::k_id, std::get<2>(tup));
+
+        if (auto* const_desc_node = std::get<3>(tup)) {
+          enum_const_nd->add_child_node(const_desc_node);
+        }
+
+        nd->add_child_node(enum_const_nd);
+      }
+
+      if (desc_node) {
+        nd->add_child_node(desc_node);
+      }
+      return nd;
+    }
+
+    return nullptr;
+  }
+      return nd;
+    }
+
+    return nullptr;
+  }
+
 
   CXChildVisitResult scan_hierarchy_visitor(ParseContext* ctx, Cursor ecursor,
                                             Cursor eparent)
@@ -814,6 +928,11 @@ namespace {
                  kind == CXCursor_TypedefDecl) {
           if (auto* alias_nd = scan_typealias(ctx, ecursor, eparent, false)) {
             ctx->_document_node->add_child_node(alias_nd);
+          }
+        }
+        else if (kind == CXCursor_EnumDecl) {
+          if (auto* enum_nd = scan_enum(ctx, ecursor, eparent, false)) {
+            ctx->_document_node->add_child_node(enum_nd);
           }
         }
         else if (kind == CXCursor_UnexposedDecl) {
