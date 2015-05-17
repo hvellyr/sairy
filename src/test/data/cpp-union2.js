@@ -267,6 +267,10 @@
                     { "type": "int",
                       "#attr-name": "const?",
                       "value": 0
+                    },
+                    { "type": "text",
+                      "#attr-name": "type-ref",
+                      "data": "cpp/struct/foo::Abc::Bar"
                     }
                   ]
                 }
@@ -301,6 +305,10 @@
                     { "type": "int",
                       "#attr-name": "const?",
                       "value": 0
+                    },
+                    { "type": "text",
+                      "#attr-name": "type-ref",
+                      "data": "cpp/class/foo::Abc::Mno"
                     }
                   ]
                 }

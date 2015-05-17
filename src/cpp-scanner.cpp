@@ -16,6 +16,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/optional.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -247,12 +248,33 @@ namespace {
   }
 
 
-  Node* make_type_node(Grove* grove, const std::string& gi, Type type)
+  boost::optional<std::string> typeid_for_type(ParseContext* ctx, Type type)
+  {
+    auto decl_cursor = type.declaration();
+    if (decl_cursor.kind() != CXCursor_NoDeclFound) {
+      auto decl_ns = get_decl_namespace(ctx, decl_cursor);
+      auto type_id = create_node_id(ctx, decl_cursor);
+
+      auto nodes = elements_with_id(ctx->_document_node->grove(), type_id);
+      if (!nodes.empty()) {
+        return type_id;
+      }
+    }
+    return boost::none;
+  }
+
+
+  Node* make_type_node(ParseContext* ctx, Grove* grove, const std::string& gi,
+                       Type type)
   {
     Node* nd = grove->make_elt_node(gi);
 
     nd->add_attribute("name", type.spelling());
     nd->add_attribute("const?", type.is_const());
+
+    if (auto type_id = typeid_for_type(ctx, type)) {
+      nd->add_attribute("type-ref", *type_id);
+    }
 
     return nd;
   }
@@ -334,7 +356,8 @@ namespace {
     return result;
   };
 
-  Node* encode_function_params(Grove* grove, const Type& type,
+  Node* encode_function_params(ParseContext* ctx, Grove* grove,
+                               const Type& type,
                                const std::vector<ParameterTuple>& params)
   {
     auto* parameters = grove->make_elt_node("parameters");
@@ -343,7 +366,7 @@ namespace {
       Node* param = grove->make_elt_node("parameter");
       param->add_attribute("name", std::get<0>(params[i]));
       param->add_child_node(
-        make_type_node(grove, "type", std::get<1>(params[i])));
+        make_type_node(ctx, grove, "type", std::get<1>(params[i])));
       parameters->add_child_node(param);
     }
 
@@ -360,10 +383,10 @@ namespace {
     if (ecursor.kind() != CXCursor_Constructor &&
         ecursor.kind() != CXCursor_Destructor) {
       func_nd->add_child_node(
-        make_type_node(grove, "return-type", type.result_type()));
+        make_type_node(ctx, grove, "return-type", type.result_type()));
     }
 
-    if (auto* params_nd = encode_function_params(grove, type, params)) {
+    if (auto* params_nd = encode_function_params(ctx, grove, type, params)) {
       func_nd->add_child_node(params_nd);
     }
   }
@@ -483,7 +506,7 @@ namespace {
 
         nd->add_attribute("name", nm);
 
-        nd->add_child_node(make_type_node(grove, "type", ecursor.type()));
+        nd->add_child_node(make_type_node(ctx, grove, "type", ecursor.type()));
         if (desc_node) {
           nd->add_child_node(desc_node);
         }
@@ -528,7 +551,7 @@ namespace {
                         access_specifier_to_string(ecursor.access_specifier()));
       nd->add_attribute("linkage", "member");
 
-      nd->add_child_node(make_type_node(grove, "type", ecursor.type()));
+      nd->add_child_node(make_type_node(ctx, grove, "type", ecursor.type()));
 
       if (desc_node) {
         nd->add_child_node(desc_node);
@@ -702,15 +725,9 @@ namespace {
       nd->add_attribute("referenced-type-name",
                         ecursor.typedef_underlying_type().spelling());
 
-      auto decl_cursor = ecursor.typedef_underlying_type().declaration();
-      if (decl_cursor.kind() != CXCursor_NoDeclFound) {
-        auto decl_ns = get_decl_namespace(ctx, decl_cursor);
-        auto type_id = create_node_id(ctx, decl_cursor);
-
-        auto nodes = elements_with_id(grove, type_id);
-        if (!nodes.empty()) {
-          nd->add_attribute("type-ref", type_id);
-        }
+      if (auto type_id =
+            typeid_for_type(ctx, ecursor.typedef_underlying_type())) {
+        nd->add_attribute("type-ref", *type_id);
       }
 
       nd->add_child_node(desc_node);

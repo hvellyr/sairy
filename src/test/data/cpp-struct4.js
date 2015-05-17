@@ -165,6 +165,10 @@
                     { "type": "int",
                       "#attr-name": "const?",
                       "value": 0
+                    },
+                    { "type": "text",
+                      "#attr-name": "type-ref",
+                      "data": "cpp/union/Foo::U"
                     }
                   ]
                 }

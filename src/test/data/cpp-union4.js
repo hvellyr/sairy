@@ -219,6 +219,10 @@
                             { "type": "int",
                               "#attr-name": "const?",
                               "value": 0
+                            },
+                            { "type": "text",
+                              "#attr-name": "type-ref",
+                              "data": "cpp/struct/foo::Abc::U::Bar"
                             }
                           ]
                         }
@@ -264,6 +268,10 @@
                     { "type": "int",
                       "#attr-name": "const?",
                       "value": 0
+                    },
+                    { "type": "text",
+                      "#attr-name": "type-ref",
+                      "data": "cpp/enum/foo::Abc::Boo"
                     }
                   ]
                 }
@@ -298,6 +306,10 @@
                     { "type": "int",
                       "#attr-name": "const?",
                       "value": 0
+                    },
+                    { "type": "text",
+                      "#attr-name": "type-ref",
+                      "data": "cpp/union/foo::Abc::U"
                     }
                   ]
                 }
