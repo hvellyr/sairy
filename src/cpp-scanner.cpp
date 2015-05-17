@@ -305,16 +305,17 @@ namespace {
     std::vector<std::string> namespaces;
 
     visit_children(ecursor, [&ctx, &result](Cursor ec, Cursor ep) {
-      if (ec.kind() == CXCursor_ParmDecl) {
+      switch (ec.kind()) {
+      case CXCursor_ParmDecl:
         result._parameters.push_back(std::make_tuple(ec.spelling(), ec.type()));
-      }
-      else if (ec.kind() == CXCursor_NamespaceRef) {
+        break;
+      case CXCursor_NamespaceRef:
         result._namespaces.push_back(ec.spelling());
-      }
-      else if (ec.kind() == CXCursor_CXXOverrideAttr) {
+        break;
+      case CXCursor_CXXOverrideAttr:
         result._override_anno = true;
-      }
-      else if (ec.kind() == CXCursor_TypeRef) {
+        break;
+      case CXCursor_TypeRef: {
         auto type_cursor = ec.referenced_cursor();
         if (type_cursor.is_set()) {
           result._typeref = std::make_tuple(type_cursor.spelling(),
@@ -323,8 +324,8 @@ namespace {
         else {
           result._typeref = std::make_tuple(ec.spelling(), std::string());
         }
-      }
-      else {
+      } break;
+      default:
         std::cout << "!{function}" << kind2str(ec.kind()) << std::endl;
       }
       return CXChildVisit_Continue;
@@ -757,67 +758,68 @@ namespace {
       } defs;
 
       visit_children(ecursor, [&ctx, &nd, &defs](Cursor ec, Cursor ep) {
-        if (ec.kind() == CXCursor_FieldDecl) {
+        switch (ec.kind()) {
+        case CXCursor_FieldDecl:
           if (auto* field_nd = scan_field(ctx, ec, ep)) {
             defs._fields.push_back(field_nd);
           }
-        }
-        else if (ec.kind() == CXCursor_VarDecl) {
+          break;
+        case CXCursor_VarDecl:
           // static data members are reported as variables
           if (Node* var_nd = scan_static_field(ctx, ec, ep)) {
             defs._fields.push_back(var_nd);
           }
-        }
-        else if (ec.kind() == CXCursor_Constructor) {
+          break;
+        case CXCursor_Constructor:
           if (auto* meth_nd = scan_method(ctx, ec, ep, "constructor")) {
             defs._ctors.push_back(meth_nd);
           }
-        }
-        else if (ec.kind() == CXCursor_Destructor) {
+          break;
+        case CXCursor_Destructor:
           if (auto* meth_nd = scan_method(ctx, ec, ep, "destructor")) {
             defs._dtors.push_back(meth_nd);
           }
-        }
-        else if (ec.kind() == CXCursor_CXXMethod) {
+          break;
+        case CXCursor_CXXMethod:
           if (auto* meth_nd = scan_method(ctx, ec, ep, "method")) {
             defs._meths.push_back(meth_nd);
           }
-        }
-        else if (ec.kind() == CXCursor_CXXBaseSpecifier) {
+          break;
+        case CXCursor_CXXBaseSpecifier:
           if (auto* base_nd = scan_base_specifier(ctx, ec, ep)) {
             defs._bases.push_back(base_nd);
           }
-        }
-        else if (ec.kind() == CXCursor_StructDecl) {
+          break;
+        case CXCursor_StructDecl:
           if (auto* type_nd = scan_struct(ctx, ec, ep, "struct", true, true)) {
             defs._types.emplace_back(type_nd);
           }
-        }
-        else if (ec.kind() == CXCursor_ClassDecl) {
+          break;
+        case CXCursor_ClassDecl:
           if (auto* type_nd = scan_struct(ctx, ec, ep, "class", true, true)) {
             defs._types.emplace_back(type_nd);
           }
-        }
-        else if (ec.kind() == CXCursor_TypeAliasDecl ||
-                 ec.kind() == CXCursor_TypedefDecl) {
+          break;
+        case CXCursor_TypeAliasDecl:
+        case CXCursor_TypedefDecl:
           if (auto* alias_nd = scan_typealias(ctx, ec, ep, true)) {
             defs._types.emplace_back(alias_nd);
           }
-        }
-        else if (ec.kind() == CXCursor_EnumDecl) {
+          break;
+        case CXCursor_EnumDecl:
           if (auto* enum_nd = scan_enum(ctx, ec, ep, true, true)) {
             defs._types.emplace_back(enum_nd);
           }
-        }
-        else if (ec.kind() == CXCursor_UnionDecl) {
+          break;
+        case CXCursor_UnionDecl:
           if (auto* union_nd = scan_union(ctx, ec, ep, true, true)) {
             defs._types.emplace_back(union_nd);
           }
-        }
-        else if (ec.kind() == CXCursor_CXXAccessSpecifier) {
+          break;
+        case CXCursor_CXXAccessSpecifier:
           // nop, handled inside of the other scan handlers
-        }
-        else {
+          break;
+        default:
           std::cout << "!{struct}" << kind2str(ec.kind()) << std::endl;
         }
 
@@ -873,12 +875,14 @@ namespace {
 
       visit_children(ecursor, [&ctx, &grove, &enumConsts](Cursor ec,
                                                           Cursor ep) {
-        if (ec.kind() == CXCursor_EnumConstantDecl) {
-          auto* const_desc_node = make_desc_node(ctx, grove, ec);
+        switch (ec.kind()) {
+        case CXCursor_EnumConstantDecl:
           enumConsts.emplace_back(ec.spelling(), ec.location(),
-                                  create_node_id(ctx, ec), const_desc_node);
-        }
-        else {
+                                  create_node_id(ctx, ec),
+                                  make_desc_node(ctx, grove, ec));
+          break;
+
+        default:
           std::cout << "!{enum}" << kind2str(ec.kind()) << std::endl;
         }
         return CXChildVisit_Continue;
@@ -1013,75 +1017,79 @@ namespace {
     SourceLocation loc = ecursor.location();
     if (loc.is_from_main_file()) {
       if (clang_isDeclaration(kind)) {
-        if (kind == CXCursor_FunctionDecl) {
-          Node* nd =
-            make_function_node(ctx, ctx->_document_node->grove(), ecursor);
-          ctx->_document_node->add_child_node(nd);
-
+        switch (kind) {
+        case CXCursor_FunctionDecl:
+          if (Node* nd = make_function_node(ctx, ctx->_document_node->grove(),
+                                            ecursor)) {
+            ctx->_document_node->add_child_node(nd);
+          }
           retval = CXChildVisit_Continue;
-        }
-        else if (kind == CXCursor_Namespace) {
+          break;
+        case CXCursor_Namespace:
           scan_namespace(ctx, ecursor, eparent);
           retval = CXChildVisit_Continue;
-        }
-        else if (kind == CXCursor_VarDecl) {
+          break;
+        case CXCursor_VarDecl:
           if (Node* var_nd = scan_var(ctx, ecursor, eparent)) {
             ctx->_document_node->add_child_node(var_nd);
           }
           retval = CXChildVisit_Continue;
-        }
-        else if (kind == CXCursor_StructDecl) {
+          break;
+        case CXCursor_StructDecl:
           if (auto* struct_nd =
                 scan_struct(ctx, ecursor, eparent, "struct", false, true)) {
             ctx->_document_node->add_child_node(struct_nd);
           }
           retval = CXChildVisit_Continue;
-        }
-        else if (kind == CXCursor_ClassDecl) {
+          break;
+        case CXCursor_ClassDecl:
           if (auto* class_nd =
                 scan_struct(ctx, ecursor, eparent, "class", false, true)) {
             ctx->_document_node->add_child_node(class_nd);
           }
           retval = CXChildVisit_Continue;
-        }
-        else if (kind == CXCursor_CXXMethod || kind == CXCursor_Destructor ||
-                 kind == CXCursor_Constructor) {
+          break;
+        case CXCursor_CXXMethod:
+        case CXCursor_Destructor:
+        case CXCursor_Constructor:
           attach_out_of_line_desc(ctx, ecursor);
-        }
-        else if (kind == CXCursor_TypeAliasDecl ||
-                 kind == CXCursor_TypedefDecl) {
+          break;
+        case CXCursor_TypeAliasDecl:
+        case CXCursor_TypedefDecl:
           if (auto* alias_nd = scan_typealias(ctx, ecursor, eparent, false)) {
             ctx->_document_node->add_child_node(alias_nd);
           }
-        }
-        else if (kind == CXCursor_EnumDecl) {
+          break;
+        case CXCursor_EnumDecl:
           if (auto* enum_nd = scan_enum(ctx, ecursor, eparent, false, true)) {
             ctx->_document_node->add_child_node(enum_nd);
           }
-        }
-        else if (kind == CXCursor_UnionDecl) {
+          break;
+        case CXCursor_UnionDecl:
           if (auto* union_nd = scan_union(ctx, ecursor, eparent, false, true)) {
             ctx->_document_node->add_child_node(union_nd);
           }
-        }
-        else if (kind == CXCursor_UnexposedDecl) {
+          break;
+        case CXCursor_UnexposedDecl:
           // this is triggered e.g. by a orphaned ; on top level
           // nop
-        }
-        else if (kind == CXCursor_UsingDirective) {
+          break;
+        case CXCursor_UsingDirective:
           // e.g. using namespace foo;
           // nop
-        }
-        else {
-          printf("UNHANDLED DECL TYPE %s %s (%s)\n", kind2str(kind), nm.c_str(),
-                 loc.format().c_str());
+          break;
+        default:
+          std::cout << "!{declaration}" << kind2str(ecursor.kind()) << ", "
+                    << nm.c_str() << " (" << loc.format().c_str() << ")"
+                    << std::endl;
         }
       }
       else if (kind == CXCursor_InclusionDirective) {
         // nop
       }
       else {
-        printf("SOME OTHER KIND: %s \n", kind2str(kind));
+        std::cout << "!{other}" << kind2str(ecursor.kind()) << ", "
+                  << std::endl;
       }
     }
     return retval;
