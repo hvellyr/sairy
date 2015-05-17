@@ -60,7 +60,10 @@ namespace {
   std::string method_const_anno(Cursor ecursor);
   void attach_out_of_line_desc(ParseContext* ctx, Cursor ecursor);
   std::string path_rel_to_cwd(const SourceLocation& loc);
-  Node* scan_enum(ParseContext* ctx, Cursor ecursor, Cursor eparent, bool inner);
+  Node* scan_enum(ParseContext* ctx, Cursor ecursor, Cursor eparent, bool inner,
+                  bool only_if_documented);
+  Node* scan_union(ParseContext* ctx, Cursor ecursor, Cursor eparent,
+                   bool inner, bool only_if_documented);
 
 
   std::string get_unique_id_for_file_location(ParseContext* ctx,
@@ -92,6 +95,7 @@ namespace {
     k_alias,
     k_enum,
     k_enum_const,
+    k_union,
     k_last
   };
 
@@ -114,9 +118,9 @@ namespace {
                       const std::string& annotation = "")
   {
     static const auto kind2nm =
-      std::vector<std::string>{"function", "ns",        "var",    "struct",
-                               "class",    "field",     "method", "alias",
-                               "enum",     "enum-const"};
+      std::vector<std::string>{"function", "ns",         "var",    "struct",
+                               "class",    "field",      "method", "alias",
+                               "enum",     "enum-const", "union"};
     assert(kind2nm.size() == k_last);
 
     std::stringstream ss;
@@ -141,6 +145,16 @@ namespace {
     return nm;
   }
 
+  std::string get_union_name(ParseContext* ctx, Cursor ecursor)
+  {
+    auto nm = ecursor.spelling();
+    if (nm.empty()) {
+      nm = get_unique_id_for_file_location(ctx, "union", ecursor.location());
+    }
+
+    return nm;
+  }
+
   std::string get_decl_namespace(ParseContext* ctx, Cursor ecursor)
   {
     std::vector<std::string> nss;
@@ -154,6 +168,9 @@ namespace {
         break;
       case CXCursor_EnumDecl:
         nss.emplace_back(get_enum_name(ctx, p));
+        break;
+      case CXCursor_UnionDecl:
+        nss.emplace_back(get_union_name(ctx, p));
         break;
       default:
         ;
@@ -202,6 +219,9 @@ namespace {
     case CXCursor_EnumConstantDecl:
       return make_id("cpp", k_enum_const, get_decl_namespace(ctx, ecursor),
                      ecursor.spelling());
+    case CXCursor_UnionDecl:
+      return make_id("cpp", k_union, get_decl_namespace(ctx, ecursor),
+                     get_union_name(ctx, ecursor));
     default:
       assert(false);
     }
@@ -701,7 +721,8 @@ namespace {
 
 
   Node* scan_struct(ParseContext* ctx, Cursor ecursor, Cursor eparent,
-                    const std::string& eltnm, bool inner)
+                    const std::string& eltnm, bool inner,
+                    bool only_if_documented)
   {
     if (inner && ecursor.access_specifier() != CX_CXXPublic &&
         ecursor.access_specifier() != CX_CXXProtected) {
@@ -711,7 +732,7 @@ namespace {
     Grove* grove = ctx->_document_node->grove();
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
 
-    if (desc_node) {
+    if (desc_node || !only_if_documented) {
       auto nm = ecursor.spelling();
       Node* nd = grove->make_elt_node(eltnm);
       nd->set_property(CommonProps::k_source,
@@ -768,12 +789,12 @@ namespace {
           }
         }
         else if (ec.kind() == CXCursor_StructDecl) {
-          if (auto* type_nd = scan_struct(ctx, ec, ep, "struct", true)) {
+          if (auto* type_nd = scan_struct(ctx, ec, ep, "struct", true, true)) {
             defs._types.emplace_back(type_nd);
           }
         }
         else if (ec.kind() == CXCursor_ClassDecl) {
-          if (auto* type_nd = scan_struct(ctx, ec, ep, "class", true)) {
+          if (auto* type_nd = scan_struct(ctx, ec, ep, "class", true, true)) {
             defs._types.emplace_back(type_nd);
           }
         }
@@ -784,8 +805,13 @@ namespace {
           }
         }
         else if (ec.kind() == CXCursor_EnumDecl) {
-          if (auto* enum_nd = scan_enum(ctx, ec, ep, true)) {
+          if (auto* enum_nd = scan_enum(ctx, ec, ep, true, true)) {
             defs._types.emplace_back(enum_nd);
+          }
+        }
+        else if (ec.kind() == CXCursor_UnionDecl) {
+          if (auto* union_nd = scan_union(ctx, ec, ep, true, true)) {
+            defs._types.emplace_back(union_nd);
           }
         }
         else if (ec.kind() == CXCursor_CXXAccessSpecifier) {
@@ -805,7 +831,9 @@ namespace {
       add_wrapped_child_nodes(nd, "destructors", defs._dtors);
       add_wrapped_child_nodes(nd, "methods", defs._meths);
 
-      nd->add_child_node(desc_node);
+      if (desc_node) {
+        nd->add_child_node(desc_node);
+      }
 
       return nd;
     }
@@ -813,7 +841,8 @@ namespace {
     return nullptr;
   }
 
-  Node* scan_enum(ParseContext* ctx, Cursor ecursor, Cursor eparent, bool inner)
+  Node* scan_enum(ParseContext* ctx, Cursor ecursor, Cursor eparent, bool inner,
+                  bool only_if_documented)
   {
     if (inner && ecursor.access_specifier() != CX_CXXPublic &&
         ecursor.access_specifier() != CX_CXXProtected) {
@@ -824,7 +853,7 @@ namespace {
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
     auto nm = ecursor.spelling();
 
-    if (desc_node || nm.empty()) {
+    if (desc_node || nm.empty() || !only_if_documented) {
       Node* nd = grove->make_elt_node("enum");
       nd->set_property(CommonProps::k_source,
                        path_rel_to_cwd(ecursor.location()));
@@ -877,6 +906,95 @@ namespace {
 
     return nullptr;
   }
+
+
+  Node* scan_union(ParseContext* ctx, Cursor ecursor, Cursor eparent,
+                   bool inner, bool only_if_documented)
+  {
+    if (inner && ecursor.access_specifier() != CX_CXXPublic &&
+        ecursor.access_specifier() != CX_CXXProtected) {
+      return nullptr;
+    }
+
+    Grove* grove = ctx->_document_node->grove();
+    auto* desc_node = make_desc_node(ctx, grove, ecursor);
+    auto nm = ecursor.spelling();
+
+    if (desc_node || nm.empty() || !only_if_documented) {
+      Node* nd = grove->make_elt_node("union");
+      nd->set_property(CommonProps::k_source,
+                       path_rel_to_cwd(ecursor.location()));
+
+      nd->add_attribute("name", nm);
+      if (inner) {
+        nd->add_attribute("access", access_specifier_to_string(
+                                      ecursor.access_specifier()));
+      }
+
+      set_namespaces_attribute(ctx, nd, ecursor);
+      nd->set_property(CommonProps::k_id, create_node_id(ctx, ecursor));
+
+      switch (ecursor.linkage()) {
+      case CXLinkage_NoLinkage:
+        nd->add_attribute("linkage", "auto");
+        break;
+      case CXLinkage_Internal:
+        nd->add_attribute("linkage", "static");
+        break;
+      case CXLinkage_UniqueExternal:
+        nd->add_attribute("linkage", "unique");
+        break;
+      case CXLinkage_External:
+        nd->add_attribute("linkage", "external");
+        break;
+      default:
+        assert(false);
+      }
+
+      struct UnionDefs {
+        std::vector<Node*> _types;
+        std::vector<Node*> _fields;
+      } defs;
+
+      visit_children(ecursor, [&ctx, &grove, &defs](Cursor ec, Cursor ep) {
+        switch (ec.kind()) {
+        case CXCursor_FieldDecl:
+          if (auto* field_nd = scan_field(ctx, ec, ep)) {
+            defs._fields.push_back(field_nd);
+          }
+          break;
+        case CXCursor_StructDecl:
+          if (auto* type_nd = scan_struct(ctx, ec, ep, "struct", true, false)) {
+            defs._types.push_back(type_nd);
+          }
+          break;
+        case CXCursor_ClassDecl:
+          if (auto* type_nd = scan_struct(ctx, ec, ep, "class", true, false)) {
+            defs._types.push_back(type_nd);
+          }
+          break;
+        case CXCursor_EnumDecl:
+          if (auto* enum_nd = scan_enum(ctx, ec, ep, false, false)) {
+            defs._types.push_back(enum_nd);
+          }
+          break;
+        case CXCursor_UnionDecl:
+          if (auto* union_nd = scan_union(ctx, ec, ep, false, false)) {
+            defs._types.push_back(union_nd);
+          }
+          break;
+        default:
+          std::cout << "!{union}" << kind2str(ec.kind()) << std::endl;
+        }
+        return CXChildVisit_Continue;
+      });
+
+      add_wrapped_child_nodes(nd, "types", defs._types);
+      add_wrapped_child_nodes(nd, "fields", defs._fields);
+
+      if (desc_node) {
+        nd->add_child_node(desc_node);
+      }
       return nd;
     }
 
@@ -914,14 +1032,14 @@ namespace {
         }
         else if (kind == CXCursor_StructDecl) {
           if (auto* struct_nd =
-                scan_struct(ctx, ecursor, eparent, "struct", false)) {
+                scan_struct(ctx, ecursor, eparent, "struct", false, true)) {
             ctx->_document_node->add_child_node(struct_nd);
           }
           retval = CXChildVisit_Continue;
         }
         else if (kind == CXCursor_ClassDecl) {
           if (auto* class_nd =
-                scan_struct(ctx, ecursor, eparent, "class", false)) {
+                scan_struct(ctx, ecursor, eparent, "class", false, true)) {
             ctx->_document_node->add_child_node(class_nd);
           }
           retval = CXChildVisit_Continue;
@@ -937,8 +1055,13 @@ namespace {
           }
         }
         else if (kind == CXCursor_EnumDecl) {
-          if (auto* enum_nd = scan_enum(ctx, ecursor, eparent, false)) {
+          if (auto* enum_nd = scan_enum(ctx, ecursor, eparent, false, true)) {
             ctx->_document_node->add_child_node(enum_nd);
+          }
+        }
+        else if (kind == CXCursor_UnionDecl) {
+          if (auto* union_nd = scan_union(ctx, ecursor, eparent, false, true)) {
+            ctx->_document_node->add_child_node(union_nd);
           }
         }
         else if (kind == CXCursor_UnexposedDecl) {
