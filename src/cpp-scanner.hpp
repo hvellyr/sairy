@@ -20,6 +20,7 @@ class CppScanner : public IScanner {
   std::vector<std::string> _defs;
   bool _verbose = false;
   bool _incl_non_documented = false;
+  std::string _lang_level;
 
 public:
   CppScanner();

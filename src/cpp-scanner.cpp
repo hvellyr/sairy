@@ -1229,6 +1229,10 @@ CppScanner::CppScanner(const po::variables_map& args)
     if (args.count("include-non-documented")) {
       _incl_non_documented = args["include-non-documented"].as<bool>();
     }
+
+    if (args.count("std")) {
+      _lang_level = args["std"].as<std::string>();
+    }
   }
 }
 
@@ -1260,6 +1264,9 @@ po::options_description CppScanner::program_options() const
                        "ignored")
     ("isystem",        po::value<std::vector<std::string>>()->composing(),
                        "-isystem arg, like -I")
+    ("std",            po::value<std::string>(),
+                       "Set the language level to support")
+
     ("include-non-documented",
                        po::bool_switch(), "include non documented symbols")
     ;
@@ -1300,6 +1307,13 @@ Node* CppScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile)
   argc++;
   args.push_back("c++");
   argc++;
+
+  std::string lang_level_cache;
+  if (!_lang_level.empty()) {
+    lang_level_cache = std::string("-std=") + _lang_level;
+    args.push_back(lang_level_cache.c_str());
+    argc++;
+  }
 
   unsigned int options = CXTranslationUnit_SkipFunctionBodies |
                          CXTranslationUnit_DetailedPreprocessingRecord |

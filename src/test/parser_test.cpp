@@ -13,6 +13,7 @@
 #include "json_spirit/json_spirit_reader_template.h"
 #include "json_spirit/json_spirit_writer_template.h"
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/program_options.hpp>
@@ -29,8 +30,7 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
 namespace {
-Node* with_parser_tb_scan(Grove& grove,
-                          const po::variables_map& vm,
+Node* with_parser_tb_scan(Grove& grove, const po::variables_map& vm,
                           const std::function<void(textbook::Parser&)>& proc)
 {
   Node* doc_node = grove.make_node(document_class_definition());
@@ -45,8 +45,7 @@ Node* with_parser_tb_scan(Grove& grove,
                           nullptr, // docspec
                           _catalog_path,
                           false, // mixed content
-                          vm["verbose"].as<bool>()
-                          );
+                          vm["verbose"].as<bool>());
 
   proc(parser);
 
@@ -105,10 +104,20 @@ Node* test_tb_file(const fs::path& path, const po::variables_map& vm,
 }
 
 
-Node* test_cpp_file(const fs::path& path, const po::variables_map& vm,
-                    Grove& grove)
+Node* test_cpp_file(const fs::path& path, po::variables_map vm, Grove& grove)
 {
   Node* nd = nullptr;
+
+  if (boost::algorithm::starts_with(path.filename().string(),
+                                    std::string("cpp11-"))) {
+    vm.insert(
+      std::make_pair("std", po::variable_value(std::string("c++11"), false)));
+  }
+  else if (boost::algorithm::starts_with(path.filename().string(),
+                                         std::string("cpp14-"))) {
+    vm.insert(
+      std::make_pair("std", po::variable_value(std::string("c++1y"), false)));
+  }
 
   try {
     CppScanner scanner(vm);
