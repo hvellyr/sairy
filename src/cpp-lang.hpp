@@ -109,6 +109,11 @@ public:
     return Cursor(clang_getCursorSemanticParent(_cursor));
   }
 
+  Cursor lexical_parent()
+  {
+    return clang_getCursorLexicalParent(_cursor);
+  }
+
   bool is_set() const { return !clang_Cursor_isNull(_cursor); }
 
   CXCursorKind kind() const { return clang_getCursorKind(_cursor); }

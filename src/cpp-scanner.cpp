@@ -101,6 +101,7 @@ namespace {
     k_enum,
     k_enum_const,
     k_union,
+    k_param,
     k_last
   };
 
@@ -125,7 +126,7 @@ namespace {
     static const auto kind2nm =
       std::vector<std::string>{"function", "ns",         "var",    "struct",
                                "class",    "field",      "method", "alias",
-                               "enum",     "enum-const", "union"};
+                               "enum",     "enum-const", "union",  "param"};
     assert(kind2nm.size() == k_last);
 
     std::stringstream ss;
@@ -163,6 +164,25 @@ namespace {
   std::string get_decl_namespace(ParseContext* ctx, Cursor ecursor)
   {
     std::vector<std::string> nss;
+
+    switch (ecursor.kind()) {
+    case CXCursor_TemplateTypeParameter:
+    case CXCursor_NonTypeTemplateParameter:
+    case CXCursor_TemplateTemplateParameter:
+      {
+        auto lex_parent = ecursor.lexical_parent();
+        auto lex_parent_ns = get_decl_namespace(ctx, lex_parent);
+        if (!lex_parent_ns.empty()) {
+          nss.emplace_back(lex_parent_ns);
+        }
+        nss.emplace_back(lex_parent.spelling());
+        return utils::join(nss, "::");
+      }
+      break;
+    default:
+      ;
+    }
+
     Cursor p = ecursor.semantic_parent();
     while (p.is_set()) {
       switch (p.kind()) {
@@ -200,6 +220,9 @@ namespace {
     case CXCursor_ClassDecl:
       return make_id("cpp", k_class, get_decl_namespace(ctx, ecursor),
                      ecursor.spelling());
+    case CXCursor_ClassTemplate:
+      return make_id("cpp", k_class, get_decl_namespace(ctx, ecursor),
+                     ecursor.display_name());
     case CXCursor_Namespace:
       return make_id("cpp", k_ns, get_decl_namespace(ctx, ecursor),
                      ecursor.spelling());
@@ -227,6 +250,11 @@ namespace {
     case CXCursor_UnionDecl:
       return make_id("cpp", k_union, get_decl_namespace(ctx, ecursor),
                      get_union_name(ctx, ecursor));
+    case CXCursor_TemplateTypeParameter:
+    case CXCursor_NonTypeTemplateParameter:
+    case CXCursor_TemplateTemplateParameter:
+      return make_id("cpp", k_param, get_decl_namespace(ctx, ecursor),
+                     ecursor.spelling());
     default:
       assert(false);
     }
@@ -746,6 +774,28 @@ namespace {
   }
 
 
+  Node* scan_templ_param(ParseContext* ctx, Cursor ecursor, Cursor eparent)
+  {
+    Grove* grove = ctx->_document_node->grove();
+    auto* desc_node = make_desc_node(ctx, grove, ecursor);
+
+    auto* nd = grove->make_elt_node("templ-param");
+    nd->set_property(CommonProps::k_source,
+                     path_rel_to_cwd(ecursor.location()));
+    nd->add_attribute("name", ecursor.spelling());
+    nd->set_property(CommonProps::k_id, create_node_id(ctx, ecursor));
+
+    if (ecursor.kind() == CXCursor_NonTypeTemplateParameter) {
+      nd->add_child_node(make_type_node(ctx, grove, "type", ecursor.type()));
+    }
+
+    if (desc_node) {
+      nd->add_child_node(desc_node);
+    }
+    return nd;
+  }
+
+
   Node* scan_struct(ParseContext* ctx, Cursor ecursor, Cursor eparent,
                     const std::string& eltnm, bool inner,
                     bool only_if_documented)
@@ -780,6 +830,7 @@ namespace {
         std::vector<Node*> _dtors;
         std::vector<Node*> _bases;
         std::vector<Node*> _types;
+        std::vector<Node*> _templ_params;
       } defs;
 
       visit_children(ecursor, [&ctx, &nd, &defs](Cursor ec, Cursor ep) {
@@ -844,6 +895,13 @@ namespace {
         case CXCursor_CXXAccessSpecifier:
           // nop, handled inside of the other scan handlers
           break;
+        case CXCursor_TemplateTypeParameter:
+        case CXCursor_NonTypeTemplateParameter:
+        case CXCursor_TemplateTemplateParameter:
+          if (auto* templ_nd = scan_templ_param(ctx, ec, ep)) {
+            defs._templ_params.emplace_back(templ_nd);
+          }
+          break;
         default:
           std::cout << "!{struct}" << kind2str(ec.kind()) << std::endl;
         }
@@ -851,6 +909,7 @@ namespace {
         return CXChildVisit_Continue;
       });
 
+      add_wrapped_child_nodes(nd, "templ-params", defs._templ_params);
       add_wrapped_child_nodes(nd, "inherits", defs._bases);
       add_wrapped_child_nodes(nd, "types", defs._types);
       add_wrapped_child_nodes(nd, "fields", defs._fields);
@@ -1096,6 +1155,13 @@ namespace {
           if (auto* union_nd = scan_union(ctx, ecursor, eparent, false, true)) {
             ctx->_document_node->add_child_node(union_nd);
           }
+          break;
+        case CXCursor_ClassTemplate:
+          if (auto* class_nd =
+                scan_struct(ctx, ecursor, eparent, "class", false, true)) {
+            ctx->_document_node->add_child_node(class_nd);
+          }
+          retval = CXChildVisit_Continue;
           break;
         case CXCursor_UnexposedDecl:
           // this is triggered e.g. by a orphaned ; on top level
