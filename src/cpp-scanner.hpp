@@ -18,7 +18,8 @@ class Grove;
 class CppScanner : public IScanner {
   std::vector<std::string> _incl_paths;
   std::vector<std::string> _defs;
-  bool _verbose;
+  bool _verbose = false;
+  bool _incl_non_documented = false;
 
 public:
   CppScanner();

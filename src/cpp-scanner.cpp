@@ -47,12 +47,16 @@ namespace {
   };
 
   struct ParseContext {
-    ParseContext(Grove& grove) : _grove(grove) {}
+    ParseContext(Grove& grove, bool incl_non_documented)
+      : _grove(grove), _incl_non_documented(incl_non_documented)
+    {
+    }
 
     Grove& _grove;
     Node* _document_node;
     int _unique_id_counter = 0;
     std::unordered_map<std::string, std::string> _file_location_to_id_map;
+    bool _incl_non_documented = false;
   };
 
 
@@ -458,7 +462,7 @@ namespace {
     Grove* grove = ctx->_document_node->grove();
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
 
-    if (desc_node) {
+    if (ctx->_incl_non_documented || desc_node) {
       auto nm = ecursor.spelling();
       Node* nd = grove->make_elt_node("namespace");
       nd->set_property(CommonProps::k_source,
@@ -467,7 +471,9 @@ namespace {
 
       set_namespaces_attribute(ctx, nd, ecursor);
       nd->set_property(CommonProps::k_id, create_node_id(ctx, ecursor));
-      nd->add_child_node(desc_node);
+      if (desc_node) {
+        nd->add_child_node(desc_node);
+      }
       ctx->_document_node->add_child_node(nd);
     }
 
@@ -498,7 +504,7 @@ namespace {
     else {
       auto* desc_node = make_desc_node(ctx, grove, ecursor);
 
-      if (desc_node || !only_if_documented) {
+      if (desc_node || !only_if_documented || ctx->_incl_non_documented) {
         auto nm = ecursor.spelling();
         Node* nd = grove->make_elt_node(node_nm);
         nd->set_property(CommonProps::k_source,
@@ -708,7 +714,7 @@ namespace {
     Grove* grove = ctx->_document_node->grove();
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
 
-    if (desc_node) {
+    if (ctx->_incl_non_documented || desc_node) {
       auto* nd = grove->make_elt_node("type-alias");
       nd->set_property(CommonProps::k_source,
                        path_rel_to_cwd(ecursor.location()));
@@ -730,7 +736,9 @@ namespace {
         nd->add_attribute("type-ref", *type_id);
       }
 
-      nd->add_child_node(desc_node);
+      if (desc_node) {
+        nd->add_child_node(desc_node);
+      }
       return nd;
     }
 
@@ -750,7 +758,7 @@ namespace {
     Grove* grove = ctx->_document_node->grove();
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
 
-    if (desc_node || !only_if_documented) {
+    if (desc_node || !only_if_documented || ctx->_incl_non_documented) {
       auto nm = ecursor.spelling();
       Node* nd = grove->make_elt_node(eltnm);
       nd->set_property(CommonProps::k_source,
@@ -872,7 +880,8 @@ namespace {
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
     auto nm = ecursor.spelling();
 
-    if (desc_node || nm.empty() || !only_if_documented) {
+    if (desc_node || nm.empty() || !only_if_documented ||
+        ctx->_incl_non_documented) {
       Node* nd = grove->make_elt_node("enum");
       nd->set_property(CommonProps::k_source,
                        path_rel_to_cwd(ecursor.location()));
@@ -941,7 +950,8 @@ namespace {
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
     auto nm = ecursor.spelling();
 
-    if (desc_node || nm.empty() || !only_if_documented) {
+    if (desc_node || nm.empty() || !only_if_documented ||
+        ctx->_incl_non_documented) {
       Node* nd = grove->make_elt_node("union");
       nd->set_property(CommonProps::k_source,
                        path_rel_to_cwd(ecursor.location()));
@@ -1181,11 +1191,11 @@ namespace {
 
 //------------------------------------------------------------------------------
 
-CppScanner::CppScanner() : _verbose(false)
+CppScanner::CppScanner()
 {
 }
 
-CppScanner::CppScanner(const po::variables_map& args) : _verbose(false)
+CppScanner::CppScanner(const po::variables_map& args)
 {
   if (!args.empty()) {
 
@@ -1214,6 +1224,10 @@ CppScanner::CppScanner(const po::variables_map& args) : _verbose(false)
                 << std::endl
                 << "defs        : " << eyestep::utils::join(defs, " ")
                 << std::endl;
+    }
+
+    if (args.count("include-non-documented")) {
+      _incl_non_documented = args["include-non-documented"].as<bool>();
     }
   }
 }
@@ -1246,6 +1260,8 @@ po::options_description CppScanner::program_options() const
                        "ignored")
     ("isystem",        po::value<std::vector<std::string>>()->composing(),
                        "-isystem arg, like -I")
+    ("include-non-documented",
+                       po::bool_switch(), "include non documented symbols")
     ;
   // clang-format on
 
@@ -1257,7 +1273,7 @@ Node* CppScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile)
   CXIndex idx;
   CXTranslationUnit tu;
 
-  ParseContext ctx(grove);
+  ParseContext ctx(grove, _incl_non_documented);
 
   ctx._document_node = grove.make_node(document_class_definition());
 
