@@ -38,12 +38,14 @@ namespace {
 
   using ParameterTuple = std::tuple<std::string, Type>;
   using TypeRefTuple = std::tuple<std::string, std::string>;
+  using TemplParamTuple = std::tuple<std::string, std::string, bool, Type>;
 
   struct FunctionDetails {
     std::vector<ParameterTuple> _parameters;
     std::vector<std::string> _namespaces;
     bool _override_anno = false;
     TypeRefTuple _typeref;
+    std::vector<TemplParamTuple> _templ_params;
   };
 
   struct ParseContext {
@@ -69,6 +71,7 @@ namespace {
                   bool only_if_documented);
   Node* scan_union(ParseContext* ctx, Cursor ecursor, Cursor eparent,
                    bool inner, bool only_if_documented);
+  Node* scan_templ_param(ParseContext* ctx, Cursor ecursor, Cursor eparent);
 
 
   std::string get_unique_id_for_file_location(ParseContext* ctx,
@@ -379,6 +382,21 @@ namespace {
           result._typeref = std::make_tuple(ec.spelling(), std::string());
         }
       } break;
+      case CXCursor_TemplateTypeParameter:
+        result._templ_params.emplace_back(ec.spelling(),
+                                          create_node_id(ctx, ec), false,
+                                          ec.type());
+        break;
+      case CXCursor_NonTypeTemplateParameter:
+        result._templ_params.emplace_back(ec.spelling(),
+                                          create_node_id(ctx, ec), true,
+                                          ec.type());
+        break;
+      case CXCursor_TemplateTemplateParameter:
+        result._templ_params.emplace_back(ec.spelling(),
+                                          create_node_id(ctx, ec), false,
+                                          ec.type());
+        break;
       default:
         std::cout << "!{function}" << kind2str(ec.kind()) << std::endl;
       }
@@ -387,6 +405,27 @@ namespace {
 
     return result;
   };
+
+  Node*
+  encode_function_templ_params(ParseContext* ctx, Grove* grove,
+                               const std::vector<TemplParamTuple>& templ_params)
+  {
+    auto* parameters = grove->make_elt_node("templ-params");
+
+    for (const auto& templ_param : templ_params) {
+      Node* param = grove->make_elt_node("templ-param");
+      param->add_attribute("name", std::get<0>(templ_param));
+      param->set_property(CommonProps::k_id, std::get<1>(templ_param));
+
+      if (std::get<2>(templ_param)) {
+        param->add_child_node(
+          make_type_node(ctx, grove, "type", std::get<3>(templ_param)));
+      }
+      parameters->add_child_node(param);
+    }
+
+    return parameters;
+  }
 
   Node* encode_function_params(ParseContext* ctx, Grove* grove,
                                const Type& type,
@@ -407,10 +446,18 @@ namespace {
 
   void encode_function(Node* func_nd, ParseContext* ctx, Grove* grove,
                        Cursor ecursor,
-                       const std::vector<ParameterTuple>& params)
+                       const std::vector<ParameterTuple>& params,
+                       const std::vector<TemplParamTuple>& templ_params)
   {
     Type type = ecursor.type();
     assert(params.size() == type.num_arg_types());
+
+    if (!templ_params.empty()) {
+      if (auto* templ_params_nd =
+            encode_function_templ_params(ctx, grove, templ_params)) {
+        func_nd->add_child_node(templ_params_nd);
+      }
+    }
 
     if (ecursor.kind() != CXCursor_Constructor &&
         ecursor.kind() != CXCursor_Destructor) {
@@ -471,7 +518,8 @@ namespace {
                      make_id("cpp", k_function, nss, nm,
                              encode_args_for_id(details._parameters), ""));
 
-    encode_function(nd, ctx, grove, ecursor, details._parameters);
+    encode_function(nd, ctx, grove, ecursor, details._parameters,
+                    details._templ_params);
 
     auto* desc_node = make_desc_node(ctx, grove, ecursor);
     if (desc_node) {
@@ -664,7 +712,8 @@ namespace {
 
       nd->set_property(CommonProps::k_id, create_node_id(ctx, ecursor));
 
-      encode_function(nd, ctx, grove, ecursor, details._parameters);
+      encode_function(nd, ctx, grove, ecursor, details._parameters,
+                      details._templ_params);
 
       if (desc_node) {
         nd->add_child_node(desc_node);
@@ -777,7 +826,6 @@ namespace {
   Node* scan_templ_param(ParseContext* ctx, Cursor ecursor, Cursor eparent)
   {
     Grove* grove = ctx->_document_node->grove();
-    auto* desc_node = make_desc_node(ctx, grove, ecursor);
 
     auto* nd = grove->make_elt_node("templ-param");
     nd->set_property(CommonProps::k_source,
@@ -789,9 +837,6 @@ namespace {
       nd->add_child_node(make_type_node(ctx, grove, "type", ecursor.type()));
     }
 
-    if (desc_node) {
-      nd->add_child_node(desc_node);
-    }
     return nd;
   }
 
@@ -1163,6 +1208,14 @@ namespace {
           }
           retval = CXChildVisit_Continue;
           break;
+        case CXCursor_FunctionTemplate:
+          if (Node* nd = make_function_node(ctx, ctx->_document_node->grove(),
+                                            ecursor)) {
+            ctx->_document_node->add_child_node(nd);
+          }
+          retval = CXChildVisit_Continue;
+          break;
+
         case CXCursor_UnexposedDecl:
           // this is triggered e.g. by a orphaned ; on top level
           // nop
