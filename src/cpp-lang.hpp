@@ -41,6 +41,16 @@ public:
   bool is_const() const { return clang_isConstQualifiedType(_type) != 0; }
 
   Cursor declaration() const;
+
+  size_t num_arg_template_arguments() const
+  {
+    return clang_Type_getNumTemplateArguments(_type);
+  }
+
+  Type template_arguments_as_type(size_t i)
+  {
+    return Type(clang_Type_getTemplateArgumentAsType(_type, i));
+  }
 };
 
 
@@ -89,6 +99,16 @@ public:
 };
 
 
+class TemplateArg {
+  std::string _spelling;
+
+public:
+  TemplateArg(std::string spelling) : _spelling(std::move(spelling)) {}
+
+  std::string spelling() const { return _spelling; }
+};
+
+
 class Cursor {
   CXCursor _cursor;
 
@@ -114,6 +134,11 @@ public:
     return clang_getCursorLexicalParent(_cursor);
   }
 
+  Cursor specialized_cursor_template()
+  {
+    return Cursor(clang_getSpecializedCursorTemplate(_cursor));
+  }
+
   bool is_set() const { return !clang_Cursor_isNull(_cursor); }
 
   CXCursorKind kind() const { return clang_getCursorKind(_cursor); }
@@ -121,6 +146,11 @@ public:
   std::string spelling() const
   {
     return to_string(clang_getCursorSpelling(_cursor));
+  }
+
+  std::string display_name() const
+  {
+    return to_string(clang_getCursorDisplayName(_cursor));
   }
 
   SourceLocation location() const
@@ -159,6 +189,41 @@ public:
   CXLinkageKind linkage() const { return clang_getCursorLinkage(_cursor); }
 
   bool is_class_virtual_base() const { return clang_isVirtualBase(_cursor); }
+
+  std::string usr() const { return to_string(clang_getCursorUSR(_cursor)); }
+
+  int num_args() const { return clang_Cursor_getNumArguments(_cursor); }
+
+  int num_templ_args() const
+  {
+    return clang_Cursor_getNumTemplateArguments(_cursor);
+  }
+
+  TemplateArg template_argument(size_t idx)
+  {
+    auto kind = clang_Cursor_getTemplateArgumentKind(_cursor, idx);
+    switch (kind) {
+    case CXTemplateArgumentKind_Type:
+      return TemplateArg(to_string(clang_getTypeSpelling(
+        clang_Cursor_getTemplateArgumentType(_cursor, idx))));
+    case CXTemplateArgumentKind_Integral: {
+      std::stringstream ss;
+      ss << clang_Cursor_getTemplateArgumentValue(_cursor, idx);
+      return TemplateArg(ss.str());
+    }
+    case CXTemplateArgumentKind_NullPtr:
+      return TemplateArg("nullptr");
+
+    case CXTemplateArgumentKind_Null:
+    case CXTemplateArgumentKind_Declaration:
+    case CXTemplateArgumentKind_Template:
+    case CXTemplateArgumentKind_TemplateExpansion:
+    case CXTemplateArgumentKind_Expression:
+    case CXTemplateArgumentKind_Pack:
+    case CXTemplateArgumentKind_Invalid:
+      return TemplateArg("???");
+    }
+  }
 };
 
 

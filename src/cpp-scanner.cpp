@@ -224,6 +224,7 @@ namespace {
       return make_id("cpp", k_class, get_decl_namespace(ctx, ecursor),
                      ecursor.spelling());
     case CXCursor_ClassTemplate:
+    case CXCursor_ClassTemplatePartialSpecialization:
       return make_id("cpp", k_class, get_decl_namespace(ctx, ecursor),
                      ecursor.display_name());
     case CXCursor_Namespace:
@@ -258,7 +259,14 @@ namespace {
     case CXCursor_TemplateTemplateParameter:
       return make_id("cpp", k_param, get_decl_namespace(ctx, ecursor),
                      ecursor.spelling());
+    case CXCursor_FunctionTemplate:
+    case CXCursor_FunctionDecl:
+      return make_id("cpp", k_function, get_decl_namespace(ctx, ecursor),
+                     ecursor.spelling(),
+                     encode_args_for_id(
+                       scan_function_children(ctx, ecursor)._parameters));
     default:
+      std::cout << ecursor.spelling() << " " << kind2str(ecursor.kind()) << std::endl;
       assert(false);
     }
 
@@ -457,6 +465,24 @@ namespace {
             encode_function_templ_params(ctx, grove, templ_params)) {
         func_nd->add_child_node(templ_params_nd);
       }
+    }
+    if (ecursor.num_templ_args() >= 0) {
+      // this seems to be a partial specialized template function
+      auto* templ_spec = grove->make_elt_node("templ-specialization");
+      auto* specialized_from = grove->make_elt_node("specialized-from");
+      specialized_from->add_attribute("name",
+                                ecursor.specialized_cursor_template().display_name());
+      specialized_from->add_attribute("ref",
+                                create_node_id(ctx,
+                                               ecursor.specialized_cursor_template()));
+      templ_spec->add_child_node(specialized_from);
+
+      for (size_t i = 0; i < ecursor.num_templ_args(); i++) {
+        Node* param = grove->make_elt_node("specialization-parameter");
+        param->add_attribute("value", ecursor.template_argument(i).spelling());
+        templ_spec->add_child_node(param);
+      }
+      func_nd->add_child_node(templ_spec);
     }
 
     if (ecursor.kind() != CXCursor_Constructor &&
@@ -831,6 +857,7 @@ namespace {
     nd->set_property(CommonProps::k_source,
                      path_rel_to_cwd(ecursor.location()));
     nd->add_attribute("name", ecursor.spelling());
+
     nd->set_property(CommonProps::k_id, create_node_id(ctx, ecursor));
 
     if (ecursor.kind() == CXCursor_NonTypeTemplateParameter) {
@@ -947,14 +974,44 @@ namespace {
             defs._templ_params.emplace_back(templ_nd);
           }
           break;
+
+        case CXCursor_NamespaceRef:
+        case CXCursor_TemplateRef:
+        case CXCursor_TypeRef:
+          break;
+
         default:
-          std::cout << "!{struct}" << kind2str(ec.kind()) << std::endl;
+          std::cout << "!{struct}" << kind2str(ec.kind()) << " -> "
+                    << ec.spelling() << std::endl;
         }
 
         return CXChildVisit_Continue;
       });
 
       add_wrapped_child_nodes(nd, "templ-params", defs._templ_params);
+
+      if (ecursor.kind() == CXCursor_ClassTemplatePartialSpecialization) {
+        auto* templ_spec = grove->make_elt_node("templ-specialization");
+        auto* specialized_from = grove->make_elt_node("specialized-from");
+        specialized_from->add_attribute("name",
+                                        ecursor.specialized_cursor_template().display_name());
+        specialized_from->add_attribute("ref",
+                                        create_node_id(ctx,
+                                                       ecursor.specialized_cursor_template()));
+        templ_spec->add_child_node(specialized_from);
+
+        for (int i = 0; i < ecursor.type().num_arg_template_arguments(); i++) {
+          auto ty = ecursor.type().template_arguments_as_type(i);
+          auto* param = grove->make_elt_node("specialization-parameter");
+          param->add_attribute("value", ty.spelling());
+          if (auto type_id = typeid_for_type(ctx, ty)) {
+            param->add_attribute("type-ref", *type_id);
+          }
+          templ_spec->add_child_node(param);
+        }
+        nd->add_child_node(templ_spec);
+      }
+
       add_wrapped_child_nodes(nd, "inherits", defs._bases);
       add_wrapped_child_nodes(nd, "types", defs._types);
       add_wrapped_child_nodes(nd, "fields", defs._fields);
@@ -1212,6 +1269,13 @@ namespace {
           if (Node* nd = make_function_node(ctx, ctx->_document_node->grove(),
                                             ecursor)) {
             ctx->_document_node->add_child_node(nd);
+          }
+          retval = CXChildVisit_Continue;
+          break;
+        case CXCursor_ClassTemplatePartialSpecialization:
+          if (Node* class_nd =
+                scan_struct(ctx, ecursor, eparent, "class", false, true)) {
+            ctx->_document_node->add_child_node(class_nd);
           }
           retval = CXChildVisit_Continue;
           break;
