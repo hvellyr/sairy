@@ -8,7 +8,7 @@ Requirements
 
   - cmake >= 2.8.12
   - boost >= 1.54
-  - libclang 3.5.0
+  - libclang 3.6.0
   - a decent c++11 enabled compiler, apple's clang "6.0" should do
 
 Development is happening mostly on Mac OS X for now.

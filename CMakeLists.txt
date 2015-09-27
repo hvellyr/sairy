@@ -52,7 +52,7 @@ if(DEFINED Boost_INCLUDE_DIR)
 endif()
 find_package(Boost 1.54 REQUIRED COMPONENTS program_options system filesystem date_time)
 
-find_package(LibClang 3.5 REQUIRED)
+find_package(LibClang 3.6 REQUIRED)
 
 include(FeatureSummary)
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
