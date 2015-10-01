@@ -58,6 +58,7 @@ const std::string CommonProps::k_attr_name = "#attr-name";
 const std::string CommonProps::k_attrs = "attributes";
 const std::string CommonProps::k_children = "children";
 const std::string CommonProps::k_data = "data";
+const std::string CommonProps::k_desc = "desc";
 const std::string CommonProps::k_gi = "gi";
 const std::string CommonProps::k_id = "id";
 const std::string CommonProps::k_parent = "parent";
@@ -359,6 +360,10 @@ std::unique_ptr<Node> Grove::remove_node(Node* nd)
   return nullptr;
 }
 
+const std::vector<std::unique_ptr<Node>>& Grove::nodes() const
+{
+  return _nodes;
+}
 
 void unparent_nodes(Nodes& nodes)
 {

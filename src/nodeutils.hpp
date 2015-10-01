@@ -31,4 +31,8 @@ std::string node_data(const Node* nd);
 
 ConstNodes elements_with_id(const Grove* grove, const std::string& id);
 
+/*! Returns the first (direct) children with element "desc" or null if no such
+ *  children element exists */
+Node* desc_element(const Node* nd);
+
 } // ns eyestep
