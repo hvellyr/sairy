@@ -5,6 +5,7 @@
 #include "cpp-scanner.hpp"
 #include "nodeclass.hpp"
 #include "nodes.hpp"
+#include "nodeutils.hpp"
 #include "utils.hpp"
 #include "cpp-comments.hpp"
 #include "textbook-parser.hpp"
@@ -33,6 +34,22 @@ namespace po = boost::program_options;
 
 
 namespace {
+
+  using ParameterTuple = std::tuple<std::string, Type>;
+  using TypeRefTuple = std::tuple<std::string, std::string>;
+
+  struct FunctionDetails {
+    std::vector<ParameterTuple> _parameters;
+    std::vector<std::string> _namespaces;
+    bool _override_anno = false;
+    TypeRefTuple _typeref;
+  };
+
+
+  FunctionDetails scan_function_children(Cursor ecursor);
+  std::string encode_args_for_id(const std::vector<ParameterTuple>& params);
+  std::string method_const_anno(Cursor ecursor);
+
 
   struct ParseContext {
     ParseContext(Grove& grove) : _grove(grove) {}
@@ -114,21 +131,29 @@ namespace {
     auto nm = ecursor.spelling();
     std::string nss;
 
-    if (ecursor.kind() == CXCursor_StructDecl) {
+    switch (ecursor.kind()) {
+    case CXCursor_StructDecl:
       return make_id("cpp", k_struct, get_decl_namespace(ecursor),
                      ecursor.spelling());
-    }
-    else if (ecursor.kind() == CXCursor_ClassDecl) {
+    case CXCursor_ClassDecl:
       return make_id("cpp", k_class, get_decl_namespace(ecursor),
                      ecursor.spelling());
-    }
-    else if (ecursor.kind() == CXCursor_Namespace) {
+    case CXCursor_Namespace:
       return make_id("cpp", k_ns, get_decl_namespace(ecursor),
                      ecursor.spelling());
-    }
-    else if (ecursor.kind() == CXCursor_VarDecl) {
+    case CXCursor_VarDecl:
       return make_id("cpp", k_var, get_decl_namespace(ecursor),
                      ecursor.spelling());
+    case CXCursor_CXXMethod:
+    case CXCursor_Destructor:
+    case CXCursor_Constructor:
+      return make_id("cpp", k_method, get_decl_namespace(ecursor),
+                     ecursor.spelling(),
+                     encode_args_for_id(
+                       scan_function_children(ecursor)._parameters),
+                     method_const_anno(ecursor));
+    default:
+      assert(false);
     }
 
     return "";
@@ -203,14 +228,6 @@ namespace {
     return desc_node;
   }
 
-  using ParameterTuple = std::tuple<std::string, Type>;
-
-  struct FunctionDetails {
-    std::vector<ParameterTuple> _parameters;
-    std::vector<std::string> _namespaces;
-    bool _override_anno = false;
-  };
-
   FunctionDetails scan_function_children(Cursor ecursor)
   {
     FunctionDetails result;
@@ -226,6 +243,16 @@ namespace {
       }
       else if (ec.kind() == CXCursor_CXXOverrideAttr) {
         result._override_anno = true;
+      }
+      else if (ec.kind() == CXCursor_TypeRef) {
+        auto type_cursor = ec.referenced_cursor();
+        if (type_cursor.is_set()) {
+          result._typeref = std::make_tuple(type_cursor.spelling(),
+                                            create_node_id(type_cursor));
+        }
+        else {
+          result._typeref = std::make_tuple(ec.spelling(), std::string());
+        }
       }
       else {
         std::cout << "!{function}" << kind2str(ec.kind()) << std::endl;
@@ -490,10 +517,7 @@ namespace {
 
       auto details = scan_function_children(ecursor);
 
-      nd->set_property(CommonProps::k_id,
-                       make_id("cpp", k_method, get_decl_namespace(ecursor), nm,
-                               encode_args_for_id(details._parameters),
-                               method_const_anno(ecursor)));
+      nd->set_property(CommonProps::k_id, create_node_id(ecursor));
 
       encode_function(nd, ctx, grove, ecursor, details._parameters);
 
@@ -505,6 +529,31 @@ namespace {
     }
 
     return nullptr;
+  }
+
+  void attach_out_of_line_desc(ParseContext* ctx, Cursor ecursor)
+  {
+    if (ecursor.access_specifier() == CX_CXXPublic ||
+        ecursor.access_specifier() == CX_CXXProtected) {
+      Grove* grove = ctx->_document_node->grove();
+      auto* desc_node = make_desc_node(ctx, grove, ecursor);
+
+      if (desc_node) {
+        auto id = create_node_id(ecursor);
+
+        auto nodes = elements_with_id(grove, id);
+        if (!nodes.empty()) {
+          auto* decl_node = const_cast<Node*>(nodes[0]);
+          auto* inline_desc_node = desc_element(decl_node);
+          if (!inline_desc_node) {
+            decl_node->add_child_node(desc_node);
+            return;
+          }
+        }
+
+        grove->remove_node(desc_node);
+      }
+    }
   }
 
   Node* scan_base_specifier(ParseContext* ctx, Cursor ecursor, Cursor eparent)
@@ -652,6 +701,10 @@ namespace {
         else if (kind == CXCursor_ClassDecl) {
           scan_struct(ctx, ecursor, eparent, "class");
           retval = CXChildVisit_Continue;
+        }
+        else if (kind == CXCursor_CXXMethod || kind == CXCursor_Destructor ||
+                 kind == CXCursor_Constructor) {
+          attach_out_of_line_desc(ctx, ecursor);
         }
         else if (kind == CXCursor_UnexposedDecl) {
           // this is triggered e.g. by a orphaned ; on top level
