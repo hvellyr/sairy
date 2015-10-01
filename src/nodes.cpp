@@ -360,6 +360,10 @@ std::unique_ptr<Node> Grove::remove_node(Node* nd)
   return nullptr;
 }
 
+const std::vector<std::unique_ptr<Node>>& Grove::nodes() const
+{
+  return _nodes;
+}
 
 void unparent_nodes(Nodes& nodes)
 {

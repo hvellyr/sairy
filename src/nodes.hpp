@@ -128,6 +128,8 @@ public:
   /*! removes the node from the grove and hands it back to the caller.  The node
     must be referenced by any other node except for its own children! */
   std::unique_ptr<Node> remove_node(Node* nd);
+
+  const std::vector<std::unique_ptr<Node>>& nodes() const;
 };
 
 /*! Reset the parent reference of all @p nodes.  Use with care. */

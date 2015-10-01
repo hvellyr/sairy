@@ -246,16 +246,12 @@ ConstNodes elements_with_id(const Grove* grove, const std::string& id)
 {
   ConstNodes nl_result;
 
-  // if grove would keep up a mapping from ids to nodes this could be easily
-  // optimized
-  NodeList nl(grove->root_node(), NodeList::k_descendants);
-  while (!nl.empty()) {
-    const auto* first = nl.head();
-    if (first->property<std::string>(CommonProps::k_id) == id) {
-      nl_result.push_back(first);
+  for (const auto& nd : grove->nodes()) {
+    if (nd.get() != nullptr) {
+      if (nd->property<std::string>(CommonProps::k_id) == id) {
+        nl_result.emplace_back(nd.get());
+      }
     }
-
-    nl = nl.rest();
   }
 
   return nl_result;
