@@ -7,6 +7,7 @@
 #include "nodeclass.hpp"
 
 #include <iostream>
+#include <sstream>
 #include <string>
 
 
@@ -225,5 +226,39 @@ void serialize(std::ostream& os, const Node* nd, bool pretty_printing,
   serialize(pp, nd, depth);
 }
 
+
+//------------------------------------------------------------------------------
+
+std::string node_data(const Node* base_nd)
+{
+  std::stringstream ss;
+
+  node_traverse(base_nd, [&ss](const Node* nd, int /*depth*/) {
+    ss << nd->property<std::string>(CommonProps::k_data);
+    return TraverseRecursion::k_recurse;
+  }, 0);
+
+  return ss.str();
+}
+
+
+ConstNodes elements_with_id(const Grove* grove, const std::string& id)
+{
+  ConstNodes nl_result;
+
+  // if grove would keep up a mapping from ids to nodes this could be easily
+  // optimized
+  NodeList nl(grove->root_node(), NodeList::k_descendants);
+  while (!nl.empty()) {
+    const auto* first = nl.head();
+    if (first->property<std::string>(CommonProps::k_id) == id) {
+      nl_result.push_back(first);
+    }
+
+    nl = nl.rest();
+  }
+
+  return nl_result;
+}
 
 } // ns eyestep

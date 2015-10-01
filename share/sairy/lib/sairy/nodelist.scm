@@ -107,3 +107,11 @@
                             (append result (list nm))
                             result)))
                     '()))
+
+;; @doc Returns the value of the @var{id} property of the node in @prm{osnl}.
+;; If @prm{osnl} is empty or the node in @prm{osnl} does not contain an @var{id}
+;; property return #f.
+(define (id osnl)
+  (if (node-list-empty? osnl)
+      #f
+      (node-property 'id osnl default: #f)))

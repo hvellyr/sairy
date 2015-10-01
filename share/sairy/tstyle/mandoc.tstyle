@@ -5,9 +5,6 @@
 (use 'bibref)
 (use 'para)
 
-(define (node-list-data nl)
-  "")
-
 
 (element opt
   (format-bold (attribute "text" (current-node))))
@@ -102,10 +99,10 @@
 
       (sosofo-append
        (make display-group
-         mandoc.name: (node-list-data (attribute "name" (current-node)))
-         mandoc.description: (node-list-data (attribute "desc" (current-node)))
-         mandoc.section: (node-list-data (attribute "section" (current-node)))
-         mandoc.author: (node-list-data author-first)
+         mandoc.name: (data (attribute "name" (current-node)))
+         mandoc.description: (data (attribute "desc" (current-node)))
+         mandoc.section: (data (attribute "section" (current-node)))
+         mandoc.author: (data author-first)
 
          (sosofo-append
           (make paragraph
@@ -223,6 +220,28 @@
     start-indent: (dimen 2 em)
     (format-bibref (current-node))))
 
+
+(define (render-ref-to-node idref nd)
+  (case (gi nd)
+    ((section) (make sequence
+                 html.ref: idref
+                 (sosofo-append
+                  (literal "Section “")
+                  (process-node-list (attribute "title" nd))
+                  (literal "”"))))
+    (else (empty-sosofo))))
+
+(element ref
+  (let* ((idref (data (attribute "ref" (current-node))))
+         (nl (if (> (string-length idref) 0)
+                 (elements-with-id idref (current-node))
+                 (empty-sosofo))))
+    (node-list-reduce nl
+                      (lambda (sosofo snl)
+                        (sosofo-append sosofo
+                                       (render-ref-to-node idref snl)))
+                      (empty-sosofo))
+    ))
 
 
 (root

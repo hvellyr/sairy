@@ -6,6 +6,7 @@
 #include "nodeclass.hpp"
 #include "nodelist.hpp"
 #include "nodes.hpp"
+#include "nodeutils.hpp"
 #include "scm-context.hpp"
 #include "sosofo.hpp"
 #include "utils.hpp"
@@ -20,6 +21,7 @@
 #include <boost/range/adaptor/transformed.hpp>
 
 #include <iostream>
+#include <sstream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -591,7 +593,7 @@ namespace {
 
   sexp func_empty_node_list(sexp ctx, sexp self, sexp_sint_t n)
   {
-    return make_nodelist(ctx, new NodeList());
+    return make_nodelist(ctx, new NodeList);
   }
 
 
@@ -881,6 +883,77 @@ namespace {
   }
 
 
+  sexp func_elements_with_id(sexp ctx, sexp self, sexp_sint_t n, sexp id_arg,
+                             sexp nl_arg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_VOID;
+
+    std::string key;
+    if (sexp_stringp(id_arg)) {
+      auto id = std::string(sexp_string_data(id_arg));
+
+      if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
+        ConstNodes nl_result = elements_with_id(node->grove(), id);
+
+        if (!nl_result.empty()) {
+          result = make_nodelist(ctx, new NodeList(nl_result));
+        }
+        else {
+          result = make_nodelist(ctx, new NodeList);
+        }
+      }
+      else {
+        result =
+          sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
+      }
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a string", id_arg);
+    }
+
+    if (result == SEXP_VOID) {
+      result = make_nodelist(ctx, new NodeList);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_data(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_VOID;
+
+    if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
+      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
+
+      std::stringstream ss;
+      NodeList p = nl->clone();
+      while (!p.empty()) {
+        ss << node_data(p.head());
+        p = p.rest();
+      }
+
+      auto data = ss.str();
+      result = sexp_c_string(ctx, data.c_str(), data.size());
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a node-list", nl_arg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
   void init_nodelist_functions(sexp ctx)
   {
     sexp_gc_var3(nm, ty, op);
@@ -934,6 +1007,11 @@ namespace {
     sexp_define_foreign(ctx, sexp_context_env(ctx),
                         "absolute-last-element-sibling?", 1,
                         &func_abs_last_element_sibling_p);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "elements-with-id", 2,
+                        &func_elements_with_id);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "data", 1, &func_data);
 
     sexp_gc_release3(ctx);
   }
@@ -1189,11 +1267,12 @@ namespace {
 
   //----------------------------------------------------------------------------
 
-  std::vector<fs::path> prepare_tstyle_search_path(const std::string& prefix_path)
+  std::vector<fs::path>
+  prepare_tstyle_search_path(const std::string& prefix_path)
   {
     return boost::copy_range<std::vector<fs::path>>(
-      eyestep::utils::split_paths(prefix_path)
-      | boost::adaptors::transformed(
+      eyestep::utils::split_paths(prefix_path) |
+      boost::adaptors::transformed(
         [](const fs::path& path) { return path / "tstyle"; }));
   }
 
@@ -1206,7 +1285,7 @@ namespace {
 
     for (const auto& p : paths) {
       auto src_path = (fs::path(p) / resource).replace_extension(".tstyle");
-      //std::cout << "test " << src_path << std::endl;
+      // std::cout << "test " << src_path << std::endl;
       if (fs::exists(src_path)) {
         return src_path;
       }
