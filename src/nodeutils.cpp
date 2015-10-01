@@ -261,4 +261,17 @@ ConstNodes elements_with_id(const Grove* grove, const std::string& id)
   return nl_result;
 }
 
+
+Node* desc_element(const Node* nd)
+{
+  const Nodes& nodes = nd->property<Nodes>(CommonProps::k_children);
+  for (auto& child : nodes) {
+    if (child->gi() == CommonProps::k_desc) {
+      return child;
+    }
+  }
+
+  return nullptr;
+}
+
 } // ns eyestep

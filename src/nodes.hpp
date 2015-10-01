@@ -37,6 +37,7 @@ struct CommonProps {
   static const std::string k_attrs;
   static const std::string k_children;
   static const std::string k_data;
+  static const std::string k_desc;
   static const std::string k_gi;
   static const std::string k_id;
   static const std::string k_parent;
