@@ -732,6 +732,12 @@ namespace {
             defs._types.emplace_back(type_nd);
           }
         }
+        else if (ec.kind() == CXCursor_TypeAliasDecl ||
+                 ec.kind() == CXCursor_TypedefDecl) {
+          if (auto* alias_nd = scan_typealias(ctx, ec, ep, true)) {
+            defs._types.emplace_back(alias_nd);
+          }
+        }
         else if (ec.kind() == CXCursor_CXXAccessSpecifier) {
           // nop, handled inside of the other scan handlers
         }
@@ -804,7 +810,8 @@ namespace {
                  kind == CXCursor_Constructor) {
           attach_out_of_line_desc(ctx, ecursor);
         }
-        else if (kind == CXCursor_TypeAliasDecl || kind == CXCursor_TypedefDecl) {
+        else if (kind == CXCursor_TypeAliasDecl ||
+                 kind == CXCursor_TypedefDecl) {
           if (auto* alias_nd = scan_typealias(ctx, ecursor, eparent, false)) {
             ctx->_document_node->add_child_node(alias_nd);
           }
