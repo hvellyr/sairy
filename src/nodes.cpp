@@ -8,8 +8,9 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 
-#include <iostream>
+#include <algorithm>
 #include <cassert>
+#include <iostream>
 
 
 namespace eyestep {
@@ -110,7 +111,7 @@ const PropertyValue Node::operator[](const std::string& propname) const
     return i_find->second;
   }
 
-  return Undefined();
+  return {Undefined()};
 }
 
 
