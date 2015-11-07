@@ -32,11 +32,11 @@ Usage:
 
 @definitions
 @item{@op{-b} @val{backend}} Choose the output renderer to use.  If not set (or
-given as "auto") a default one is chosen most appropriate to the format and
+given as “auto”) a default one is chosen most appropriate to the format and
 document specification.
 
 @item{@op{-t} @val{style-sheet}} The style sheet to use for processing.  If not
-set (or given as "auto") a default one is chosen most appropriate to the
+set (or given as “auto”) a default one is chosen most appropriate to the
 document specification.
 @end definitions
 
