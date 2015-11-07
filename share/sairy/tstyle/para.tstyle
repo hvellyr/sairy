@@ -72,4 +72,5 @@
   (make paragraph
     mandoc.section: "para"
     first-line-start-indent: (dimen 0 em)
+    quadding: "justify"
     (process-children)))

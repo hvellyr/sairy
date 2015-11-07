@@ -40,6 +40,7 @@
      first-line-start-indent: (dimen 0 em)
      space-before: (dimen 14 pt)
      space-after: (dimen 7 pt)
+     quadding: "left"
      (process-node-list (attribute "title" (current-node))))
 
    ;; body
@@ -47,6 +48,7 @@
      start-indent: (dimen 2 em)
      (sosofo-append
       (make paragraph
+        quadding: "justify"
         first-line-start-indent: (dimen 0 em)
         (process-node-list-trim (node-list-first (children (current-node)))))
       (process-node-list-trim (node-list-rest (children (current-node)))))
@@ -66,6 +68,7 @@
      space-after: (dimen 7 pt)
      keep-with-next?: #t
      first-line-start-indent: (dimen 0 em)
+     quadding: "left"
      (literal "Synopsis"))
    (make display-group
      start-indent: (dimen 2 em)
@@ -112,6 +115,7 @@
             space-after: (dimen 7 pt)
             keep-with-next?: #t
             first-line-start-indent: (dimen 0 em)
+            quadding: "left"
             (sosofo-append
              (process-node-list (attribute "name" (current-node)))
              (literal "(")
@@ -128,11 +132,13 @@
             space-after: (dimen 7 pt)
             keep-with-next?: #t
             first-line-start-indent: (dimen 0 em)
+            quadding: "left"
             (literal "Name"))
           (make display-group
             start-indent: (dimen 2 em)
             (make paragraph
               first-line-start-indent: (dimen 0 em)
+              quadding: "left"
               (sosofo-append
                (process-node-list (attribute "name" (current-node)))
                (literal " - ")
@@ -154,6 +160,7 @@
               space-after: (dimen 7 pt)
               keep-with-next?: #t
               first-line-start-indent: (dimen 0 em)
+              quadding: "left"
               (literal "Authors"))
             (make display-group
               start-indent: (dimen 2 em)
@@ -169,6 +176,7 @@
   (let ((email (attribute "email" (current-node))))
     (make paragraph
       first-line-start-indent: (dimen 0 pt)
+      quadding: "left"
       (sosofo-append
        (process-node-list (attribute "name" (current-node)))
        (if (not (node-list-empty? email))
@@ -192,6 +200,7 @@
      space-before: (dimen 14 pt)
      space-after: (dimen 7 pt)
      keep-with-next?: #t
+     quadding: "left"
      (literal "See Also"))
    (make display-group
      start-indent: (dimen 2 em)
@@ -200,6 +209,7 @@
 (element (seealso mref)
   (make paragraph
     first-line-start-indent: (dimen 0 pt)
+    quadding: "left"
     (sosofo-append
      (process-node-list (attribute "name" (current-node)))
      (literal " (")
@@ -211,6 +221,7 @@
 (element (seealso xref)
   (make paragraph
     first-line-start-indent: (dimen 0 pt)
+    quadding: "left"
     (process-node-list (attribute "ref" (current-node)))))
 
 
@@ -218,6 +229,7 @@
   (make paragraph
     first-line-start-indent: (dimen -2 em)
     start-indent: (dimen 2 em)
+    quadding: "left"
     (format-bibref (current-node))))
 
 
