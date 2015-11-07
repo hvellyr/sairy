@@ -50,7 +50,7 @@
       (make paragraph
         quadding: "justify"
         first-line-start-indent: (dimen 0 em)
-        (process-node-list-trim (node-list-first (children (current-node)))))
+        (process-node-list-trim (children (node-list-first (children (current-node))))))
       (process-node-list-trim (node-list-rest (children (current-node)))))
      ))
   )
