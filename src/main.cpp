@@ -19,6 +19,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/program_options/parsers.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/adaptor/filtered.hpp>
 
 #include <string>
 #include <iostream>
@@ -69,6 +71,7 @@ eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
   return grove;
 }
 
+
 fs::path deduce_output_file(const std::string& outf,
                             const std::vector<fs::path>& sources,
                             const std::string& default_ext)
@@ -80,6 +83,55 @@ fs::path deduce_output_file(const std::string& outf,
   if (!sources.empty()) {
     auto first = sources[0];
     return first.replace_extension(default_ext).filename();
+  }
+
+  return fs::path();
+}
+
+
+std::vector<std::string> document_root_elements_gi(eyestep::Grove& grove)
+{
+  using namespace eyestep;
+
+  std::vector<std::string> gis;
+
+  auto root_children =
+    grove.root_node()->property<Nodes>(CommonProps::k_children);
+  if (root_children.size() == 1) {
+    auto document = root_children[0];
+    auto top_elements = document->property<Nodes>(CommonProps::k_children);
+    for (const auto nd : top_elements) {
+      gis.emplace_back(nd->gi());
+    }
+  }
+
+  return gis;
+}
+
+
+fs::path deduce_templ_from_document(eyestep::Grove& grove,
+                                    std::string prefix_path)
+{
+  using namespace eyestep;
+  using namespace boost::adaptors;
+
+  auto gis = document_root_elements_gi(grove);
+  if (!gis.empty()) {
+    auto style_file = fs::path(gis[0]).replace_extension(".tstyle");
+
+    // clang-format off
+    auto paths = boost::copy_range<std::vector<fs::path>>(
+      eyestep::utils::split_paths(prefix_path)
+      | transformed([style_file](const fs::path& path) {
+          return path / "tstyle" / style_file;
+        })
+      | filtered([](const fs::path& path) {
+          return fs::exists(path);
+        })
+      );
+    // clang-format on
+
+    return paths.empty() ? fs::path() : paths[0];
   }
 
   return fs::path();
@@ -175,6 +227,17 @@ int main(int argc, char** argv)
     }
 
     if (!templ_path.empty()) {
+      auto eff_templ_path = templ_path == "auto"
+                              ? deduce_templ_from_document(grove, prefix_path)
+                              : templ_path;
+      if (eff_templ_path.string().empty()) {
+        std::cerr << "No stylesheet found" << std::endl;
+        exit(1);
+      }
+
+      if (vm["verbose"].as<bool>())
+        std::cout << "use template  : " << eff_templ_path << std::endl;
+
       auto processor = eyestep::make_processor_for_file(backend, vm);
       if (processor) {
         processor->set_output_file(
@@ -182,7 +245,7 @@ int main(int argc, char** argv)
                              processor->default_output_extension()));
 
         eyestep::StyleEngine engine(prefix_path, backend);
-        if (engine.load_style(templ_path)) {
+        if (engine.load_style(eff_templ_path)) {
           auto sosofo = std::move(engine.process_node(grove.root_node()));
 
           processor->render_processed_node(sosofo.get());
