@@ -214,14 +214,20 @@ namespace fo {
 
   const PropertySpecs& DisplayGroup::default_properties() const
   {
+    // clang-format off
     static PropertySpecs propspecs = {
       PropertySpec("space-before", Dimen(0, k_pt)),
       PropertySpec("space-after", Dimen(0, k_pt)),
-      PropertySpec("break-before?", false), PropertySpec("break-after?", false),
-      PropertySpec("font-caps", ""), PropertySpec("font-name", ""),
-      PropertySpec("font-posture", ""), PropertySpec("font-size", ""),
-      PropertySpec("font-weight", ""), PropertySpec("lines", ""),
+      PropertySpec("break-before?", false),
+      PropertySpec("break-after?", false),
+      PropertySpec("font-caps", ""),
+      PropertySpec("font-name", ""),
+      PropertySpec("font-posture", ""),
+      PropertySpec("font-size", ""),
+      PropertySpec("font-weight", ""),
+      PropertySpec("lines", ""),
     };
+    // clang-format on
     return propspecs;
   }
 

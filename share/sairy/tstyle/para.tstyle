@@ -15,7 +15,7 @@
 
 (element (definitions p item)
   (make line-field
-    field-width: (dimen 6 em)
+    field-width: (dimen 70 pt)
     field-align: 'left
     (process-node-list-trim (attribute "text" (current-node)))))
 
@@ -23,14 +23,14 @@
   (let ((item (node-list-first (children (current-node)))))
     (if (equal? (gi item) 'item)
         (make paragraph
-          first-line-start-indent: (dimen -6 em)
-          start-indent: (dimen 6 em)
+          first-line-start-indent: (dimen -70 pt)
+          start-indent: (dimen 70 pt)
           (sosofo-append
            (process-node-list (node-list-first (children (current-node))))
            (process-node-list-trim (node-list-rest (children (current-node))))))
         (make paragraph
           first-line-start-indent: (dimen 0 em)
-          start-indent: (dimen 6 em)
+          start-indent: (dimen 70 pt)
           (process-children-trim)
           ) ))
   )
@@ -44,7 +44,7 @@
 
 (element (itemize p item)
   (make line-field
-    field-width: (dimen 1 em)
+    field-width: (dimen 12 pt)
     field-align: 'left
     (let ((txt (attribute "text" (current-node))))
       (if (node-list-empty? txt)
@@ -55,14 +55,14 @@
   (let ((item (node-list-first (children (current-node)))))
     (if (equal? (gi item) 'item)
         (make paragraph
-          first-line-start-indent: (dimen -1 em)
-          start-indent: (dimen 1 em)
+          first-line-start-indent: (dimen -12 pt)
+          start-indent: (dimen 12 pt)
           (sosofo-append
            (process-node-list (node-list-first (children (current-node))))
            (process-node-list-trim (node-list-rest (children (current-node))))))
         (make paragraph
           first-line-start-indent: (dimen 0 em)
-          start-indent: (dimen 1 em)
+          start-indent: (dimen 12 pt)
           (process-children-trim)
           ) ))
   )
@@ -72,4 +72,5 @@
   (make paragraph
     mandoc.section: "para"
     first-line-start-indent: (dimen 0 em)
+    quadding: "justify"
     (process-children)))

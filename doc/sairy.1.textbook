@@ -6,7 +6,7 @@
 @end info
 
 @synopsis
-@app{sairy} [@op{-b} @val{backend}] [@op{-t} @val{style-sheet}] @val{FileName} ...
+@app{sairy} [@op{-b} @val{backend}] [@op{-t} @val{style-sheet}] @val{FileName} …
 @end synopsis
 
 @section{Description}
@@ -25,18 +25,18 @@ The @app{sairy} system features a number of things:
 @item a grove system and generalized node tree
 @item a style engine working on the grove system producing formatting objects
 @item multiple formatting object rendering backends (builtin examples: html,
-mandoc, ...)
+mandoc, …)
 @end itemize
 
 Usage:
 
 @definitions
 @item{@op{-b} @val{backend}} Choose the output renderer to use.  If not set (or
-given as "auto") a default one is chosen most appropriate to the format and
+given as “auto”) a default one is chosen most appropriate to the format and
 document specification.
 
 @item{@op{-t} @val{style-sheet}} The style sheet to use for processing.  If not
-set (or given as "auto") a default one is chosen most appropriate to the
+set (or given as “auto”) a default one is chosen most appropriate to the
 document specification.
 @end definitions
 

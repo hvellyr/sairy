@@ -369,7 +369,7 @@ namespace {
         processor->ctx().port().write_text(str);
       }
       else if (capsstyle == detail::k_lower_caps) {
-        processor->ctx().port().write_text(boost::to_upper_copy(str));
+        processor->ctx().port().write_text(boost::to_lower_copy(str));
       }
       else if (capsstyle == detail::k_upper_caps) {
         processor->ctx().port().write_text(boost::to_upper_copy(str));
