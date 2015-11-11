@@ -5,8 +5,8 @@
 #               [COPYONLY] [ESCAPE_QUOTES] [@ONLY]
 #               [NEWLINE_STYLE [UNIX|DOS|WIN32|LF|CRLF] ])
 
-add_definitions(-DSEXP_USE_MODULES=1 -DSEXP_USE_BOEHM=0 -DSEXP_USE_DL=1 -DSEXP_USE_UTF8_STRINGS=1
-                -DSEXP_USE_KEYWORDS=1)
+add_definitions(-DSEXP_USE_MODULES=1 -DSEXP_USE_BOEHM=0 -DSEXP_USE_DL=1
+                -DSEXP_USE_UTF8_STRINGS=1 -DSEXP_USE_KEYWORDS=1 -DSEXP_USE_QUANTITY=1)
 
 add_library(scheme SHARED
   ../../chibi-scheme/gc.c
