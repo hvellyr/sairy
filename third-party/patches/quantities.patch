@@ -1,0 +1,759 @@
+diff --git a/third-party/chibi-scheme/eval.c b/third-party/chibi-scheme/eval.c
+index 1c2a176..5fc3e83 100644
+--- a/third-party/chibi-scheme/eval.c
++++ b/third-party/chibi-scheme/eval.c
+@@ -385,6 +385,9 @@ sexp sexp_make_synclo_op (sexp ctx, sexp self, sexp_sint_t n, sexp env, sexp fv,
+ #if SEXP_USE_KEYWORDS
+          || sexp_keywordp(expr)
+ #endif
++#if SEXP_USE_QUANTITY
++         || sexp_quantityp(expr)
++#endif
+         ))
+     return expr;
+   res = sexp_alloc_type(ctx, synclo, SEXP_SYNCLO);
+@@ -1542,8 +1545,33 @@ sexp sexp_exact_sqrt (sexp ctx, sexp self, sexp_sint_t n, sexp z) {
+ #endif
+ 
+ sexp sexp_sqrt (sexp ctx, sexp self, sexp_sint_t n, sexp z) {
+-#if SEXP_USE_BIGNUMS
+   sexp_gc_var2(res, rem);
++#if SEXP_USE_QUANTITY
++  if (sexp_quantityp(z)) {
++    double val = sexp_fixnump(sexp_quantity_number(z))
++      ? sexp_unbox_fixnum(sexp_quantity_number(z))
++      : (sexp_flonump(sexp_quantity_number(z))
++         ? sexp_flonum_value(sexp_quantity_number(z)) : 0.0);
++    sexp_gc_preserve1(ctx, res);
++
++    if (sexp_quantity_dimen(z) >= 2) {
++      if (val >= 0) {
++        res = sexp_make_quantity(ctx, sexp_make_flonum(ctx, sqrt(val)),
++                                 sexp_quantity_unit(z),
++                                 sexp_quantity_dimen(z) / 2,
++                                 sexp_quantity_factor(z));
++      }
++      else
++        res = sexp_user_exception(ctx, self, "sqrt: z < 0", z);
++    }
++    else
++      res = sexp_user_exception(ctx, self, "sqrt: quantity dimension < 2", z);
++
++    sexp_gc_release1(ctx);
++    return res;
++  }
++#endif
++#if SEXP_USE_BIGNUMS
+   if (sexp_bignump(z)) {
+     sexp_gc_preserve2(ctx, res, rem);
+     res = sexp_bignum_sqrt(ctx, z, &rem);
+@@ -1672,6 +1700,11 @@ sexp sexp_complex_imag_op (sexp ctx, sexp self, sexp_sint_t n, sexp cpx) {
+ sexp sexp_exact_to_inexact (sexp ctx, sexp self, sexp_sint_t n, sexp i) {
+   sexp_gc_var1(res);
+   res = i;
++#if SEXP_USE_QUANTITY
++  if (sexp_quantityp(i))
++    res = i;
++  else
++#endif
+   if (sexp_fixnump(i))
+     res = sexp_fixnum_to_flonum(ctx, i);
+ #if SEXP_USE_FLONUMS
+@@ -1705,6 +1738,10 @@ sexp sexp_inexact_to_exact (sexp ctx, sexp self, sexp_sint_t n, sexp z) {
+   if (sexp_exactp(z)) {
+     res = z;
+   }
++#if SEXP_USE_QUANTITY
++  else if (sexp_quantityp(z))
++    res = z;
++#endif
+ #if SEXP_USE_FLONUMS
+   else if (sexp_flonump(z)) {
+     if (isinf(sexp_flonum_value(z)) || isnan(sexp_flonum_value(z))) {
+@@ -2289,6 +2326,9 @@ static const char* sexp_initial_features[] = {
+ #if SEXP_USE_RATIOS
+   "ratios",
+ #endif
++#if SEXP_USE_QUANTITY
++  "quantity",
++#endif
+   "r7rs",
+   "chibi",
+   NULL,
+diff --git a/third-party/chibi-scheme/include/chibi/features.h b/third-party/chibi-scheme/include/chibi/features.h
+index 5b85975..5d0d3ae 100644
+--- a/third-party/chibi-scheme/include/chibi/features.h
++++ b/third-party/chibi-scheme/include/chibi/features.h
+@@ -202,6 +202,10 @@
+ /* uncomment this to enable SRFI-88 keywords */
+ /* #define SEXP_USE_KEYWORDS 1 */
+ 
++/* uncomment this to enable DSSSL like quantities */
++/*   This will conflict partitally with complex and infinity number notation. */
++/* #define SEXP_USE_QUANTITY 1 */
++
+ /* uncomment this to disable automatic closing of ports */
+ /*   If enabled, the underlying FILE* for file ports will be */
+ /*   automatically closed when they're garbage collected.  Doesn't */
+@@ -603,6 +607,10 @@
+ #define SEXP_USE_KEYWORDS 0
+ #endif
+ 
++#ifndef SEXP_USE_QUANTITY
++#define SEXP_USE_QUANTITY 0
++#endif
++
+ #ifndef SEXP_USE_AUTOCLOSE_PORTS
+ #define SEXP_USE_AUTOCLOSE_PORTS ! SEXP_USE_NO_FEATURES
+ #endif
+diff --git a/third-party/chibi-scheme/include/chibi/sexp.h b/third-party/chibi-scheme/include/chibi/sexp.h
+index f9fa64e..5411637 100755
+--- a/third-party/chibi-scheme/include/chibi/sexp.h
++++ b/third-party/chibi-scheme/include/chibi/sexp.h
+@@ -168,6 +168,9 @@ enum sexp_types {
+ #if SEXP_USE_KEYWORDS
+   SEXP_KEYWORD,
+ #endif
++#if SEXP_USE_QUANTITY
++  SEXP_QUANTITY,
++#endif
+   SEXP_NUM_CORE_TYPES
+ };
+ 
+@@ -368,6 +371,13 @@ struct sexp_struct {
+     struct {
+       sexp real, imag;
+     } complex;
++#if SEXP_USE_QUANTITY
++    struct {
++      sexp number, unit;
++      int dimen;
++      double factor;
++    } quantity;
++#endif
+     struct {
+       sexp_uint_t length;
+       void *value;
+@@ -786,9 +796,17 @@ SEXP_API sexp sexp_make_unsigned_integer(sexp ctx, sexp_luint_t x);
+ #endif
+ 
+ #if SEXP_USE_COMPLEX
+-#define sexp_numberp(x) (sexp_realp(x) || sexp_complexp(x))
++  #if SEXP_USE_QUANTITY
++    #define sexp_numberp(x) (sexp_realp(x) || sexp_complexp(x) || sexp_quantityp(x))
++  #else
++    #define sexp_numberp(x) (sexp_realp(x) || sexp_complexp(x))
++  #endif
+ #else
+-#define sexp_numberp(x) (sexp_realp(x))
++  #if SEXP_USE_QUANTITY
++    #define sexp_numberp(x) (sexp_realp(x) || sexp_quantityp(x))
++  #else
++    #define sexp_numberp(x) (sexp_realp(x))
++  #endif
+ #endif
+ 
+ #define sexp_exact_negativep(x) (sexp_fixnump(x) ? (sexp_unbox_fixnum(x) < 0) \
+@@ -1378,6 +1396,9 @@ SEXP_API sexp sexp_flush_output_op (sexp ctx, sexp self, sexp_sint_t n, sexp out
+ SEXP_API sexp sexp_read_string (sexp ctx, sexp in, int sentinel);
+ SEXP_API sexp sexp_read_symbol (sexp ctx, sexp in, int init, int internp);
+ SEXP_API sexp sexp_read_number (sexp ctx, sexp in, int base, int exactp);
++#if SEXP_USE_QUANTITY
++SEXP_API sexp sexp_read_quantity_unit(sexp ctx, sexp in, sexp dim);
++#endif
+ #if SEXP_USE_BIGNUMS
+ SEXP_API sexp sexp_read_bignum (sexp ctx, sexp in, sexp_uint_t init,
+ 				signed char sign, sexp_uint_t base);
+@@ -1475,6 +1496,21 @@ SEXP_API sexp sexp_string_to_keyword_op (sexp ctx, sexp self, sexp_sint_t n, sex
+ SEXP_API sexp sexp_keyword_to_string_op (sexp ctx, sexp self, sexp_sint_t n, sexp sym);
+ SEXP_API sexp sexp_make_keyword(sexp ctx, const char *str, sexp_sint_t len);
+ #endif
++#if SEXP_USE_QUANTITY
++#define sexp_quantityp(x)       (sexp_check_tag(x, SEXP_QUANTITY))
++#define sexp_quantity_number(x) (sexp_field(x, quantity, SEXP_QUANTITY, number))
++#define sexp_quantity_unit(x)   (sexp_field(x, quantity, SEXP_QUANTITY, unit))
++#define sexp_quantity_factor(x) (sexp_field(x, quantity, SEXP_QUANTITY, factor))
++#define sexp_quantity_dimen(x) (sexp_field(x, quantity, SEXP_QUANTITY, dimen))
++SEXP_API sexp sexp_make_quantity(sexp ctx, sexp number, sexp unit, int dimen, double factor);
++SEXP_API sexp_sint_t sexp_quantity_compare (sexp ctx, sexp a, sexp b);
++SEXP_API sexp sexp_quantity_to_number_op (sexp ctx, sexp self, sexp_sint_t n, sexp quant);
++SEXP_API sexp sexp_quantity_add(sexp ctx, sexp self, sexp one, sexp two);
++SEXP_API sexp sexp_quantity_sub(sexp ctx, sexp self, sexp one, sexp two);
++SEXP_API sexp sexp_quantity_mul(sexp ctx, sexp self, sexp one, sexp two);
++SEXP_API sexp sexp_quantity_div(sexp ctx, sexp self, sexp one, sexp two);
++SEXP_API double sexp_quantity_normalize_to_double (sexp ctx, sexp quant);
++#endif
+ 
+ #if SEXP_USE_GREEN_THREADS
+ SEXP_API int sexp_maybe_block_port (sexp ctx, sexp in, int forcep);
+@@ -1670,6 +1706,9 @@ enum sexp_opcode_names {
+ #if SEXP_USE_KEYWORDS
+   SEXP_OP_KEYWORDP,
+ #endif
++#if SEXP_USE_QUANTITY
++  SEXP_OP_QUANTITYP,
++#endif
+   SEXP_OP_NUM_OPCODES
+ };
+ 
+diff --git a/third-party/chibi-scheme/lib/chibi/ast.c b/third-party/chibi-scheme/lib/chibi/ast.c
+index 7fdf05c..d4fa2db 100644
+--- a/third-party/chibi-scheme/lib/chibi/ast.c
++++ b/third-party/chibi-scheme/lib/chibi/ast.c
+@@ -208,6 +208,10 @@ static sexp sexp_type_of (sexp ctx, sexp self, sexp_sint_t n, sexp x) {
+   else if (sexp_keywordp(x))
+     return sexp_type_by_index(ctx, SEXP_KEYWORD);
+ #endif
++#if SEXP_USE_QUANTITY
++  else if (sexp_quantityp(x))
++    return sexp_type_by_index(ctx, SEXP_QUANTITY);
++#endif
+ #if SEXP_USE_IMMEDIATE_FLONUMS
+   else if (sexp_flonump(x))
+     return sexp_type_by_index(ctx, SEXP_FLONUM);
+diff --git a/third-party/chibi-scheme/lib/chibi/heap-stats.c b/third-party/chibi-scheme/lib/chibi/heap-stats.c
+index ea5369d..e536cf7 100644
+--- a/third-party/chibi-scheme/lib/chibi/heap-stats.c
++++ b/third-party/chibi-scheme/lib/chibi/heap-stats.c
+@@ -18,6 +18,9 @@ static void sexp_print_simple (sexp ctx, sexp x, sexp out, int depth) {
+ #if SEXP_USE_KEYWORDS
+       || sexp_keywordp(x)
+ #endif
++#if SEXP_USE_QUANTITY
++      || sexp_quantityp(x)
++#endif
+     ) {
+     sexp_write(ctx, x, out);
+   } else if (depth <= 0) {
+diff --git a/third-party/chibi-scheme/lib/init-7.scm b/third-party/chibi-scheme/lib/init-7.scm
+index 3a63da9..5d8d9f5 100644
+--- a/third-party/chibi-scheme/lib/init-7.scm
++++ b/third-party/chibi-scheme/lib/init-7.scm
+@@ -732,7 +732,7 @@
+                                              (,_i (,_- ,_len ,len))
+                                              (,_res (,_quote ())))
+                                   (,_if (,_>= 0 ,_i)
+-                                      ,(lp `(,(cddr p) 
++                                      ,(lp `(,(cddr p)
+                                              (,(car p) ,(car (cdr p))))
+                                            `(,_cons ,_ls
+                                                     (,_cons (,_reverse ,_res)
+@@ -1119,6 +1119,9 @@
+ (define (integer? x)
+   (if (exact-integer? x) #t (and (flonum? x) (= x (truncate x)))))
+ (define (number? x) (if (inexact? x) #t (exact? x)))
++(cond-expand
++ (quantity
++  (define (quantity? x) (if (%quantity? x) #t (number? x)))))
+ (define complex? number?)
+ (cond-expand
+  (complex (define (real? x) (and (number? x) (not (%complex? x)))))
+@@ -1128,13 +1131,24 @@
+ 
+ (define (eqv? a b) (if (eq? a b) #t (and (number? a) (equal? a b))))
+ 
+-(define (zero? x) (= x 0))
+-(define (positive? x) (> x 0))
+-(define (negative? x) (< x 0))
++(cond-expand
++ (quantity
++  (define (zero? x) (= (quantity->number x) 0))
++  (define (positive? x) (> (quantity->number x) 0))
++  (define (negative? x) (< (quantity->number x) 0)))
++ (else
++  (define (zero? x) (= x 0))
++  (define (positive? x) (> x 0))
++  (define (negative? x) (< x 0))))
+ (define (even? n) (= (remainder n 2) 0))
+ (define (odd? n) (not (= (remainder n 2) 0)))
+ 
+-(define (abs x) (if (< x 0) (- x) x))
++(cond-expand
++ (quantity
++  (define (abs x) (if (quantity? x)
++                      (if (< x 0m) (- 0m x) x)
++                      (if (< x 0) (- x) x) )))
++ (else (define (abs x) (if (< x 0) (- x) x))))
+ 
+ (define (modulo a b)
+   (let ((res (remainder a b)))
+diff --git a/third-party/chibi-scheme/lib/srfi/95/qsort.c b/third-party/chibi-scheme/lib/srfi/95/qsort.c
+index d96f27d..bd5c7d6 100644
+--- a/third-party/chibi-scheme/lib/srfi/95/qsort.c
++++ b/third-party/chibi-scheme/lib/srfi/95/qsort.c
+@@ -101,6 +101,11 @@ static int sexp_object_compare (sexp ctx, sexp a, sexp b) {
+           res = strcmp(sexp_keyword_data(a), sexp_keyword_data(b));
+           break;
+ #endif
++#if SEXP_USE_QUANTITY
++        case SEXP_QUANTITY:
++          res = sexp_quantity_compare(ctx, a, b);
++          break;
++#endif
+         /* TODO: consider recursively traversing containers.  requires */
+         /* cycle detection. */
+         /* case SEXP_PAIR: */
+diff --git a/third-party/chibi-scheme/opcodes.c b/third-party/chibi-scheme/opcodes.c
+index b626d57..2afd0ff 100644
+--- a/third-party/chibi-scheme/opcodes.c
++++ b/third-party/chibi-scheme/opcodes.c
+@@ -276,6 +276,10 @@ _OP(SEXP_OPC_TYPE_PREDICATE, SEXP_OP_KEYWORDP,  1, 0, _I(SEXP_BOOLEAN), _I(SEXP_
+ _FN1(_I(SEXP_KEYWORD), _I(SEXP_STRING), "string->keyword", 0, sexp_string_to_keyword_op),
+ _FN1(_I(SEXP_STRING), _I(SEXP_KEYWORD), "keyword->string", 0, sexp_keyword_to_string_op),
+ #endif
++#if SEXP_USE_QUANTITY
++_OP(SEXP_OPC_TYPE_PREDICATE, SEXP_OP_QUANTITYP,  1, 0, _I(SEXP_BOOLEAN), _I(SEXP_OBJECT), SEXP_FALSE, SEXP_FALSE, 0, "%quantity?", NULL, 0),
++_FN1(_I(SEXP_NUMBER), _I(SEXP_QUANTITY), "quantity->number", 0, sexp_quantity_to_number_op),
++#endif
+ _OP(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+ };
+ 
+diff --git a/third-party/chibi-scheme/sexp.c b/third-party/chibi-scheme/sexp.c
+index f6b8f13..71ba28b 100644
+--- a/third-party/chibi-scheme/sexp.c
++++ b/third-party/chibi-scheme/sexp.c
+@@ -241,6 +241,9 @@ static struct sexp_type_struct _sexp_type_specs[] = {
+ #if SEXP_USE_KEYWORDS
+   {SEXP_KEYWORD, 0, 0, 0, 0, 0, sexp_sizeof(symbol)+1, sexp_offsetof(symbol, length), 1, 0, 0, 0, 0, 0, 0, (sexp)"Keyword", SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, NULL, SEXP_FALSE, NULL, NULL},
+ #endif
++#if SEXP_USE_QUANTITY
++  {SEXP_QUANTITY, sexp_offsetof(quantity, number), 2, 2, 0, 0, sexp_sizeof(quantity), 0, 0, 0, 0, 0, 0, 0, 0, (sexp)"Quantity", SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, NULL, SEXP_FALSE, NULL, NULL},
++#endif
+ };
+ 
+ #define SEXP_INIT_NUM_TYPES (SEXP_NUM_CORE_TYPES*2)
+@@ -1298,6 +1301,38 @@ sexp sexp_keyword_to_string_op (sexp ctx, sexp self, sexp_sint_t n, sexp sym) {
+ }
+ #endif
+ 
++#if SEXP_USE_QUANTITY
++sexp sexp_make_quantity(sexp ctx, sexp number, sexp unit, int dimen, double factor)
++{
++  sexp quant;
++  if (!number || !unit) return SEXP_FALSE;
++  quant = sexp_alloc_type(ctx, quantity, SEXP_QUANTITY);
++  if (sexp_exceptionp(quant)) return quant;
++  sexp_quantity_number(quant) = number;
++  sexp_quantity_unit(quant) = unit;
++  sexp_quantity_dimen(quant) = dimen;
++  sexp_quantity_factor(quant) = factor;
++  return quant;
++}
++
++double sexp_quantity_normalize_to_double (sexp ctx, sexp quant) {
++  sexp num = sexp_quantity_number(quant);
++  double v = (sexp_fixnump(num)
++              ? sexp_unbox_fixnum(num) : (sexp_flonump(num)
++                                          ? sexp_flonum_value(num) : 0.0));
++  return v * sexp_quantity_factor(quant);
++}
++
++sexp sexp_quantity_to_number_op (sexp ctx, sexp self, sexp_sint_t n, sexp quant) {
++  if (sexp_quantityp(quant)) {
++    return sexp_make_flonum(ctx, sexp_quantity_normalize_to_double(ctx, quant));
++  }
++  else
++    return quant;
++}
++#endif
++
++
+ /************************ reading and writing *************************/
+ 
+ #if SEXP_USE_STRING_STREAMS
+@@ -2151,6 +2186,14 @@ sexp sexp_write_one (sexp ctx, sexp obj, sexp out) {
+       if (c!=EOF) sexp_write_char(ctx, c, out);
+       break;
+ #endif
++#if SEXP_USE_QUANTITY
++    case SEXP_QUANTITY:
++      sexp_write(ctx, sexp_quantity_number(obj), out);
++      sexp_write(ctx, sexp_quantity_unit(obj), out);
++      if (sexp_quantity_dimen(obj) != 0 && sexp_quantity_dimen(obj) != 1)
++        sexp_write(ctx, sexp_make_fixnum(sexp_quantity_dimen(obj)), out);
++      break;
++#endif
+ 
+ #if SEXP_USE_BIGNUMS
+     case SEXP_BIGNUM:
+@@ -2374,7 +2417,7 @@ sexp sexp_read_string (sexp ctx, sexp in, int sentinel) {
+       case 'a': c = '\a'; break;
+       case 'b': c = '\b'; break;
+       case 'n': c = '\n'; break;
+-      case 'r': c = '\r'; break; 
++      case 'r': c = '\r'; break;
+       case 't': c = '\t'; break;
+       case 'x':
+         res = sexp_read_number(ctx, in, 16, 0);
+@@ -2486,6 +2529,48 @@ sexp sexp_read_symbol (sexp ctx, sexp in, int init, int internp) {
+   return res;
+ }
+ 
++#if SEXP_USE_QUANTITY
++double unit_to_factor(const char* unit) {
++  if (strcmp(unit, "m") == 0) return 1.0;
++  else if (strcmp(unit, "mm") == 0) return 0.001;
++  else if (strcmp(unit, "cm") == 0) return 0.01;
++  else if (strcmp(unit, "in") == 0) return 0.0254;
++  else if (strcmp(unit, "pt") == 0) return 0.0003527778;
++  else if (strcmp(unit, "pc") == 0) return 0.004233333;
++  return 1.0;
++}
++
++sexp sexp_read_quantity_unit(sexp ctx, sexp in, sexp number) {
++  sexp_gc_var4(res, str, unit, dimen);
++
++  sexp_gc_preserve4(ctx, res, str, unit, dimen);
++
++  unit = sexp_read_symbol(ctx, in, EOF, 1);
++  if (sexp_lsymbolp(unit)) {
++    char tmpc[128];
++    double factor;
++    strncpy(tmpc, sexp_lsymbol_data(unit), sexp_lsymbol_length(unit));
++    tmpc[sexp_lsymbol_length(unit)] = '\0';
++    factor = unit_to_factor(tmpc);
++    /*dimen = sexp_make_flonum(ctx, factor); */
++    res = sexp_make_quantity(ctx, number, unit, 1, factor);
++  }
++  else if (sexp_isymbolp(unit)) {
++    double factor;
++    str = sexp_symbol_to_string(ctx, unit);
++    factor = unit_to_factor(sexp_string_data(str));
++    /*dimen = sexp_make_flonum(ctx, factor);*/
++    res = sexp_make_quantity(ctx, number, unit, 1, factor);
++  }
++  else {
++    res = sexp_read_error(ctx, "invalid numeric syntax (unit)", SEXP_NULL, in);
++  }
++  sexp_gc_release4(ctx);
++
++  return res;
++}
++#endif
++
+ #if SEXP_USE_COMPLEX
+ sexp sexp_make_complex (sexp ctx, sexp real, sexp image) {
+   sexp res = sexp_alloc_type(ctx, complex, SEXP_COMPLEX);
+@@ -2627,6 +2712,12 @@ sexp sexp_read_float_tail (sexp ctx, sexp in, double whole, int negp) {
+   res = sexp_make_fixnum((sexp_uint_t)val);
+ #endif
+   if (!is_precision_indicator(c)) {
++#if SEXP_USE_QUANTITY
++    if (c>='a' && c<='z') {
++      sexp_push_char(ctx, c, in);
++      return sexp_read_quantity_unit(ctx, in, res);
++    } else
++#endif
+ #if SEXP_USE_COMPLEX
+     if (c=='i' || c=='i' || c=='+' || c=='-') {
+       sexp_push_char(ctx, c, in);
+@@ -2788,8 +2879,8 @@ sexp sexp_read_number (sexp ctx, sexp in, int base, int exactp) {
+     } else
+ #endif
+       do {
+-    res = sexp_make_ratio(ctx, sexp_make_fixnum(negativep ? -val : val), den);
+-    res = sexp_ratio_normalize(ctx, res, in);
++        res = sexp_make_ratio(ctx, sexp_make_fixnum(negativep ? -val : val), den);
++        res = sexp_ratio_normalize(ctx, res, in);
+       } while (0);
+ #else
+     if (!sexp_exceptionp(res))
+@@ -2798,7 +2889,13 @@ sexp sexp_read_number (sexp ctx, sexp in, int base, int exactp) {
+ #endif
+     }
+     sexp_gc_release2(ctx);
++
+     return res;
++#if SEXP_USE_QUANTITY
++  } else if (c>='a' && c<='z') {
++    sexp_push_char(ctx, c, in);
++    return sexp_read_quantity_unit(ctx, in, sexp_make_fixnum(negativep ? -val : val));
++#endif
+ #if SEXP_USE_COMPLEX
+   } else if (c=='i' || c=='I' || c=='+' || c=='-' || c=='@') {
+     if (base != 10)
+@@ -3218,6 +3315,15 @@ sexp sexp_read_raw (sexp ctx, sexp in) {
+       sexp_push_char(ctx, c2, in);
+       res = sexp_read_number(ctx, in, 10, 0);
+       if ((c1 == '-') && ! sexp_exceptionp(res)) {
++#if SEXP_USE_QUANTITY
++        if (sexp_quantityp(res)) {
++          sexp num = sexp_quantity_number(res);
++          if (sexp_flonump(num))
++            sexp_quantity_number(res) = sexp_make_flonum(ctx, -1 * sexp_flonum_value(num));
++          else if (sexp_fixnump(num))
++            sexp_quantity_number(res) = sexp_make_fixnum(-1 * sexp_unbox_fixnum(num));
++        } else
++#endif
+ #if SEXP_USE_FLONUMS
+         if (sexp_flonump(res))
+ #if SEXP_USE_IMMEDIATE_FLONUMS
+diff --git a/third-party/chibi-scheme/vm.c b/third-party/chibi-scheme/vm.c
+index a3f9fdc..c4d0088 100644
+--- a/third-party/chibi-scheme/vm.c
++++ b/third-party/chibi-scheme/vm.c
+@@ -1495,6 +1495,10 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
+   case SEXP_OP_KEYWORDP:
+     _ARG1 = sexp_make_boolean(sexp_keywordp(_ARG1)); break;
+ #endif
++#if SEXP_USE_QUANTITY
++  case SEXP_OP_QUANTITYP:
++    _ARG1 = sexp_make_boolean(sexp_quantityp(_ARG1)); break;
++#endif
+   case SEXP_OP_CHARP:
+     _ARG1 = sexp_make_boolean(sexp_charp(_ARG1)); break;
+   case SEXP_OP_ISA:
+@@ -1622,6 +1626,12 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
+   case SEXP_OP_ADD:
+     tmp1 = _ARG1, tmp2 = _ARG2;
+     sexp_context_top(ctx) = --top;
++#if SEXP_USE_QUANTITY
++    if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
++      _ARG1 = sexp_quantity_add(ctx, self, tmp1, tmp2);
++      sexp_check_exception();
++    } else
++#endif
+ #if SEXP_USE_BIGNUMS
+     if (sexp_fixnump(tmp1) && sexp_fixnump(tmp2)) {
+       j = sexp_unbox_fixnum(tmp1) + sexp_unbox_fixnum(tmp2);
+@@ -1651,6 +1661,12 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
+   case SEXP_OP_SUB:
+     tmp1 = _ARG1, tmp2 = _ARG2;
+     sexp_context_top(ctx) = --top;
++#if SEXP_USE_QUANTITY
++    if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
++      _ARG1 = sexp_quantity_sub(ctx, self, tmp1, tmp2);
++      sexp_check_exception();
++    } else
++#endif
+ #if SEXP_USE_BIGNUMS
+     if (sexp_fixnump(tmp1) && sexp_fixnump(tmp2)) {
+       j = sexp_unbox_fixnum(tmp1) - sexp_unbox_fixnum(tmp2);
+@@ -1680,6 +1696,12 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
+   case SEXP_OP_MUL:
+     tmp1 = _ARG1, tmp2 = _ARG2;
+     sexp_context_top(ctx) = --top;
++#if SEXP_USE_QUANTITY
++    if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
++      _ARG1 = sexp_quantity_mul(ctx, self, tmp1, tmp2);
++      sexp_check_exception();
++    } else
++#endif
+ #if SEXP_USE_BIGNUMS
+     if (sexp_fixnump(tmp1) && sexp_fixnump(tmp2)) {
+       prod = (sexp_lsint_t)sexp_unbox_fixnum(tmp1) * sexp_unbox_fixnum(tmp2);
+@@ -1732,6 +1754,12 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
+ #endif
+ #endif
+     }
++#if SEXP_USE_QUANTITY
++    else if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
++      _ARG1 = sexp_quantity_div(ctx, self, tmp1, tmp2);
++      sexp_check_exception();
++    }
++#endif
+ #if SEXP_USE_BIGNUMS
+     else {
+       _ARG1 = sexp_div(ctx, tmp1, tmp2);
+@@ -1786,6 +1814,11 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
+   case SEXP_OP_LT:
+     tmp1 = _ARG1, tmp2 = _ARG2;
+     sexp_context_top(ctx) = --top;
++#if SEXP_USE_QUANTITY
++    if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
++      _ARG1 = sexp_make_boolean(sexp_quantity_compare(ctx, tmp1, tmp2) < 0);
++    } else
++#endif
+     if (sexp_fixnump(tmp1) && sexp_fixnump(tmp2)) {
+       i = (sexp_sint_t)tmp1 < (sexp_sint_t)tmp2;
+ #if SEXP_USE_BIGNUMS
+@@ -1817,6 +1850,11 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
+   case SEXP_OP_LE:
+     tmp1 = _ARG1, tmp2 = _ARG2;
+     sexp_context_top(ctx) = --top;
++#if SEXP_USE_QUANTITY
++    if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
++      _ARG1 = sexp_make_boolean(sexp_quantity_compare(ctx, tmp1, tmp2) <= 0);
++    } else
++#endif
+     if (sexp_fixnump(tmp1) && sexp_fixnump(tmp2)) {
+       i = (sexp_sint_t)tmp1 <= (sexp_sint_t)tmp2;
+ #if SEXP_USE_BIGNUMS
+@@ -1848,6 +1886,11 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
+   case SEXP_OP_EQN:
+     tmp1 = _ARG1, tmp2 = _ARG2;
+     sexp_context_top(ctx) = --top;
++#if SEXP_USE_QUANTITY
++    if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
++      _ARG1 = sexp_make_boolean(sexp_quantity_compare(ctx, tmp1, tmp2) == 0);
++    } else
++#endif
+     if (sexp_fixnump(tmp1) && sexp_fixnump(tmp2)) {
+       i = tmp1 == tmp2;
+ #if SEXP_USE_BIGNUMS
+@@ -2205,3 +2248,165 @@ sexp sexp_apply_no_err_handler (sexp ctx, sexp proc, sexp args) {
+ }
+ 
+ #endif
++
++#if SEXP_USE_QUANTITY
++struct normalized_num_data {
++  double value;
++  double factor;
++  int dimen;
++};
++
++static void normalize_quantity_number(struct normalized_num_data* data, sexp num) {
++  data->value = 0.0;
++  data->factor = 1.0;
++  data->dimen = 0;
++
++  if (sexp_quantityp(num)) {
++    data->value = sexp_fixnump(sexp_quantity_number(num))
++      ? sexp_unbox_fixnum(sexp_quantity_number(num))
++      : (sexp_flonump(sexp_quantity_number(num))
++         ? sexp_flonum_value(sexp_quantity_number(num)) : 0.0);
++    data->factor = sexp_quantity_factor(num);
++    data->dimen = sexp_quantity_dimen(num);
++  }
++  else {
++    data->value = (sexp_fixnump(num)
++                   ? sexp_unbox_fixnum(num) : (sexp_flonump(num)
++                                               ? sexp_flonum_value(num) : 0.0));
++  }
++}
++
++sexp sexp_quantity_add(sexp ctx, sexp self, sexp one, sexp two) {
++  struct normalized_num_data data0;
++  struct normalized_num_data data1;
++  normalize_quantity_number(&data0, one);
++  normalize_quantity_number(&data1, two);
++
++  if (data0.dimen == data1.dimen) {
++    double res_f = data0.factor > data1.factor ? data0.factor : data1.factor;
++    sexp res_unit = (data0.factor > data1.factor
++                     ? sexp_quantity_unit(one) : sexp_quantity_unit(two));
++    double val = (data0.value * data0.factor + data1.value * data1.factor) / res_f;
++    return sexp_make_quantity(ctx,
++                              sexp_make_flonum(ctx, val),
++                              res_unit,
++                              data0.dimen,
++                              res_f);
++  }
++  else {
++    return sexp_user_exception(ctx, self, "+: quantity dimension mismatch", two);
++  }
++}
++
++sexp sexp_quantity_sub(sexp ctx, sexp self, sexp one, sexp two) {
++  struct normalized_num_data data0;
++  struct normalized_num_data data1;
++  normalize_quantity_number(&data0, one);
++  normalize_quantity_number(&data1, two);
++
++  if (data0.dimen == data1.dimen) {
++    double res_f = 1.0;
++    sexp res_unit;
++
++    if (sexp_quantityp(one)) {
++      res_f = data0.factor;
++      res_unit = sexp_quantity_unit(one);
++    }
++    else {
++      res_f = data1.factor;
++      res_unit = sexp_quantity_unit(two);
++    }
++
++    double val = (data0.value * data0.factor - data1.value * data1.factor) / res_f;
++    return sexp_make_quantity(ctx,
++                              sexp_make_flonum(ctx, val),
++                              res_unit,
++                              data0.dimen,
++                              res_f);
++  }
++  else {
++    return sexp_user_exception(ctx, self, "-: quantity dimension mismatch", two);
++  }
++}
++
++sexp sexp_quantity_mul(sexp ctx, sexp self, sexp one, sexp two) {
++  struct normalized_num_data data0;
++  struct normalized_num_data data1;
++  normalize_quantity_number(&data0, one);
++  normalize_quantity_number(&data1, two);
++
++  double eff_f = 1.0;
++  sexp res_unit;
++  int res_dimen = data0.dimen + data1.dimen;
++
++  if (sexp_quantityp(one)) {
++    eff_f = data0.factor;
++    res_unit = sexp_quantity_unit(one);
++  }
++  else {
++    eff_f = data1.factor;
++    res_unit = sexp_quantity_unit(two);
++  }
++
++  double res_f = 1.0;
++  for (int i = 0; i < res_dimen; i++)
++    res_f *= eff_f;
++
++  double val = (data0.value * data0.factor * data1.value * data1.factor) / res_f;
++  return sexp_make_quantity(ctx,
++                            sexp_make_flonum(ctx, val),
++                            res_unit,
++                            data0.dimen + data1.dimen,
++                            res_f);
++}
++
++sexp sexp_quantity_div(sexp ctx, sexp self, sexp one, sexp two) {
++  struct normalized_num_data data0;
++  struct normalized_num_data data1;
++  normalize_quantity_number(&data0, one);
++  normalize_quantity_number(&data1, two);
++
++  int res_dimen = data0.dimen - data1.dimen;
++  if (res_dimen == 0) {
++    return sexp_make_flonum(ctx, (data0.value * data0.factor) / (data1.value * data1.factor));
++  }
++  else {
++    double res_f = 1.0;
++    sexp res_unit;
++
++    if (sexp_quantityp(one)) {
++      res_f = data0.factor;
++      res_unit = sexp_quantity_unit(one);
++    }
++    else {
++      res_f = data1.factor;
++      res_unit = sexp_quantity_unit(two);
++    }
++
++    double val = ((data0.value * data0.factor) / (data1.value * data1.factor)) / res_f;
++    return sexp_make_quantity(ctx,
++                              sexp_make_flonum(ctx, val),
++                              res_unit,
++                              res_dimen,
++                              res_f);
++  }
++}
++
++
++sexp_sint_t sexp_quantity_compare (sexp ctx, sexp one, sexp two) {
++  struct normalized_num_data data0;
++  struct normalized_num_data data1;
++  normalize_quantity_number(&data0, one);
++  normalize_quantity_number(&data1, two);
++
++  if (data0.dimen == data1.dimen) {
++    double val0 = data0.value * data0.factor;
++    double val1 = data1.value * data1.factor;
++
++    return val0 > val1 ? 1 : (val0 < val1 ? -1 : 0);
++  }
++
++  return -1;
++}
++
++#endif
