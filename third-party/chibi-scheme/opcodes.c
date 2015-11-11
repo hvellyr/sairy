@@ -276,6 +276,10 @@ _OP(SEXP_OPC_TYPE_PREDICATE, SEXP_OP_KEYWORDP,  1, 0, _I(SEXP_BOOLEAN), _I(SEXP_
 _FN1(_I(SEXP_KEYWORD), _I(SEXP_STRING), "string->keyword", 0, sexp_string_to_keyword_op),
 _FN1(_I(SEXP_STRING), _I(SEXP_KEYWORD), "keyword->string", 0, sexp_keyword_to_string_op),
 #endif
+#if SEXP_USE_QUANTITY
+_OP(SEXP_OPC_TYPE_PREDICATE, SEXP_OP_QUANTITYP,  1, 0, _I(SEXP_BOOLEAN), _I(SEXP_OBJECT), SEXP_FALSE, SEXP_FALSE, 0, "%quantity?", NULL, 0),
+_FN1(_I(SEXP_NUMBER), _I(SEXP_QUANTITY), "quantity->number", 0, sexp_quantity_to_number_op),
+#endif
 _OP(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
 };
 

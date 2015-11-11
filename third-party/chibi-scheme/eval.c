@@ -385,6 +385,9 @@ sexp sexp_make_synclo_op (sexp ctx, sexp self, sexp_sint_t n, sexp env, sexp fv,
 #if SEXP_USE_KEYWORDS
          || sexp_keywordp(expr)
 #endif
+#if SEXP_USE_QUANTITY
+         || sexp_quantityp(expr)
+#endif
         ))
     return expr;
   res = sexp_alloc_type(ctx, synclo, SEXP_SYNCLO);
@@ -1542,8 +1545,33 @@ sexp sexp_exact_sqrt (sexp ctx, sexp self, sexp_sint_t n, sexp z) {
 #endif
 
 sexp sexp_sqrt (sexp ctx, sexp self, sexp_sint_t n, sexp z) {
-#if SEXP_USE_BIGNUMS
   sexp_gc_var2(res, rem);
+#if SEXP_USE_QUANTITY
+  if (sexp_quantityp(z)) {
+    double val = sexp_fixnump(sexp_quantity_number(z))
+      ? sexp_unbox_fixnum(sexp_quantity_number(z))
+      : (sexp_flonump(sexp_quantity_number(z))
+         ? sexp_flonum_value(sexp_quantity_number(z)) : 0.0);
+    sexp_gc_preserve1(ctx, res);
+
+    if (sexp_quantity_dimen(z) >= 2) {
+      if (val >= 0) {
+        res = sexp_make_quantity(ctx, sexp_make_flonum(ctx, sqrt(val)),
+                                 sexp_quantity_unit(z),
+                                 sexp_quantity_dimen(z) / 2,
+                                 sexp_quantity_factor(z));
+      }
+      else
+        res = sexp_user_exception(ctx, self, "sqrt: z < 0", z);
+    }
+    else
+      res = sexp_user_exception(ctx, self, "sqrt: quantity dimension < 2", z);
+
+    sexp_gc_release1(ctx);
+    return res;
+  }
+#endif
+#if SEXP_USE_BIGNUMS
   if (sexp_bignump(z)) {
     sexp_gc_preserve2(ctx, res, rem);
     res = sexp_bignum_sqrt(ctx, z, &rem);
@@ -1672,6 +1700,11 @@ sexp sexp_complex_imag_op (sexp ctx, sexp self, sexp_sint_t n, sexp cpx) {
 sexp sexp_exact_to_inexact (sexp ctx, sexp self, sexp_sint_t n, sexp i) {
   sexp_gc_var1(res);
   res = i;
+#if SEXP_USE_QUANTITY
+  if (sexp_quantityp(i))
+    res = i;
+  else
+#endif
   if (sexp_fixnump(i))
     res = sexp_fixnum_to_flonum(ctx, i);
 #if SEXP_USE_FLONUMS
@@ -1705,6 +1738,10 @@ sexp sexp_inexact_to_exact (sexp ctx, sexp self, sexp_sint_t n, sexp z) {
   if (sexp_exactp(z)) {
     res = z;
   }
+#if SEXP_USE_QUANTITY
+  else if (sexp_quantityp(z))
+    res = z;
+#endif
 #if SEXP_USE_FLONUMS
   else if (sexp_flonump(z)) {
     if (isinf(sexp_flonum_value(z)) || isnan(sexp_flonum_value(z))) {
@@ -2291,6 +2328,9 @@ static const char* sexp_initial_features[] = {
 #endif
 #if SEXP_USE_KEYWORDS
   "keywords",
+#endif
+#if SEXP_USE_QUANTITY
+  "quantity",
 #endif
   "r7rs",
   "chibi",
