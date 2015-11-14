@@ -310,7 +310,7 @@
 (define ($perfect-hash-table-lookup table key)
   (let* ((n (quotient (vector-length table) 2))
          (x (* 2 ($hash-keyword key n))))
-    (and (eq? (vector-ref table x) key)
+    (and (eqv? (vector-ref table x) key)
          (vector-ref table (+ x 1)))))
 
 ; Handling of named parameters.
@@ -319,13 +319,13 @@
 
 (define ($req-key key-values i)
   (let ((val (vector-ref key-values i)))
-    (if (eq? val $undefined)
+    (if (eqv? val $undefined)
         (error "a required named parameter was not provided")
         val)))
 
 (define ($opt-key key-values i default)
   (let ((val (vector-ref key-values i)))
-    (if (eq? val $undefined)
+    (if (eqv? val $undefined)
         (default)
         val)))
 
@@ -342,7 +342,7 @@
                     (if (null? (cdr args))
                         (error "a value was expected after keyword" k)
                         (begin
-                          (if (eq? (vector-ref key-values i) $undefined)
+                          (if (eqv? (vector-ref key-values i) $undefined)
                               (vector-set! key-values i (cadr args))
                               (error "duplicate parameter" k))
                           (loop (cddr args)))))))))))
