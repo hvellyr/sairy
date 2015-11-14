@@ -223,6 +223,30 @@ namespace {
   }
 
 
+  sexp func_displace_space_p(sexp ctx, sexp self, sexp_sint_t n, sexp q)
+  {
+    if (sexp_check_tag(q, length_spec_tag_p(ctx))) {
+      const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(q));
+      if (ls->_spec_type == fo::kDisplay)
+        return sexp_make_boolean(1);
+    }
+
+    return sexp_make_boolean(0);
+  }
+
+
+  sexp func_inline_space_p(sexp ctx, sexp self, sexp_sint_t n, sexp q)
+  {
+    if (sexp_check_tag(q, length_spec_tag_p(ctx))) {
+      const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(q));
+      if (ls->_spec_type == fo::kInline)
+        return sexp_make_boolean(1);
+    }
+
+    return sexp_make_boolean(0);
+  }
+
+
   sexp func_make_length_spec(sexp ctx, sexp self, sexp_sint_t n,
                              sexp type_arg,
                              sexp val_arg, sexp min_arg, sexp max_arg,
@@ -324,6 +348,10 @@ namespace {
     // register functions
     sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-length-spec", 6,
                         &func_make_length_spec);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "display-space?", 1,
+                        &func_displace_space_p);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "inline-space?", 1,
+                        &func_inline_space_p);
 
     sexp_gc_release3(ctx);
   }
