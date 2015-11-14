@@ -1126,7 +1126,15 @@
 (define (rational? x)
   (and (real? x) (= x x) (not (= x (+ x (if (positive? x) 1 -1))))))
 
-(define (eqv? a b) (if (eq? a b) #t (and (number? a) (equal? a b))))
+(cond-expand
+ (keywords
+  (define (eqv? a b) (if (eq? a b)
+                         #t
+                         (if (and (keyword? a) (keyword? b))
+                             (equal? a b)
+                             (and (number? a) (equal? a b))))))
+ (else
+  (define (eqv? a b) (if (eq? a b) #t (and (number? a) (equal? a b))))))
 
 (define (zero? x) (= x 0))
 (define (positive? x) (> x 0))
