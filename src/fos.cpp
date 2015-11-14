@@ -34,49 +34,49 @@ namespace fo {
     {"break-before?", false},          // Bool
     {"class", false},                  // String
     {"color", true},                   // Color
-    {"end-indent", true},              // Dimen
-    {"end-margin", false},             // Dimen
-    {"field-width", false},            // Dimen
+    {"end-indent", true},              // LengthSpec
+    {"end-margin", false},             // LengthSpec
+    {"field-width", false},            // LengthSpec
     {"field-align", false},            // Keyw: left, right, center
-    {"first-line-start-indent", true}, // Dimen
-    {"last-line-end-indent", true},    // Dimen
+    {"first-line-start-indent", true}, // LengthSpec
+    {"last-line-end-indent", true},    // LengthSpec
     {"font-name", true},               // String
     {"font-posture", true},            // Keyw: upright, italic, oblique
-    {"font-size", true},               // Dimen
+    {"font-size", true},               // LengthSpec
     {"font-weight", true},             // Keyw: medium, bold, semibold,
     {"font-caps", true},               // Keyw: normal, caps, smallcaps,
     {"inhibit-line-breaks?", false},   // Bool
     {"language", true},                // String
-    {"line-spacing", true},            // Dimen
-    {"line-thickness", true},          // Dimen
+    {"line-spacing", true},            // LengthSpec
+    {"line-thickness", true},          // LengthSpec
     {"quadding", true},                // Keyw: left, right, center, justify
-    {"space-after", false},            // Dimen
-    {"space-before", false},           // Dimen
-    {"start-indent", false},           // Dimen
-    {"start-margin", false},           // Dimen
+    {"space-after", false},            // LengthSpec
+    {"space-before", false},           // LengthSpec
+    {"start-indent", false},           // LengthSpec
+    {"start-margin", false},           // LengthSpec
     {"title", false},                  // Sosofo
     {"keep-with-previous?", false},    // Bool
     {"keep-with-next?", false},        // Bool
     {"lines", true},                   // Keyw: wrap, asis, asis-wrap, none
     {"numbered-lines?", true},         // Bool
     {"line-number-side", true},        // Keyw: start, end, inside, outside
-    {"asis-wrap-indent", true},        // Dimen
+    {"asis-wrap-indent", true},        // LengthSpec
     {"whitespace-treatment", true},    // Keyw: preserve, collapse, ignore
-    {"page-width", false},             // Dimen
-    {"page-height", false},            // Dimen
-    {"left-margin", false},            // Dimen
-    {"right-margin", false},           // Dimen
-    {"top-margin", false},             // Dimen
-    {"bottom-margin", false},          // Dimen
-    {"header-margin", false},          // Dimen
-    {"footer-margin", false},          // Dimen
+    {"page-width", false},             // LengthSpec
+    {"page-height", false},            // LengthSpec
+    {"left-margin", false},            // LengthSpec
+    {"right-margin", false},           // LengthSpec
+    {"top-margin", false},             // LengthSpec
+    {"bottom-margin", false},          // LengthSpec
+    {"header-margin", false},          // LengthSpec
+    {"footer-margin", false},          // LengthSpec
     {"left-header", false},            // Sosofo
     {"center-header", false},          // Sosofo
     {"right-header", false},           // Sosofo
     {"left-footer", false},            // Sosofo
     {"center-footer", false},          // Sosofo
     {"right-footer", false},           // Sosofo
-    {"position-point-shift", false},   // Dimen
+    {"position-point-shift", false},   // LengthSpec
     {"text", false},                   // String
   };
 
@@ -149,18 +149,19 @@ namespace fo {
     double max_inf = std::numeric_limits<double>::infinity();
 
     static PropertySpecs propspecs = {
-      PropertySpec("first-line-start-indent", Dimen(0, k_em)),
-      PropertySpec("last-line-end-indent", Dimen(1, k_em, 1, max_inf)),
-      PropertySpec("line-spacing", Dimen(14, k_pt)),
+      PropertySpec("first-line-start-indent", LengthSpec(kInline, 0, k_em)),
+      PropertySpec("last-line-end-indent", LengthSpec(kInline, 1, k_em, 1, max_inf)),
+      PropertySpec("line-spacing", LengthSpec(kDimen, 14, k_pt)),
       PropertySpec("font-caps", "normal"), PropertySpec("font-name", "serif"),
       PropertySpec("font-posture", "upright"),
-      PropertySpec("font-size", Dimen(10, k_pt)),
-      PropertySpec("font-weight", "medium"), PropertySpec("language", ""),
-      PropertySpec("start-indent", Dimen(0, k_em)),
-      PropertySpec("end-indent", Dimen(0, k_em)),
+      PropertySpec("font-size", LengthSpec(kDimen, 10, k_pt)),
+      PropertySpec("font-weight", "medium"),
+      PropertySpec("language", ""),
+      PropertySpec("start-indent", LengthSpec(kInline, 0, k_em)),
+      PropertySpec("end-indent", LengthSpec(kInline, 0, k_em)),
       PropertySpec("quadding", "justify"),
-      PropertySpec("space-before", Dimen(0, k_pt)),
-      PropertySpec("space-after", Dimen(0, k_pt)),
+      PropertySpec("space-before", LengthSpec(kDisplay, 0, k_pt)),
+      PropertySpec("space-after", LengthSpec(kDisplay, 0, k_pt)),
       PropertySpec("keep-with-previous?", false),
       PropertySpec("keep-with-next?", false),
       PropertySpec("break-after?", false), PropertySpec("break-before?", false),
@@ -169,7 +170,7 @@ namespace fo {
       PropertySpec("asis-wrap-indent", 10),
       PropertySpec("numbered-lines?", false),
       PropertySpec("line-number-side", "start"),
-      PropertySpec("position-point-shift", Dimen(0, k_pt)),
+      PropertySpec("position-point-shift", LengthSpec(kDimen, 0, k_pt)),
     };
     return propspecs;
   }
@@ -216,8 +217,8 @@ namespace fo {
   {
     // clang-format off
     static PropertySpecs propspecs = {
-      PropertySpec("space-before", Dimen(0, k_pt)),
-      PropertySpec("space-after", Dimen(0, k_pt)),
+      PropertySpec("space-before", LengthSpec(kDisplay, 0, k_pt)),
+      PropertySpec("space-after", LengthSpec(kDisplay, 0, k_pt)),
       PropertySpec("break-before?", false),
       PropertySpec("break-after?", false),
       PropertySpec("font-caps", ""),
@@ -261,7 +262,7 @@ namespace fo {
   const PropertySpecs& Sequence::default_properties() const
   {
     static PropertySpecs propspecs = {
-      PropertySpec("position-point-shift", Dimen(0, k_pt)),
+      PropertySpec("position-point-shift", LengthSpec(kDimen, 0, k_pt)),
     };
     return propspecs;
   }
@@ -296,10 +297,10 @@ namespace fo {
   const PropertySpecs& LineField::default_properties() const
   {
     static PropertySpecs propspecs = {
-      PropertySpec("field-width", Dimen(0, k_pt)),
+      PropertySpec("field-width", LengthSpec(kInline, 0, k_pt)),
       PropertySpec("field-align", "left"),
       PropertySpec("inhibit-line-breaks?", false),
-      PropertySpec("position-point-shift", Dimen(0, k_pt)),
+      PropertySpec("position-point-shift", LengthSpec(kDimen, 0, k_pt)),
     };
     return propspecs;
   }
@@ -335,7 +336,8 @@ namespace fo {
   {
     static PropertySpecs propspecs = {
       PropertySpec("below?", false), PropertySpec("above?", false),
-      PropertySpec("color", ""), PropertySpec("line-thickness", Dimen(0, k_pt)),
+      PropertySpec("color", ""),
+      PropertySpec("line-thickness", LengthSpec(kDimen, 0, k_pt)),
     };
     return propspecs;
   }
@@ -376,19 +378,20 @@ namespace fo {
     static PropertySpecs propspecs =
       {PropertySpec("font-caps", "normal"), PropertySpec("font-name", "serif"),
        PropertySpec("font-posture", "upright"),
-       PropertySpec("font-size", Dimen(10, k_pt)),
-       PropertySpec("font-weight", "medium"), PropertySpec("lines", "wrap"),
+       PropertySpec("font-size", LengthSpec(kDimen, 10, k_pt)),
+       PropertySpec("font-weight", "medium"),
+       PropertySpec("lines", "wrap"),
        PropertySpec("whitespace-treatment", "collapse"),
-       PropertySpec("start-margin", Dimen(0, k_pt)),
-       PropertySpec("end-margin", Dimen(0, k_pt)),
-       PropertySpec("page-width", Dimen(210, k_mm)),
-       PropertySpec("page-height", Dimen(297, k_mm)),
-       PropertySpec("left-margin", Dimen(30, k_mm)),
-       PropertySpec("right-margin", Dimen(30, k_mm)),
-       PropertySpec("top-margin", Dimen(20, k_mm)),
-       PropertySpec("bottom-margin", Dimen(30, k_mm)),
-       PropertySpec("header-margin", Dimen(10, k_mm)),
-       PropertySpec("footer-margin", Dimen(20, k_mm)),
+       PropertySpec("start-margin", LengthSpec(kInline, 0, k_pt)),
+       PropertySpec("end-margin", LengthSpec(kInline, 0, k_pt)),
+       PropertySpec("page-width", LengthSpec(kDimen, 210, k_mm)),
+       PropertySpec("page-height", LengthSpec(kDimen, 297, k_mm)),
+       PropertySpec("left-margin", LengthSpec(kInline, 30, k_mm)),
+       PropertySpec("right-margin", LengthSpec(kDimen, 30, k_mm)),
+       PropertySpec("top-margin", LengthSpec(kDimen, 20, k_mm)),
+       PropertySpec("bottom-margin", LengthSpec(kDimen, 30, k_mm)),
+       PropertySpec("header-margin", LengthSpec(kDimen, 10, k_mm)),
+       PropertySpec("footer-margin", LengthSpec(kDimen, 20, k_mm)),
        PropertySpec("left-header", std::make_shared<Sosofo>()),
        PropertySpec("center-header", std::make_shared<Sosofo>()),
        PropertySpec("right-header", std::make_shared<Sosofo>()),
@@ -431,10 +434,11 @@ namespace fo {
     static PropertySpecs propspecs = {
       PropertySpec("font-caps", "normal"), PropertySpec("font-name", "serif"),
       PropertySpec("font-posture", "upright"),
-      PropertySpec("font-size", Dimen(10, k_pt)),
-      PropertySpec("font-weight", "medium"), PropertySpec("title", false),
-      PropertySpec("start-margin", Dimen(0, k_pt)),
-      PropertySpec("end-margin", Dimen(0, k_pt)),
+      PropertySpec("font-size", LengthSpec(kDimen, 10, k_pt)),
+      PropertySpec("font-weight", "medium"),
+      PropertySpec("title", false),
+      PropertySpec("start-margin", LengthSpec(kDimen, 0, k_pt)),
+      PropertySpec("end-margin", LengthSpec(kDimen, 0, k_pt)),
       PropertySpec("background-color", false),
       PropertySpec("background-tile", false),
     };
@@ -612,7 +616,7 @@ namespace fo {
   }
 
 
-  std::ostream& operator<<(std::ostream& os, const Dimen& dimen)
+  std::ostream& operator<<(std::ostream& os, const LengthSpec& dimen)
   {
     auto unit_name = [](Unit un) {
       switch (un) {
@@ -631,7 +635,7 @@ namespace fo {
       }
     };
 
-    os << "<dimen:" << dimen._value << unit_name(dimen._unit);
+    os << "<length-spec:" << dimen._value << unit_name(dimen._unit);
     if (dimen._value != dimen._min) {
       os << " min " << dimen._min << unit_name(dimen._unit);
     }

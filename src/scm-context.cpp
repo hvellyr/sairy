@@ -212,7 +212,7 @@ namespace {
 
   //------------------------------------------------------------------------------
 
-  sexp make_dimen(sexp ctx, fo::Dimen dim)
+  sexp make_length_spec(sexp ctx, fo::LengthSpec dim)
   {
     sexp_gc_var4(ty, tmp, result, nm);
     sexp_gc_preserve4(ctx, ty, tmp, result, nm);
@@ -225,7 +225,7 @@ namespace {
       result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
       sexp_cpointer_freep(result) = 0;
       sexp_cpointer_length(result) = 0;
-      sexp_cpointer_value(result) = (void*)new fo::Dimen(dim);
+      sexp_cpointer_value(result) = (void*)new fo::LengthSpec(dim);
     }
     else {
       result = SEXP_VOID;
@@ -239,7 +239,7 @@ namespace {
 
   sexp free_dimen(sexp ctx, sexp self, sexp_sint_t n, sexp dim_arg)
   {
-    const fo::Dimen* dimen = (const fo::Dimen*)(sexp_cpointer_value(dim_arg));
+    const fo::LengthSpec* dimen = (const fo::LengthSpec*)(sexp_cpointer_value(dim_arg));
     delete dimen;
 
     sexp_cpointer_value(dim_arg) = nullptr;
@@ -260,15 +260,22 @@ namespace {
       fo::Unit unit = map_name_to_unit(*unitnm);
 
       if (sexp_flonump(val_arg)) {
-        result = make_dimen(ctx, fo::Dimen(sexp_flonum_value(val_arg), unit));
+        result = make_length_spec(ctx, fo::LengthSpec(fo::kDimen,
+                                                      sexp_flonum_value(val_arg),
+                                                      unit));
       }
       else if (sexp_ratiop(val_arg)) {
         result =
-          make_dimen(ctx, fo::Dimen(sexp_ratio_to_double(val_arg), unit));
+          make_length_spec(ctx, fo::LengthSpec(fo::kDimen,
+                                               sexp_ratio_to_double(val_arg),
+                                               unit));
       }
       else if (sexp_fixnump(val_arg)) {
         result =
-          make_dimen(ctx, fo::Dimen(int(sexp_unbox_fixnum(val_arg)), unit));
+          make_length_spec(ctx,
+                           fo::LengthSpec(fo::kDimen,
+                                          int(sexp_unbox_fixnum(val_arg)),
+                                          unit));
       }
       else {
         result = sexp_user_exception(ctx, self, "invalid number", val_arg);
@@ -1143,7 +1150,7 @@ namespace {
       result = fo::PropertySpec(key, int(sexp_unbox_fixnum(expr)));
     }
     else if (sexp_check_tag(expr, dimen_tag_p(ctx))) {
-      const fo::Dimen* dimen = (const fo::Dimen*)(sexp_cpointer_value(expr));
+      const fo::LengthSpec* dimen = (const fo::LengthSpec*)(sexp_cpointer_value(expr));
       result = fo::PropertySpec(key, *dimen);
     }
     else if (sexp_stringp(expr)) {
