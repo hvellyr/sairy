@@ -5,7 +5,7 @@
           default element root mode text
           process-node-list process-node-list-trim
           process-children process-children-trim current-node
-          make literal dimen
+          make literal
           select-elements match-element?
           node-list
           sosofo-append

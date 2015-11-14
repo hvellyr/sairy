@@ -33,23 +33,23 @@
    ;; head
    (make paragraph
      font-caps: 'small-caps
-     font-size: (dimen 14 pt)
+     font-size: 14pt
      font-weight: 'bold
      break-after?: #f
      keep-with-next?: #t
-     first-line-start-indent: (dimen 0 em)
-     space-before: (dimen 14 pt)
-     space-after: (dimen 7 pt)
+     first-line-start-indent: 0pt
+     space-before: 14pt
+     space-after: 7pt
      quadding: "left"
      (process-node-list (attribute "title" (current-node))))
 
    ;; body
    (make display-group
-     start-indent: (dimen 2 em)
+     start-indent: 20pt
      (sosofo-append
       (make paragraph
         quadding: "justify"
-        first-line-start-indent: (dimen 0 em)
+        first-line-start-indent: 0pt
         (process-node-list-trim (children (node-list-first (children (current-node))))))
       (process-node-list-trim (node-list-rest (children (current-node)))))
      ))
@@ -61,17 +61,17 @@
    (make paragraph
      mandoc.section: "synopsis"
      font-caps: 'small-caps
-     font-size: (dimen 14 pt)
+     font-size: 14pt
      font-weight: 'bold
      break-after?: #f
-     space-before: (dimen 14 pt)
-     space-after: (dimen 7 pt)
+     space-before: 14pt
+     space-after: 7pt
      keep-with-next?: #t
-     first-line-start-indent: (dimen 0 em)
+     first-line-start-indent: 0pt
      quadding: "left"
      (literal "Synopsis"))
    (make display-group
-     start-indent: (dimen 2 em)
+     start-indent: 20pt
      (process-children-trim))))
 
 
@@ -93,12 +93,12 @@
          )
 
     (make simple-page-sequence
-      font-size: (dimen 10 pt)
-      line-spacing: (dimen 14 pt)
+      font-size: 10pt
+      line-spacing: 14pt
       metadata.author: author-as-string
       metadata.desc: manpage-desc
       metadata.title: manpage-title
-      html.width: (dimen 600 px)
+      html.width: 600pt
 
       (sosofo-append
        (make display-group
@@ -111,10 +111,10 @@
           (make paragraph
             font-weight: 'bold
             break-after?: #f
-            space-before: (dimen 0 pt)
-            space-after: (dimen 7 pt)
+            space-before: 0pt
+            space-after: 7pt
             keep-with-next?: #t
-            first-line-start-indent: (dimen 0 em)
+            first-line-start-indent: 0pt
             quadding: "left"
             (sosofo-append
              (process-node-list (attribute "name" (current-node)))
@@ -124,20 +124,20 @@
           (make paragraph
             mandoc.section: "name"
             font-caps: 'small-caps
-            font-size: (dimen 14 pt)
-            line-spacing: (dimen 17 pt)
+            font-size: 14pt
+            line-spacing: 17pt
             font-weight: 'bold
             break-after?: #f
-            space-before: (dimen 20 pt)
-            space-after: (dimen 7 pt)
+            space-before: 20pt
+            space-after: 7pt
             keep-with-next?: #t
-            first-line-start-indent: (dimen 0 em)
+            first-line-start-indent: 0pt
             quadding: "left"
             (literal "Name"))
           (make display-group
-            start-indent: (dimen 2 em)
+            start-indent: 20pt
             (make paragraph
-              first-line-start-indent: (dimen 0 em)
+              first-line-start-indent: 0pt
               quadding: "left"
               (sosofo-append
                (process-node-list (attribute "name" (current-node)))
@@ -152,18 +152,18 @@
             (make paragraph
               mandoc.section: "authors"
               font-caps: 'small-caps
-              font-size: (dimen 14 pt)
-              line-spacing: (dimen 17 pt)
+              font-size: 14pt
+              line-spacing: 17pt
               font-weight: 'bold
               break-after?: #f
-              space-before: (dimen 20 pt)
-              space-after: (dimen 7 pt)
+              space-before: 20pt
+              space-after: 7pt
               keep-with-next?: #t
-              first-line-start-indent: (dimen 0 em)
+              first-line-start-indent: 0pt
               quadding: "left"
               (literal "Authors"))
             (make display-group
-              start-indent: (dimen 2 em)
+              start-indent: 20pt
               (process-node-list authors)))
            (empty-sosofo))
        )) ))
@@ -175,7 +175,7 @@
 (element author
   (let ((email (attribute "email" (current-node))))
     (make paragraph
-      first-line-start-indent: (dimen 0 pt)
+      first-line-start-indent: 0pt
       quadding: "left"
       (sosofo-append
        (process-node-list (attribute "name" (current-node)))
@@ -194,21 +194,21 @@
   (sosofo-append
    (make paragraph
      font-caps: 'small-caps
-     font-size: (dimen 14 pt)
+     font-size: 14pt
      font-weight: 'bold
      break-after?: #f
-     space-before: (dimen 14 pt)
-     space-after: (dimen 7 pt)
+     space-before: 14pt
+     space-after: 7pt
      keep-with-next?: #t
      quadding: "left"
      (literal "See Also"))
    (make display-group
-     start-indent: (dimen 2 em)
+     start-indent: 20pt
      (process-children))))
 
 (element (seealso mref)
   (make paragraph
-    first-line-start-indent: (dimen 0 pt)
+    first-line-start-indent: 0pt
     quadding: "left"
     (sosofo-append
      (process-node-list (attribute "name" (current-node)))
@@ -220,15 +220,15 @@
 
 (element (seealso xref)
   (make paragraph
-    first-line-start-indent: (dimen 0 pt)
+    first-line-start-indent: 0pt
     quadding: "left"
     (process-node-list (attribute "ref" (current-node)))))
 
 
 (element (seealso bibref)
   (make paragraph
-    first-line-start-indent: (dimen -2 em)
-    start-indent: (dimen 2 em)
+    first-line-start-indent: -20pt
+    start-indent: 20pt
     quadding: "left"
     (format-bibref (current-node))))
 
