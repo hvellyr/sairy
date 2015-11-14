@@ -1149,6 +1149,11 @@ namespace {
     else if (sexp_fixnump(expr)) {
       result = fo::PropertySpec(key, int(sexp_unbox_fixnum(expr)));
     }
+    else if (sexp_quantityp(expr)) {
+      // the number is normalized to 'm' unit; rebase it to 'pt'
+      double val = sexp_quantity_normalize_to_double(ctx, expr) / 0.0003527778;
+      result = fo::PropertySpec(key, fo::LengthSpec(fo::kDimen, val, fo::k_pt));
+    }
     else if (sexp_check_tag(expr, dimen_tag_p(ctx))) {
       const fo::LengthSpec* dimen = (const fo::LengthSpec*)(sexp_cpointer_value(expr));
       result = fo::PropertySpec(key, *dimen);
