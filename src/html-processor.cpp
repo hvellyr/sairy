@@ -110,7 +110,7 @@ namespace {
   const std::string k_mm = "mm";
   const std::string k_cm = "cm";
 
-  std::string dimen2css(const fo::Dimen& dim)
+  std::string length_spec2css(const fo::LengthSpec& dim)
   {
     auto unit_name = [](fo::Unit un) {
       switch (un) {
@@ -186,10 +186,10 @@ namespace {
 
 
   void set_attr(detail::StyleAttrs& attrs, const std::string& key,
-                boost::optional<fo::Dimen> val_or_none)
+                boost::optional<fo::LengthSpec> val_or_none)
   {
     if (val_or_none) {
-      attrs._css_map[key] = dimen2css(*val_or_none);
+      attrs._css_map[key] = length_spec2css(*val_or_none);
     }
   }
 
@@ -283,10 +283,10 @@ namespace {
                                 HtmlProcessor* processor,
                                 const IFormattingObject* fo)
   {
-    auto fontsize = processor->property_or_none<fo::Dimen>(fo, "font-size");
+    auto fontsize = processor->property_or_none<fo::LengthSpec>(fo, "font-size");
     auto fontcaps = processor->property_or_none<std::string>(fo, "font-caps");
     auto posptshift =
-      processor->property_or_none<fo::Dimen>(fo, "position-point-shift");
+      processor->property_or_none<fo::LengthSpec>(fo, "position-point-shift");
 
     set_attr(attrs, "font-size", fontsize);
     set_capsstyle(attrs, fontcaps);
@@ -300,13 +300,13 @@ namespace {
                                  const IFormattingObject* fo)
   {
     auto startindent =
-      processor->property_or_none<fo::Dimen>(fo, "start-indent");
-    auto endindent = processor->property_or_none<fo::Dimen>(fo, "end-indent");
+      processor->property_or_none<fo::LengthSpec>(fo, "start-indent");
+    auto endindent = processor->property_or_none<fo::LengthSpec>(fo, "end-indent");
     auto firstline_startindent =
-      processor->property_or_none<fo::Dimen>(fo, "first-line-start-indent");
+      processor->property_or_none<fo::LengthSpec>(fo, "first-line-start-indent");
     auto spacebefore =
-      processor->property_or_none<fo::Dimen>(fo, "space-before");
-    auto spaceafter = processor->property_or_none<fo::Dimen>(fo, "space-after");
+      processor->property_or_none<fo::LengthSpec>(fo, "space-before");
+    auto spaceafter = processor->property_or_none<fo::LengthSpec>(fo, "space-after");
 
     set_attr(attrs, "padding-left", startindent);
     set_attr(attrs, "margin-right", endindent);
@@ -457,7 +457,7 @@ namespace {
       auto author = processor->property(fo, "metadata.author", std::string());
       auto desc = processor->property(fo, "metadata.desc", std::string());
       auto html_width =
-        processor->property_or_none<fo::Dimen>(fo, "html.width");
+        processor->property_or_none<fo::LengthSpec>(fo, "html.width");
 
       withHtmlFile(processor, processor->ctx().current_path(), title, author,
                    desc, html::k_XHTML_1_1_DTD,
@@ -524,7 +524,7 @@ namespace {
       set_font_characteristics(attrs, processor, fo);
 
       auto field_width =
-        processor->property_or_none<fo::Dimen>(fo, "field-width");
+        processor->property_or_none<fo::LengthSpec>(fo, "field-width");
       auto field_align =
         processor->property_or_none<std::string>(fo, "field-align");
 

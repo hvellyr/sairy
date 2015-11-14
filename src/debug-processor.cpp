@@ -25,7 +25,7 @@ namespace po = boost::program_options;
 namespace {
   class DebugPropertySpecVisitor : public boost::static_visitor<> {
   public:
-    void operator()(const fo::Dimen& dimen) { std::cout << dimen; }
+    void operator()(const fo::LengthSpec& ls) { std::cout << ls; }
     void operator()(bool val) { std::cout << (val ? "yes" : "no"); }
     void operator()(int val) { std::cout << val; }
     void operator()(const std::string& val) { std::cout << val; }

@@ -10,8 +10,8 @@
 ;;     quadding: 'justify
 ;;     numbered-lines?: #t
 ;;     asis-wrap-indent: 42
-;;     line-spacing: (dimen 3/4 pt)
-;;     font-size: (dimen 14.4 pt)
+;;     line-spacing: 0.75pt
+;;     font-size: 14.4pt
 ;;     (sosofo-append
 ;;      (make literal)
 ;;      (process-children))
@@ -44,7 +44,7 @@
 (element title
   (make display-group
     (make paragraph
-      font-size: (dimen 48 pt)
+      font-size: 48pt
       (sosofo-append (literal "title")
                      (process-children)))))
 

@@ -253,11 +253,6 @@
 (define (process-children-trim)
   (process-node-list-trim (children (current-node))))
 
-
-(define-syntax dimen
-  (syntax-rules ()
-    ((dimen real unit) (%make-dimen real 'unit))))
-
 ;; register a default text mapping
 (text
  (literal (node-property 'data (current-node) default: "")))

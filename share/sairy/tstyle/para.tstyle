@@ -9,13 +9,13 @@
 
 (element definitions
   (make display-group
-    space-before: (dimen 7 pt)
-    space-after: (dimen 7 pt)
+    space-before: 7pt
+    space-after: 7pt
     (process-children-trim)))
 
 (element (definitions p item)
   (make line-field
-    field-width: (dimen 70 pt)
+    field-width: 70pt
     field-align: 'left
     (process-node-list-trim (attribute "text" (current-node)))))
 
@@ -23,14 +23,14 @@
   (let ((item (node-list-first (children (current-node)))))
     (if (equal? (gi item) 'item)
         (make paragraph
-          first-line-start-indent: (dimen -70 pt)
-          start-indent: (dimen 70 pt)
+          first-line-start-indent: -70pt
+          start-indent: 70pt
           (sosofo-append
            (process-node-list (node-list-first (children (current-node))))
            (process-node-list-trim (node-list-rest (children (current-node))))))
         (make paragraph
-          first-line-start-indent: (dimen 0 em)
-          start-indent: (dimen 70 pt)
+          first-line-start-indent: 0pt
+          start-indent: 70pt
           (process-children-trim)
           ) ))
   )
@@ -38,13 +38,13 @@
 
 (element itemize
   (make display-group
-    space-before: (dimen 7 pt)
-    space-after: (dimen 7 pt)
+    space-before: 7pt
+    space-after: 7pt
     (process-children-trim)))
 
 (element (itemize p item)
   (make line-field
-    field-width: (dimen 12 pt)
+    field-width: 12pt
     field-align: 'left
     (let ((txt (attribute "text" (current-node))))
       (if (node-list-empty? txt)
@@ -55,14 +55,14 @@
   (let ((item (node-list-first (children (current-node)))))
     (if (equal? (gi item) 'item)
         (make paragraph
-          first-line-start-indent: (dimen -12 pt)
-          start-indent: (dimen 12 pt)
+          first-line-start-indent: -12pt
+          start-indent: 12pt
           (sosofo-append
            (process-node-list (node-list-first (children (current-node))))
            (process-node-list-trim (node-list-rest (children (current-node))))))
         (make paragraph
-          first-line-start-indent: (dimen 0 em)
-          start-indent: (dimen 12 pt)
+          first-line-start-indent: 0pt
+          start-indent: 12pt
           (process-children-trim)
           ) ))
   )
@@ -71,6 +71,6 @@
 (element p
   (make paragraph
     mandoc.section: "para"
-    first-line-start-indent: (dimen 0 em)
+    first-line-start-indent: 0pt
     quadding: "justify"
     (process-children)))

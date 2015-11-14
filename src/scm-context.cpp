@@ -45,8 +45,8 @@ namespace {
 #define SOSOFO_TAG "<sosofo>"
 #define SOSOFO_TAG_SIZE 8
 
-#define DIMEN_TAG "<dimen>"
-#define DIMEN_TAG_SIZE 7
+#define LENGTH_SPEC_TAG "<length-spec>"
+#define LENGTH_SPEC_TAG_SIZE 13
 
 
   //----------------------------------------------------------------------------
@@ -74,7 +74,7 @@ namespace {
   }
 
 
-  int dimen_tag_p(sexp ctx)
+  int length_spec_tag_p(sexp ctx)
   {
     int retv = 0;
     sexp_gc_var2(ty, nm);
@@ -82,7 +82,7 @@ namespace {
 
     ty =
       sexp_env_ref(ctx, sexp_context_env(ctx),
-                   nm = sexp_intern(ctx, DIMEN_TAG, DIMEN_TAG_SIZE), SEXP_VOID);
+                   nm = sexp_intern(ctx, LENGTH_SPEC_TAG, LENGTH_SPEC_TAG_SIZE), SEXP_VOID);
     if (sexp_typep(ty)) {
       retv = sexp_type_tag(ty);
     }
@@ -182,50 +182,26 @@ namespace {
   }
 
 
-  fo::Unit map_name_to_unit(const std::string& nm)
-  {
-    if (nm == "pt") {
-      return fo::k_pt;
-    }
-    else if (nm == "px") {
-      return fo::k_px;
-    }
-    else if (nm == "cm") {
-      return fo::k_cm;
-    }
-    else if (nm == "em") {
-      return fo::k_em;
-    }
-    else if (nm == "m") {
-      return fo::k_m;
-    }
-    else if (nm == "mm") {
-      return fo::k_mm;
-    }
-
-    return fo::k_pt;
-  }
-
-
   sexp make_nodelist(sexp ctx, const NodeList* obj);
 
 
   //------------------------------------------------------------------------------
 
-  sexp make_dimen(sexp ctx, fo::Dimen dim)
+  sexp make_length_spec(sexp ctx, fo::LengthSpec ls)
   {
     sexp_gc_var4(ty, tmp, result, nm);
     sexp_gc_preserve4(ctx, ty, tmp, result, nm);
 
     ty =
       sexp_env_ref(ctx, sexp_context_env(ctx),
-                   nm = sexp_intern(ctx, DIMEN_TAG, DIMEN_TAG_SIZE), SEXP_VOID);
+                   nm = sexp_intern(ctx, LENGTH_SPEC_TAG, LENGTH_SPEC_TAG_SIZE),
+                   SEXP_VOID);
 
     if (sexp_typep(ty)) {
       result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
       sexp_cpointer_freep(result) = 0;
       sexp_cpointer_length(result) = 0;
-      sexp_cpointer_value(result) = (void*)new fo::Dimen(dim);
+      sexp_cpointer_value(result) = (void*)new fo::LengthSpec(ls);
     }
     else {
       result = SEXP_VOID;
@@ -237,45 +213,113 @@ namespace {
   }
 
 
-  sexp free_dimen(sexp ctx, sexp self, sexp_sint_t n, sexp dim_arg)
+  sexp free_length_spec(sexp ctx, sexp self, sexp_sint_t n, sexp ls_arg)
   {
-    const fo::Dimen* dimen = (const fo::Dimen*)(sexp_cpointer_value(dim_arg));
-    delete dimen;
+    const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(ls_arg));
+    delete ls;
 
-    sexp_cpointer_value(dim_arg) = nullptr;
+    sexp_cpointer_value(ls_arg) = nullptr;
     return SEXP_VOID;
   }
 
 
-  sexp func_make_dimen(sexp ctx, sexp self, sexp n, sexp val_arg, sexp unit_arg)
+  sexp func_displace_space_p(sexp ctx, sexp self, sexp_sint_t n, sexp q)
+  {
+    if (sexp_check_tag(q, length_spec_tag_p(ctx))) {
+      const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(q));
+      if (ls->_spec_type == fo::kDisplay)
+        return sexp_make_boolean(1);
+    }
+
+    return sexp_make_boolean(0);
+  }
+
+
+  sexp func_inline_space_p(sexp ctx, sexp self, sexp_sint_t n, sexp q)
+  {
+    if (sexp_check_tag(q, length_spec_tag_p(ctx))) {
+      const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(q));
+      if (ls->_spec_type == fo::kInline)
+        return sexp_make_boolean(1);
+    }
+
+    return sexp_make_boolean(0);
+  }
+
+
+  sexp func_make_length_spec(sexp ctx, sexp self, sexp_sint_t n,
+                             sexp type_arg,
+                             sexp val_arg, sexp min_arg, sexp max_arg,
+                             sexp conditionalp_arg, sexp priority_arg)
   {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
-    auto unitnm = string_from_symbol_sexp_or_none(ctx, unit_arg);
-
     result = SEXP_VOID;
 
-    if (unitnm) {
-      fo::Unit unit = map_name_to_unit(*unitnm);
-
-      if (sexp_flonump(val_arg)) {
-        result = make_dimen(ctx, fo::Dimen(sexp_flonum_value(val_arg), unit));
-      }
-      else if (sexp_ratiop(val_arg)) {
-        result =
-          make_dimen(ctx, fo::Dimen(sexp_ratio_to_double(val_arg), unit));
-      }
-      else if (sexp_fixnump(val_arg)) {
-        result =
-          make_dimen(ctx, fo::Dimen(int(sexp_unbox_fixnum(val_arg)), unit));
-      }
-      else {
-        result = sexp_user_exception(ctx, self, "invalid number", val_arg);
-      }
+    if (!sexp_quantityp(val_arg)) {
+      result =
+        sexp_user_exception(ctx, self, "val: not a quantity", val_arg);
+    }
+    else if (!sexp_quantityp(min_arg)) {
+      result =
+        sexp_user_exception(ctx, self, "min: not a quantity", min_arg);
+    }
+    else if (!sexp_booleanp(conditionalp_arg)) {
+      result =
+        sexp_user_exception(ctx, self, "conditional?: not a bool", conditionalp_arg);
+    }
+    else if (!sexp_fixnump(priority_arg)) {
+      result =
+        sexp_user_exception(ctx, self, "priority: not a integer", priority_arg);
     }
     else {
-      result = sexp_user_exception(ctx, self, "invalid unit", unit_arg);
+      auto type = fo::kDimen;
+
+      if (auto typev = string_from_symbol_sexp_or_none(ctx, type_arg)) {
+        if (*typev == "inline")
+          type = fo::kInline;
+        else if (*typev == "display")
+          type = fo::kDisplay;
+        else
+          result =
+            sexp_user_exception(ctx, self, "type: not supported space type", type_arg);
+      }
+      else {
+        result =
+          sexp_user_exception(ctx, self, "type: not a symbol", type_arg);
+      }
+
+      // the number is normalized to 'm' unit; rebase it to 'pt'
+      double val = sexp_quantity_normalize_to_double(ctx, val_arg) / 0.0003527778;
+      double minv = sexp_quantity_normalize_to_double(ctx, min_arg) / 0.0003527778;
+      double maxv = val;
+
+      if (sexp_quantityp(max_arg)) {
+        maxv = sexp_quantity_normalize_to_double(ctx, max_arg) / 0.0003527778;
+      }
+      else if (auto symbv = string_from_symbol_sexp_or_none(ctx, max_arg)) {
+        if (*symbv == "inf")
+          maxv = std::numeric_limits<double>::infinity();
+        else
+          result =
+            sexp_user_exception(ctx, self, "max: symbol must be 'inf", max_arg);
+      }
+      else {
+        result =
+          sexp_user_exception(ctx, self, "max: not a quantity or real", max_arg);
+      }
+
+      if (result == SEXP_VOID) {
+        result = make_length_spec(ctx,
+                                  fo::LengthSpec(type,
+                                                 val,
+                                                 fo::k_pt,
+                                                 minv,
+                                                 maxv,
+                                                 bool(sexp_unbox_boolean(conditionalp_arg)),
+                                                 sexp_unbox_fixnum(priority_arg)));
+      }
     }
 
     sexp_gc_release1(ctx);
@@ -284,26 +328,30 @@ namespace {
   }
 
 
-  void init_dimen_functions(sexp ctx)
+  void init_length_spec_functions(sexp ctx)
   {
     sexp_gc_var3(nm, ty, op);
     sexp_gc_preserve3(ctx, nm, ty, op);
 
     // register qobject type
-    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "dimen", -1),
-                              &free_dimen);
+    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "length-spec", -1),
+                              &free_length_spec);
 
     sexp_env_cell_define(ctx, sexp_context_env(ctx),
-                         nm = sexp_intern(ctx, DIMEN_TAG, DIMEN_TAG_SIZE), ty,
+                         nm = sexp_intern(ctx, LENGTH_SPEC_TAG, LENGTH_SPEC_TAG_SIZE), ty,
                          NULL);
     op =
-      sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "dimen?", -1), ty);
+      sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "length-spec?", -1), ty);
     sexp_env_define(ctx, sexp_context_env(ctx),
-                    nm = sexp_intern(ctx, "dimen?", -1), op);
+                    nm = sexp_intern(ctx, "length-spec?", -1), op);
 
     // register functions
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-dimen", 2,
-                        &func_make_dimen);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-length-spec", 6,
+                        &func_make_length_spec);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "display-space?", 1,
+                        &func_displace_space_p);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "inline-space?", 1,
+                        &func_inline_space_p);
 
     sexp_gc_release3(ctx);
   }
@@ -1142,9 +1190,14 @@ namespace {
     else if (sexp_fixnump(expr)) {
       result = fo::PropertySpec(key, int(sexp_unbox_fixnum(expr)));
     }
-    else if (sexp_check_tag(expr, dimen_tag_p(ctx))) {
-      const fo::Dimen* dimen = (const fo::Dimen*)(sexp_cpointer_value(expr));
-      result = fo::PropertySpec(key, *dimen);
+    else if (sexp_quantityp(expr)) {
+      // the number is normalized to 'm' unit; rebase it to 'pt'
+      double val = sexp_quantity_normalize_to_double(ctx, expr) / 0.0003527778;
+      result = fo::PropertySpec(key, fo::LengthSpec(fo::kDimen, val, fo::k_pt));
+    }
+    else if (sexp_check_tag(expr, length_spec_tag_p(ctx))) {
+      const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(expr));
+      result = fo::PropertySpec(key, *ls);
     }
     else if (sexp_stringp(expr)) {
       result = fo::PropertySpec(key, std::string(sexp_string_data(expr)));
@@ -1351,7 +1404,7 @@ namespace {
   void init_builtins(sexp ctx)
   {
     init_registry_functions(ctx);
-    init_dimen_functions(ctx);
+    init_length_spec_functions(ctx);
     init_nodelist_functions(ctx);
     init_node_functions(ctx);
     init_sosofo_functions(ctx);

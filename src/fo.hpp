@@ -25,45 +25,45 @@ namespace fo {
     k_px,
   };
 
-  struct Dimen {
-    Dimen() : _value(0), _unit(k_pt), _min(0), _max(0) {}
-    Dimen(double value, Unit unit, boost::optional<double> min = boost::none,
-          boost::optional<double> max = boost::none)
-      : _value(value), _unit(unit), _min(min != boost::none ? *min : value),
+  enum LengthSpecType {
+    kDimen,
+    kInline,
+    kDisplay,
+  };
+
+  struct LengthSpec {
+    LengthSpec() : _value(0), _unit(k_pt), _min(0), _max(0) {}
+    LengthSpec(LengthSpecType spec_type, double value, Unit unit,
+               boost::optional<double> min = boost::none,
+               boost::optional<double> max = boost::none,
+               bool conditionalp = false, int priority = 1)
+      : _spec_type(spec_type), _conditionalp(conditionalp), _priority(priority),
+        _value(value), _unit(unit), _min(min != boost::none ? *min : value),
         _max(max != boost::none ? *max : value)
     {
     }
 
-    Dimen(const Dimen& other)
-      : _value(other._value), _unit(other._unit), _min(other._min),
-        _max(other._max)
-    {
-    }
+    LengthSpec(const LengthSpec& other) = default;
+    LengthSpec& operator=(const LengthSpec& other) = default;
 
-    Dimen& operator=(const Dimen& other)
-    {
-      const_cast<double&>(_value) = other._value;
-      const_cast<Unit&>(_unit) = other._unit;
-      const_cast<double&>(_min) = other._min;
-      const_cast<double&>(_max) = other._max;
-      return *this;
-    }
-
-    const double _value;
-    const Unit _unit;
-    const double _min;
-    const double _max;
+    LengthSpecType _spec_type = kDimen;
+    bool _conditionalp;
+    int _priority;
+    double _value;
+    Unit _unit;
+    double _min;
+    double _max;
   };
 
-  std::ostream& operator<<(std::ostream& os, const Dimen& dimen);
+  std::ostream& operator<<(std::ostream& os, const LengthSpec& dimen);
 
 
   class PropertySpec {
   public:
     using ValueType =
-      boost::variant<Dimen, bool, int, std::string, std::shared_ptr<Sosofo>>;
+      boost::variant<LengthSpec, bool, int, std::string, std::shared_ptr<Sosofo>>;
 
-    PropertySpec(std::string name, Dimen val)
+    PropertySpec(std::string name, LengthSpec val)
       : _name(std::move(name)), _value(val)
     {
     }

@@ -119,7 +119,7 @@ target_compile_options(debug-processor
 
 
 #------------------------------------------------------------------------------
-add_definitions(-DSEXP_USE_KEYWORDS=1)
+add_definitions(-DSEXP_USE_KEYWORDS=1 -DSEXP_USE_QUANTITY=1)
 
 add_executable(sairy
   main.cpp
