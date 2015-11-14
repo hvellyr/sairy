@@ -445,7 +445,7 @@ namespace {
         --i;
 
         if (i > stack_bot) {
-          if (*key == "default:") {
+          if (*key == "default") {
             default_value = stack[i];
           }
           else {
@@ -1205,8 +1205,7 @@ namespace {
           if (sexp_pairp(sexp_cdr(ls))) {
             ref = sexp_car(sexp_cdr(ls));
             auto prop =
-              evaluate_keyword_parameter(ctx, self,
-                                         key->substr(0, key->size() - 1), ref);
+              evaluate_keyword_parameter(ctx, self, *key, ref);
             if (prop) {
               props.push_back(*prop);
             }

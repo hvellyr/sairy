@@ -1289,12 +1289,21 @@ sexp sexp_make_keyword(sexp ctx, const char *str, sexp_sint_t len)
 
 sexp sexp_string_to_keyword_op (sexp ctx, sexp self, sexp_sint_t n, sexp str) {
   sexp_assert_type(ctx, sexp_stringp, SEXP_STRING, str);
-  return sexp_make_keyword(ctx, sexp_string_data(str), sexp_string_size(str));
+
+  if (sexp_string_size(str) < 255) {
+    char tmp[256];
+    strncpy(tmp, sexp_string_data(str), sexp_string_size(str));
+    tmp[sexp_string_size(str)] = ':';
+    tmp[sexp_string_size(str) + 1] = '\0';
+    return sexp_make_keyword(ctx, tmp, sexp_string_size(str) + 1);
+  }
+  return sexp_user_exception(ctx, SEXP_FALSE,
+                             "string->keyword: string to long", str);
 }
 
 sexp sexp_keyword_to_string_op (sexp ctx, sexp self, sexp_sint_t n, sexp sym) {
   sexp_assert_type(ctx, sexp_keywordp, SEXP_KEYWORD, sym);
-  return sexp_c_string(ctx, sexp_keyword_data(sym), sexp_keyword_length(sym));
+  return sexp_c_string(ctx, sexp_keyword_data(sym), sexp_keyword_length(sym) - 1);
 }
 #endif
 

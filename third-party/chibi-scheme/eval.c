@@ -2289,6 +2289,9 @@ static const char* sexp_initial_features[] = {
 #if SEXP_USE_RATIOS
   "ratios",
 #endif
+#if SEXP_USE_KEYWORDS
+  "keywords",
+#endif
   "r7rs",
   "chibi",
   NULL,
