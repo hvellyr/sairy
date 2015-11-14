@@ -101,6 +101,11 @@ static int sexp_object_compare (sexp ctx, sexp a, sexp b) {
           res = strcmp(sexp_keyword_data(a), sexp_keyword_data(b));
           break;
 #endif
+#if SEXP_USE_QUANTITY
+        case SEXP_QUANTITY:
+          res = sexp_quantity_compare(ctx, a, b);
+          break;
+#endif
         /* TODO: consider recursively traversing containers.  requires */
         /* cycle detection. */
         /* case SEXP_PAIR: */

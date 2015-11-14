@@ -241,6 +241,9 @@ static struct sexp_type_struct _sexp_type_specs[] = {
 #if SEXP_USE_KEYWORDS
   {SEXP_KEYWORD, 0, 0, 0, 0, 0, sexp_sizeof(symbol)+1, sexp_offsetof(symbol, length), 1, 0, 0, 0, 0, 0, 0, (sexp)"Keyword", SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, NULL, SEXP_FALSE, NULL, NULL},
 #endif
+#if SEXP_USE_QUANTITY
+  {SEXP_QUANTITY, sexp_offsetof(quantity, number), 2, 2, 0, 0, sexp_sizeof(quantity), 0, 0, 0, 0, 0, 0, 0, 0, (sexp)"Quantity", SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, NULL, SEXP_FALSE, NULL, NULL},
+#endif
 };
 
 #define SEXP_INIT_NUM_TYPES (SEXP_NUM_CORE_TYPES*2)
@@ -1307,6 +1310,38 @@ sexp sexp_keyword_to_string_op (sexp ctx, sexp self, sexp_sint_t n, sexp sym) {
 }
 #endif
 
+#if SEXP_USE_QUANTITY
+sexp sexp_make_quantity(sexp ctx, sexp number, sexp unit, int dimen, double factor)
+{
+  sexp quant;
+  if (!number || !unit) return SEXP_FALSE;
+  quant = sexp_alloc_type(ctx, quantity, SEXP_QUANTITY);
+  if (sexp_exceptionp(quant)) return quant;
+  sexp_quantity_number(quant) = number;
+  sexp_quantity_unit(quant) = unit;
+  sexp_quantity_dimen(quant) = dimen;
+  sexp_quantity_factor(quant) = factor;
+  return quant;
+}
+
+double sexp_quantity_normalize_to_double (sexp ctx, sexp quant) {
+  sexp num = sexp_quantity_number(quant);
+  double v = (sexp_fixnump(num)
+              ? sexp_unbox_fixnum(num) : (sexp_flonump(num)
+                                          ? sexp_flonum_value(num) : 0.0));
+  return v * sexp_quantity_factor(quant);
+}
+
+sexp sexp_quantity_to_number_op (sexp ctx, sexp self, sexp_sint_t n, sexp quant) {
+  if (sexp_quantityp(quant)) {
+    return sexp_make_flonum(ctx, sexp_quantity_normalize_to_double(ctx, quant));
+  }
+  else
+    return quant;
+}
+#endif
+
+
 /************************ reading and writing *************************/
 
 #if SEXP_USE_STRING_STREAMS
@@ -2160,6 +2195,14 @@ sexp sexp_write_one (sexp ctx, sexp obj, sexp out) {
       if (c!=EOF) sexp_write_char(ctx, c, out);
       break;
 #endif
+#if SEXP_USE_QUANTITY
+    case SEXP_QUANTITY:
+      sexp_write(ctx, sexp_quantity_number(obj), out);
+      sexp_write(ctx, sexp_quantity_unit(obj), out);
+      if (sexp_quantity_dimen(obj) != 0 && sexp_quantity_dimen(obj) != 1)
+        sexp_write(ctx, sexp_make_fixnum(sexp_quantity_dimen(obj)), out);
+      break;
+#endif
 
 #if SEXP_USE_BIGNUMS
     case SEXP_BIGNUM:
@@ -2383,7 +2426,7 @@ sexp sexp_read_string (sexp ctx, sexp in, int sentinel) {
       case 'a': c = '\a'; break;
       case 'b': c = '\b'; break;
       case 'n': c = '\n'; break;
-      case 'r': c = '\r'; break; 
+      case 'r': c = '\r'; break;
       case 't': c = '\t'; break;
       case 'x':
         res = sexp_read_number(ctx, in, 16, 0);
@@ -2494,6 +2537,42 @@ sexp sexp_read_symbol (sexp ctx, sexp in, int init, int internp) {
   if (size != INIT_STRING_BUFFER_SIZE) free(buf);
   return res;
 }
+
+#if SEXP_USE_QUANTITY
+double unit_to_factor(const char* unit) {
+  if (strcmp(unit, "m") == 0) return 1.0;
+  else if (strcmp(unit, "mm") == 0) return 0.001;
+  else if (strcmp(unit, "cm") == 0) return 0.01;
+  else if (strcmp(unit, "in") == 0) return 0.0254;
+  else if (strcmp(unit, "pt") == 0) return 0.0003527778;
+  else if (strcmp(unit, "pc") == 0) return 0.004233333;
+  return 1.0;
+}
+
+sexp sexp_read_quantity_unit(sexp ctx, sexp in, sexp number) {
+  sexp_gc_var4(res, str, unit, dimen);
+
+  sexp_gc_preserve4(ctx, res, str, unit, dimen);
+
+  unit = sexp_read_symbol(ctx, in, EOF, 1);
+  if (sexp_lsymbolp(unit)) {
+    double factor = unit_to_factor(sexp_lsymbol_data(unit));
+    res = sexp_make_quantity(ctx, number, unit, 1, factor);
+  }
+  else if (sexp_isymbolp(unit)) {
+    double factor;
+    str = sexp_symbol_to_string(ctx, unit);
+    factor = unit_to_factor(sexp_string_data(str));
+    res = sexp_make_quantity(ctx, number, unit, 1, factor);
+  }
+  else {
+    res = sexp_read_error(ctx, "invalid numeric syntax (unit)", SEXP_NULL, in);
+  }
+  sexp_gc_release4(ctx);
+
+  return res;
+}
+#endif
 
 #if SEXP_USE_COMPLEX
 sexp sexp_make_complex (sexp ctx, sexp real, sexp image) {
@@ -2636,6 +2715,12 @@ sexp sexp_read_float_tail (sexp ctx, sexp in, double whole, int negp) {
   res = sexp_make_fixnum((sexp_uint_t)val);
 #endif
   if (!is_precision_indicator(c)) {
+#if SEXP_USE_QUANTITY
+    if (c>='a' && c<='z') {
+      sexp_push_char(ctx, c, in);
+      return sexp_read_quantity_unit(ctx, in, res);
+    } else
+#endif
 #if SEXP_USE_COMPLEX
     if (c=='i' || c=='i' || c=='+' || c=='-') {
       sexp_push_char(ctx, c, in);
@@ -2797,8 +2882,8 @@ sexp sexp_read_number (sexp ctx, sexp in, int base, int exactp) {
     } else
 #endif
       do {
-    res = sexp_make_ratio(ctx, sexp_make_fixnum(negativep ? -val : val), den);
-    res = sexp_ratio_normalize(ctx, res, in);
+        res = sexp_make_ratio(ctx, sexp_make_fixnum(negativep ? -val : val), den);
+        res = sexp_ratio_normalize(ctx, res, in);
       } while (0);
 #else
     if (!sexp_exceptionp(res))
@@ -2807,7 +2892,13 @@ sexp sexp_read_number (sexp ctx, sexp in, int base, int exactp) {
 #endif
     }
     sexp_gc_release2(ctx);
+
     return res;
+#if SEXP_USE_QUANTITY
+  } else if (c>='a' && c<='z') {
+    sexp_push_char(ctx, c, in);
+    return sexp_read_quantity_unit(ctx, in, sexp_make_fixnum(negativep ? -val : val));
+#endif
 #if SEXP_USE_COMPLEX
   } else if (c=='i' || c=='I' || c=='+' || c=='-' || c=='@') {
     if (base != 10)
@@ -3227,6 +3318,15 @@ sexp sexp_read_raw (sexp ctx, sexp in) {
       sexp_push_char(ctx, c2, in);
       res = sexp_read_number(ctx, in, 10, 0);
       if ((c1 == '-') && ! sexp_exceptionp(res)) {
+#if SEXP_USE_QUANTITY
+        if (sexp_quantityp(res)) {
+          sexp num = sexp_quantity_number(res);
+          if (sexp_flonump(num))
+            sexp_quantity_number(res) = sexp_make_flonum(ctx, -1 * sexp_flonum_value(num));
+          else if (sexp_fixnump(num))
+            sexp_quantity_number(res) = sexp_make_fixnum(-1 * sexp_unbox_fixnum(num));
+        } else
+#endif
 #if SEXP_USE_FLONUMS
         if (sexp_flonump(res))
 #if SEXP_USE_IMMEDIATE_FLONUMS

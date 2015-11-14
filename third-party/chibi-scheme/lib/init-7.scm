@@ -732,7 +732,7 @@
                                              (,_i (,_- ,_len ,len))
                                              (,_res (,_quote ())))
                                   (,_if (,_>= 0 ,_i)
-                                      ,(lp `(,(cddr p) 
+                                      ,(lp `(,(cddr p)
                                              (,(car p) ,(car (cdr p))))
                                            `(,_cons ,_ls
                                                     (,_cons (,_reverse ,_res)
@@ -1119,6 +1119,9 @@
 (define (integer? x)
   (if (exact-integer? x) #t (and (flonum? x) (= x (truncate x)))))
 (define (number? x) (if (inexact? x) #t (exact? x)))
+(cond-expand
+ (quantity
+  (define (quantity? x) (if (%quantity? x) #t (number? x)))))
 (define complex? number?)
 (cond-expand
  (complex (define (real? x) (and (number? x) (not (%complex? x)))))
@@ -1136,13 +1139,24 @@
  (else
   (define (eqv? a b) (if (eq? a b) #t (and (number? a) (equal? a b))))))
 
-(define (zero? x) (= x 0))
-(define (positive? x) (> x 0))
-(define (negative? x) (< x 0))
+(cond-expand
+ (quantity
+  (define (zero? x) (= (quantity->number x) 0))
+  (define (positive? x) (> (quantity->number x) 0))
+  (define (negative? x) (< (quantity->number x) 0)))
+ (else
+  (define (zero? x) (= x 0))
+  (define (positive? x) (> x 0))
+  (define (negative? x) (< x 0))))
 (define (even? n) (= (remainder n 2) 0))
 (define (odd? n) (not (= (remainder n 2) 0)))
 
-(define (abs x) (if (< x 0) (- x) x))
+(cond-expand
+ (quantity
+  (define (abs x) (if (quantity? x)
+                      (if (< x 0m) (- 0m x) x)
+                      (if (< x 0) (- x) x) )))
+ (else (define (abs x) (if (< x 0) (- x) x))))
 
 (define (modulo a b)
   (let ((res (remainder a b)))

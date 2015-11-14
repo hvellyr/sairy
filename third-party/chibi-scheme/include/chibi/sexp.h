@@ -168,6 +168,9 @@ enum sexp_types {
 #if SEXP_USE_KEYWORDS
   SEXP_KEYWORD,
 #endif
+#if SEXP_USE_QUANTITY
+  SEXP_QUANTITY,
+#endif
   SEXP_NUM_CORE_TYPES
 };
 
@@ -368,6 +371,13 @@ struct sexp_struct {
     struct {
       sexp real, imag;
     } complex;
+#if SEXP_USE_QUANTITY
+    struct {
+      sexp number, unit;
+      int dimen;
+      double factor;
+    } quantity;
+#endif
     struct {
       sexp_uint_t length;
       void *value;
@@ -786,9 +796,17 @@ SEXP_API sexp sexp_make_unsigned_integer(sexp ctx, sexp_luint_t x);
 #endif
 
 #if SEXP_USE_COMPLEX
-#define sexp_numberp(x) (sexp_realp(x) || sexp_complexp(x))
+  #if SEXP_USE_QUANTITY
+    #define sexp_numberp(x) (sexp_realp(x) || sexp_complexp(x) || sexp_quantityp(x))
+  #else
+    #define sexp_numberp(x) (sexp_realp(x) || sexp_complexp(x))
+  #endif
 #else
-#define sexp_numberp(x) (sexp_realp(x))
+  #if SEXP_USE_QUANTITY
+    #define sexp_numberp(x) (sexp_realp(x) || sexp_quantityp(x))
+  #else
+    #define sexp_numberp(x) (sexp_realp(x))
+  #endif
 #endif
 
 #define sexp_exact_negativep(x) (sexp_fixnump(x) ? (sexp_unbox_fixnum(x) < 0) \
@@ -1378,6 +1396,9 @@ SEXP_API sexp sexp_flush_output_op (sexp ctx, sexp self, sexp_sint_t n, sexp out
 SEXP_API sexp sexp_read_string (sexp ctx, sexp in, int sentinel);
 SEXP_API sexp sexp_read_symbol (sexp ctx, sexp in, int init, int internp);
 SEXP_API sexp sexp_read_number (sexp ctx, sexp in, int base, int exactp);
+#if SEXP_USE_QUANTITY
+SEXP_API sexp sexp_read_quantity_unit(sexp ctx, sexp in, sexp dim);
+#endif
 #if SEXP_USE_BIGNUMS
 SEXP_API sexp sexp_read_bignum (sexp ctx, sexp in, sexp_uint_t init,
 				signed char sign, sexp_uint_t base);
@@ -1474,6 +1495,21 @@ SEXP_API int sexp_write_utf8_char (sexp ctx, int c, sexp out);
 SEXP_API sexp sexp_string_to_keyword_op (sexp ctx, sexp self, sexp_sint_t n, sexp str);
 SEXP_API sexp sexp_keyword_to_string_op (sexp ctx, sexp self, sexp_sint_t n, sexp sym);
 SEXP_API sexp sexp_make_keyword(sexp ctx, const char *str, sexp_sint_t len);
+#endif
+#if SEXP_USE_QUANTITY
+#define sexp_quantityp(x)       (sexp_check_tag(x, SEXP_QUANTITY))
+#define sexp_quantity_number(x) (sexp_field(x, quantity, SEXP_QUANTITY, number))
+#define sexp_quantity_unit(x)   (sexp_field(x, quantity, SEXP_QUANTITY, unit))
+#define sexp_quantity_factor(x) (sexp_field(x, quantity, SEXP_QUANTITY, factor))
+#define sexp_quantity_dimen(x) (sexp_field(x, quantity, SEXP_QUANTITY, dimen))
+SEXP_API sexp sexp_make_quantity(sexp ctx, sexp number, sexp unit, int dimen, double factor);
+SEXP_API sexp_sint_t sexp_quantity_compare (sexp ctx, sexp a, sexp b);
+SEXP_API sexp sexp_quantity_to_number_op (sexp ctx, sexp self, sexp_sint_t n, sexp quant);
+SEXP_API sexp sexp_quantity_add(sexp ctx, sexp self, sexp one, sexp two);
+SEXP_API sexp sexp_quantity_sub(sexp ctx, sexp self, sexp one, sexp two);
+SEXP_API sexp sexp_quantity_mul(sexp ctx, sexp self, sexp one, sexp two);
+SEXP_API sexp sexp_quantity_div(sexp ctx, sexp self, sexp one, sexp two);
+SEXP_API double sexp_quantity_normalize_to_double (sexp ctx, sexp quant);
 #endif
 
 #if SEXP_USE_GREEN_THREADS
@@ -1669,6 +1705,9 @@ enum sexp_opcode_names {
   SEXP_OP_DONE,
 #if SEXP_USE_KEYWORDS
   SEXP_OP_KEYWORDP,
+#endif
+#if SEXP_USE_QUANTITY
+  SEXP_OP_QUANTITYP,
 #endif
   SEXP_OP_NUM_OPCODES
 };

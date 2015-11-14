@@ -18,6 +18,9 @@ static void sexp_print_simple (sexp ctx, sexp x, sexp out, int depth) {
 #if SEXP_USE_KEYWORDS
       || sexp_keywordp(x)
 #endif
+#if SEXP_USE_QUANTITY
+      || sexp_quantityp(x)
+#endif
     ) {
     sexp_write(ctx, x, out);
   } else if (depth <= 0) {

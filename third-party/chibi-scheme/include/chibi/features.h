@@ -202,6 +202,10 @@
 /* uncomment this to enable SRFI-88 keywords */
 /* #define SEXP_USE_KEYWORDS 1 */
 
+/* uncomment this to enable DSSSL like quantities */
+/*   This will conflict partitally with complex and infinity number notation. */
+/* #define SEXP_USE_QUANTITY 1 */
+
 /* uncomment this to disable automatic closing of ports */
 /*   If enabled, the underlying FILE* for file ports will be */
 /*   automatically closed when they're garbage collected.  Doesn't */
@@ -601,6 +605,10 @@
 
 #ifndef SEXP_USE_KEYWORDS
 #define SEXP_USE_KEYWORDS 0
+#endif
+
+#ifndef SEXP_USE_QUANTITY
+#define SEXP_USE_QUANTITY 0
 #endif
 
 #ifndef SEXP_USE_AUTOCLOSE_PORTS

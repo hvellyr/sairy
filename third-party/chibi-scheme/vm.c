@@ -1495,6 +1495,10 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
   case SEXP_OP_KEYWORDP:
     _ARG1 = sexp_make_boolean(sexp_keywordp(_ARG1)); break;
 #endif
+#if SEXP_USE_QUANTITY
+  case SEXP_OP_QUANTITYP:
+    _ARG1 = sexp_make_boolean(sexp_quantityp(_ARG1)); break;
+#endif
   case SEXP_OP_CHARP:
     _ARG1 = sexp_make_boolean(sexp_charp(_ARG1)); break;
   case SEXP_OP_ISA:
@@ -1622,6 +1626,12 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
   case SEXP_OP_ADD:
     tmp1 = _ARG1, tmp2 = _ARG2;
     sexp_context_top(ctx) = --top;
+#if SEXP_USE_QUANTITY
+    if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
+      _ARG1 = sexp_quantity_add(ctx, self, tmp1, tmp2);
+      sexp_check_exception();
+    } else
+#endif
 #if SEXP_USE_BIGNUMS
     if (sexp_fixnump(tmp1) && sexp_fixnump(tmp2)) {
       j = sexp_unbox_fixnum(tmp1) + sexp_unbox_fixnum(tmp2);
@@ -1651,6 +1661,12 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
   case SEXP_OP_SUB:
     tmp1 = _ARG1, tmp2 = _ARG2;
     sexp_context_top(ctx) = --top;
+#if SEXP_USE_QUANTITY
+    if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
+      _ARG1 = sexp_quantity_sub(ctx, self, tmp1, tmp2);
+      sexp_check_exception();
+    } else
+#endif
 #if SEXP_USE_BIGNUMS
     if (sexp_fixnump(tmp1) && sexp_fixnump(tmp2)) {
       j = sexp_unbox_fixnum(tmp1) - sexp_unbox_fixnum(tmp2);
@@ -1680,6 +1696,12 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
   case SEXP_OP_MUL:
     tmp1 = _ARG1, tmp2 = _ARG2;
     sexp_context_top(ctx) = --top;
+#if SEXP_USE_QUANTITY
+    if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
+      _ARG1 = sexp_quantity_mul(ctx, self, tmp1, tmp2);
+      sexp_check_exception();
+    } else
+#endif
 #if SEXP_USE_BIGNUMS
     if (sexp_fixnump(tmp1) && sexp_fixnump(tmp2)) {
       prod = (sexp_lsint_t)sexp_unbox_fixnum(tmp1) * sexp_unbox_fixnum(tmp2);
@@ -1732,6 +1754,12 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
 #endif
 #endif
     }
+#if SEXP_USE_QUANTITY
+    else if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
+      _ARG1 = sexp_quantity_div(ctx, self, tmp1, tmp2);
+      sexp_check_exception();
+    }
+#endif
 #if SEXP_USE_BIGNUMS
     else {
       _ARG1 = sexp_div(ctx, tmp1, tmp2);
@@ -1786,6 +1814,11 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
   case SEXP_OP_LT:
     tmp1 = _ARG1, tmp2 = _ARG2;
     sexp_context_top(ctx) = --top;
+#if SEXP_USE_QUANTITY
+    if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
+      _ARG1 = sexp_make_boolean(sexp_quantity_compare(ctx, tmp1, tmp2) < 0);
+    } else
+#endif
     if (sexp_fixnump(tmp1) && sexp_fixnump(tmp2)) {
       i = (sexp_sint_t)tmp1 < (sexp_sint_t)tmp2;
 #if SEXP_USE_BIGNUMS
@@ -1817,6 +1850,11 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
   case SEXP_OP_LE:
     tmp1 = _ARG1, tmp2 = _ARG2;
     sexp_context_top(ctx) = --top;
+#if SEXP_USE_QUANTITY
+    if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
+      _ARG1 = sexp_make_boolean(sexp_quantity_compare(ctx, tmp1, tmp2) <= 0);
+    } else
+#endif
     if (sexp_fixnump(tmp1) && sexp_fixnump(tmp2)) {
       i = (sexp_sint_t)tmp1 <= (sexp_sint_t)tmp2;
 #if SEXP_USE_BIGNUMS
@@ -1848,6 +1886,11 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
   case SEXP_OP_EQN:
     tmp1 = _ARG1, tmp2 = _ARG2;
     sexp_context_top(ctx) = --top;
+#if SEXP_USE_QUANTITY
+    if (sexp_quantityp(tmp1) || sexp_quantityp(tmp2)) {
+      _ARG1 = sexp_make_boolean(sexp_quantity_compare(ctx, tmp1, tmp2) == 0);
+    } else
+#endif
     if (sexp_fixnump(tmp1) && sexp_fixnump(tmp2)) {
       i = tmp1 == tmp2;
 #if SEXP_USE_BIGNUMS
@@ -2202,6 +2245,168 @@ sexp sexp_apply_no_err_handler (sexp ctx, sexp proc, sexp args) {
 #endif
   sexp_gc_release2(ctx);
   return res;
+}
+
+#endif
+
+#if SEXP_USE_QUANTITY
+struct normalized_num_data {
+  double value;
+  double factor;
+  int dimen;
+};
+
+static void normalize_quantity_number(struct normalized_num_data* data, sexp num) {
+  data->value = 0.0;
+  data->factor = 1.0;
+  data->dimen = 0;
+
+  if (sexp_quantityp(num)) {
+    data->value = sexp_fixnump(sexp_quantity_number(num))
+      ? sexp_unbox_fixnum(sexp_quantity_number(num))
+      : (sexp_flonump(sexp_quantity_number(num))
+         ? sexp_flonum_value(sexp_quantity_number(num)) : 0.0);
+    data->factor = sexp_quantity_factor(num);
+    data->dimen = sexp_quantity_dimen(num);
+  }
+  else {
+    data->value = (sexp_fixnump(num)
+                   ? sexp_unbox_fixnum(num) : (sexp_flonump(num)
+                                               ? sexp_flonum_value(num) : 0.0));
+  }
+}
+
+sexp sexp_quantity_add(sexp ctx, sexp self, sexp one, sexp two) {
+  struct normalized_num_data data0;
+  struct normalized_num_data data1;
+  normalize_quantity_number(&data0, one);
+  normalize_quantity_number(&data1, two);
+
+  if (data0.dimen == data1.dimen) {
+    double res_f = data0.factor > data1.factor ? data0.factor : data1.factor;
+    sexp res_unit = (data0.factor > data1.factor
+                     ? sexp_quantity_unit(one) : sexp_quantity_unit(two));
+    double val = (data0.value * data0.factor + data1.value * data1.factor) / res_f;
+    return sexp_make_quantity(ctx,
+                              sexp_make_flonum(ctx, val),
+                              res_unit,
+                              data0.dimen,
+                              res_f);
+  }
+  else {
+    return sexp_user_exception(ctx, self, "+: quantity dimension mismatch", two);
+  }
+}
+
+sexp sexp_quantity_sub(sexp ctx, sexp self, sexp one, sexp two) {
+  struct normalized_num_data data0;
+  struct normalized_num_data data1;
+  normalize_quantity_number(&data0, one);
+  normalize_quantity_number(&data1, two);
+
+  if (data0.dimen == data1.dimen) {
+    double res_f = 1.0;
+    sexp res_unit;
+
+    if (sexp_quantityp(one)) {
+      res_f = data0.factor;
+      res_unit = sexp_quantity_unit(one);
+    }
+    else {
+      res_f = data1.factor;
+      res_unit = sexp_quantity_unit(two);
+    }
+
+    double val = (data0.value * data0.factor - data1.value * data1.factor) / res_f;
+    return sexp_make_quantity(ctx,
+                              sexp_make_flonum(ctx, val),
+                              res_unit,
+                              data0.dimen,
+                              res_f);
+  }
+  else {
+    return sexp_user_exception(ctx, self, "-: quantity dimension mismatch", two);
+  }
+}
+
+sexp sexp_quantity_mul(sexp ctx, sexp self, sexp one, sexp two) {
+  struct normalized_num_data data0;
+  struct normalized_num_data data1;
+  normalize_quantity_number(&data0, one);
+  normalize_quantity_number(&data1, two);
+
+  double eff_f = 1.0;
+  sexp res_unit;
+  int res_dimen = data0.dimen + data1.dimen;
+
+  if (sexp_quantityp(one)) {
+    eff_f = data0.factor;
+    res_unit = sexp_quantity_unit(one);
+  }
+  else {
+    eff_f = data1.factor;
+    res_unit = sexp_quantity_unit(two);
+  }
+
+  double res_f = 1.0;
+  for (int i = 0; i < res_dimen; i++)
+    res_f *= eff_f;
+
+  double val = (data0.value * data0.factor * data1.value * data1.factor) / res_f;
+  return sexp_make_quantity(ctx,
+                            sexp_make_flonum(ctx, val),
+                            res_unit,
+                            data0.dimen + data1.dimen,
+                            res_f);
+}
+
+sexp sexp_quantity_div(sexp ctx, sexp self, sexp one, sexp two) {
+  struct normalized_num_data data0;
+  struct normalized_num_data data1;
+  normalize_quantity_number(&data0, one);
+  normalize_quantity_number(&data1, two);
+
+  int res_dimen = data0.dimen - data1.dimen;
+  if (res_dimen == 0) {
+    return sexp_make_flonum(ctx, (data0.value * data0.factor) / (data1.value * data1.factor));
+  }
+  else {
+    double res_f = 1.0;
+    sexp res_unit;
+
+    if (sexp_quantityp(one)) {
+      res_f = data0.factor;
+      res_unit = sexp_quantity_unit(one);
+    }
+    else {
+      res_f = data1.factor;
+      res_unit = sexp_quantity_unit(two);
+    }
+
+    double val = ((data0.value * data0.factor) / (data1.value * data1.factor)) / res_f;
+    return sexp_make_quantity(ctx,
+                              sexp_make_flonum(ctx, val),
+                              res_unit,
+                              res_dimen,
+                              res_f);
+  }
+}
+
+
+sexp_sint_t sexp_quantity_compare (sexp ctx, sexp one, sexp two) {
+  struct normalized_num_data data0;
+  struct normalized_num_data data1;
+  normalize_quantity_number(&data0, one);
+  normalize_quantity_number(&data1, two);
+
+  if (data0.dimen == data1.dimen) {
+    double val0 = data0.value * data0.factor;
+    double val1 = data1.value * data1.factor;
+
+    return val0 > val1 ? 1 : (val0 < val1 ? -1 : 0);
+  }
+
+  return -1;
 }
 
 #endif
