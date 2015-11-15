@@ -72,6 +72,8 @@ add_library(fo
   fos.hpp
   sosofo.cpp
   sosofo.hpp
+  colors.hpp
+  colors.cpp
 )
 target_include_directories(fo
   PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>")

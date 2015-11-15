@@ -1,6 +1,7 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
+#include "colors.hpp"
 #include "estd/memory.hpp"
 #include "fo.hpp"
 #include "nodeclass.hpp"
@@ -48,6 +49,9 @@ namespace {
 #define LENGTH_SPEC_TAG "<length-spec>"
 #define LENGTH_SPEC_TAG_SIZE 13
 
+#define COLOR_TAG "<color>"
+#define COLOR_TAG_SIZE 7
+
 
   //----------------------------------------------------------------------------
 
@@ -83,6 +87,25 @@ namespace {
     ty =
       sexp_env_ref(ctx, sexp_context_env(ctx),
                    nm = sexp_intern(ctx, LENGTH_SPEC_TAG, LENGTH_SPEC_TAG_SIZE), SEXP_VOID);
+    if (sexp_typep(ty)) {
+      retv = sexp_type_tag(ty);
+    }
+
+    sexp_gc_release2(ctx);
+
+    return retv;
+  }
+
+
+  int color_tag_p(sexp ctx)
+  {
+    int retv = 0;
+    sexp_gc_var2(ty, nm);
+    sexp_gc_preserve2(ctx, ty, nm);
+
+    ty =
+      sexp_env_ref(ctx, sexp_context_env(ctx),
+                   nm = sexp_intern(ctx, COLOR_TAG, COLOR_TAG_SIZE), SEXP_VOID);
     if (sexp_typep(ty)) {
       retv = sexp_type_tag(ty);
     }
@@ -1202,6 +1225,10 @@ namespace {
     else if (sexp_stringp(expr)) {
       result = fo::PropertySpec(key, std::string(sexp_string_data(expr)));
     }
+    else if (sexp_check_tag(expr, color_tag_p(ctx))) {
+      const fo::Color* co = (const fo::Color*)(sexp_cpointer_value(expr));
+      result = fo::PropertySpec(key, *co);
+    }
     else {
       excep = sexp_user_exception(ctx, self, "Bad property type: ", expr);
       check_exception_p(ctx, excep);
@@ -1319,6 +1346,189 @@ namespace {
 
   //----------------------------------------------------------------------------
 
+  sexp free_color(sexp ctx, sexp self, sexp_sint_t n, sexp co_arg)
+  {
+    const fo::Color* co = (const fo::Color*)(sexp_cpointer_value(co_arg));
+    delete co;
+
+    sexp_cpointer_value(co_arg) = nullptr;
+    return SEXP_VOID;
+  }
+
+
+  sexp make_color(sexp ctx, fo::Color co) {
+    sexp_gc_var3(ty, result, nm);
+    sexp_gc_preserve3(ctx, ty, result, nm);
+
+    ty = sexp_env_ref(ctx, sexp_context_env(ctx),
+                      nm = sexp_intern(ctx, COLOR_TAG, COLOR_TAG_SIZE),
+                      SEXP_VOID);
+
+    if (sexp_typep(ty)) {
+      result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
+      sexp_cpointer_freep(result) = 0;
+      sexp_cpointer_length(result) = 0;
+      sexp_cpointer_value(result) = (void*)new fo::Color(co);
+    }
+    else {
+      result = SEXP_VOID;
+    }
+
+    sexp_gc_release3(ctx);
+
+    return result;
+  }
+
+
+  sexp make_rgb_color(sexp ctx, sexp self, sexp args_arg) {
+    sexp_gc_var2(len, result);
+    sexp_gc_preserve2(ctx, len, result);
+
+    len = sexp_length_op(ctx, self, 1, args_arg);
+    if (sexp_fixnump(len) && sexp_unbox_fixnum(len) == 3) {
+      sexp red = sexp_car(args_arg);
+      sexp green = sexp_cadr(args_arg);
+      sexp blue = sexp_caddr(args_arg);
+
+      float redv = sexp_flonump(red) ? sexp_flonum_value(red) : 0.0;
+      float greenv = sexp_flonump(green) ? sexp_flonum_value(green) : 0.0;
+      float bluev = sexp_flonump(blue) ? sexp_flonum_value(blue) : 0.0;
+
+      result = make_color(ctx, fo::make_rgb_color(redv, greenv, bluev));
+    }
+    else
+      result = sexp_user_exception(ctx, self,
+                                   "3 reals expected for 'rgb' color space", args_arg);
+
+    sexp_gc_release2(ctx);
+
+    return result;
+  }
+
+
+  sexp make_cmyk_color(sexp ctx, sexp self, sexp args_arg) {
+    sexp_gc_var2(len, result);
+    sexp_gc_preserve2(ctx, len, result);
+
+    len = sexp_length_op(ctx, self, 1, args_arg);
+    if (sexp_fixnump(len) && sexp_unbox_fixnum(len) == 4) {
+      sexp cyan = sexp_car(args_arg);
+      sexp magenta = sexp_cadr(args_arg);
+      sexp yellow = sexp_caddr(args_arg);
+      sexp black = sexp_cadddr(args_arg);
+
+      float cyanv = sexp_flonump(cyan) ? sexp_flonum_value(cyan) : 0.0;
+      float magentav = sexp_flonump(magenta) ? sexp_flonum_value(magenta) : 0.0;
+      float yellowv = sexp_flonump(yellow) ? sexp_flonum_value(yellow) : 0.0;
+      float blackv = sexp_flonump(black) ? sexp_flonum_value(black) : 0.0;
+
+      result = make_color(ctx, fo::make_cmyk_color(cyanv, magentav, yellowv, blackv));
+    }
+    else
+      result = sexp_user_exception(ctx, self,
+                                   "4 reals expected for 'cmyk' color space", args_arg);
+
+    sexp_gc_release2(ctx);
+
+    return result;
+  }
+
+
+  sexp make_gray_color(sexp ctx, sexp self, sexp args_arg) {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    if (sexp_numberp(args_arg)) {
+      float val = (sexp_fixnump(args_arg)
+                   ? sexp_unbox_fixnum(args_arg)
+                   : (sexp_flonump(args_arg)
+                      ? sexp_flonum_value(args_arg)
+                       : 0.0));
+      result = make_color(ctx, fo::make_gray_color(val));
+    }
+    else
+      result = sexp_user_exception(ctx, self, "not a real", args_arg);
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp make_x11_color(sexp ctx, sexp self, sexp args_arg) {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    if (auto color = string_from_symbol_sexp_or_none(ctx, args_arg)) {
+      result = make_color(ctx, fo::color_by_x11name(*color));
+    }
+    else
+      result = sexp_user_exception(ctx, self, "not a real", args_arg);
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_color(sexp ctx, sexp self, sexp_sint_t n, sexp space_arg, sexp args_arg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    auto space = string_from_symbol_sexp_or_none(ctx, space_arg);
+    if (!space) {
+      result = sexp_user_exception(ctx, self, "not a symbol", space_arg);
+    }
+    else {
+      if (*space == "rgb") {
+        result = make_rgb_color(ctx, self, args_arg);
+      }
+      else if (*space == "cmyk") {
+        result = make_cmyk_color(ctx, self, args_arg);
+      }
+      else if (*space == "gray") {
+        result = make_gray_color(ctx, self, args_arg);
+      }
+      else if (*space == "x11") {
+        result = make_x11_color(ctx, self, args_arg);
+      }
+      else
+        result = sexp_user_exception(ctx, self, "unknown color space", space_arg);
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  void init_color_functions(sexp ctx)
+  {
+    sexp_gc_var3(nm, ty, op);
+    sexp_gc_preserve3(ctx, nm, ty, op);
+
+    // register qobject type
+    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "color", -1),
+                              &free_color);
+    sexp_env_cell_define(ctx, sexp_context_env(ctx),
+                         nm = sexp_intern(ctx, COLOR_TAG, COLOR_TAG_SIZE), ty,
+                         NULL);
+
+    op =
+      sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "color?", -1), ty);
+    sexp_env_define(ctx, sexp_context_env(ctx),
+                    nm = sexp_intern(ctx, "color?", -1), op);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "color", 2,
+                        &func_color);
+
+    sexp_gc_release3(ctx);
+  }
+
+
+  //----------------------------------------------------------------------------
+
   std::vector<fs::path>
   prepare_tstyle_search_path(const std::string& prefix_path)
   {
@@ -1409,6 +1619,7 @@ namespace {
     init_node_functions(ctx);
     init_sosofo_functions(ctx);
     init_make_functions(ctx);
+    init_color_functions(ctx);
   }
 
 

@@ -616,7 +616,7 @@ namespace fo {
   }
 
 
-  std::ostream& operator<<(std::ostream& os, const LengthSpec& dimen)
+  std::ostream& operator<<(std::ostream& os, const LengthSpec& ls)
   {
     auto unit_name = [](Unit un) {
       switch (un) {
@@ -635,19 +635,40 @@ namespace fo {
       }
     };
 
-    os << "<length-spec:" << dimen._value << unit_name(dimen._unit);
-    if (dimen._value != dimen._min) {
-      os << " min " << dimen._min << unit_name(dimen._unit);
+    os << "<length-spec:" << ls._value << unit_name(ls._unit);
+    if (ls._value != ls._min) {
+      os << " min " << ls._min << unit_name(ls._unit);
     }
-    if (dimen._max == std::numeric_limits<double>::infinity()) {
+    if (ls._max == std::numeric_limits<double>::infinity()) {
       os << " plus INF";
     }
-    else if (dimen._value != dimen._max) {
-      os << " plus " << dimen._max << unit_name(dimen._unit);
+    else if (ls._value != ls._max) {
+      os << " plus " << ls._max << unit_name(ls._unit);
     }
 
     os << ">";
 
+    return os;
+  }
+
+
+  std::ostream& operator<<(std::ostream& os, const Color& co)
+  {
+    os << "<color:";
+
+    switch (co._space) {
+    case kRGB:
+      os << "rgb:" << co._rgb._red << "," << co._rgb._green << "," << co._rgb._blue;
+      break;
+    case kCMYK:
+      os << "cmyk" << co._cmyk._cyan << "," << co._cmyk._magenta
+         << "," << co._cmyk._yellow << "," << co._cmyk._black;
+      break;
+    case kGray:
+      os << "gray:" << co._gray; break;
+    }
+
+    os << ">";
     return os;
   }
 
