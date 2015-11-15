@@ -29,6 +29,7 @@ namespace {
     void operator()(bool val) { std::cout << (val ? "yes" : "no"); }
     void operator()(int val) { std::cout << val; }
     void operator()(const std::string& val) { std::cout << val; }
+    void operator()(const fo::Color& co) { std::cout << co; }
     void operator()(const std::shared_ptr<Sosofo>& val)
     {
       std::cout << "<sosofo>";

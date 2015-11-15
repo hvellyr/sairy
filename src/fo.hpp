@@ -55,13 +55,69 @@ namespace fo {
     double _max;
   };
 
-  std::ostream& operator<<(std::ostream& os, const LengthSpec& dimen);
+  std::ostream& operator<<(std::ostream& os, const LengthSpec& ls);
+
+
+  enum ColorSpace {
+    kGray,
+    kRGB,
+    kCMYK
+  };
+
+  struct Color {
+    Color() = default;
+    Color(const Color& other) = default;
+    Color(Color&& other) = default;
+
+    Color& operator=(const Color& other) = default;
+    Color& operator=(Color&& other) = default;
+
+    ColorSpace _space = kGray;
+    union {
+      float _gray;
+      struct {
+        float _red;
+        float _green;
+        float _blue;
+      } _rgb;
+      struct {
+        float _cyan;
+        float _magenta;
+        float _yellow;
+        float _black;
+      } _cmyk;
+    };
+  };
+
+  inline Color make_gray_color(float v) {
+    Color co;
+    co._space = kGray;
+    co._gray = v;
+    return co;
+  }
+
+  inline Color make_rgb_color(float r, float g, float b) {
+    Color co;
+    co._space = kRGB;
+    co._rgb = {r, g, b};
+    return co;
+  }
+
+  inline Color make_cmyk_color(float c, float m, float y, float b) {
+    Color co;
+    co._space = kCMYK;
+    co._cmyk = {c, m, y, b};
+    return co;
+  }
+
+  std::ostream& operator<<(std::ostream& os, const Color& co);
 
 
   class PropertySpec {
   public:
     using ValueType =
-      boost::variant<LengthSpec, bool, int, std::string, std::shared_ptr<Sosofo>>;
+      boost::variant<LengthSpec, bool, int, std::string, std::shared_ptr<Sosofo>,
+                     Color>;
 
     PropertySpec(std::string name, LengthSpec val)
       : _name(std::move(name)), _value(val)
@@ -88,10 +144,13 @@ namespace fo {
     {
     }
 
-    PropertySpec(const PropertySpec& other)
-      : _name(other._name), _value(other._value)
+    PropertySpec(std::string name, Color val)
+      : _name(std::move(name)), _value(val)
     {
     }
+
+    PropertySpec(const PropertySpec& other) = default;
+    PropertySpec(PropertySpec&& other) = default;
 
     PropertySpec& operator=(const PropertySpec& other)
     {
