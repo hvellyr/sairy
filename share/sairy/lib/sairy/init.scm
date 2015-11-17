@@ -2,3 +2,4 @@
 
 (import (srfi 89))
 (import (sairy dsssl))
+(import (sairy string-lib))
