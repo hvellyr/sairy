@@ -2,7 +2,7 @@
   (import (chibi) (srfi 9) (srfi 28) (srfi 39) (srfi 69) (srfi 89)
           (sairy string-lib))
   (export current-mode register-default-rule register-root-rule register-element-rule
-          default element root mode text
+          default element root mode text with-mode
           process-node-list process-node-list-trim
           process-children process-children-trim current-node
           make literal inline-space display-space
