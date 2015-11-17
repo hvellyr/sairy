@@ -13,9 +13,11 @@
           node-list-reverse node-list-ref node-list-tail node-list-sublist
           named-node-list-names
           attributes attribute id
+          format-number
           )
   (include "nodelist.scm")
   (include "fo.scm")
   (include "dsssl.scm")
   (include "query.scm")
+  (include "lang.scm")
   )
