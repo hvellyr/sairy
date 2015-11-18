@@ -60,6 +60,12 @@ namespace tex_detail {
     kBreakPageAfter,
     kSurpressNextPageBreak,
   };
+
+  enum CropMarksKind {
+    kOff,
+    kCamera,
+    kFrame,
+  };
 }
 
 class TexProcessor : public AbstractProcessor<TexProcessor> {
@@ -90,9 +96,9 @@ public:
   void request_page_break(tex_detail::BreakKind breakKind);
 
   fo::LengthSpec _current_start_margin;
-
   int _first_page = true;
   tex_detail::BreakKind _break_pending = tex_detail::kNoBreak;
+  tex_detail::CropMarksKind _cropmarks;
 };
 
 

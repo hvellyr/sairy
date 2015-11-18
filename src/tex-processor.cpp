@@ -740,7 +740,8 @@ namespace {
 TexProcessor::TexProcessor()
   : _verbose(false),
     _style_ctx{tex_detail::k_normal_caps, tex_detail::k_normal_wrap,
-               tex_detail::k_collapse_ws}
+               tex_detail::k_collapse_ws},
+    _cropmarks(tex_detail::kOff)
 {
 }
 
@@ -750,6 +751,16 @@ TexProcessor::TexProcessor(const po::variables_map& args)
 {
   if (!args.empty()) {
     _verbose = args["verbose"].as<bool>();
+  }
+
+  if (args.count("cropmarks")) {
+    auto cropmarks = args["cropmarks"].as<std::string>();
+    if (cropmarks == "cam")
+      _cropmarks = tex_detail::kCamera;
+    else if (cropmarks == "frame")
+      _cropmarks = tex_detail::kFrame;
+    else
+      _cropmarks = tex_detail::kOff;
   }
 }
 
@@ -770,6 +781,13 @@ po::options_description TexProcessor::program_options() const
   std::string opts_title =
     std::string("Tex renderer [selector: '") + proc_id() + "']";
   po::options_description desc(opts_title);
+
+  // clang-format off
+  desc.add_options()
+    ("cropmarks", po::value<std::string>()->default_value(std::string()),
+     "enable crop marks style: cam, frame, off.  Default is off")
+    ;
+  // clang-format on
 
   return desc;
 }
@@ -811,6 +829,18 @@ void TexProcessor::before_rendering()
           << "\\usepackage[utf8]{inputenc}" << std::endl
           << "\\usepackage{makeidx}" << std::endl
           << "\\makeindex" << std::endl;
+  switch (_cropmarks) {
+  case tex_detail::kCamera:
+    _stream
+      << "\\newcommand*\\infofont[1]{{\\textsf{\\fontsize{7}{8.5}\\selectfont#1}}}" << std::endl
+      << "\\usepackage[cam,a4,horigin=0in,vorigin=0in,font=infofont]{crop}" << std::endl;
+    break;
+  case tex_detail::kFrame:
+    _stream << "\\usepackage[frame,a4,horigin=0in,vorigin=0in,noinfo]{crop}" << std::endl;
+    break;
+  case tex_detail::kOff:
+    break;
+  }
 
   _stream << "\\begin{document}" << std::endl;
 }
