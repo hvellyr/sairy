@@ -23,6 +23,7 @@ namespace fo {
     k_mm,
     k_pt,
     k_px,
+    k_in,
   };
 
   enum LengthSpecType {
