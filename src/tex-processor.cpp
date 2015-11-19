@@ -20,9 +20,10 @@
 #include <iostream>
 #include <map>
 #include <memory>
-#include <unordered_set>
+#include <regex>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 
 namespace eyestep {
 
@@ -62,6 +63,23 @@ namespace {
   }
 
 
+  fo::Unit unit_str2unit(const std::string& str)
+  {
+    if (str == k_pt)
+      return fo::k_pt;
+    else if (str == k_m)
+      return fo::k_m;
+    else if (str == k_mm)
+      return fo::k_mm;
+    else if (str == k_cm)
+      return fo::k_cm;
+    else if (str == k_in)
+      return fo::k_in;
+
+    return fo::k_pt;
+  }
+
+
   std::string dimen2str(const fo::LengthSpec& ls)
   {
     double max_inf = std::numeric_limits<double>::infinity();
@@ -82,6 +100,20 @@ namespace {
       ss << " minus " << ls._min << unit_name(ls._unit);
 
     return ss.str();
+  }
+
+
+  std::string crop_paper_size(
+    const std::tuple<fo::LengthSpec, fo::LengthSpec, std::string>& dimen)
+  {
+    if (std::get<2>(dimen) == "user") {
+      std::stringstream ss;
+      ss << "width=" << dimen2str(std::get<0>(dimen))
+         << ",height=" << dimen2str(std::get<1>(dimen));
+      return ss.str();
+    }
+
+    return std::get<2>(dimen);
   }
 
 
@@ -480,10 +512,8 @@ namespace {
       auto desc = po->property(fo, "metadata.desc", std::string());
       auto cover = po->property(fo, "metadata.cover", std::string());
 
-      auto pagewidth = po->property(fo, "page-width",
-                                    fo::LengthSpec(fo::kDimen, 210, fo::k_mm));
-      auto pageheight = po->property(fo, "page-height",
-                                     fo::LengthSpec(fo::kDimen, 297, fo::k_mm));
+      auto pagewidth = po->property(fo, "page-width", po->paper_width());
+      auto pageheight = po->property(fo, "page-height", po->paper_height());
       auto leftmargin = po->property(fo, "left-margin",
                                      fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
       auto rightmargin = po->property(fo, "right-margin",
@@ -519,7 +549,7 @@ namespace {
         << "\\addtolength{\\textwidth}{-" << dimen2str(rightmargin) << "}" << std::endl;
 
       po->stream()
-        << "\\setlength{\\hoffset}{210mm}" << std::endl
+        << "\\setlength{\\hoffset}{" << dimen2str(po->paper_width()) << "}" << std::endl
         << "\\addtolength{\\hoffset}{-" << dimen2str(pagewidth) << "}" << std::endl
         << "\\divide\\hoffset by 2" << std::endl
         // to correct tex's auto hoffset of 1in
@@ -549,7 +579,7 @@ namespace {
       // let's center the page on the paper
       // \voffset = dsssl:pageheight / 2
       po->stream()
-        << "\\setlength\\voffset{297mm}" << std::endl
+        << "\\setlength\\voffset{" << dimen2str(po->paper_height()) << "}" << std::endl
         << "\\addtolength{\\voffset}{-" << dimen2str(pageheight) << "}" << std::endl
         << "\\divide\\voffset by 2" << std::endl
         // to correct tex's auto voffset of 1in
@@ -741,26 +771,69 @@ TexProcessor::TexProcessor()
   : _verbose(false),
     _style_ctx{tex_detail::k_normal_caps, tex_detail::k_normal_wrap,
                tex_detail::k_collapse_ws},
-    _cropmarks(tex_detail::kOff)
+    _cropmarks(tex_detail::kOff),
+    _paper_dimen(std::make_tuple(fo::LengthSpec(fo::kDimen, 210, fo::k_mm),
+                                 fo::LengthSpec(fo::kDimen, 297, fo::k_mm),
+                                 std::string("a4")))
 {
 }
 
 
-TexProcessor::TexProcessor(const po::variables_map& args)
-  : TexProcessor()
+TexProcessor::TexProcessor(const po::variables_map& args) : TexProcessor()
 {
   if (!args.empty()) {
     _verbose = args["verbose"].as<bool>();
-  }
 
-  if (args.count("cropmarks")) {
-    auto cropmarks = args["cropmarks"].as<std::string>();
-    if (cropmarks == "cam")
-      _cropmarks = tex_detail::kCamera;
-    else if (cropmarks == "frame")
-      _cropmarks = tex_detail::kFrame;
-    else
-      _cropmarks = tex_detail::kOff;
+    if (args.count("cropmarks")) {
+      auto cropmarks = args["cropmarks"].as<std::string>();
+      if (cropmarks == "cam")
+        _cropmarks = tex_detail::kCamera;
+      else if (cropmarks == "frame")
+        _cropmarks = tex_detail::kFrame;
+      else
+        _cropmarks = tex_detail::kOff;
+    }
+
+    if (args.count("paper-size")) {
+      auto ps = args["paper-size"].as<std::string>();
+
+      if (ps == "a3")
+        _paper_dimen =
+          std::make_tuple(fo::LengthSpec(fo::kDimen, 297, fo::k_mm),
+                          fo::LengthSpec(fo::kDimen, 420, fo::k_mm), ps);
+      else if (ps == "a4")
+        _paper_dimen =
+          std::make_tuple(fo::LengthSpec(fo::kDimen, 210, fo::k_mm),
+                          fo::LengthSpec(fo::kDimen, 297, fo::k_mm), ps);
+      else if (ps == "a5")
+        _paper_dimen =
+          std::make_tuple(fo::LengthSpec(fo::kDimen, 148, fo::k_mm),
+                          fo::LengthSpec(fo::kDimen, 210, fo::k_mm), ps);
+      else if (ps == "letter")
+        _paper_dimen =
+          std::make_tuple(fo::LengthSpec(fo::kDimen, 8.5, fo::k_in),
+                          fo::LengthSpec(fo::kDimen, 11, fo::k_in), ps);
+      else if (ps == "legal")
+        _paper_dimen =
+          std::make_tuple(fo::LengthSpec(fo::kDimen, 8.5, fo::k_in),
+                          fo::LengthSpec(fo::kDimen, 14, fo::k_in), ps);
+      else {
+        std::smatch user_dimen;
+        std::regex_search(ps, user_dimen, std::regex(std::regex(
+                                            "([[:digit:]]+)([[:alpha:]]+)x"
+                                            "([[:digit:]]+)([[:alpha:]]+)")));
+        if (!user_dimen.empty()) {
+          _paper_dimen =
+            std::make_tuple(fo::LengthSpec(fo::kDimen,
+                                           std::stof(user_dimen[1].str()),
+                                           unit_str2unit(user_dimen[2].str())),
+                            fo::LengthSpec(fo::kDimen,
+                                           std::stof(user_dimen[3].str()),
+                                           unit_str2unit(user_dimen[4].str())),
+                            std::string("user"));
+        }
+      }
+    }
   }
 }
 
@@ -786,6 +859,8 @@ po::options_description TexProcessor::program_options() const
   desc.add_options()
     ("cropmarks", po::value<std::string>()->default_value(std::string()),
      "enable crop marks style: cam, frame, off.  Default is off")
+    ("paper-size", po::value<std::string>()->default_value(std::string("a4")),
+     "give size of paper use.  Default is 'a4'")
     ;
   // clang-format on
 
@@ -825,20 +900,24 @@ void TexProcessor::before_rendering()
   }
 
   //_stream << "\\usepackage{listings}" << std::endl
-  _stream << "\\documentclass[a4paper]{textbook}" << std::endl
+  _stream << "\\documentclass{textbook}" << std::endl
           << "\\usepackage[utf8]{inputenc}" << std::endl
           << "\\usepackage{makeidx}" << std::endl
           << "\\makeindex" << std::endl;
   switch (_cropmarks) {
   case tex_detail::kCamera:
-    _stream
-      << "\\newcommand*\\infofont[1]{{\\textsf{\\fontsize{7}{8.5}\\selectfont#1}}}" << std::endl
-      << "\\usepackage[cam,a4,horigin=0in,vorigin=0in,font=infofont]{crop}" << std::endl;
+    _stream << "\\newcommand*\\infofont[1]{{\\textsf{\\fontsize{7}{8.5}"
+               "\\selectfont#1}}}" << std::endl
+            << "\\usepackage[cam," << crop_paper_size(_paper_dimen)
+            << ",horigin=0in,vorigin=0in,font=infofont]{crop}" << std::endl;
     break;
   case tex_detail::kFrame:
-    _stream << "\\usepackage[frame,a4,horigin=0in,vorigin=0in,noinfo]{crop}" << std::endl;
+    _stream << "\\usepackage[frame," << crop_paper_size(_paper_dimen)
+            << ",horigin=0in,vorigin=0in,noinfo]{crop}" << std::endl;
     break;
   case tex_detail::kOff:
+    _stream << "\\usepackage[off," << crop_paper_size(_paper_dimen)
+            << ",horigin=0in,vorigin=0in,noinfo]{crop}" << std::endl;
     break;
   }
 
@@ -887,6 +966,18 @@ void TexProcessor::request_page_break(tex_detail::BreakKind breakKind)
       _break_pending != tex_detail::kSurpressNextPageBreak) {
     _break_pending = breakKind;
   }
+}
+
+
+fo::LengthSpec TexProcessor::paper_width() const
+{
+  return std::get<0>(_paper_dimen);
+}
+
+
+fo::LengthSpec TexProcessor::paper_height() const
+{
+  return std::get<1>(_paper_dimen);
 }
 
 } // ns eyestep

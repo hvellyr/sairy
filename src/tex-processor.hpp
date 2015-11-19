@@ -89,6 +89,9 @@ public:
 
   bool is_verbose() const;
 
+  fo::LengthSpec paper_width() const;
+  fo::LengthSpec paper_height() const;
+
   boost::filesystem::ofstream& stream();
   tex_detail::TexStyleContext& style_ctx();
 
@@ -99,6 +102,8 @@ public:
   int _first_page = true;
   tex_detail::BreakKind _break_pending = tex_detail::kNoBreak;
   tex_detail::CropMarksKind _cropmarks;
+  // width, height, cropmarks classifier
+  std::tuple<fo::LengthSpec, fo::LengthSpec, std::string> _paper_dimen;
 };
 
 
