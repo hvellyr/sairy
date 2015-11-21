@@ -106,7 +106,8 @@ namespace fo {
   const PropertySpecs& Literal::default_properties() const
   {
     static const PropertySpecs propspecs = {
-      PropertySpec("text", ""), PropertySpec("language", ""),
+      PropertySpec("text", ""),
+      PropertySpec("language", ""),
     };
 
     return propspecs;
@@ -120,13 +121,8 @@ namespace fo {
 
   std::string Literal::text() const
   {
-    const auto i_find =
-      std::find_if(_props.begin(), _props.end(), [](const PropertySpec& spec) {
-        return spec._name == "text";
-      });
-    if (i_find != _props.end()) {
-      if (const std::string* val =
-            boost::get<const std::string>(&i_find->_value)) {
+    if (auto spec = _props.lookup_key("text")) {
+      if (const std::string* val = boost::get<const std::string>(&spec->_value)) {
         return *val;
       }
     }

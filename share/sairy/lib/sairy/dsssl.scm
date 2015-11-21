@@ -179,6 +179,14 @@
    ( else (empty-sosofo)) ))
 
 
+(define-syntax with-mode
+  (syntax-rules ()
+    ((with-mode mode-name expr)
+     (parameterize ((current-mode 'mode-name))
+                   expr)
+     )))
+
+
 ;; Returns a singleton node-list.  This node is the one currently matched.
 ;; (define current-node
 ;;   (make-parameter (empty-node-list)))

@@ -26,23 +26,13 @@ fo::PropertySpecOrNone
 PropertiesStack::get(const std::string& key,
                      const fo::PropertySpecs& defaults) const
 {
-  const auto lookup_key =
-    [](const fo::PropertySpecs& props, const std::string& key) {
-      return std::find_if(props.begin(), props.end(),
-                          [&key](const fo::PropertySpec& spec) {
-                            return spec._name == key;
-                          });
-    };
-
   auto i_current = _stack.begin();
 
   const fo::PropertySpecs* current = &(*i_current);
 
   while (current) {
-    auto i_find = lookup_key(*current, key);
-    if (i_find != current->end()) {
-      return *i_find;
-    }
+    if (auto spec = current->lookup_key(key))
+      return spec;
 
     ++i_current;
     if (i_current != _stack.end() && fo::is_property_be_inherited(key)) {
@@ -53,12 +43,24 @@ PropertiesStack::get(const std::string& key,
     }
   }
 
-  auto i_find = lookup_key(defaults, key);
-  if (i_find != defaults.end()) {
-    return *i_find;
-  }
+  if (auto spec = defaults.lookup_key(key))
+    return spec;
 
   return boost::none;
+}
+
+
+fo::PropertySpecs merge_property_specs(const fo::PropertySpecs& one,
+                                       const fo::PropertySpecs& two)
+{
+  fo::PropertySpecs result(one);
+
+  for (const auto& spec : two) {
+    if (!result.lookup_key(spec._name))
+      result.set(spec);
+  }
+
+  return result;
 }
 
 } // ns eyestep

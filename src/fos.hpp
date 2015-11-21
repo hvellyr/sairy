@@ -18,7 +18,7 @@ class Sosofo;
 namespace fo {
   class Fo : public IFormattingObject {
   protected:
-    const PropertySpecs _props;
+    PropertySpecs _props;
     Fo() = default;
     Fo(const PropertySpecs& props) : _props(props) {}
 

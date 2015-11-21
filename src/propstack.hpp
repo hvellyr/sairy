@@ -22,4 +22,6 @@ public:
                              const fo::PropertySpecs& defaults) const;
 };
 
+fo::PropertySpecs merge_property_specs(const fo::PropertySpecs& one,
+                                       const fo::PropertySpecs& two);
 } // ns eyestep
