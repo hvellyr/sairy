@@ -5,7 +5,7 @@
           default element root mode text with-mode
           process-node-list process-node-list-trim
           process-children process-children-trim current-node
-          make literal inline-space display-space
+          make style literal inline-space display-space
           select-elements match-element?
           node-list
           sosofo-append

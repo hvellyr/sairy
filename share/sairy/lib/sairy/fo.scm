@@ -20,6 +20,13 @@
     ((sosofo-append args ...) (%sosofo-append (list args ...)))
     ))
 
+
+(define-syntax style
+  (syntax-rules ()
+    ((style args ...) (make-style (list args ...)))
+    ))
+
+
 (define* (inline-space q (min: min #f) (max: max #f))
   (%make-length-spec 'inline q (if (not min) q min)
                      (if (not max) q max)

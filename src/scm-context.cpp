@@ -11,6 +11,7 @@
 #include "scm-context.hpp"
 #include "sosofo.hpp"
 #include "utils.hpp"
+#include "propstack.hpp"
 
 #include "chibi/eval.h"
 #include "chibi/sexp.h"
@@ -51,6 +52,9 @@ namespace {
 
 #define COLOR_TAG "<color>"
 #define COLOR_TAG_SIZE 7
+
+#define STYLE_TAG "<style>"
+#define STYLE_TAG_SIZE 7
 
 
   //----------------------------------------------------------------------------
@@ -147,6 +151,24 @@ namespace {
     if (sexp_typep(ty)) {
       retv = sexp_type_tag(ty);
     }
+
+    sexp_gc_release2(ctx);
+
+    return retv;
+  }
+
+
+  int style_tag_p(sexp ctx)
+  {
+    int retv = 0;
+    sexp_gc_var2(ty, nm);
+    sexp_gc_preserve2(ctx, ty, nm);
+
+    ty = sexp_env_ref(ctx, sexp_context_env(ctx),
+                      nm = sexp_intern(ctx, STYLE_TAG, STYLE_TAG_SIZE),
+                      SEXP_VOID);
+    if (sexp_typep(ty))
+      retv = sexp_type_tag(ty);
 
     sexp_gc_release2(ctx);
 
@@ -1190,6 +1212,41 @@ namespace {
 
   //----------------------------------------------------------------------------
 
+  sexp make_style(sexp ctx, const fo::PropertySpecs* obj)
+  {
+    sexp_gc_var3(ty, result, nm);
+    sexp_gc_preserve3(ctx, ty, result, nm);
+
+    ty = sexp_env_ref(ctx, sexp_context_env(ctx),
+                      nm = sexp_intern(ctx, STYLE_TAG, STYLE_TAG_SIZE),
+                      SEXP_VOID);
+
+    if (sexp_typep(ty)) {
+      result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
+      sexp_cpointer_freep(result) = 0;
+      sexp_cpointer_length(result) = 0;
+      sexp_cpointer_value(result) = (void*)obj;
+    }
+    else {
+      result = SEXP_VOID;
+    }
+
+    sexp_gc_release3(ctx);
+
+    return result;
+  }
+
+
+  sexp free_style(sexp ctx, sexp self, sexp_sint_t n, sexp style_arg)
+  {
+    const fo::PropertySpecs* style = (const fo::PropertySpecs*)(sexp_cpointer_value(style_arg));
+    delete style;
+
+    sexp_cpointer_value(style_arg) = nullptr;
+    return SEXP_VOID;
+  }
+
+
   boost::optional<fo::PropertySpec>
   evaluate_keyword_parameter(sexp ctx, sexp self, const std::string& key,
                              sexp expr)
@@ -1249,13 +1306,11 @@ namespace {
       const Sosofo* sosofo =
         (const Sosofo*)(sexp_cpointer_value(principal_port));
 
-      return std::move(fo::create_fo_by_classname(std::string("#") + fo_class,
-                                                  props, *sosofo));
+      return fo::create_fo_by_classname(std::string("#") + fo_class, props, *sosofo);
     }
 
     Sosofo sosofo;
-    return std::move(
-      fo::create_fo_by_classname(std::string("#") + fo_class, props, sosofo));
+    return fo::create_fo_by_classname(std::string("#") + fo_class, props, sosofo);
   }
 
 
@@ -1284,10 +1339,25 @@ namespace {
         if (key) {
           if (sexp_pairp(sexp_cdr(ls))) {
             ref = sexp_car(sexp_cdr(ls));
-            auto prop =
-              evaluate_keyword_parameter(ctx, self, *key, ref);
-            if (prop) {
+
+            if (*key == "use") {
+              if (sexp_check_tag(ref, style_tag_p(ctx))) {
+                const fo::PropertySpecs* style =
+                  (const fo::PropertySpecs*)(sexp_cpointer_value(ref));
+                props = merge_property_specs(props, *style);
+              }
+              else {
+                result =
+                  sexp_user_exception(ctx, self, "use: requires style argument", ref);
+                break;
+              }
+            }
+            else {
+              auto prop =
+                evaluate_keyword_parameter(ctx, self, *key, ref);
+              if (prop) {
                 props.set(*prop);
+              }
             }
           }
           else {
@@ -1337,10 +1407,93 @@ namespace {
   }
 
 
+  sexp func_make_style(sexp ctx, sexp self, sexp_sint_t n, sexp args_arg)
+  {
+    sexp_gc_var2(result, obj);
+    sexp_gc_preserve2(ctx, result, obj);
+
+    result = SEXP_NULL;
+    obj = SEXP_NULL;
+
+    fo::PropertySpecs props;
+    if (sexp_pairp(args_arg)) {
+      sexp ls = args_arg;
+
+      for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
+        sexp ref = sexp_car(ls);
+        auto key = string_from_keyword_or_none(ctx, ref);
+
+        if (key) {
+          if (sexp_pairp(sexp_cdr(ls))) {
+            ref = sexp_car(sexp_cdr(ls));
+            if (*key == "use") {
+              if (sexp_check_tag(ref, style_tag_p(ctx))) {
+                const fo::PropertySpecs* style =
+                  (const fo::PropertySpecs*)(sexp_cpointer_value(ref));
+                props = merge_property_specs(props, *style);
+              }
+              else {
+                result =
+                  sexp_user_exception(ctx, self, "use: requires style argument", ref);
+                break;
+              }
+            }
+            else {
+              auto prop = evaluate_keyword_parameter(ctx, self, *key, ref);
+              if (prop) {
+                props.set(*prop);
+              }
+            }
+          }
+          else {
+            result =
+              sexp_user_exception(ctx, self, "value missing for keyword", ref);
+            break;
+          }
+        }
+        else {
+          result = sexp_user_exception(ctx, self,
+                                       "unexpeced keyword in style list", ref);
+          break;
+        }
+
+        ls = sexp_cdr(ls);
+      }
+    }
+    else {
+      result = sexp_user_exception(ctx, self, "not a list", args_arg);
+    }
+
+    if (result == SEXP_NULL) {
+      result = make_style(ctx, new fo::PropertySpecs(props));
+    }
+
+    sexp_gc_release2(ctx);
+
+    return result;
+  }
+
+
   void init_make_functions(sexp ctx)
   {
+    sexp_gc_var3(nm, ty, op);
+    sexp_gc_preserve3(ctx, nm, ty, op);
+
+    // register qobject type
+    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "style", -1),
+                              &free_style);
+
+    sexp_env_cell_define(ctx, sexp_context_env(ctx),
+                         nm = sexp_intern(ctx, STYLE_TAG, STYLE_TAG_SIZE), ty,
+                         NULL);
+    op = sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "style?", -1), ty);
+    sexp_env_define(ctx, sexp_context_env(ctx),
+                    nm = sexp_intern(ctx, "style?", -1), op);
+
     sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-fo", 2,
                         &func_make_fo);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "make-style", 1,
+                        &func_make_style);
   }
 
 
