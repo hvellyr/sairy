@@ -6,9 +6,12 @@
 #include <boost/optional/optional.hpp>
 #include <boost/variant/variant.hpp>
 
+#include <initializer_list>
+#include <iterator>
+#include <map>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 namespace eyestep {
 
@@ -165,7 +168,112 @@ namespace fo {
   };
 
   using PropertySpecOrNone = boost::optional<fo::PropertySpec>;
-  using PropertySpecs = std::vector<PropertySpec>;
+
+  class PropertySpecs
+  {
+  public:
+    using storage_type = std::map<std::string, PropertySpec>;
+
+    class PropertySpecIterator : public std::iterator<std::random_access_iterator_tag,
+                                                      PropertySpec>
+    {
+      typename storage_type::const_iterator _i_ptr;
+    public:
+      PropertySpecIterator(typename storage_type::const_iterator i_ptr)
+        : _i_ptr(i_ptr)
+      {}
+
+      PropertySpecIterator(const PropertySpecIterator&) = default;
+      PropertySpecIterator& operator=(const PropertySpecIterator& ) = default;
+
+      bool operator==(const PropertySpecIterator& other) const
+      {
+        return _i_ptr == other._i_ptr;
+      }
+
+      bool operator!=(const PropertySpecIterator& other) const
+      {
+        return !(operator==(other));
+      }
+
+      PropertySpecIterator& operator++()
+      {
+        ++_i_ptr;
+        return *this;
+      }
+
+      PropertySpecIterator& operator--()
+      {
+        ++_i_ptr;
+        return *this;
+      }
+
+      PropertySpecIterator operator++(int)
+      {
+        auto tmp(*this);
+        ++_i_ptr;
+        return tmp;
+      }
+
+      PropertySpecIterator operator--(int)
+      {
+        auto tmp(*this);
+        --_i_ptr;
+        return tmp;
+      }
+
+      const PropertySpec& operator*() const
+      {
+        return _i_ptr->second;
+      }
+
+      const PropertySpec* operator->() const
+      {
+        return &_i_ptr->second;
+      }
+    };
+
+    using const_iterator = PropertySpecIterator;
+
+    PropertySpecs() = default;
+    PropertySpecs(const PropertySpecs& ) = default;
+    PropertySpecs(PropertySpecs&& ) = default;
+
+    PropertySpecs(std::initializer_list<PropertySpec> si)
+    {
+      for (auto const& spec : si) {
+        _specs.insert(std::make_pair(spec._name, spec));
+      }
+    }
+
+    PropertySpecs& operator=(const PropertySpecs& ) = default;
+    PropertySpecs& operator=(PropertySpecs&& ) = default;
+
+    void set(const fo::PropertySpec& spec)
+    {
+      _specs.insert(std::make_pair(spec._name, spec));
+    }
+
+    PropertySpecOrNone lookup_key(const std::string& key) const
+    {
+      auto i_find = _specs.find(key);
+      return i_find != _specs.end()
+        ? PropertySpecOrNone(i_find->second)
+        : boost::none;
+    }
+
+    const_iterator begin() const
+    {
+      return PropertySpecIterator(_specs.begin());
+    }
+
+    const_iterator end() const
+    {
+      return PropertySpecIterator(_specs.end());
+    }
+
+    storage_type _specs;
+  };
 
   bool is_property_be_inherited(const std::string& key);
 

@@ -1287,7 +1287,7 @@ namespace {
             auto prop =
               evaluate_keyword_parameter(ctx, self, *key, ref);
             if (prop) {
-              props.push_back(*prop);
+                props.set(*prop);
             }
           }
           else {
