@@ -109,6 +109,7 @@ namespace {
   const std::string k_m = "m";
   const std::string k_mm = "mm";
   const std::string k_cm = "cm";
+  const std::string k_in = "in";
 
   std::string length_spec2css(const fo::LengthSpec& dim)
   {
@@ -126,6 +127,8 @@ namespace {
         return k_cm;
       case fo::k_em:
         return k_em;
+      case fo::k_in:
+        return k_in;
       }
     };
 

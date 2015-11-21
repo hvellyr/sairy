@@ -632,6 +632,8 @@ namespace fo {
         return "cm";
       case k_em:
         return "em";
+      case k_in:
+        return "in";
       }
     };
 

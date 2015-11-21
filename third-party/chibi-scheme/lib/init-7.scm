@@ -1153,9 +1153,9 @@
 
 (cond-expand
  (quantity
-  (define (abs x) (if (quantity? x)
-                      (if (< x 0m) (- 0m x) x)
-                      (if (< x 0) (- x) x) )))
+  (define (abs x) (if (number? x)
+                      (if (< x 0) (- x) x)
+                      (if (< x 0m) (- 0m x) x) )))
  (else (define (abs x) (if (< x 0) (- x) x))))
 
 (define (modulo a b)
