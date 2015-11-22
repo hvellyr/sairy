@@ -40,7 +40,7 @@ namespace fo {
     LengthSpec(LengthSpecType spec_type, double value, Unit unit,
                boost::optional<double> min = boost::none,
                boost::optional<double> max = boost::none,
-               bool conditionalp = false, int priority = 1)
+               bool conditionalp = true, int priority = 1)
       : _spec_type(spec_type), _conditionalp(conditionalp), _priority(priority),
         _value(value), _unit(unit), _min(min != boost::none ? *min : value),
         _max(max != boost::none ? *max : value)
