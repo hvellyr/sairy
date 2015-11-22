@@ -9,7 +9,7 @@
           select-elements match-element?
           node-list
           sosofo-append
-          node-list-property node-list-reduce node-list-map node-list->list
+          node-list-property node-list-reduce node-list-map node-list->list node-list-filter
           node-list-reverse node-list-ref node-list-tail node-list-sublist
           named-node-list-names
           attributes attribute id

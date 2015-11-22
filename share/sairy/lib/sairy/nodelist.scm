@@ -42,6 +42,17 @@
                       (node-list (proc snl) result))
                     (empty-node-list)))
 
+;; @doc Returns a node-list containing just those members of @prm{nl} for which
+;; @prm{predicate} applied to a singleton node-list containing just that member does
+;; not return #f.
+(define (node-list-filter predicate nl)
+  (node-list-reduce nl
+                    (lambda (result snl)
+                      (if (predicate snl)
+                          (node-list snl result)
+                          result))
+                    (empty-node-list)))
+
 ;; @doc Returns a list containing, for each member of nl, a singleton node-list
 ;; containing just that member.
 (define (node-list->list nl)
