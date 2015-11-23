@@ -4,7 +4,7 @@
           string-pad-left
           string-upcase-ascii string-downcase-ascii
           string-prefix?
-          string-join string-split
+          string-join string-split string-find
           )
   (include "string-lib.scm")
   )
