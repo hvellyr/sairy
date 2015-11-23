@@ -133,12 +133,21 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
-  Paragraph::Paragraph(const PropertySpecs& props, const Sosofo& textPort)
-    : Fo(props), _text_port(textPort)
+  Paragraph::Paragraph(const PropertySpecs& props, const Sosofo& text_port)
+    : Fo(props), _text_port(text_port)
   {
   }
 
   std::string Paragraph::classname() const { return "#paragraph"; }
+
+  bool Paragraph::accepts_fo(const Sosofo& fo) const
+  {
+    for (int i = 0 ; i < fo.length() ; i++) {
+      if (dynamic_cast<const Paragraph*>(fo[i]) != nullptr)
+        return false;
+    }
+    return true;
+  }
 
   const PropertySpecs& Paragraph::default_properties() const
   {

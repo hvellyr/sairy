@@ -1,16 +1,22 @@
 ;; Copyright (c) 2015 by Gregor Klinke
 ;; All rights reserved.
 
+(import (srfi 28))
+
+
+(define (make-source def)
+  (cons (format "definition of '~s'" def) #f))
+
 (define-syntax make
   (syntax-rules ()
-    ((make fo-class) (%make-fo 'fo-class '()))
-    ((make fo-class args ...) (%make-fo 'fo-class (list args ...)))
+    ((make fo-class) (%make-fo 'fo-class '() (make-source (%in-current-definition%))))
+    ((make fo-class args ...) (%make-fo 'fo-class (list args ...) (make-source (%in-current-definition%))))
     ))
 
 
 (define-syntax literal
   (syntax-rules ()
-    ((literal str) (%make-fo 'literal (list text: str)))
+    ((literal str) (%make-fo 'literal (list text: str) (make-source (%in-current-definition%))))
     ))
 
 

@@ -14,6 +14,7 @@
           named-node-list-names
           attributes attribute id
           format-number
+          %in-current-definition%
           )
   (include "nodelist.scm")
   (include "fo.scm")
