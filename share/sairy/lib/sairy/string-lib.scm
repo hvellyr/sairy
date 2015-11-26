@@ -28,6 +28,11 @@
               (loop (- i 1))
               i))))
 
+;; @doc Indicates whether a string @prm{str} contains at least one occurance of
+;; @prm{c}.
+(define (string-contains? str c)
+  (integer? (string-find str (lambda (c2) (char=? c c2)))))
+
 ;; @doc Returns a new string without all characters from the start which match
 ;; the @proc{whitespace?} predicate.
 (define (string-trim str)

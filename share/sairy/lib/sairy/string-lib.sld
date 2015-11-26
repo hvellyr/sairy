@@ -5,6 +5,7 @@
           string-upcase-ascii string-downcase-ascii
           string-prefix?
           string-join string-split string-find
+          string-contains?
           )
   (include "string-lib.scm")
   )
