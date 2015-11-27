@@ -20,4 +20,5 @@
   (include "dsssl.scm")
   (include "query.scm")
   (include "lang.scm")
+  (include "process.scm")
   )
