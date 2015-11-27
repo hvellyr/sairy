@@ -43,13 +43,14 @@
                     (empty-node-list)))
 
 ;; @doc Returns a node-list containing just those members of @prm{nl} for which
-;; @prm{predicate} applied to a singleton node-list containing just that member does
-;; not return #f.
+;; @prm{predicate} applied to a singleton node-list containing just that member
+;; does not return #f.  The resulting members in node-list preserve their order
+;; from @prm{nl}.
 (define (node-list-filter predicate nl)
   (node-list-reduce nl
                     (lambda (result snl)
                       (if (predicate snl)
-                          (node-list snl result)
+                          (node-list result snl)
                           result))
                     (empty-node-list)))
 
