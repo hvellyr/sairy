@@ -9,34 +9,54 @@
       (char=? c #\tab)
       (char=? c #\return) ))
 
+;; @doc Returns the index of the first occurance of a character in @prm{str} for
+;; white @prm{pred} returns #f or #f if no character matches.
+(define (string-find str pred)
+  (let ((slen (string-length str)))
+    (let loop ((i 0))
+      (if (>= i slen)
+          #f
+          (if (pred (string-ref str i))
+              (loop (+ i 1))
+              i)))))
+
+(define (string-find-right str pred)
+  (let loop ((i (- (string-length str) 1)))
+      (if (< i 0)
+          #f
+          (if (pred (string-ref str i))
+              (loop (- i 1))
+              i))))
+
+;; @doc Indicates whether a string @prm{str} contains at least one occurance of
+;; @prm{c}.
+(define (string-contains? str c)
+  (integer? (string-find str (lambda (c2) (char=? c c2)))))
+
 ;; @doc Returns a new string without all characters from the start which match
 ;; the @proc{whitespace?} predicate.
 (define (string-trim str)
-  (let loop ((i 0))
-    (if (>= i (string-length str))
-        str
-        (let ((c (string-ref str i)))
-          (if (whitespace? c)
-              (loop (+ i 1))
-              (substring str i (string-length str)))))
-    ))
+  (let ((idx (string-find str whitespace?)))
+    (if idx
+        (substring str idx (string-length str))
+        "")))
 
 ;; @doc Returns a new string without all characters from the end which match the
 ;; @proc{whitespace?} predicate.
 (define (string-trim-right str)
-  (let loop ((i (- (string-length str) 1)))
-    (if (< i 0)
-        str
-        (let ((c (string-ref str i)))
-          (if (whitespace? c)
-              (loop (- i 1))
-              (substring str 0 (+ i 1)))))
-    ))
+  (let ((idx (string-find-right str whitespace?)))
+    (if idx
+        (substring str 0 (+ idx 1))
+        "")))
 
 ;; @doc Returns a new string with all characters matching the @proc{whitespace?}
 ;; predicate removed from the start and end of @prm{str}.
 (define (string-trim-both str)
-  (string-trim (string-trim-right str)))
+  (let ((idx-left (string-find str whitespace?))
+        (idx-right (string-find-right str whitespace?)))
+    (if (and idx-left idx-right)
+        (substring str idx-left (+ idx-right 1))
+        "")))
 
 ;; @doc Creates a new string with length @prm{k} by copying the right most
 ;; @prm{k} characters from @prm{s} into its right end.  The remaining left – if
@@ -49,7 +69,6 @@
 ;; @end example
 (define (string-pad-left s k c)
   (let ((pad-k (- k (string-length s))))
-    (display "-------> ") (display pad-k) (newline)
     (cond
      ((< pad-k 0) (string-copy s (abs pad-k) (string-length s)))
      ((= pad-k 0) s)
