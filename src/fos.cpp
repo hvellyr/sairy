@@ -145,10 +145,12 @@ namespace fo {
     double max_inf = std::numeric_limits<double>::infinity();
 
     static PropertySpecs propspecs = {
+      // clang-format off
       PropertySpec("first-line-start-indent", LengthSpec(kInline, 0, k_em)),
       PropertySpec("last-line-end-indent", LengthSpec(kInline, 1, k_em, 1, max_inf)),
       PropertySpec("line-spacing", LengthSpec(kDimen, 14, k_pt)),
-      PropertySpec("font-caps", "normal"), PropertySpec("font-name", "serif"),
+      PropertySpec("font-caps", "normal"),
+      PropertySpec("font-name", "serif"),
       PropertySpec("font-posture", "upright"),
       PropertySpec("font-size", LengthSpec(kDimen, 10, k_pt)),
       PropertySpec("font-weight", "medium"),
@@ -160,13 +162,15 @@ namespace fo {
       PropertySpec("space-after", LengthSpec(kDisplay, 0, k_pt)),
       PropertySpec("keep-with-previous?", false),
       PropertySpec("keep-with-next?", false),
-      PropertySpec("break-after?", false), PropertySpec("break-before?", false),
+      PropertySpec("break-after?", false),
+      PropertySpec("break-before?", false),
       PropertySpec("lines", "wrap"),
       PropertySpec("whitespace-treatment", "collapse"),
       PropertySpec("asis-wrap-indent", 10),
       PropertySpec("numbered-lines?", false),
       PropertySpec("line-number-side", "start"),
       PropertySpec("position-point-shift", LengthSpec(kDimen, 0, k_pt)),
+      // clang-format on
     };
     return propspecs;
   }
