@@ -43,6 +43,21 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 set(CMAKE_MACOSX_RPATH ON)
 
+# Check for some system header files
+# This only works for C headers, sigh.
+# INCLUDE (CheckIncludeFiles)
+# CHECK_INCLUDE_FILES (codecvt HAVE_STD_CODECVT)
+INCLUDE (CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_FLAGS "${cxx11_options}")
+CHECK_CXX_SOURCE_COMPILES("
+  #include <codecvt>
+  int main() {
+    std::codecvt_utf8_utf16<char16_t> x;
+    return 0;
+  }
+" HAVE_STD_CODECVT)
+CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/src/config.hpp.in ${PROJECT_BINARY_DIR}/src/config.hpp)
+
 enable_testing()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")

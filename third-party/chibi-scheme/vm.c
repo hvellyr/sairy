@@ -2349,7 +2349,8 @@ sexp sexp_quantity_mul(sexp ctx, sexp self, sexp one, sexp two) {
   }
 
   double res_f = 1.0;
-  for (int i = 0; i < res_dimen; i++)
+  int i;
+  for (i = 0; i < res_dimen; i++)
     res_f *= eff_f;
 
   double val = (data0.value * data0.factor * data1.value * data1.factor) / res_f;
