@@ -1,26 +1,28 @@
 language: cpp
+sudo: false
 
 branches:
     only:
         - master
 
-install:
-# install snapshot version of libclang1 libclang-common-3.X-dev
-    - sudo apt-add-repository "deb http://llvm.org/apt/precise/ llvm-toolchain-precise main" --yes
-    - sudo apt-add-repository "deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu precise main"  --yes
-# travis-ci has ubuntu 12.04 only; kubuntu-ppa/backports make available 2.8.12
-    - sudo add-apt-repository ppa:kubuntu-ppa/backports --yes
-# needed for gcc-4.8
-    - sudo add-apt-repository ppa:ubuntu-toolchain-r/test --yes
-# needed for boost 1.55
-    - sudo add-apt-repository "deb http://ppa.launchpad.net/boost-latest/ppa/ubuntu precise main" --yes
-
-    - sudo apt-get update -qq
-
-    - sudo apt-get install cmake
-    - sudo apt-get install gcc-4.9 g++-4.9
-    - sudo apt-get install libclang-3.7-dev libclang1-3.7 libclang-common-3.7-dev --yes --force-yes
-    - sudo apt-get install libboost-system1.55-dev libboost-filesystem1.55-dev libboost-date-time1.55-dev libboost-program-options1.55-dev
+addons:
+  apt:
+    sources:
+      - kubuntu-backports
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.7
+      - boost-latest
+    packages:
+      - cmake
+      - gcc-4.9
+      - g++-4.9
+      - libclang-3.7-dev
+      - libclang1-3.7
+      - libclang-common-3.7-dev
+      - libboost-system1.55-dev
+      - libboost-filesystem1.55-dev
+      - libboost-date-time1.55-dev
+      - libboost-program-options1.55-dev
 
 before_script:
     - mkdir build && cd build
