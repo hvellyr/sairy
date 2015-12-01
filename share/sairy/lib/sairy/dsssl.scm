@@ -2,6 +2,7 @@
 ;; All rights reserved.
 
 (import (srfi 6))
+(import (srfi 28))
 
 
 (define default-mode-marker #f)
@@ -240,7 +241,7 @@
 ;; @doc Returns the sosofo that results from appending the sosofos that result
 ;; from processing @prm{nl} in order after removing any leading and trailing
 ;; whitespace from leading and trailing text nodes.
-(define (process-node-list-trim nl)
+(define* (process-node-list-trim nl (left?: left? #t) (right?: right? #t))
   (define (left-trim first? str)
     (if first? (string-trim str) str))
 
@@ -265,11 +266,16 @@
                 #f
                 (sosofo-append
                  sosofo
-                 (process-with-trim first?
-                                    (node-list-empty? rest)
+                 (process-with-trim (and left? first?)
+                                    (and right? (node-list-empty? rest))
                                     (node-list-first p))) ))
         )))
 
+;; @doc Returns the sosofo that results from appending the sosofos that result
+;; from processing in order the children of the current node after removing any
+;; leading and trailing whitespace from leading and trailing text nodes.
+(define (process-children-trim)
+  (process-node-list-trim (children (current-node))))
 
 ;; register a default text mapping
 (text

@@ -3,7 +3,7 @@
           (sairy string-lib))
   (export current-mode register-default-rule register-root-rule register-element-rule
           default element root mode text with-mode
-          process-node-list process-node-list-trim
+          process-node-list process-node-list-trim process-children-trim
           process-children process-children-trim process-node-list-join current-node
           make style literal inline-space display-space
           select-elements match-element?
