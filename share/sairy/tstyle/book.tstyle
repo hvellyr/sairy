@@ -4,6 +4,7 @@
 (use 'common)
 (use 'bibref)
 (use 'book-title)
+(use 'book-index)
 
 
 ;; ------------------------------------------------------------------------------
@@ -58,7 +59,7 @@
 
 (define (invisible-tag? snl)
   (case (gi snl)
-    ((idx vidx) #t)
+    ((idx) #t)
     (else #f)))
 
 (define (empty-text-node? snl)
@@ -617,9 +618,13 @@
 
 ;; #-----------------------------------------------------------------------------
 
-(define idx
-  ;; TODO
-  (empty-sosofo))
+(element idx
+  (make anchor
+    id: (id (current-node))
+    (empty-sosofo)))
+
+(element vidx
+  (process-node-list (attribute "text" (current-node))))
 
 
 ;; #-----------------------------------------------------------------------------
