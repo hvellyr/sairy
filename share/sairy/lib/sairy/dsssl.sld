@@ -1,5 +1,5 @@
 (define-library (sairy dsssl)
-  (import (chibi) (srfi 9) (srfi 28) (srfi 39) (srfi 69) (srfi 89)
+  (import (chibi) (srfi 9) (srfi 28) (srfi 39) (srfi 69) (srfi 89) (srfi 95)
           (sairy string-lib))
   (export %in-current-definition%
           attribute

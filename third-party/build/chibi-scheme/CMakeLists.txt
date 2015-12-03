@@ -75,6 +75,26 @@ set_target_properties(hash
              LIBRARY_OUTPUT_DIRECTORY_RELEASE ${modules_output_srfi69})
 
 
+add_library(qsort MODULE
+  ../../chibi-scheme/lib/srfi/95/qsort.c
+)
+target_include_directories(qsort PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../chibi-scheme/include>"
+  ../../chibi-scheme/include)
+target_compile_options(qsort
+  PUBLIC ${warning_options} )
+target_link_libraries(qsort
+  scheme)
+
+set(modules_output_srfi95 "${modules_output}/srfi/95")
+file(MAKE_DIRECTORY "${modules_output_srfi95}")
+set_target_properties(qsort
+  PROPERTIES PREFIX ""
+             SUFFIX ".so"
+             LIBRARY_OUTPUT_DIRECTORY ${modules_output_srfi95}
+             LIBRARY_OUTPUT_DIRECTORY_DEBUG ${modules_output_srfi95}
+             LIBRARY_OUTPUT_DIRECTORY_RELEASE ${modules_output_srfi95})
+
 
 file(COPY ../../chibi-scheme/lib/ DESTINATION "${modules_output}"
      FILES_MATCHING REGEX ".*\\.(scm|sld)$")
