@@ -137,6 +137,20 @@ namespace fo {
   };
 
 
+  class SimpleColumnSetSequence : public Fo {
+    const Sosofo _text_port;
+
+  public:
+    SimpleColumnSetSequence() = default;
+    SimpleColumnSetSequence(const PropertySpecs& props, const Sosofo& sosofo);
+
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
+    const std::vector<std::string>& ports() const override;
+    const Sosofo& port(const std::string& portname) const override;
+  };
+
+
   class ScrollSequence : public Fo {
     const Sosofo _scroll_port;
 

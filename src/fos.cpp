@@ -39,6 +39,7 @@ namespace fo {
     {"field-width", false},            // LengthSpec
     {"field-align", false},            // Keyw: left, right, center
     {"first-line-start-indent", true}, // LengthSpec
+    {"gutter-width", false},           // LengthSpec
     {"last-line-end-indent", true},    // LengthSpec
     {"font-name", true},               // String
     {"font-posture", true},            // Keyw: upright, italic, oblique
@@ -430,6 +431,54 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
+  SimpleColumnSetSequence::SimpleColumnSetSequence(const PropertySpecs& props,
+                                                   const Sosofo& text_port)
+    : Fo(props), _text_port(text_port)
+  {
+  }
+
+  std::string SimpleColumnSetSequence::classname() const
+  {
+    return "#simple-column-set-sequence";
+  }
+
+  const PropertySpecs& SimpleColumnSetSequence::default_properties() const
+  {
+    static PropertySpecs propspecs = {
+      // clang-format off
+      PropertySpec("space-before", LengthSpec(kDisplay, 0, k_pt)),
+      PropertySpec("space-after", LengthSpec(kDisplay, 0, k_pt)),
+      PropertySpec("keep-with-previous?", false),
+      PropertySpec("keep-with-next?", false),
+      PropertySpec("break-after?", false),
+      PropertySpec("break-before?", false),
+      PropertySpec("column-number", 1),
+      PropertySpec("gutter-width", LengthSpec(kDimen, 21, k_pt)),
+      // clang-format on
+    };
+    return propspecs;
+  }
+
+  const std::vector<std::string>& SimpleColumnSetSequence::ports() const
+  {
+    static const auto ports = std::vector<std::string>{
+      "text",
+    };
+    return ports;
+  }
+
+  const Sosofo& SimpleColumnSetSequence::port(const std::string& portname) const
+  {
+    if (portname == "text") {
+      return _text_port;
+    }
+
+    return k_nil_sosofo;
+  }
+
+
+  //----------------------------------------------------------------------------
+
   ScrollSequence::ScrollSequence(const PropertySpecs& props,
                                  const Sosofo& sosofo)
     : Fo(props), _scroll_port(sosofo)
@@ -609,6 +658,7 @@ namespace fo {
       register_fo_class_factory<LineField>();
       register_fo_class_factory<Score>();
       register_fo_class_factory<SimplePageSequence>();
+      register_fo_class_factory<SimpleColumnSetSequence>();
       register_fo_class_factory<ScrollSequence>();
       register_fo_class_factory<FootNote>();
 

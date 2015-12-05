@@ -764,6 +764,29 @@ namespace {
     }
   };
 
+
+  class TexSimpleColumnSetSequenceProcessor : public IFoProcessor<TexProcessor> {
+  public:
+    void render(TexProcessor* po, const IFormattingObject* fo) const override
+    {
+      po->finalize_breaks();
+
+      auto col_num = po->property(fo, "column-number", 1);
+
+      auto gutterwidth = po->property(fo, "gutter-width",
+                                      fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+
+      po->stream() << "{\\leftskip0pt\\relax%" << std::endl
+                   << " \\setlength{\\columnsep}{" << dimen2str(gutterwidth) << "}%"
+                   << std::endl;
+      po->stream() << "\\begin{tbmulticols}{" << col_num << "}"
+                   << "{" << dimen2str(po->_current_start_margin) << "}"
+                   << "{-" << dimen2str(po->_current_start_margin) << "}"
+                   << std::endl;
+      po->render_sosofo(&fo->port("text"));
+      po->stream() << "\\end{tbmulticols}}" << std::endl;
+    }
+  };
 } // ns anon
 
 
@@ -881,7 +904,9 @@ TexProcessor::lookup_fo_processor(const std::string& fo_classname) const
       {"#sequence", std::make_shared<TexSequenceFoProcessor>()},
       {"#line-field", std::make_shared<TexLineFieldFoProcessor>()},
       {"#page-number", std::make_shared<TexPageNumberFoProcessor>()},
-      {"#anchor", std::make_shared<TexAnchorFoProcessor>()}
+      {"#anchor", std::make_shared<TexAnchorFoProcessor>()},
+      {"#simple-column-set-sequence",
+       std::make_shared<TexSimpleColumnSetSequenceProcessor>()}
     };
 
   auto i_find = procs.find(fo_classname);
