@@ -1,20 +1,55 @@
 (define-library (sairy dsssl)
   (import (chibi) (srfi 9) (srfi 28) (srfi 39) (srfi 69) (srfi 89)
           (sairy string-lib))
-  (export current-mode register-default-rule register-root-rule register-element-rule
-          default element root mode text with-mode
-          process-node-list process-node-list-trim process-children-trim
-          process-children process-children-trim process-node-list-join current-node
-          make style literal inline-space display-space
-          select-elements match-element?
-          node-list
-          sosofo-append
-          node-list-property node-list-reduce node-list-map node-list->list node-list-filter
-          node-list-reverse node-list-ref node-list-tail node-list-sublist
-          named-node-list-names
-          attributes attribute id
+  (export %in-current-definition%
+          attribute
+          attributes
+          current-mode
+          current-node
+          default
+          display-space
+          element
           format-number
-          %in-current-definition%
+          id
+          inline-space
+          literal
+          make
+          match-element?
+          mode
+          named-node-list-names
+          node-list
+          node-list->list
+          node-list-contains?
+          node-list-difference
+          node-list-every?
+          node-list-filter
+          node-list-head
+          node-list-intersection
+          node-list-map
+          node-list-property
+          node-list-reduce
+          node-list-ref
+          node-list-remove-duplicates
+          node-list-reverse
+          node-list-some?
+          node-list-sublist
+          node-list-tail
+          node-list-union
+          process-children
+          process-children-trim
+          process-children-trim
+          process-node-list
+          process-node-list-join
+          process-node-list-trim
+          register-default-rule
+          register-element-rule
+          register-root-rule
+          root
+          select-elements
+          sosofo-append
+          style
+          text
+          with-mode
           )
   (include "nodelist.scm")
   (include "fo.scm")

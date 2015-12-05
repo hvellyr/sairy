@@ -801,6 +801,45 @@ namespace {
   }
 
 
+  sexp func_node_list_equal(sexp ctx, sexp self, sexp_sint_t n, sexp nl0_arg, sexp nl1_arg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    if (!sexp_check_tag(nl0_arg, nodelist_tag_p(ctx))) {
+      result = sexp_user_exception(ctx, self, "not a node-list", nl0_arg);
+    }
+    else if (!sexp_check_tag(nl1_arg, nodelist_tag_p(ctx))) {
+      result = sexp_user_exception(ctx, self, "not a node-list", nl1_arg);
+    }
+    else {
+      result = SEXP_FALSE;
+
+      const NodeList* nl0 = (const NodeList*)(sexp_cpointer_value(nl0_arg));
+      const NodeList* nl1 = (const NodeList*)(sexp_cpointer_value(nl1_arg));
+
+      if (nl0 != nl1) {
+        NodeList p0 = nl0->clone();
+        NodeList p1 = nl1->clone();
+        while (!p0.empty() && !p1.empty()) {
+          if (p0.head() != p1.head())
+            break;
+          p0 = p0.rest();
+          p1 = p1.rest();
+        }
+        if (p0.empty() && p1.empty())
+          result = SEXP_TRUE;
+      }
+      else
+        result = SEXP_TRUE;
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
   sexp func_node_list_ctor(sexp ctx, sexp self, sexp_sint_t n, sexp args_arg)
   {
     sexp_gc_var1(result);
@@ -1109,6 +1148,8 @@ namespace {
                         &func_node_list_rest);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "%node-list", 1,
                         &func_node_list_ctor);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list=?", 2,
+                        &func_node_list_equal);
 
     sexp_define_foreign(ctx, sexp_context_env(ctx), "children", 1,
                         &func_children);
