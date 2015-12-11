@@ -61,6 +61,7 @@ const std::string CommonProps::k_data = "data";
 const std::string CommonProps::k_desc = "desc";
 const std::string CommonProps::k_gi = "gi";
 const std::string CommonProps::k_id = "id";
+const std::string CommonProps::k_auto_id = "auto-id";
 const std::string CommonProps::k_parent = "parent";
 const std::string CommonProps::k_source = "source";
 const std::string CommonProps::k_value = "value";
@@ -275,6 +276,12 @@ const Properties& Node::properties() const
 
 //------------------------------------------------------------------------------
 
+std::string next_auto_id()
+{
+  static int counter = 0;
+  return std::string("sairy-nd-") + std::to_string(++counter);
+}
+
 Node* Grove::make_node(const NodeClass* node_class)
 {
   auto nd = estd::make_unique<Node>();
@@ -301,6 +308,8 @@ Node* Grove::make_node(const NodeClass* node_class)
     }
     p = p->_super_class;
   }
+
+  nd->set_property(CommonProps::k_auto_id, next_auto_id());
 
   _nodes.emplace_back(std::move(nd));
 
@@ -371,6 +380,16 @@ void unparent_nodes(Nodes& nodes)
   for (auto& nd : nodes) {
     nd->set_property(CommonProps::k_parent, nullptr);
   }
+}
+
+std::string effective_id(const Node& nd)
+{
+  if (nd.has_property(CommonProps::k_id))
+    return nd.property<std::string>(CommonProps::k_id);
+  else if (nd.has_property(CommonProps::k_auto_id))
+    return nd.property<std::string>(CommonProps::k_auto_id);
+
+  return "";
 }
 
 } // ns eyestep
