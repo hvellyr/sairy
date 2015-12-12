@@ -37,8 +37,11 @@
 @c etc. for title
 @tag{showindex}  {}                           {EMPTY}{NOP}
 
-@c like chapter, but specific for content
+@c like chapter, but specific for contents
 @tag{content}    {title?}                     {#TEXT | ANY}
+
+@c like chapter, but specific for indices
+@tag{index}      {title?}                     {#TEXT | ANY}
 
 @c a separator line between two paragraphs
 @tag{asterisk}   {}                           {EMPTY}{NOP}
