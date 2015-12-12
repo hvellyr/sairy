@@ -5,6 +5,7 @@
 (use 'bibref)
 (use 'book-title)
 (use 'book-index)
+(use 'book-contents)
 
 
 ;; ------------------------------------------------------------------------------
@@ -170,6 +171,8 @@
          (title-sosofo (section-title-sosofo title nd))
          )
     (sosofo-append
+     (make anchor
+       id: (id nd))
      (make paragraph
        font-size: (vector-ref layout 0)
        line-spacing: (vector-ref layout 1)
