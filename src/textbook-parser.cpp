@@ -133,6 +133,7 @@ namespace textbook {
             for (const auto& attr : split_attrs(attr_spec)) {
               if (!attr.empty()) {
                 bool is_opt = true;
+                bool is_data = false;
                 std::string nm;
                 AttrType ty;
 
@@ -144,6 +145,11 @@ namespace textbook {
                   min_attr += 1;
                   is_opt = false;
                   nm = attr;
+                }
+
+                if (nm.front() == '%') {
+                  is_data = true;
+                  nm = nm.substr(1, attr.size());
                 }
                 max_attr += 1;
 
@@ -157,7 +163,7 @@ namespace textbook {
                   ty = k_attr_str;
                 }
 
-                attrspecs.push_back(AttrSpec(nm, ty, is_opt));
+                attrspecs.push_back(AttrSpec(nm, ty, is_opt, is_data));
               }
             }
 
@@ -185,17 +191,17 @@ namespace textbook {
 
       docspec->add(
         TagSpec(k_tag_tag,
-                std::vector<AttrSpec>{AttrSpec(k_tag_tag, k_attr_str, false),
-                                      AttrSpec(k_attrs_tag, k_attr_str, false),
-                                      AttrSpec(k_model_tag, k_attr_str, false),
-                                      AttrSpec(k_p_tag, k_attr_str, true)},
+                std::vector<AttrSpec>{AttrSpec(k_tag_tag, k_attr_str, false, false),
+                                      AttrSpec(k_attrs_tag, k_attr_str, false, false),
+                                      AttrSpec(k_model_tag, k_attr_str, false, false),
+                                      AttrSpec(k_p_tag, k_attr_str, true, false)},
                 std::make_tuple(3u, 4u),
                 false, // is_env
                 false  // is_mixed
                 ));
       docspec->add(TagSpec(k_textbook_tag,
                            std::vector<AttrSpec>{
-                             AttrSpec(k_version_tag, k_attr_str, false)},
+                             AttrSpec(k_version_tag, k_attr_str, false, false)},
                            std::make_tuple(1u, 1u),
                            false, // is_env,
                            false  // is_mixed
@@ -661,6 +667,9 @@ namespace textbook {
           for (auto* child : grandch) {
             child->set_property(CommonProps::k_attr_name,
                                 attrspecs[attrc].name());
+            if (attrspecs[attrc].is_data()) {
+              child->set_property(CommonProps::k_data_attr, attrspecs[attrc].name());
+            }
             nl.push_back(child);
           }
         }
@@ -676,6 +685,9 @@ namespace textbook {
           for (auto* child : children) {
             child->set_property(CommonProps::k_attr_name,
                                 attrspecs[attrc].name());
+            if (attrspecs[attrc].is_data()) {
+              child->set_property(CommonProps::k_data_attr, attrspecs[attrc].name());
+            }
             nl.push_back(child);
           }
         }
