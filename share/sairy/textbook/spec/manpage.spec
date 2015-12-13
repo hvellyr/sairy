@@ -14,6 +14,6 @@
 @c a specific see also section for manpages
 @tag{seealso}    {}                           {ANY}
 
-@tag{section}    {title, ID?}                 {#TEXT | ANY}
+@tag{section}    {%title, ID?}                {#TEXT | ANY}
 
 

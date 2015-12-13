@@ -64,6 +64,7 @@ const std::string CommonProps::k_id = "id";
 const std::string CommonProps::k_parent = "parent";
 const std::string CommonProps::k_source = "source";
 const std::string CommonProps::k_value = "value";
+const std::string CommonProps::k_data_attr = "data-attr";
 
 
 //------------------------------------------------------------------------------

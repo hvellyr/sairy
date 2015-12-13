@@ -29,14 +29,16 @@ namespace textbook {
     std::string _name;
     AttrType _type;
     bool _is_optional;
+    bool _is_data;
 
   public:
-    AttrSpec(const std::string& name, AttrType type, bool is_opt)
-      : _name(name), _type(type), _is_optional(is_opt)
+    AttrSpec(const std::string& name, AttrType type, bool is_opt, bool is_data)
+      : _name(name), _type(type), _is_optional(is_opt), _is_data(is_data)
     {
     }
 
     bool is_optional() const { return _is_optional; }
+    bool is_data() const { return _is_data; }
 
     std::string name() const { return _name; }
     AttrType type() const { return _type; }

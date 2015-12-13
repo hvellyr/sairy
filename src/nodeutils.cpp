@@ -235,6 +235,11 @@ std::string node_data(const Node* base_nd)
 
   node_traverse(base_nd, [&ss](const Node* nd, int /*depth*/) {
     ss << nd->property<std::string>(CommonProps::k_data);
+
+    auto key = nd->property<std::string>(CommonProps::k_data_attr);
+    if (auto named_attr = nd->attribute(key)) {
+      ss << node_data(named_attr);
+    }
     return TraverseRecursion::k_recurse;
   }, 0);
 

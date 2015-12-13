@@ -43,6 +43,7 @@ struct CommonProps {
   static const std::string k_parent;
   static const std::string k_source;
   static const std::string k_value;
+  static const std::string k_data_attr;
 };
 
 
