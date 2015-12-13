@@ -201,7 +201,8 @@ namespace {
 
     for (const auto& prop : nd->properties()) {
       if (prop.first != CommonProps::k_gi &&
-          prop.first != CommonProps::k_parent) {
+          prop.first != CommonProps::k_parent &&
+          prop.first != CommonProps::k_auto_id) {
         pp.sep().indent(depth, 1).print_attrnm(prop.first);
 
         SerializeVisitor visitor(pp, depth + 1);
@@ -253,7 +254,7 @@ ConstNodes elements_with_id(const Grove* grove, const std::string& id)
 
   for (const auto& nd : grove->nodes()) {
     if (nd.get() != nullptr) {
-      if (nd->property<std::string>(CommonProps::k_id) == id) {
+      if (effective_id(*nd.get()) == id) {
         nl_result.emplace_back(nd.get());
       }
     }

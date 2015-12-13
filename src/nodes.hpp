@@ -40,6 +40,7 @@ struct CommonProps {
   static const std::string k_desc;
   static const std::string k_gi;
   static const std::string k_id;
+  static const std::string k_auto_id;
   static const std::string k_parent;
   static const std::string k_source;
   static const std::string k_value;
@@ -135,5 +136,7 @@ public:
 
 /*! Reset the parent reference of all @p nodes.  Use with care. */
 void unparent_nodes(Nodes& nodes);
+
+std::string effective_id(const Node& nd);
 
 } // ns eyestep

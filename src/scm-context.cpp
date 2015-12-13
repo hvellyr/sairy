@@ -555,6 +555,20 @@ namespace {
         if (!propname) {
           result = sexp_user_exception(ctx, self, "not a symbol", propname_arg);
         }
+        else if (propname == CommonProps::k_id) {
+          SexpPropVisitor visitor(ctx, self, propname_arg, default_value);
+
+          if (node->has_property(CommonProps::k_id)) {
+            PropertyValue value = (*node)[CommonProps::k_id];
+            result = boost::apply_visitor(visitor, value);
+          }
+          else if (node->has_property(CommonProps::k_auto_id)) {
+            PropertyValue value = (*node)[CommonProps::k_auto_id];
+            result = boost::apply_visitor(visitor, value);
+          }
+          else
+            result = default_value;
+        }
         else {
           SexpPropVisitor visitor(ctx, self, propname_arg, default_value);
           PropertyValue value = (*node)[*propname];
