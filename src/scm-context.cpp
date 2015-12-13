@@ -230,6 +230,24 @@ namespace {
   sexp make_nodelist(sexp ctx, const NodeList* obj);
 
 
+  sexp make_sairy_exception(sexp ctx, sexp self, const char *ms, sexp ir,
+                            sexp source)
+  {
+    sexp res;
+    sexp_gc_var3(sym, str, irr);
+    sexp_gc_preserve3(ctx, sym, str, irr);
+    res = sexp_make_exception(ctx,
+                              sym = sexp_intern(ctx, "read", -1), // kind
+                              str = sexp_c_string(ctx, ms, -1), // msg
+                              ((sexp_pairp(ir) || sexp_nullp(ir))
+                               ? ir : (irr = sexp_list1(ctx, ir))), // irritants
+                              self, // procedure
+                              source); // source
+    sexp_gc_release3(ctx);
+    return res;
+  }
+
+
   //------------------------------------------------------------------------------
 
   sexp make_length_spec(sexp ctx, fo::LengthSpec ls)
@@ -783,6 +801,45 @@ namespace {
   }
 
 
+  sexp func_node_list_equal(sexp ctx, sexp self, sexp_sint_t n, sexp nl0_arg, sexp nl1_arg)
+  {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    if (!sexp_check_tag(nl0_arg, nodelist_tag_p(ctx))) {
+      result = sexp_user_exception(ctx, self, "not a node-list", nl0_arg);
+    }
+    else if (!sexp_check_tag(nl1_arg, nodelist_tag_p(ctx))) {
+      result = sexp_user_exception(ctx, self, "not a node-list", nl1_arg);
+    }
+    else {
+      result = SEXP_FALSE;
+
+      const NodeList* nl0 = (const NodeList*)(sexp_cpointer_value(nl0_arg));
+      const NodeList* nl1 = (const NodeList*)(sexp_cpointer_value(nl1_arg));
+
+      if (nl0 != nl1) {
+        NodeList p0 = nl0->clone();
+        NodeList p1 = nl1->clone();
+        while (!p0.empty() && !p1.empty()) {
+          if (p0.head() != p1.head())
+            break;
+          p0 = p0.rest();
+          p1 = p1.rest();
+        }
+        if (p0.empty() && p1.empty())
+          result = SEXP_TRUE;
+      }
+      else
+        result = SEXP_TRUE;
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
   sexp func_node_list_ctor(sexp ctx, sexp self, sexp_sint_t n, sexp args_arg)
   {
     sexp_gc_var1(result);
@@ -1091,6 +1148,8 @@ namespace {
                         &func_node_list_rest);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "%node-list", 1,
                         &func_node_list_ctor);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list=?", 2,
+                        &func_node_list_equal);
 
     sexp_define_foreign(ctx, sexp_context_env(ctx), "children", 1,
                         &func_children);
@@ -1311,25 +1370,50 @@ namespace {
   }
 
 
-  std::unique_ptr<IFormattingObject> allocate_fo(sexp ctx,
-                                                 const std::string& fo_class,
-                                                 const fo::PropertySpecs& props,
-                                                 sexp principal_port)
+  sexp make_fo(sexp ctx, sexp self, const std::string& fo_class,
+               sexp fo_class_arg,
+               const fo::PropertySpecs& props, sexp principal_port,
+               sexp source)
   {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_NULL;
+
     if (sexp_check_tag(principal_port, sosofo_tag_p(ctx))) {
       const Sosofo* sosofo =
         (const Sosofo*)(sexp_cpointer_value(principal_port));
 
-      return fo::create_fo_by_classname(std::string("#") + fo_class, props, *sosofo);
+      std::shared_ptr<IFormattingObject> fo(
+        fo::create_fo_by_classname(std::string("#") + fo_class, props, *sosofo));
+
+      if (!fo) {
+        result =
+          make_sairy_exception(ctx, self, "Unknown fo-class: ", fo_class_arg,
+                               source);
+      }
+      else if (!fo->accepts_fo(*sosofo)) {
+        result =
+          make_sairy_exception(ctx, self, "bad FO nesting", fo_class_arg,
+                               source);
+      }
+      else
+        result = make_sosofo(ctx, new Sosofo(fo));
+    }
+    else {
+      std::shared_ptr<IFormattingObject> fo(
+        fo::create_fo_by_classname(std::string("#") + fo_class, props, Sosofo()));
+      result = make_sosofo(ctx, new Sosofo(fo));
     }
 
-    Sosofo sosofo;
-    return fo::create_fo_by_classname(std::string("#") + fo_class, props, sosofo);
+    sexp_gc_release1(ctx);
+
+    return result;
   }
 
 
   sexp func_make_fo(sexp ctx, sexp self, sexp_sint_t n, sexp fo_class_arg,
-                    sexp args_arg)
+                    sexp args_arg, sexp source)
   {
     sexp_gc_var2(result, obj);
     sexp_gc_preserve2(ctx, result, obj);
@@ -1339,7 +1423,8 @@ namespace {
 
     auto fo_class = string_from_symbol_sexp_or_none(ctx, fo_class_arg);
     if (!fo_class) {
-      result = sexp_user_exception(ctx, self, "not a symbol", fo_class_arg);
+      result = make_sairy_exception(ctx, self, "not a symbol", fo_class_arg,
+                                    source);
     }
 
     fo::PropertySpecs props;
@@ -1362,7 +1447,8 @@ namespace {
               }
               else {
                 result =
-                  sexp_user_exception(ctx, self, "use: requires style argument", ref);
+                  make_sairy_exception(ctx, self, "use: requires style argument", ref,
+                                       source);
                 break;
               }
             }
@@ -1376,7 +1462,8 @@ namespace {
           }
           else {
             result =
-              sexp_user_exception(ctx, self, "value missing for keyword", ref);
+              make_sairy_exception(ctx, self, "value missing for keyword", ref,
+                                   source);
             break;
           }
         }
@@ -1392,27 +1479,20 @@ namespace {
         auto key = string_from_keyword_or_none(ctx, ref);
 
         if (key) {
-          result = sexp_user_exception(ctx, self,
-                                       "unexpeced keyword in make body", ref);
+          result = make_sairy_exception(ctx, self,
+                                        "unexpeced keyword in make body", ref,
+                                        source);
           break;
         }
         obj = ref;
       }
     }
     else {
-      result = sexp_user_exception(ctx, self, "not a list", args_arg);
+      result = make_sairy_exception(ctx, self, "not a list", args_arg, source);
     }
 
     if (result == SEXP_NULL && fo_class) {
-      std::shared_ptr<IFormattingObject> fo(
-        allocate_fo(ctx, *fo_class, props, obj));
-      if (!fo) {
-        result =
-          sexp_user_exception(ctx, self, "Unknown fo-class: ", fo_class_arg);
-      }
-      else {
-        result = make_sosofo(ctx, new Sosofo(fo));
-      }
+      result = make_fo(ctx, self, *fo_class, fo_class_arg, props, obj, source);
     }
 
     sexp_gc_release2(ctx);
@@ -1504,7 +1584,7 @@ namespace {
     sexp_env_define(ctx, sexp_context_env(ctx),
                     nm = sexp_intern(ctx, "style?", -1), op);
 
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-fo", 2,
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-fo", 3,
                         &func_make_fo);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "make-style", 1,
                         &func_make_style);

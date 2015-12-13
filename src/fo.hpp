@@ -283,6 +283,8 @@ class IFormattingObject {
 public:
   virtual ~IFormattingObject() {}
 
+  virtual bool accepts_fo(const Sosofo& fo) const = 0;
+
   /*! Returns the class name for this FOs @p class. */
   virtual std::string classname() const = 0;
 

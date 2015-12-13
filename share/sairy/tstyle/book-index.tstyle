@@ -1,0 +1,165 @@
+;;; Copyright (c) 2015 Gregor Klinke
+;;; All rights reserved.
+
+(define (map-str-to-category str)
+  (let ((ci (char->integer (char-downcase (string-ref str 0)))))
+    (cond
+     ((and (>= ci 48) (<= ci 57)) (- ci 48))
+     ((and (>= ci 97) (<= ci 122)) (+ (- ci 97) 10))
+     (else (+ 26 10)))))
+
+(define (make-category-vector)
+  (let loop ((cats (list "0" "1" "2" "3" "4" "5" "6" "7" "8" "9"
+                         "a" "b" "c" "d" "e" "f" "g" "h" "i" "j"
+                         "k" "l" "m" "n" "o" "p" "q" "r" "s" "t"
+                         "u" "v" "w" "x" "y" "z" "#"))
+             (result (list)))
+    (if (null? cats)
+        (list->vector result)
+        (loop (cdr cats) (append result (list (vector (car cats) (list))))))))
+
+(define (categorize-idx-data data)
+  (let ((result (make-category-vector)))
+    (let loop ((d data))
+      (if (null? d)
+          (vector->list result)
+          (let ((v (vector-ref result (map-str-to-category (caar d)))))
+            (vector-set! v 1 (append (vector-ref v 1) (list (car d))))
+            (loop (cdr d)))
+      ))))
+
+(define (fold-data data)
+  (let loop ((d data)
+             (last 'first)
+             (result (list)))
+    (if (null? d)
+        (if (eqv? last 'first)
+            result
+            (append result (list last)))
+        (let ((c (car d)))
+          (if (eqv? last 'first)
+              (loop (cdr d) c result)
+              (if (and (equal? (car c) (car last))    ;; same key
+                       (equal? (cadr c) (cadr last))) ;; same type
+                  (loop (cdr d) (append last (cddr c)) result) ;; extend last with c
+                  (loop (cdr d) c (append result (list last)))
+                  )))
+        )))
+
+(define (prepare-index-data idx-data)
+  (let* ((sorted (sort idx-data (lambda (desc1 desc2)
+                                  (string<? (car desc1) (car desc2)))))
+         (folded (fold-data sorted))
+         (categorized (categorize-idx-data folded))
+         )
+    ;;(display (format "folded ~a~%" categorized))
+    categorized))
+
+(mode index-mode
+  (element idx
+    (let ((text (attribute "text" (current-node))))
+      (process-node-list text)))
+  (element em
+    (make sequence
+     font-name: "roman"
+     font-posture: 'italic
+     (process-node-list (attribute "text" (current-node)))))
+  (element r
+    (make sequence
+     font-name: "roman"
+     font-posture: 'italic
+     (process-node-list (attribute "text" (current-node)))))
+  )
+
+(define (font-index-name-by-type type)
+  (cond
+    ((equal? type "cp") "roman")
+    ((equal? type "fn") "monospace")
+    (else "roman")
+    ))
+
+(define (idx-entry-ids entries)
+  (map (lambda (e) (id e)) entries))
+
+(define (process-entry-ids ids)
+  (let loop ((p ids)
+             (sep (empty-sosofo))
+             (sosofo (empty-sosofo)))
+    (if (null? p)
+        sosofo
+        (loop (cdr p)
+              (literal ", ")
+              (sosofo-append sosofo
+                             sep
+                             (make page-number
+                               refid: (car p))
+                             )))))
+
+(define (process-index-entry entry)
+  (make paragraph
+    quadding: 'left
+    font-size: 9pt
+    line-spacing: 10.5pt
+    font-name: (font-index-name-by-type (cadr entry))
+    end-indent: 15pt
+    last-line-end-indent: -15pt
+    (sosofo-append
+     (with-mode index-mode
+       (process-node-list (cadr (cdr entry))))
+     (literal " ")
+     (make line-field
+       field-align: 'right
+       (make sequence
+         font-name: "roman"
+         (process-entry-ids (idx-entry-ids (cddr entry)))))
+     )))
+
+(define (process-category cat)
+  (if (= (length (vector-ref cat 1)) 0)
+      (empty-sosofo)
+      (let ((category-letter (string-upcase-ascii (vector-ref cat 0))))
+        (make display-group
+          space-before: 7pt
+          (sosofo-append
+           (make paragraph
+             font-size: 11pt
+             quadding: 'left
+             space-after: 4pt
+             keep-with-next: #t
+             font-weight: 'bold
+             (sosofo-append
+              (literal category-letter)))
+
+           (let loop ((n (vector-ref cat 1))
+                      (sosofo (empty-sosofo)))
+             (if (null? n)
+                 sosofo
+                 (loop (cdr n) (sosofo-append sosofo (process-index-entry (car n))))
+                 ))
+           )))))
+
+(element showindex
+  (let* ((type (attribute "type" (current-node)))
+         (descs (descendants (grove-root)))
+         (idx-nds (node-list
+                   (select-elements descs 'idx)
+                   (select-elements descs 'vidx)))
+         (idx-data (prepare-index-data (map (lambda (snl)
+                                              (list (data (attribute "text" snl))
+                                                    (data (attribute "type" snl))
+                                                    snl)
+                                              )
+                                            (node-list->list idx-nds))))
+         )
+    (make simple-column-set-sequence
+      keep-with-previous?: #t
+      gutter-width: 14pt
+      column-number: 2
+      (let loop ((n idx-data)
+                 (sosofo (empty-sosofo)))
+        (if (null? n)
+            sosofo
+            (loop (cdr n)
+                  (sosofo-append sosofo
+                                 (process-category (car n))))))
+      )))

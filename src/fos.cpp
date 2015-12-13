@@ -39,6 +39,7 @@ namespace fo {
     {"field-width", false},            // LengthSpec
     {"field-align", false},            // Keyw: left, right, center
     {"first-line-start-indent", true}, // LengthSpec
+    {"gutter-width", false},           // LengthSpec
     {"last-line-end-indent", true},    // LengthSpec
     {"font-name", true},               // String
     {"font-posture", true},            // Keyw: upright, italic, oblique
@@ -133,22 +134,33 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
-  Paragraph::Paragraph(const PropertySpecs& props, const Sosofo& textPort)
-    : Fo(props), _text_port(textPort)
+  Paragraph::Paragraph(const PropertySpecs& props, const Sosofo& text_port)
+    : Fo(props), _text_port(text_port)
   {
   }
 
   std::string Paragraph::classname() const { return "#paragraph"; }
+
+  bool Paragraph::accepts_fo(const Sosofo& fo) const
+  {
+    for (int i = 0 ; i < fo.length() ; i++) {
+      if (dynamic_cast<const Paragraph*>(fo[i]) != nullptr)
+        return false;
+    }
+    return true;
+  }
 
   const PropertySpecs& Paragraph::default_properties() const
   {
     double max_inf = std::numeric_limits<double>::infinity();
 
     static PropertySpecs propspecs = {
+      // clang-format off
       PropertySpec("first-line-start-indent", LengthSpec(kInline, 0, k_em)),
       PropertySpec("last-line-end-indent", LengthSpec(kInline, 1, k_em, 1, max_inf)),
       PropertySpec("line-spacing", LengthSpec(kDimen, 14, k_pt)),
-      PropertySpec("font-caps", "normal"), PropertySpec("font-name", "serif"),
+      PropertySpec("font-caps", "normal"),
+      PropertySpec("font-name", "serif"),
       PropertySpec("font-posture", "upright"),
       PropertySpec("font-size", LengthSpec(kDimen, 10, k_pt)),
       PropertySpec("font-weight", "medium"),
@@ -160,13 +172,15 @@ namespace fo {
       PropertySpec("space-after", LengthSpec(kDisplay, 0, k_pt)),
       PropertySpec("keep-with-previous?", false),
       PropertySpec("keep-with-next?", false),
-      PropertySpec("break-after?", false), PropertySpec("break-before?", false),
+      PropertySpec("break-after?", false),
+      PropertySpec("break-before?", false),
       PropertySpec("lines", "wrap"),
       PropertySpec("whitespace-treatment", "collapse"),
       PropertySpec("asis-wrap-indent", 10),
       PropertySpec("numbered-lines?", false),
       PropertySpec("line-number-side", "start"),
       PropertySpec("position-point-shift", LengthSpec(kDimen, 0, k_pt)),
+      // clang-format on
     };
     return propspecs;
   }
@@ -417,6 +431,54 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
+  SimpleColumnSetSequence::SimpleColumnSetSequence(const PropertySpecs& props,
+                                                   const Sosofo& text_port)
+    : Fo(props), _text_port(text_port)
+  {
+  }
+
+  std::string SimpleColumnSetSequence::classname() const
+  {
+    return "#simple-column-set-sequence";
+  }
+
+  const PropertySpecs& SimpleColumnSetSequence::default_properties() const
+  {
+    static PropertySpecs propspecs = {
+      // clang-format off
+      PropertySpec("space-before", LengthSpec(kDisplay, 0, k_pt)),
+      PropertySpec("space-after", LengthSpec(kDisplay, 0, k_pt)),
+      PropertySpec("keep-with-previous?", false),
+      PropertySpec("keep-with-next?", false),
+      PropertySpec("break-after?", false),
+      PropertySpec("break-before?", false),
+      PropertySpec("column-number", 1),
+      PropertySpec("gutter-width", LengthSpec(kDimen, 21, k_pt)),
+      // clang-format on
+    };
+    return propspecs;
+  }
+
+  const std::vector<std::string>& SimpleColumnSetSequence::ports() const
+  {
+    static const auto ports = std::vector<std::string>{
+      "text",
+    };
+    return ports;
+  }
+
+  const Sosofo& SimpleColumnSetSequence::port(const std::string& portname) const
+  {
+    if (portname == "text") {
+      return _text_port;
+    }
+
+    return k_nil_sosofo;
+  }
+
+
+  //----------------------------------------------------------------------------
+
   ScrollSequence::ScrollSequence(const PropertySpecs& props,
                                  const Sosofo& sosofo)
     : Fo(props), _scroll_port(sosofo)
@@ -596,6 +658,7 @@ namespace fo {
       register_fo_class_factory<LineField>();
       register_fo_class_factory<Score>();
       register_fo_class_factory<SimplePageSequence>();
+      register_fo_class_factory<SimpleColumnSetSequence>();
       register_fo_class_factory<ScrollSequence>();
       register_fo_class_factory<FootNote>();
 

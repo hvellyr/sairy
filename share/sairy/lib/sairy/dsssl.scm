@@ -1,19 +1,27 @@
 ;; Copyright (c) 2015 by Gregor Klinke
 ;; All rights reserved.
 
+(import (srfi 6))
+(import (srfi 28))
+
+
 (define default-mode-marker #f)
 
 (define current-mode
   (make-parameter default-mode-marker))
 
+(define %in-current-definition%
+  (make-parameter #f))
+
 (define-record-type :match-node
-    (match-node _others _body)
+    (match-node _others _selector _body)
     match-node?
     (_others match-node-others match-node-set-others!)
+    (_selector match-node-selector match-node-set-selector!)
     (_body match-node-body match-node-set-body!))
 
-(define (make-match-node body)
-  (match-node (make-hash-table) body))
+(define (make-match-node selector body)
+  (match-node (make-hash-table) selector body))
 
 
 (define (match-node-display mn0)
@@ -42,19 +50,22 @@
 (define (rules-registry mode)
   (hash-table-ref *registry* mode
                   (lambda ()
-                    (let ((new-registry (make-match-node #f)))
+                    (let ((new-registry (make-match-node '() #f)))
                       (hash-table-set! *registry* mode new-registry)
                       new-registry))) )
 
 
 (define (register-default-rule mode . body)
-  (hash-table-set! (match-node-others (rules-registry mode)) '<all> (make-match-node body)))
+  (hash-table-set! (match-node-others (rules-registry mode)) '<all>
+                   (make-match-node '<default> body)))
 
 (define (register-root-rule mode . body)
-  (hash-table-set! (match-node-others (rules-registry mode)) '<root> (make-match-node body)))
+  (hash-table-set! (match-node-others (rules-registry mode)) '<root>
+                   (make-match-node '<root> body)))
 
 (define (register-text-rule mode . body)
-  (hash-table-set! (match-node-others (rules-registry mode)) '<text> (make-match-node body)))
+  (hash-table-set! (match-node-others (rules-registry mode)) '<text>
+                   (make-match-node '<text> body)))
 
 (define (register-element-rule selector mode . body)
   (let loop ((gis (if (list? selector)
@@ -67,13 +78,14 @@
                (current-map (match-node-others parent-node))
                (hmn (hash-table-ref current-map gi
                                     (lambda ()
-                                      (let ((new-match-node (make-match-node #f)))
+                                      (let ((new-match-node (make-match-node selector #f)))
                                         (hash-table-set! current-map gi new-match-node)
                                         new-match-node)) )))
           (if (null? (cdr gis))
               (begin
                 (if (match-node-body hmn)
                     (display (format "ERROR: Rule '~s' redefined~%" selector)))
+                (match-node-set-selector! hmn selector)
                 (match-node-set-body! hmn body)))
           (loop (cdr gis) hmn))
         )
@@ -124,20 +136,29 @@
               (append path (list (gi nd)))) )))
 
 
+(define (selector->string sel)
+  (let ((q (open-output-string)))
+    (display sel q)
+    (get-output-string q)))
+
 (define (process-node-in-registry nd-path rule-node)
   (let* ((spec (let loop ((path nd-path)
                           (cur-rule-node rule-node))
                  (if (null? path)
-                     (match-node-body cur-rule-node)
+                     (cons (match-node-selector cur-rule-node)
+                           (match-node-body cur-rule-node))
                      (let ((mnd (hash-table-ref/default (match-node-others cur-rule-node)
                                                         (car path) 'no-match)))
                        (if (equal? mnd 'no-match)
-                           (match-node-body cur-rule-node)
+                           (cons (match-node-selector cur-rule-node)
+                                 (match-node-body cur-rule-node))
                            (loop (cdr path)
                                  mnd)))
                      ))) )
-    (if (and (list? spec) (procedure? (car spec)))
-        ((car spec))
+    (if (and (list? spec) (procedure? (cadr spec)))
+        (parameterize ((%in-current-definition%
+                        (selector->string (car spec))))
+                      ((cadr spec)))
         #f) ))
 
 
@@ -220,7 +241,7 @@
 ;; @doc Returns the sosofo that results from appending the sosofos that result
 ;; from processing @prm{nl} in order after removing any leading and trailing
 ;; whitespace from leading and trailing text nodes.
-(define (process-node-list-trim nl)
+(define* (process-node-list-trim nl (left?: left? #t) (right?: right? #t))
   (define (left-trim first? str)
     (if first? (string-trim str) str))
 
@@ -245,11 +266,16 @@
                 #f
                 (sosofo-append
                  sosofo
-                 (process-with-trim first?
-                                    (node-list-empty? rest)
+                 (process-with-trim (and left? first?)
+                                    (and right? (node-list-empty? rest))
                                     (node-list-first p))) ))
         )))
 
+;; @doc Returns the sosofo that results from appending the sosofos that result
+;; from processing in order the children of the current node after removing any
+;; leading and trailing whitespace from leading and trailing text nodes.
+(define (process-children-trim)
+  (process-node-list-trim (children (current-node))))
 
 ;; register a default text mapping
 (text

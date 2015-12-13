@@ -1,6 +1,8 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
+#include "config.hpp"
+
 #include "utils.hpp"
 
 #include <boost/algorithm/string/classification.hpp>
@@ -10,10 +12,17 @@
 #include <boost/range/iterator.hpp>
 #include <boost/range/iterator_range.hpp>
 
+#ifdef HAVE_STD_CODECVT
+#include <codecvt>
+#else
+#include <boost/locale/encoding_utf.hpp>
+#endif
+
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
+
 
 namespace eyestep {
 namespace utils {
@@ -92,6 +101,37 @@ namespace utils {
     //ret.append(i_to, _to.end());
     return ret;
   }
+
+
+  //------------------------------------------------------------------------------
+
+#ifdef HAVE_STD_CODECVT
+  std::u16string utf8_to_u16string(const std::string& str)
+  {
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> conv16;
+    return conv16.from_bytes(str);
+  }
+
+  std::string u16string_to_utf8(const std::u16string& str)
+  {
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> conv8;
+    return conv8.to_bytes(str);
+  }
+
+#else
+
+  std::u16string utf8_to_u16string(const std::string& str)
+  {
+    using boost::locale::conv::utf_to_utf;
+    return utf_to_utf<char16_t>(str.c_str(), str.c_str() + str.size());
+  }
+
+  std::string u16string_to_utf8(const std::u16string& str)
+  {
+    using boost::locale::conv::utf_to_utf;
+    return utf_to_utf<char>(str.c_str(), str.c_str() + str.size());
+  }
+#endif
 
 } // ns utils
 } // ns eyestep

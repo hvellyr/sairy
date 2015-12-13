@@ -36,6 +36,10 @@
                         proc
                         (proc obj (node-list-first nl)))))
 
+;; @doc For each member of @prm{nl}, applies @prm{proc} to a singleton node-list
+;; containing just that member and appends the resulting node-lists.  It shall
+;; be an error if @prm{proc} does not return a node-list when applied to any
+;; member of @prm{nl}.
 (define (node-list-map proc nl)
   (node-list-reduce nl
                     (lambda (result snl)
@@ -127,3 +131,93 @@
   (if (node-list-empty? osnl)
       #f
       (node-property 'id osnl default: #f)))
+
+
+;; @doc Returns #t if @prm{nl} contains a node equal to the member of @prm{snl},
+;; and otherwise returns #f.
+(define (node-list-contains? nl snl)
+  (node-list-reduce nl
+                    (lambda (result i)
+                      (or result
+                          (node-list=? snl i)))
+                    #f))
+
+;; @doc Returns a node-list which is the same as @prm{nl} except that any member
+;; of @prm{nl} which is equal to a preceding member of @prm{nl} is removed.
+(define (node-list-remove-duplicates nl)
+  (node-list-reduce nl
+                    (lambda (result snl)
+                      (if (node-list-contains? result snl)
+                          result
+                          (node-list result snl)))
+                    (empty-node-list)))
+
+;; @doc Returns a node-list containing the union of all the arguments, which
+;; shall be node-lists.  The result shall contain no duplicates.  With no
+;; arguments, an empty node-list shall be returned.
+(define* (node-list-union . args)
+  (reduce args
+          (lambda (nl1 nl2)
+            (node-list-reduce nl2
+                              (lambda (result snl)
+                                (if (node-list-contains? result snl)
+                                    result
+                                    (node-list result snl)))
+                              nl1))
+          (empty-node-list)))
+
+;; @doc Returns a node-list containing the intersection of all the arguments,
+;; which shall be node-lists.  The result shall contain no duplicates.  With no
+;; arguments, an empty node-list shall be returned.
+(define (node-list-intersection . args)
+  (if (null? args)
+      (empty-node-list)
+      (reduce (cdr args)
+              (lambda (nl1 nl2)
+                (node-list-reduce nl1
+                                  (lambda (result snl)
+                                    (if (node-list-contains? nl2 snl)
+                                        (node-list result snl)
+                                        result))
+                                  (empty-node-list)))
+              (node-list-remove-duplicates (car args)))))
+
+;; @doc Returns a node-list containing the set difference of all the arguments,
+;; which shall be node-lists.  The set difference is defined to be those members
+;; of the first argument that are not members of any of the other arguments.
+;; The result shall contain no duplicates.  With no arguments, an empty
+;; node-list shall be returned.
+(define (node-list-difference . args)
+  (if (null? args)
+      (empty-node-list)
+      (reduce (cdr args)
+              (lambda (nl1 nl2)
+                (node-list-reduce nl1
+                                  (lambda (result snl)
+                                    (if (node-list-contains? nl2 snl)
+                                        result
+                                        (node-list result snl)))
+                                  (empty-node-list)))
+              (node-list-remove-duplicates (car args)))))
+
+;; @doc Returns #t if, for some member of @prm{nl}, @prm{proc} does not return
+;; #f when applied to a singleton node-list containing just that member, and
+;; otherwise returns #f.  An implementation is allowed, but not required, to
+;; signal an error if, for some member of @prm{nl}, @prm{proc} would signal an
+;; error when applied to a singleton node-list containing just that member.
+(define (node-list-some? proc nl)
+  (node-list-reduce nl
+                    (lambda (result snl)
+                      (or result (proc snl)))
+                    #f))
+
+;; @doc Returns #t if, for every member of @prm{nl}, @prm{proc} does not return
+;; #f when applied to a singleton node-list containing just that member, and
+;; otherwise returns #f.  An implementation is allowed to signal an error if,
+;; for some member of @prm{nl}, @prm{proc} would signal an error when applied to
+;; a singleton node-list containing just that member.
+(define (node-list-every? proc nl)
+  (node-list-reduce nl
+                    (lambda (result snl)
+                      (and result (proc snl)))
+                    #t))

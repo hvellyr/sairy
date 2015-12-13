@@ -1,0 +1,155 @@
+%% This is file `tbmulticol.sty'
+%%
+%% Copyright (c) 2015, Gregor Klinke
+%%
+%% Any modified versions of this file must be renamed with new filenames
+%% distinct from tbmulticol.sty.
+%%
+%% Based on adjmulticol.sty (adjmulticol.dtx):
+%%
+%% Copyright 2011, Boris Veytsman <borisv@lk.net>
+%%
+%% Since this package is based (via adjmulticol.dtx) on the multicol package,
+%% Copyright 1989-2005 Frank Mittelbach, the following additional condition is
+%% added to the licensing terms.  The term ``multicol'' here should be
+%% interpreted as ``multicol and/or tbmulticol'' package, as appropriate.
+%%
+%%  In addition to the terms of LPPL any distributed version
+%%  (unchanged or modified) of multicol has to keep the statement
+%%  about the moral obligation for using multicol. In case of major
+%%  changes where this would not be appropriate the author of the
+%%  changed version should contact the copyright holder.
+%%
+%%
+%%  Moral obligation for using multicol:
+%%  ------------------------------------
+%%
+%%  Users of multicol who wish to include or use multicol or a modified
+%%  version in a proprietary and commercially market product are asked
+%%  under certain conditions (see below) for the payment of a license
+%%  fee.  The size of this fee is to be determined, in each instance,
+%%  by the commercial user, depending on his/her judgment of the value of
+%%  multicol for his/her product.
+%%
+%%
+%%  The conditions for this are as follows:
+%%
+%%   The producer of a proprietary and commercially market product
+%%   that involves typesetting using multicol is asked to determine
+%%   the value of a license fee for using multicol if
+%%
+%%   - the product is a document and the producer has decided to
+%%     include multicol to typeset (parts of) the document or has
+%%     directed the author of the document to include multicol (for
+%%     example, by providing a class file to be used by the author)
+%%
+%%   - the product is a LaTeX class or package that includes multicol
+%%
+%%
+%%   There is no moral obligation in case
+%%
+%%   - the product is a document but producer has not directed
+%%     the author to include multicol (in that case the moral obligation
+%%     lies with the author of the document)
+%%
+%%   - the product does not involve typesetting, e.g., consists, for
+%%     example, of distributing multicol and its documentation.
+%%
+%%   - the product is not proprietary, i.e., is made available as free
+%%     software itself (which doesn't prohibit its commercial marketing)
+%%
+%%   - multicol is used for non-commercial purposes
+%%
+%%
+%% Determinating a license fee might result in a license fee of zero
+%% (i.e., no payment) in case a producer has determined that the use
+%% of multicol has no enhancing effect on the product. This is a
+%% plausible scenario, i.e., in the above two cases the producer is
+%% only asked to evaluate the value of multicol for the product
+%% not for the payment of a license fee per se (which might or might
+%% not follow from this evaluation).
+%%
+%% The license fee, if any, can be payed either to the LaTeX3 fund
+%% (see ltx3info.txt in the base LaTeX distribution) or to the author of
+%% the program who can be contacted at
+%%
+%%     Frank.Mittelbach@latex-project.org
+%%
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tbmulticol}
+[2012/01/20 v1.1 Textbook specifc margins for multicolumn layout]
+\DeclareOption*{\PassOptionsToPackage{\CurrentOption}{multicol}}
+\ProcessOptions\relax
+\RequirePackage{multicol}
+\newdimen\tbmc@inner
+\newdimen\tbmc@outer
+\newdimen\tbmc@saved@leftmargin
+\def\tbmulticols#1#2#3{\col@number#1\relax
+  \def\@tempa{#2}%
+  \ifx\@tempa\@empty\tbmc@inner\z@\else\tbmc@inner#2\fi
+  \def\@tempa{#3}%
+  \ifx\@tempa\@empty\tbmc@outer\z@\else\tbmc@outer#3\fi
+  \ifnum\col@number<\@ne
+     \PackageWarning{tbmulticol}%
+      {Using `\number\col@number'
+       columns doesn't seem a good idea.^^J
+       I therefore use one columns instead}%
+     \col@number\@ne\fi
+  \ifnum\col@number>10
+     \PackageError{tbmulticol}%
+      {Too many columns}%
+      {Current implementation doesn't
+       support more than 10 columns.%
+       \MessageBreak
+       I therefore use 10 columns instead}%
+     \col@number10 \fi
+     \ifx\@footnotetext\mult@footnotetext\else
+       \let\orig@footnotetext\@footnotetext
+       \let\@footnotetext\mult@footnotetext
+     \fi
+  \@ifnextchar[\tbmult@cols{\tbmult@cols[]}}
+\def\tbmult@cols[#1]{\@ifnextchar[%
+  {\tbmult@@cols{#1}}%
+  {\tbmult@@cols{#1}[\premulticols]}}
+\def\tbmult@@cols#1[#2]{%
+    \advance\linewidth by -\tbmc@inner\relax
+    \advance\linewidth by -\tbmc@outer\relax
+\let\page@sofar=\tbmc@page@sofar
+   \mult@@cols#1[#2]}
+\def\set@mult@vsize#1{%
+    \vsize\@colroom
+    \@tempdima\baselineskip
+    \advance\@tempdima-\topskip
+    \advance\vsize\@tempdima
+    \vsize\col@number\vsize
+    \advance\vsize-\@tempdima
+    \ifnum\col@number>1\relax
+    \advance\vsize\col@number\baselineskip
+    \else
+    \advance\vsize-2\baselineskip
+    \fi
+    #1\advance\vsize
+        \c@collectmore\baselineskip}
+\def\endtbmulticols{%
+  \def\@currenvir{multicols}%
+  \endmulticols}
+\let\tbmc@page@sofar@orig=\page@sofar
+\def\tbmc@page@sofar{%
+  \ifnum\col@number=\@ne
+  \setbox\mult@rightbox\box\mult@firstbox
+  \fi
+   \tbmc@saved@leftmargin=\multicol@leftmargin
+   \if@twoside
+      \ifodd\c@page
+        \advance\multicol@leftmargin by \tbmc@inner\relax
+     \else
+        \advance \multicol@leftmargin by \tbmc@outer\relax
+    \fi
+   \else
+      \advance \multicol@leftmargin by \tbmc@inner\relax
+  \fi
+   \tbmc@page@sofar@orig
+   \multicol@leftmargin=\tbmc@saved@leftmargin}
+\endinput
+%%
+%% End of file `tbmulticol.sty'.

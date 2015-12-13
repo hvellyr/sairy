@@ -23,6 +23,7 @@ namespace fo {
     Fo(const PropertySpecs& props) : _props(props) {}
 
   public:
+    bool accepts_fo(const Sosofo& fo) const override { return true; }
     const PropertySpecs& properties() const override { return _props; }
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
@@ -49,6 +50,7 @@ namespace fo {
     Paragraph() = default;
     Paragraph(const PropertySpecs& props, const Sosofo& sosofo);
 
+    bool accepts_fo(const Sosofo& fo) const override;
     std::string classname() const override;
     const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
@@ -127,6 +129,20 @@ namespace fo {
   public:
     SimplePageSequence() = default;
     SimplePageSequence(const PropertySpecs& props, const Sosofo& sosofo);
+
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
+    const std::vector<std::string>& ports() const override;
+    const Sosofo& port(const std::string& portname) const override;
+  };
+
+
+  class SimpleColumnSetSequence : public Fo {
+    const Sosofo _text_port;
+
+  public:
+    SimpleColumnSetSequence() = default;
+    SimpleColumnSetSequence(const PropertySpecs& props, const Sosofo& sosofo);
 
     std::string classname() const override;
     const PropertySpecs& default_properties() const override;

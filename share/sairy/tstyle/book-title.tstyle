@@ -1,0 +1,306 @@
+;;; Copyright (c) 2015 Gregor Klinke
+;;; All rights reserved.
+
+(element (book info)
+  (empty-sosofo))
+
+(element (book titlepage)
+  (empty-sosofo))
+
+(element (book titlepage title)
+  (process-children))
+
+(element (book info author)
+  (process-node-list (attribute "name" (current-node))))
+
+(define %title-style% 'modern)
+
+(define (format-book-front-matter nd)
+  (sosofo-append
+   (case %title-style%
+     ((classic) (format-book-title-classic nd))
+     ((modern) (format-book-title-modern nd))
+     (else (format-book-title-classic nd)))
+   (format-book-copyright nd)
+   ))
+
+(define (format-book-title-classic nd)
+  (let* ((info (select-elements (children nd) 'info))
+         (titlepage (select-elements (children nd) 'titlepage))
+
+         (authors (select-elements (children info) 'author))
+         (author-first (if (> (node-list-length authors) 0)
+                           (node-list-first authors)
+                           (node-list)))
+         (author-as-string (node-property 'data (attribute "name" author-first)
+                                          default: "N.N."))
+         (publdate (select-elements (children info) 'publdate))
+         (publisher (select-elements (children info) 'publisher))
+
+         (titlepage-titles (select-elements (children titlepage) 'title))
+         (titlepage-subtitles (select-elements (children titlepage) 'subtitle))
+         ;;(titlepage-covers (select-elements (children titlepage) 'cover))
+
+         (authors-sosofo (make paragraph
+                           first-line-start-indent: 0pt
+                           start-indent: 0pt
+                           quadding: 'center
+                           font-size: 14pt
+                           (process-node-list-join authors (literal ", "))))
+         (title-first (if (> (node-list-length titlepage-titles) 0)
+                          (attribute "value" (node-list-first titlepage-titles))
+                          (node-list)))
+         (title-sosofo (node-list-reduce titlepage-titles
+                                         (lambda (sosofo snl)
+                                           (make paragraph
+                                             first-line-start-indent: 0pt
+                                             start-indent: 0pt
+                                             quadding: 'center
+                                             font-size:  24pt
+                                             line-spacing: 30pt
+                                             (process-node-list (attribute "value" snl))))
+                                         (empty-sosofo)))
+         (subtitle-sosofo (node-list-reduce titlepage-subtitles
+                                            (lambda (sosofo snl)
+                                              (make paragraph
+                                                first-line-start-indent: 0pt
+                                                start-indent: 0pt
+                                                quadding: 'center
+                                                font-size:  18pt
+                                                line-spacing: 22pt
+                                                (process-node-list (attribute "value" snl))))
+                                            (empty-sosofo)))
+
+         (publloc-sosofo (sosofo-append
+                          (if (node-list-empty? publdate)
+                              (empty-sosofo)
+                              (make paragraph
+                                first-line-start-indent: 0pt
+                                start-indent: 0pt
+                                quadding: 'center
+                                font-size: 16pt
+                                line-spacing: 20pt
+                                (process-node-list
+                                 (attribute "value" (node-list-first publdate)))))
+                          (if (node-list-empty? publisher)
+                              (empty-sosofo)
+                              (make paragraph
+                                first-line-start-indent: 0pt
+                                start-indent: 0pt
+                                quadding: 'center
+                                font-size: 16pt
+                                line-spacing: 20pt
+                                (process-node-list
+                                 (attribute "value" (node-list-first publisher)))))))
+         )
+
+    (make simple-page-sequence
+      metadata.author: author-as-string
+      metadata.title: (data title-first)
+
+       use: page-style
+
+       font-size: 10pt
+       line-spacing: 12pt
+
+       start-margin: 0pt
+       end-margin: 0pt
+
+       right-header: (empty-sosofo)
+       left-header: (empty-sosofo)
+
+       (sosofo-append
+        authors-sosofo
+        (make display-group
+          space-before: 12pt
+          title-sosofo)
+        (make display-group
+          space-before: 24pt
+          subtitle-sosofo)
+        (make display-group
+          space-before: (display-space 20pt max: 'inf
+                                       priority: 2)
+          publloc-sosofo)
+        ))
+    ))
+
+
+(define (format-book-title-modern nd)
+  (let* ((info (select-elements (children nd) 'info))
+         (titlepage (select-elements (children nd) 'titlepage))
+
+         (authors (select-elements (children info) 'author))
+         (author-first (if (> (node-list-length authors) 0)
+                           (node-list-first authors)
+                           (node-list)))
+         (author-as-string (node-property 'data (attribute "name" author-first)
+                                          default: "N.N."))
+         (publdate (select-elements (children info) 'publdate))
+         (publisher (select-elements (children info) 'publisher))
+
+         (titlepage-titles (select-elements (children titlepage) 'title))
+         (titlepage-subtitles (select-elements (children titlepage) 'subtitle))
+         ;;(titlepage-covers (select-elements (children titlepage) 'cover))
+
+         (authors-sosofo (sosofo-append
+                          (make paragraph
+                            first-line-start-indent: 0pt
+                            start-indent: 45mm
+                            quadding: 'left
+                            font-size: 12pt
+                            line-spacing: 14.4pt
+                            font-posture: 'italic
+                            (literal "by"))
+                          (make paragraph
+                            space-before: 4pt
+                            first-line-start-indent: 0pt
+                            start-indent: 45mm
+                            quadding: 'left
+                            font-size: 18pt
+                            line-spacing: 21.6pt
+                            (process-node-list-join authors (literal ", ")))))
+         (title-first (if (> (node-list-length titlepage-titles) 0)
+                          (attribute "value" (node-list-first titlepage-titles))
+                          (node-list)))
+         (title-sosofo (node-list-reduce titlepage-titles
+                                         (lambda (sosofo snl)
+                                           (sosofo-append
+                                            sosofo
+                                            (make paragraph
+                                              first-line-start-indent: 0pt
+                                              last-line-end-indent: 0pt
+                                              start-indent: 0pt
+                                              quadding: 'left
+                                              font-size:  36pt
+                                              line-spacing: 43.2pt
+                                              font-posture: 'italic
+                                              font-weight: 'bold
+                                              (make sequence
+                                                color: (color 'x11 'gray50)
+                                                (process-node-list-trim (attribute "value" snl))))))
+                                         (empty-sosofo)))
+         (subtitle-sosofo (node-list-reduce titlepage-subtitles
+                                            (lambda (sosofo snl)
+                                              (sosofo-append
+                                               sosofo
+                                               (make paragraph
+                                                 first-line-start-indent: 0pt
+                                                 start-indent: 45mm
+                                                 quadding: 'left
+                                                 font-size:  24pt
+                                                 line-spacing: 28pt
+                                                (process-node-list (attribute "value" snl)))))
+                                            (empty-sosofo)))
+
+         (publloc-sosofo (sosofo-append
+                          (if (node-list-empty? publdate)
+                              (empty-sosofo)
+                              (make paragraph
+                                first-line-start-indent: 0pt
+                                start-indent: 45mm
+                                quadding: 'left
+                                font-size: 18pt
+                                line-spacing: 21.6pt
+                                (process-node-list
+                                 (attribute "value" (node-list-first publdate)))))
+                          (if (node-list-empty? publisher)
+                              (empty-sosofo)
+                              (make paragraph
+                                first-line-start-indent: 0pt
+                                start-indent: 45mm
+                                quadding: 'left
+                                font-size: 18pt
+                                line-spacing: 21.6pt
+                                (process-node-list
+                                 (attribute "value" (node-list-first publisher)))))))
+         )
+
+    (make simple-page-sequence
+      metadata.author: author-as-string
+      metadata.title: (data title-first)
+
+       use: page-style
+
+       font-size: 10pt
+       line-spacing: 12pt
+
+       start-margin: 0pt
+       end-margin: 0pt
+
+       right-header: (empty-sosofo)
+       left-header: (empty-sosofo)
+
+       (sosofo-append
+        (make display-group
+          space-before: (display-space 60pt conditional?: #f)
+          title-sosofo)
+        (make display-group
+          space-before: 10pt
+          subtitle-sosofo)
+        (make display-group
+          space-before: 30pt
+          authors-sosofo)
+        (make display-group
+          space-before: (display-space 20pt max: 'inf
+                                       priority: 2)
+          publloc-sosofo)
+        ))
+    ))
+
+(mode copyright-page
+  (element (info revision)
+    (make display-group
+      space-before: 12pt
+      (process-children)))
+
+  (element (info copyright)
+    (make paragraph
+      first-line-start-indent: 0pt
+      start-margin: 0pt
+      space-before: 12pt
+      (process-node-list (attribute "text" (current-node)))))
+
+  (element (info license)
+    (make display-group
+      space-before: 12pt
+      (process-children)))
+
+  (element (info author)
+    (empty-sosofo))
+
+  (element (info publdate)
+    (empty-sosofo))
+
+  (element (info publisher)
+    (empty-sosofo))
+
+  (element (info docid)
+    (empty-sosofo))
+
+  (element (info abstract)
+    (empty-sosofo))
+  )
+
+(define (format-book-copyright nd)
+  (let* ((info (select-elements (children nd) 'info)))
+    (make simple-page-sequence
+      use: page-style
+
+      font-size: 10pt
+      line-spacing: 12pt
+
+      start-margin: 25mm
+      end-margin: 0pt
+
+      right-header: (empty-sosofo)
+      left-header: (empty-sosofo)
+
+      (make display-group
+        break-after?: 'page
+        space-before: (display-space 10pt max: 'inf
+                                     conditional?: #f
+                                     priority: 2)
+        font-size: 9pt
+        (with-mode copyright-page
+          (process-node-list (children info)))
+        ))))

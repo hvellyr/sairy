@@ -33,9 +33,9 @@
 @c the place where to render the table of content; put into separate
 @c chapter etc. for title.
 @tag{showtoc}    {}                           {EMPTY}{NOP}
-@c the place where to render the index; put into separate chapter
-@c etc. for title
-@tag{showindex}  {}                           {EMPTY}{NOP}
+@c the place where to render the index; put into separate chapter etc. for
+@c title.  @prm{type} gives on which index type to filter (e.g. fun, key)
+@tag{showindex}  {type?}                      {EMPTY}{NOP}
 
 @c like chapter, but specific for contents
 @tag{content}    {%title?}                     {#TEXT | ANY}

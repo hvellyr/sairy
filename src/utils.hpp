@@ -22,5 +22,7 @@ namespace utils {
   boost::filesystem::path make_relative(const boost::filesystem::path& from,
                                         const boost::filesystem::path& to);
 
+  std::u16string utf8_to_u16string(const std::string& str);
+  std::string u16string_to_utf8(const std::u16string& str);
 } // ns utils
 } // ns eyestep
