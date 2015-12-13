@@ -43,7 +43,8 @@
                   "attributes": [
                     { "type": "text",
                       "#attr-name": "text",
-                      "data": "some"
+                      "data": "some",
+                      "data-attr": "text"
                     }
                   ]
                 },
@@ -60,7 +61,8 @@
                   "attributes": [
                     { "type": "text",
                       "#attr-name": "text",
-                      "data": "+"
+                      "data": "+",
+                      "data-attr": "text"
                     }
                   ]
                 },

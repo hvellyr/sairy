@@ -13,11 +13,13 @@
               "attributes": [
                 { "type": "text",
                   "#attr-name": "name",
-                  "data": "Tsiang"
+                  "data": "Tsiang",
+                  "data-attr": "name"
                 },
                 { "type": "text",
                   "#attr-name": "email",
-                  "data": "tsiang@abc.ch"
+                  "data": "tsiang@abc.ch",
+                  "data-attr": "email"
                 }
               ]
             }

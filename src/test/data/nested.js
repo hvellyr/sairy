@@ -15,7 +15,8 @@
               "attributes": [
                 { "type": "text",
                   "#attr-name": "text",
-                  "data": "probably "
+                  "data": "probably ",
+                  "data-attr": "text"
                 },
                 { "type": "element",
                   "gi": "val",
@@ -23,9 +24,11 @@
                   "attributes": [
                     { "type": "text",
                       "#attr-name": "text",
-                      "data": "nested"
+                      "data": "nested",
+                      "data-attr": "text"
                     }
-                  ]
+                  ],
+                  "data-attr": "text"
                 }
               ]
             },

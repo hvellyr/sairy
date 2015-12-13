@@ -26,11 +26,13 @@
               "attributes": [
                 { "type": "text",
                   "#attr-name": "name",
-                  "data": "Hwao-Tsiang"
+                  "data": "Hwao-Tsiang",
+                  "data-attr": "name"
                 },
                 { "type": "text",
                   "#attr-name": "email",
-                  "data": "tsiang@china.ch"
+                  "data": "tsiang@china.ch",
+                  "data-attr": "email"
                 }
               ]
             },
@@ -39,7 +41,8 @@
               "attributes": [
                 { "type": "text",
                   "#attr-name": "text",
-                  "data": "Copyright (c) 2015 Tsiang. All Rights Reserved."
+                  "data": "Copyright (c) 2015 Tsiang. All Rights Reserved.",
+                  "data-attr": "text"
                 }
               ]
             }
