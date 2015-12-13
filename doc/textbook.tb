@@ -1,0 +1,446 @@
+@c -*-textbook-*-
+@book
+
+@titlepage
+@title{The Textbook Manual}
+@end titlepage
+
+@info
+@docid{a108ed3b-be99-4c4f-a722-fcd6edcf065}
+@author{Gregor Klinke}{gck@@eyestep.org}
+@copyright{Copyright (c) 2012, 2015, 2017 Gregor Klinke. All Rights Reserved.}
+@end info
+
+@c -----------------------------------------------------------------------------
+@content
+@showtoc
+@end content
+
+@c -----------------------------------------------------------------------------
+@introduction{Introduction}
+@end introduction
+
+@c -----------------------------------------------------------------------------
+@chapter{Overview of Textbook}
+@end chapter
+
+@c -----------------------------------------------------------------------------
+@chapter{Tutorial}
+@end chapter
+
+@c -----------------------------------------------------------------------------
+@chapter{Generate a target format}
+@section{PDF}
+@end section
+
+@section{HTML}
+@end section
+
+@section{Epub}
+@end section
+
+@section{Manpage format (groff/mandoc)}
+@end section
+@end chapter
+
+@c -----------------------------------------------------------------------------
+@chapter{Document classes}
+@section{Manpages}
+@end section
+
+@section{Books}
+@end section
+@end chapter
+
+
+@c -----------------------------------------------------------------------------
+@chapter{Reference: Textbook markup}
+@end chapter
+
+@c -----------------------------------------------------------------------------
+@chapter{Reference: Textbook stylesheets}
+
+@section{Expression language}
+
+@subsection{Node list access and manipulation}
+
+@deffn{(node-list @prm{nl1} @prm{nl2} ... @prm{nln})}
+Returns the node-list that results from appending the members of @prm{nl1},
+@prm{nl2}, ... @prm{nln}.  If there are no arguments, returns the empty
+node-list.
+@end{deffn}
+
+@deffn{(node-list-property @prm{name} @prm{nl})}
+Returns the mapping over @prm{nl} of the function on a node that returns
+the value that the node exhibits for the property propname or an empty
+node-list if the node does not exhibit a value or exhibits a null value for
+propname.  @prm{name} can be specified in any of the ways allowed for the
+node-property procedure.
+@end{deffn}
+
+@deffn{(node-list-reduce @prm{nl} @prm{proc} @prm{obj})}
+If @prm{nl} has no members, returns @prm{obj}, and otherwise returns the result
+of applying node-list-reduce to
+@itemize
+ @item a node-list containing all but the first member of nl,
+ @item proc, and
+ @item the result of applying proc to obj and the first member of nl.
+@end{itemize}
+@end{deffn}
+
+@deffn{(node-list-map @prm{proc} @prm{nl})}
+For each member of @prm{nl}, applies @prm{proc} to a singleton node-list
+containing just that member and appends the resulting node-lists.  It shall
+be an error if @prm{proc} does not return a node-list when applied to any
+member of @prm{nl}.
+@end{deffn}
+
+@deffn{(node-list-filter @prm{predicate} @prm{nl})}
+Returns a node-list containing just those members of @prm{nl} for which
+@prm{predicate} applied to a singleton node-list containing just that member
+does not return #f.  The resulting members in node-list preserve their order
+from @prm{nl}.
+@end{deffn}
+
+@deffn{(node-list->list @prm{nl})}
+Returns a list containing, for each member of nl, a singleton node-list
+containing just that member.
+@end{deffn}
+
+@deffn{(node-list-reverse @prm{nl})}
+Returns a node-list containing the members of @prm{nl} in reverse order.
+@end{deffn}
+
+@deffn{(node-list-ref @prm{nl} @prm{k})}
+Returns a node-list containing the @prm{k}th member of nl (zero-based),
+if there is such a member, and otherwise returns the empty node-list.
+@end{deffn}
+
+@deffn{(node-list-tail @prm{nl} @prm{k})}
+Returns the node-list comprising all but the first @prm{k} members of
+@prm{nl}.  If @prm{nl} has @prm{k} or fewer members, returns the empty
+node-list.
+@end{deffn}
+
+@deffn{(node-list-head @prm{nl} @prm{k})}
+Returns a node-list comprising the first @prm{k} members of @prm{nl}.
+If @prm{nl} has @prm{k} or fewer members, returns @prm{nl}.
+@end{deffn}
+
+@deffn{(node-list-sublist @prm{nl} @prm{k1} @prm{k2})}
+Returns a node-list containing those members of @prm{nl} from index
+@prm{k1} inclusive to @prm{k2} exclusive.
+@end{deffn}
+
+@deffn{(named-node-list-names @prm{nnl})}
+Returns the names of all members of @prm{nnl} in the same order as
+@prm{nnl} as list.
+@end{deffn}
+
+@deffn{(node-list=? @prm{nl1} @prm{nl2})}
+Returns @val{#t} if @prm{nl1} and @prm{nl2} are the same node-list, that is, they contain
+the same members in the same order, and otherwise returns @val{#f}.
+@end deffn
+
+@deffn{(node-list-contains? @prm{nl} @prm{snl})}
+Returns @val{#t} if @prm{nl} contains a node equal to the member of @prm{snl},
+and otherwise returns @val{#f}.
+@end deffn
+
+@deffn{(node-list-remove-duplicates @prm{nl})}
+Returns a node-list which is the same as @prm{nl} except that any member
+@prm{nl} which is equal to a preceding member of @prm{nl} is removed.
+@end deffn
+
+@deffn{(node-list-union @prm{nl1} @prm{nl2} ... @prm{nln})}
+Returns a node-list containing the union of all the arguments, which
+shall be node-lists.  The result shall contain no duplicates.  With no
+arguments, an empty node-list shall be returned.
+@end deffn
+
+@deffn{(node-list-intersection @prm{nl1} @prm{nl2} ... @prm{nln})}
+Returns a node-list containing the intersection of all the arguments,
+which shall be node-lists.  The result shall contain no duplicates.  With no
+arguments, an empty node-list shall be returned.
+@end deffn
+
+@deffn{(node-list-difference @prm{nl1} @prm{nl2} ... @prm{nln})}
+Returns a node-list containing the set difference of all the arguments,
+which shall be node-lists.  The set difference is defined to be those members
+of the first argument that are not members of any of the other arguments.
+The result shall contain no duplicates.  With no arguments, an empty
+node-list shall be returned.
+@end deffn
+
+@deffn{(node-list-some? @prm{proc} @prm{nl})}
+Returns @val{#t} if, for some member of @prm{nl}, @prm{proc} does not return
+@val{#f} when applied to a singleton node-list containing just that member, and
+otherwise returns @val{#f}.  An implementation is allowed, but not required, to
+signal an error if, for some member of @prm{nl}, @prm{proc} would signal an
+error when applied to a singleton node-list containing just that member.
+@end deffn
+
+@deffn{(node-list-every? @prm{proc} @prm{nl})}
+Returns @val{#t} if, for every member of @prm{nl}, @prm{proc} does not return
+@val{#f} when applied to a singleton node-list containing just that member, and
+otherwise returns @val{#f}.  An implementation is allowed to signal an error if,
+for some member of @prm{nl}, @prm{proc} would signal an error when applied to
+a singleton node-list containing just that member.
+@end deffn
+
+@deffn{(attributes @prm{nl})}
+Returns the @fun{attributes} property of all nodes in @prm{nl}
+@end{deffn}
+
+@deffn{(attribute @prm{name} @prm{nl})}
+Returns the mapping over @prm{nl} of the function that returns the
+member of the value of the attributes property whose name is @prm{name}.
+@end{deffn}
+
+@deffn{(id @prm{osnl})}
+Returns the value of the @var{id} property of the node in @prm{osnl}.
+If @prm{osnl} is empty or the node in @prm{osnl} does not contain an @var{id}
+property return #f.
+@end{deffn}
+
+@end subsection
+
+@subsection{Processing nodes}
+
+@deffn{(process-children)}
+Returns the sosofo that results from appending the sosofos that result
+from processing in order the children of the current node.
+@end deffn
+
+@deffn{(process-children-trim)}
+Returns the sosofo that results from appending the sosofos that result
+from processing in order the children of the current node after removing any
+leading and trailing whitespace from leading and trailing text nodes.
+@end deffn
+
+@deffn{(process-node-list-join @prm{nl} @prm{sep})}
+Returns the sosofo that results from appending the sosofos that result
+from processing in order the elements of @prm{nl}.  Each sosofo such produced
+is separated by @prm{sep} which should be a valid sosofo.
+
+If @prm{nl} contains zero or extactly one node @prm{sep} is not added at all.
+@end deffn
+
+@deffn{(process-node-list @prm{nl})}
+Returns the sosofo that results from appending the sosofos that result
+from processing the members of the @prm{nl} in order.
+@end deffn
+
+@deffn{(process-node-list-trim @prm{nl} @prm{[left?: #t]} @prm{[right?: #t]})}
+Returns the sosofo that results from appending the sosofos that result
+from processing @prm{nl} in order after removing any leading and trailing
+whitespace from leading and trailing text nodes.
+@end deffn
+
+@deffn{(current-node)}
+Returns the node currently processed as a singleton node list.
+@end deffn
+
+@deffn{(current-mode)}
+Returns the mode currently set.
+@end deffn
+
+@end subsection
+
+
+@subsection{Selecting and matching elements}
+
+@deffn{(match-element? @prm{pattern} @prm{snl})}
+tbd.
+@end deffn
+
+@deffn{(select-elements @prm{nl} @prm{pattern})}
+tbd.
+@end deffn
+
+@end subsection
+@end section
+
+@section{Formatting Objects}
+@subsection{Constructing formatting objects and sosofos}
+
+@deffn{(make @prm{flow-object-class-name} @prm{keyword-argument*}
+       @prm{content-expression*})}
+Creates a formatting object of class @prm{flow-object-class-name}.  The
+formatting object's characteristics are set by the @prm{keyword-argument}s.
+
+Each @prm{content-expression} shall return an object of type sosofo. The sosofos
+returned by the @prm{content-expression}s are concatenated to form the content
+of the formatting object.  If @prm{flow-object-class-name} is atomic no
+@prm{content-expression} is allowed.
+
+The following keywords are allowed as @prm{keyword-argument}:
+
+@itemize
+@item A keyword that is the name of a characteristic of any formatting object
+ and specifies its value.
+@item @keyw{use:} specifying a style to be used for the construction of the
+ formatting object.  The value should be a style object or @val{#f} to indicate
+ to not use any style object.
+@end itemize
+
+@example
+(element p
+ (make paragraph
+    first-line-start-indent: 0pt
+    quadding: "justify"
+    (process-children)))
+@end example
+@end deffn
+
+The style language always works in @dfn{modes}.  There's an default mode which
+contains all matching rules not defined in mode explicitely.  This rules are
+also active when processing elements inside of specific modes, but these default
+mode rules has a lesser priority.
+
+@deffn{(mode @prm{mode-id} @prm{matching-rules} ...)}
+Defining rules inside a specific mode is done with the @fun{mode} form.  All
+@prm{matching-rules} defined inside the mode expression are defined inside the
+mode @prm{mode-id}.
+
+@example
+(mode title-mode
+ (element p
+   ...)
+ (element info
+   ...)
+ )
+@end example
+@end deffn
+
+@deffn{(with-mode @prm{mode-id} @prm{expression})}
+Evaluates @prm{expression} with the processing mode @prm{mode-id} as defined by
+a previous @fun{mode} specification.
+@end deffn
+
+
+@deffn{(empty-sosofo)}
+Returns an empty sosofo.
+@end deffn
+
+@deffn{(literal @prm{string})}
+Returns a formattin object of type @class{literal} with the string value
+@prm{string}.
+@end deffn
+
+@end subsection
+
+@c default
+@c element
+@c format-number
+@c id
+@c root
+@c sosofo-append
+@c style
+@c text
+
+
+@subsection{Color}
+
+@deffn{(color? @prm{o})}
+Indicates whether @prm{o} is an object of type color.
+@end deffn
+
+@deffn{(color @prm{color-space} @prm{arg} ...)}
+Returns an object of type color from the color space specified by
+@prm{color-space}.  The arguments depend on the space used.
+
+@example
+(color 'rgb 0.5 0.4 0.4)
+(color 'cmyk 0.2 0.0 0.9 1.0)
+(color 'x11 'turquoise)
+@end example
+@end deffn
+@end subsection
+
+
+@subsection{Spaces, dimensions}
+@deffn{(display-space? @prm{o})}
+Indicates whether @prm{o} is an object of type display-space.
+@end deffn
+
+@deffn{(display-space @prm{length-spec} @prm{[min:]} @prm{[max:]}
+                     @prm{[conditional?:]} @prm{[priority:]})}
+Creates a new object of type display-space.
+
+tbd.
+@end deffn
+
+@deffn{(inline-space? @prm{o})}
+Indicates whether @prm{o} is an object of type inline-space.
+@end deffn
+
+@deffn{(inline-space @prm{length-spec} @prm{[min:]} @prm{[max:]})}
+tbd.
+@end deffn
+@end subsection
+
+
+@subsection{Display formatting objects}
+@def{Display Object}{paragraph}
+The @class{paragraph} class represents a display formatting object with one
+principial port (@val{“text”}).  It takes any number of inline formatting
+objects are organizes them into line by line flow.  Typical geometrical layout
+are left and right margins, space before and after and font and size
+specifications.  The first and last line of a paragraph can be specially layed
+out using the @var{first-line-start-indent} and @var{last-line-end-indent}
+characteristics.
+
+Defined characteristics:
+
+@definitions
+@item{@var{first-line-start-indent:}} is a length-spec giving an indent for the
+  first line.  This is added to the general indent @var{start-indent} and can be
+  negative.  The default value is @val{0pt}.
+@item{@var{last-line-end-indent:}} is a length-spec giving an indent for the
+  last line.  This is added to the @var{end-indent} and can be negative.  The
+  default value is the inline-space equivalent to @code{(inline-space 1em min: 1em
+  max: 'inf)}.
+@item{@var{line-spacing:}} is a length-spec specifing the spacing between
+lines.  The default value is @val{12pt}.
+@item{@var{font-caps:}} is a symbol specifying the capitialization of the text.
+  Possible values are @code{normal}, @code{lower}, @code{caps},
+  @code{small-caps}.  If @val{#f} the default (inherited) value is used.
+@item{@var{font-name:}} a string specifying the name of the font family to use.
+  If @val{#f} use the default (inherited) font.  The three abstract font family
+  names @code{"serif"}, @code{"sans-serif"} and @code{"monospace"} are always available
+  and are mapped to approriate system fonts.  The default value is @code{"serif"}.
+@item{@var{font-posture:}} Default is @code{“upright”},
+@item{@var{font-size:}} is a length-spec giving the size of the font.  The
+  default value is @val{10pt}.
+@item{@var{font-weight:}} @c "medium"),
+@item{@var{language:}} @c ""),
+@item{@var{start-indent:}} @c LengthSpec(kInline, 0, k_em)),
+@item{@var{end-indent:}} @c LengthSpec(kInline, 0, k_em)),
+@item{@var{quadding:}} @c "justify"),
+@item{@var{space-before:}} @c LengthSpec(kDisplay, 0, k_pt)),
+@item{@var{space-after:}} @c LengthSpec(kDisplay, 0, k_pt)),
+@item{@var{keep-with-previous?:}} @c false),
+@item{@var{keep-with-next?:}} @c false),
+@item{@var{break-after?:}} @c false),
+@item{@var{break-before?:}} @c false),
+@item{@var{lines:}} @c "wrap"),
+@item{@var{whitespace-treatment:}} @c "collapse"),
+@item{@var{asis-wrap-indent:}} @c 10),
+@item{@var{numbered-lines?:}} @c false),
+@item{@var{line-number-side:}} @c "start"),
+@item{@var{position-point-shift:}} @c LengthSpec(kDimen, 0, k_pt)),
+@item{@var{color:}} @c ""),
+@item{@var{background-color:}} @c ""),
+@end definitions
+
+@end def
+
+@end subsection
+
+@subsection{Inline formatting objects}
+@end subsection
+
+@end section
+@end chapter
+@end book
