@@ -1,9 +1,13 @@
 *.1                text
 *.a                binary
+*.afm              text
+*.am               text
 *.c                text diff=cpp
 *.chibi            text
 *.cmake            text
 *.cpp              text diff=cpp
+*.dat              binary
+*.def              text eol=crlf
 *.dylib            binary
 *.el               text
 *.h                text diff=cpp
@@ -11,10 +15,19 @@
 *.hpp              text diff=cpp
 *.in               text
 *.ipp              text diff=cpp
+*.jpg              binary
 *.libs             text
+*.mk               text
 *.modulemap        text
+*.msvc             text
+*.msvc_dll         text
+*.pdf              binary
+*.pfb              binary
 *.pl               text
 *.png              binary
+*.rc               text eol=crlf
+*.rc.template      text eol=crlf
+*.res              binary
 *.sch              text
 *.scm              text
 *.scrbl            text
@@ -25,13 +38,18 @@
 *.templ            text
 *.textbook         text
 *.tstyle           text
+*.ttf              binary
 *.txt              text
 *.vcproj           text
+*_cmake            text
 .clang-format      text
 .gitattributes     text
 .gitignore         text
 AUTHORS            text
+CHANGES            text
 COPYING            text
+INSTALL            text
+LICENCE            text
 LICENSE            text
 Makefile           text
 Makefile.*         text
