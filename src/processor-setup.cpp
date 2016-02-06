@@ -9,6 +9,7 @@
 #include "debug-processor.hpp"
 #include "html-processor.hpp"
 #include "tex-processor.hpp"
+#include "pdf-processor.hpp"
 
 #include <map>
 #include <string>
@@ -46,6 +47,7 @@ namespace {
       register_processor_factory<DebugProcessor>();
       register_processor_factory<HtmlProcessor>();
       register_processor_factory<TexProcessor>();
+      register_processor_factory<PdfProcessor>();
     }
 
     return s_processor_factory_map;

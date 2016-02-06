@@ -121,6 +121,19 @@ target_compile_options(tex-processor
 
 
 #------------------------------------------------------------------------------
+add_library(pdf-processor
+  pdf-processor.cpp
+  pdf-processor.hpp
+)
+target_include_directories(pdf-processor
+  PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>;"
+         "${PROJECT_SOURCE_DIR}/third-party/libharu/include;"
+         "${PROJECT_BINARY_DIR}/third-party/libharu/include")
+target_compile_options(pdf-processor
+  PUBLIC ${cxx11_options} ${warning_options})
+
+
+#------------------------------------------------------------------------------
 add_library(debug-processor
   debug-processor.cpp
   debug-processor.hpp
@@ -157,6 +170,7 @@ target_link_libraries(sairy
   grove
   html-processor
   tex-processor
+  pdf-processor
   processor-base
   scheme
   textbook-parser
