@@ -1297,6 +1297,9 @@ namespace {
       else if (kind == CXCursor_InclusionDirective) {
         // nop
       }
+      else if (kind == CXCursor_MacroExpansion) {
+        //std::cout << "!{MACRO EXP}" << ecursor.spelling() << std::endl;
+      }
       else {
         std::cout << "!{other}" << kind2str(ecursor.kind()) << ", "
                   << std::endl;
