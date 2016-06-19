@@ -4,19 +4,10 @@
 
 ;;;-----------------------------------------------------------------------------
 
-;; (default
-;;   (display (format "ANY ~s:~s~%" (class (current-node)) (gi (current-node)))))
-;;   (make paragraph
-;;     quadding: 'justify
-;;     numbered-lines?: #t
-;;     asis-wrap-indent: 42
-;;     line-spacing: 0.75pt
-;;     font-size: 14.4pt
-;;     (sosofo-append
-;;      (make literal)
-;;      (process-children))
-;;     )
-;;   )
+(default
+    (begin
+      (display (format "ANY ~s:~s~%" (class (current-node)) (gi (current-node))))
+      (process-children)))
 
 (root
   (make simple-page-sequence
@@ -24,22 +15,42 @@
     metadata:author: "N.N."
     (process-children)))
 
+
+;;;-------------------
+;;; desc rendering
+
+(element prm
+  (make sequence
+    font-weight: 'bold
+    (process-children)))
+
+(element val
+  (make sequence
+    font-weight: 'bold
+    (process-children)))
+
+
+
 (element function
-  (make display-group
+  (sosofo-append
     (make paragraph
       space-before: 1cm
       quadding: 'left
       (sosofo-append
        (process-node-list (select-elements (children (current-node)) 'return-type))
        (literal " ")
-       (literal (node-property 'name (current-node)))
+       (literal (node-property 'data (attribute "name" (current-node))))
        (process-node-list (select-elements (children (current-node)) 'parameters))
-       ))))
+       ))
+    (make paragraph
+      space-before: 2mm
+      (process-node-list (select-elements (children (current-node)) 'desc)))
+    ))
 
 (element (function return-type)
   (make sequence
     font-weight: 'bold
-    (literal (node-property 'name (current-node))) ))
+    (literal (node-property 'data (attribute "name" (current-node))))))
 
 (element (function parameters)
   (make sequence
@@ -51,7 +62,7 @@
 (element (parameter type)
   (make sequence
     font-weight: 'bold
-    (literal (node-property 'name (current-node))) ))
+    (literal (node-property 'data (attribute "name" (current-node))))))
 
 (element parameter
   (sosofo-append
@@ -59,7 +70,7 @@
    (literal " ")
    (make sequence
      font-posture: 'italic
-     (literal (node-property 'name (current-node))))
+     (literal (node-property 'data (attribute "name" (current-node)))))
    (if (absolute-last-sibling? (current-node))
        (empty-sosofo)
        (literal ", "))
