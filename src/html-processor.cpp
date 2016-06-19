@@ -549,7 +549,9 @@ namespace {
       auto field_align =
         processor->property_or_none<std::string>(fo, "field-align");
 
-      set_attr(attrs, "width", field_width);
+      if (field_width && field_width->_value > 0) {
+        set_attr(attrs, "width", field_width);
+      }
       if (field_align) {
         if (*field_align == k_left || *field_align == k_center ||
             *field_align == k_right) {
