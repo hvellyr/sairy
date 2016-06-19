@@ -22,12 +22,23 @@
 (element (definitions p)
   (let ((item (node-list-first (children (current-node)))))
     (if (equal? (gi item) 'item)
-        (make paragraph
-          first-line-start-indent: -70pt
-          start-indent: 70pt
-          (sosofo-append
-           (process-node-list (node-list-first (children (current-node))))
-           (process-node-list-trim (node-list-rest (children (current-node))))))
+        (if (> (string-length (data (attribute "text" item))) 15)
+            (sosofo-append
+             (make paragraph
+               first-line-start-indent: 0pt
+               start-indent: 0pt
+               (process-node-list (node-list-first (children (current-node)))))
+             (make paragraph
+               first-line-start-indent: 0pt
+               start-indent: 70pt
+               (process-node-list-trim (node-list-rest (children (current-node)))))
+             )
+            (make paragraph
+              first-line-start-indent: -70pt
+              start-indent: 70pt
+              (sosofo-append
+               (process-node-list (node-list-first (children (current-node))))
+               (process-node-list-trim (node-list-rest (children (current-node)))))))
         (make paragraph
           first-line-start-indent: 0pt
           start-indent: 70pt
