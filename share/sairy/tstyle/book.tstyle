@@ -1,11 +1,14 @@
 ;;; Copyright (c) 2015 Gregor Klinke
 ;;; All rights reserved.
 
-(use 'common)
+(use 'admon)
 (use 'bibref)
-(use 'book-title)
-(use 'book-index)
 (use 'book-contents)
+(use 'book-index)
+(use 'book-title)
+(use 'common)
+(use 'inline)
+(use 'para)
 
 
 ;; ------------------------------------------------------------------------------
@@ -260,122 +263,6 @@
 
 ;; ------------------------------------------------------------------------------
 
-(element definitions
-  (make display-group
-    space-before: 7pt
-    space-after: 7pt
-    (process-children-trim)))
-
-(element (definitions p item)
-  (make line-field
-    field-width: 70pt
-    field-align: 'left
-    (process-node-list-trim (attribute "text" (current-node)))))
-
-(element (definitions p)
-  (let ((item (node-list-first (children (current-node)))))
-    (if (equal? (gi item) 'item)
-        (if (> (string-length (data (attribute "text" item))) 15)
-            (sosofo-append
-             (make paragraph
-               first-line-start-indent: 0pt
-               start-indent: 0pt
-               (process-node-list (node-list-first (children (current-node)))))
-             (make paragraph
-               first-line-start-indent: 0pt
-               start-indent: 70pt
-               (process-node-list-trim (node-list-rest (children (current-node)))))
-             )
-            (make paragraph
-              first-line-start-indent: -70pt
-              start-indent: 70pt
-              (sosofo-append
-               (process-node-list (node-list-first (children (current-node))))
-               (process-node-list-trim (node-list-rest (children (current-node)))))))
-        (make paragraph
-          first-line-start-indent: 0pt
-          start-indent: 70pt
-          (process-children-trim)
-          ) ))
-  )
-
-(element itemize
-  (make display-group
-    space-before: 7pt
-    space-after: 7pt
-    (process-children-trim)))
-
-(element (itemize p item)
-  (make line-field
-    field-width: 12pt
-    field-align: 'left
-    (let ((txt (attribute "text" (current-node))))
-      (if (node-list-empty? txt)
-          (literal "•")
-          (process-node-list-trim txt) )) ))
-
-(element (itemize p)
-  (let ((item (node-list-first (children (current-node)))))
-    (if (equal? (gi item) 'item)
-        (make paragraph
-          first-line-start-indent: -12pt
-          start-indent: 12pt
-          (sosofo-append
-           (process-node-list (node-list-first (children (current-node))))
-           (process-node-list-trim (node-list-rest (children (current-node))))))
-        (make paragraph
-          first-line-start-indent: 0pt
-          start-indent: 12pt
-          (process-children-trim)
-          ) ))
-  )
-
-
-(define (item-number nd)
-  (let* ((nds (select-elements (preced (parent nd)) 'p))
-         (item-nds (node-list-filter (lambda (snl)
-                                       (let ((c (children snl)))
-                                         (and (not (node-list-empty? c))
-                                              (eqv? (gi (node-list-first c)) 'item))))
-                                     nds)))
-    (+ (node-list-length item-nds) 1)))
-
-(element enumerate
-  (make display-group
-    space-before: 7pt
-    space-after: 7pt
-    (process-children-trim)))
-
-(element (enumerate p item)
-  (make line-field
-    field-width: 12pt
-    field-align: 'left
-    (let ((txt (attribute "text" (current-node))))
-      (if (node-list-empty? txt)
-          (sosofo-append
-           (literal (number->string (item-number (current-node))))
-           (literal ". "))
-          (process-node-list-trim txt) )) ))
-
-(element (enumerate p)
-  (let ((item (node-list-first (children (current-node)))))
-    (if (equal? (gi item) 'item)
-        (make paragraph
-          first-line-start-indent: -12pt
-          start-indent: 12pt
-          (sosofo-append
-           (process-node-list (node-list-first (children (current-node))))
-           (process-node-list-trim (node-list-rest (children (current-node))))))
-        (make paragraph
-          first-line-start-indent: 0pt
-          start-indent: 12pt
-          (process-children-trim)
-          ) ))
-  )
-
-
-;; ------------------------------------------------------------------------------
-
 (define (get-line-length nd)
   (let loop ((c (children nd))
              (maxlen 0))
@@ -422,52 +309,6 @@
     (with-mode verbatim-mode
       (process-children))))
 
-
-;; ------------------------------------------------------------------------------
-
-(mode admon-mode
-  (element p
-    (make paragraph
-      mandoc.section: "para"
-      first-line-start-indent: 0pt
-      font-posture: 'italic
-      quadding: "justify"
-      (process-children))))
-
-(element admon
-  (let* ((kids (children (current-node)))
-         (first-p (node-list-first kids))
-         (title (attribute "title" (current-node))) )
-    (if (and (not (node-list-empty? first-p))
-             (eqv? (gi first-p) 'p))
-        (with-mode admon-mode
-          (sosofo-append
-           (make paragraph
-             first-line-start-indent: -45mm
-             font-posture: 'italic
-             (sosofo-append
-              (make line-field
-                font-weight: 'bold
-                field-width: 41mm
-                field-align: 'right
-                (sosofo-append
-                 (process-node-list (attribute "title" (current-node)))
-                 (literal ".")))
-              (make line-field
-                field-width: 4mm
-                (empty-sosofo))
-              (process-node-list (children first-p))))
-           (process-node-list (node-list-rest kids))))
-        (with-mode admon-mode
-          (sosofo-append
-           (make paragraph
-             first-line-start-indent: 0pt
-             font-posture: 'italic
-             (make line-field
-               font-weight: 'bold
-               (process-node-list (attribute "title" (current-node)))))
-           (process-node-list (children (current-node)))))
-        )))
 
 ;; ------------------------------------------------------------------------------
 
@@ -566,57 +407,6 @@
             (process-node-list email)
             (literal ">"))))
       )))
-
-
-;; ------------------------------------------------------------------------------
-
-(element r
-  (format-r (attribute "text" (current-node))))
-
-(element opt
-  (format-bold (attribute "text" (current-node))))
-
-(element op
-  (format-bold (attribute "text" (current-node))))
-
-(element app
-  (format-bold (attribute "text" (current-node))))
-
-(element val
-  (format-em (attribute "text" (current-node))))
-
-(element file
-  (format-em (attribute "text" (current-node))))
-
-(element em
-  (format-em (attribute "text" (current-node))))
-
-(element acr
-  (process-node-list-trim (attribute "text" (current-node))))
-
-(element const
-  (format-monospace (attribute "text" (current-node))))
-
-(element ty
-  (format-monospace (attribute "text" (current-node))))
-
-(element var
-  (format-monospace (attribute "text" (current-node))))
-
-(element code
-  (format-monospace (attribute "text" (current-node))))
-
-(element fun
-  (format-monospace (attribute "text" (current-node))))
-
-(element keyw
-  (format-monospace (attribute "text" (current-node))))
-
-(element prm
-  (format-em (attribute "text" (current-node))))
-
-(element dfn
-  (format-em (attribute "text" (current-node))))
 
 
 ;; #-----------------------------------------------------------------------------

@@ -74,3 +74,46 @@
     first-line-start-indent: 0pt
     quadding: "justify"
     (process-children)))
+
+
+(define (item-number nd)
+  (let* ((nds (select-elements (preced (parent nd)) 'p))
+         (item-nds (node-list-filter (lambda (snl)
+                                       (let ((c (children snl)))
+                                         (and (not (node-list-empty? c))
+                                              (eqv? (gi (node-list-first c)) 'item))))
+                                     nds)))
+    (+ (node-list-length item-nds) 1)))
+
+(element enumerate
+  (make display-group
+    space-before: 7pt
+    space-after: 7pt
+    (process-children-trim)))
+
+(element (enumerate p item)
+  (make line-field
+    field-width: 12pt
+    field-align: 'left
+    (let ((txt (attribute "text" (current-node))))
+      (if (node-list-empty? txt)
+          (sosofo-append
+           (literal (number->string (item-number (current-node))))
+           (literal ". "))
+          (process-node-list-trim txt) )) ))
+
+(element (enumerate p)
+  (let ((item (node-list-first (children (current-node)))))
+    (if (equal? (gi item) 'item)
+        (make paragraph
+          first-line-start-indent: -12pt
+          start-indent: 12pt
+          (sosofo-append
+           (process-node-list (node-list-first (children (current-node))))
+           (process-node-list-trim (node-list-rest (children (current-node))))))
+        (make paragraph
+          first-line-start-indent: 0pt
+          start-indent: 12pt
+          (process-children-trim)
+          ) ))
+  )

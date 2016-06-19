@@ -1,0 +1,53 @@
+;;; Copyright (c) 2015 Gregor Klinke
+;;; All rights reserved.
+
+(use 'common)
+
+
+;; ------------------------------------------------------------------------------
+
+(mode admon-mode
+  (element p
+    (make paragraph
+      mandoc.section: "para"
+      first-line-start-indent: 0pt
+      font-posture: 'italic
+      quadding: "justify"
+      (process-children))))
+
+(element admon
+  (let* ((kids (children (current-node)))
+         (first-p (node-list-first kids))
+         (title (attribute "title" (current-node))) )
+    (if (and (not (node-list-empty? first-p))
+             (eqv? (gi first-p) 'p))
+        (with-mode admon-mode
+          (sosofo-append
+           (make paragraph
+             first-line-start-indent: -45mm
+             font-posture: 'italic
+             (sosofo-append
+              (make line-field
+                font-weight: 'bold
+                field-width: 41mm
+                field-align: 'right
+                (sosofo-append
+                 (process-node-list (attribute "title" (current-node)))
+                 (literal ".")))
+              (make line-field
+                field-width: 4mm
+                (empty-sosofo))
+              (process-node-list (children first-p))))
+           (process-node-list (node-list-rest kids))))
+        (with-mode admon-mode
+          (sosofo-append
+           (make paragraph
+             first-line-start-indent: 0pt
+             font-posture: 'italic
+             (make line-field
+               font-weight: 'bold
+               (process-node-list (attribute "title" (current-node)))))
+           (process-node-list (children (current-node)))))
+        )))
+
+
