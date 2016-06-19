@@ -244,14 +244,17 @@ namespace {
   }
 
 
-  html::Attrs style_str2attrs(const std::string& str)
+  html::Attrs tag_style_attrs(HtmlProcessor* processor,
+                              const std::string& tag,
+                              const detail::StyleAttrs& attrs)
   {
-    html::Attrs attrs;
+    auto str = attrs_to_string(attrs);
     if (!str.empty()) {
-      attrs.push_back(html::Attr{"style", str});
+      auto cls = processor->css_writer().add_rule(tag, str);
+      return {{ "class", cls }};
     }
 
-    return attrs;
+    return {};
   }
 
 
@@ -260,7 +263,7 @@ namespace {
   {
     if (!attrs._css_map.empty()) {
       return std::move(html::Tag(processor->ctx().port(), "span",
-                                 style_str2attrs(attrs_to_string(attrs))));
+                                 tag_style_attrs(processor, "span", attrs)));
     }
 
     return std::move(html::Tag());
@@ -275,7 +278,7 @@ namespace {
 
     if (!extAttrs._css_map.empty()) {
       return std::move(html::Tag(processor->ctx().port(), "span",
-                                 style_str2attrs(attrs_to_string(extAttrs))));
+                                 tag_style_attrs(processor, "span", extAttrs)));
     }
 
     return std::move(html::Tag());
@@ -334,11 +337,23 @@ namespace {
 
 
   template <typename Functor>
-  void withHtmlFile(HtmlProcessor* processor, const fs::path& path,
-                    const std::string& title, const std::string& author,
-                    const std::string& desc, const html::Doctype& doctype,
-                    Functor functor)
+  void with_html_file(HtmlProcessor* processor, const fs::path& path,
+                      const std::string& title, const std::string& author,
+                      const std::string& desc, const html::Doctype& doctype,
+                      Functor functor)
   {
+    auto csspath = path;
+    csspath.replace_extension("css");
+
+    if (!processor->css_writer().is_open()) {
+      if (processor->is_verbose()) {
+        std::cout << processor->proc_id() << ": Create css file: '" << csspath
+                  << "'" << std::endl;
+      }
+
+      processor->css_writer().open(csspath);
+    }
+
     if (processor->is_verbose()) {
       std::cout << processor->proc_id() << ": Create output file: '"
                 << path.string() << "'" << std::endl;
@@ -351,7 +366,11 @@ namespace {
 
     ctx.push_port(std::move(port), path);
 
-    ctx.port().header(title, author, desc, [](std::ostream&) {});
+    ctx.port().header(title, author, desc, [&](std::ostream&) {
+      ctx.port().write_link("stylesheet", {{"media", "screen"},
+                                           {"type", "text/css"},
+                                           {"href", csspath.string()}});
+    });
 
     functor(processor);
 
@@ -396,7 +415,7 @@ namespace {
       {
         auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
         html::Tag with_tag(processor->ctx().port(), "p",
-                           style_str2attrs(attrs_to_string(d_attrs)));
+                           tag_style_attrs(processor, "p", d_attrs));
         StyleScope style_scope(processor->ctx(), d_attrs);
 
         html::Tag b_tag(std::move(
@@ -440,7 +459,7 @@ namespace {
       {
         auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
         html::Tag with_tag(processor->ctx().port(), "div",
-                           style_str2attrs(attrs_to_string(d_attrs)));
+                           tag_style_attrs(processor, "div", d_attrs));
         StyleScope style_scope(processor->ctx(), d_attrs);
 
         processor->ctx().port().newln();
@@ -462,24 +481,23 @@ namespace {
       auto html_width =
         processor->property_or_none<fo::LengthSpec>(fo, "html.width");
 
-      withHtmlFile(processor, processor->ctx().current_path(), title, author,
-                   desc, html::k_XHTML_1_1_DTD,
-                   [fo, html_width](HtmlProcessor* processor) {
-                     {
-                       detail::StyleAttrs attrs;
-                       set_attr(attrs, "width", html_width);
+      with_html_file(processor, processor->ctx().current_path(), title, author,
+                     desc, html::k_XHTML_1_1_DTD,
+                     [fo, html_width](HtmlProcessor* processor) {
+                       {
+                         detail::StyleAttrs attrs;
+                         set_attr(attrs, "width", html_width);
 
-                       html::Tag with_tag(processor->ctx().port(), "div",
-                                          style_str2attrs(
-                                            attrs_to_string(attrs)));
-                       StyleScope style_scope(processor->ctx(), attrs);
+                         html::Tag with_tag(processor->ctx().port(), "div",
+                                            tag_style_attrs(processor, "div", attrs));
+                         StyleScope style_scope(processor->ctx(), attrs);
 
+                         processor->ctx().port().newln();
+
+                         processor->render_sosofo(&fo->port("text"));
+                       }
                        processor->ctx().port().newln();
-
-                       processor->render_sosofo(&fo->port("text"));
-                     }
-                     processor->ctx().port().newln();
-                   });
+                     });
     }
   };
 
@@ -566,12 +584,13 @@ namespace {
 } // ns anon
 
 
-HtmlProcessor::HtmlProcessor() : _verbose(false)
+HtmlProcessor::HtmlProcessor() : _verbose(false), _css_port(k_SAIRY_GENERATOR)
+
 {
 }
 
 
-HtmlProcessor::HtmlProcessor(const po::variables_map& args) : _verbose(false)
+HtmlProcessor::HtmlProcessor(const po::variables_map& args) : HtmlProcessor()
 {
   if (!args.empty()) {
     _verbose = args["verbose"].as<bool>();
@@ -642,6 +661,12 @@ detail::HtmlRenderContext& HtmlProcessor::ctx()
 html::Writer& HtmlProcessor::writer()
 {
   return _ctx.port();
+}
+
+
+html::CSSWriter& HtmlProcessor::css_writer()
+{
+  return _css_port;
 }
 
 

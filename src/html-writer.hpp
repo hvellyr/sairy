@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <unordered_map>
 
 
 namespace eyestep {
@@ -51,6 +52,7 @@ namespace html {
     void write_text(const std::string& value);
 
     void write_style(const std::string& text);
+    void write_link(const std::string& rel, const Attrs& attrs = {});
 
     void doctype();
     void header(const std::string& title, const std::string& author,
@@ -60,6 +62,23 @@ namespace html {
     void footer();
 
     void newln();
+  };
+
+
+  class CSSWriter {
+    boost::filesystem::path _path;
+    boost::filesystem::ofstream _stream;
+    std::string _generator;
+    std::unordered_map<std::string, std::string> _props_cache;
+
+  public:
+    CSSWriter(const std::string& generator);
+
+    void open(const boost::filesystem::path& path);
+    bool is_open() const;
+    void write_rule(const std::string& selector, const std::string& props);
+
+    std::string add_rule(const std::string& tag, const std::string& props);
   };
 
 

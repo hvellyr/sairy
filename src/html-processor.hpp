@@ -85,6 +85,7 @@ namespace detail {
 class HtmlProcessor : public AbstractProcessor<HtmlProcessor> {
   detail::HtmlRenderContext _ctx;
   bool _verbose;
+  html::CSSWriter _css_port;
 
 public:
   HtmlProcessor();
@@ -102,6 +103,7 @@ public:
 
   detail::HtmlRenderContext& ctx();
   html::Writer& writer();
+  html::CSSWriter& css_writer();
 
   bool is_verbose() const;
 };
