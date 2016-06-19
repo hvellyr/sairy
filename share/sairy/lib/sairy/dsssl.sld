@@ -57,4 +57,5 @@
   (include "query.scm")
   (include "lang.scm")
   (include "process.scm")
+  (include "default.scm")
   )
