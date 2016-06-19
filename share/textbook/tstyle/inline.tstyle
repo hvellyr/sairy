@@ -1,0 +1,54 @@
+;;; Copyright (c) 2015 Gregor Klinke
+;;; All rights reserved.
+
+;; ------------------------------------------------------------------------------
+
+(element r
+  (format-r (attribute "text" (current-node))))
+
+(element opt
+  (format-bold (attribute "text" (current-node))))
+
+(element op
+  (format-bold (attribute "text" (current-node))))
+
+(element app
+  (format-bold (attribute "text" (current-node))))
+
+(element val
+  (format-em (attribute "text" (current-node))))
+
+(element file
+  (format-em (attribute "text" (current-node))))
+
+(element em
+  (format-em (attribute "text" (current-node))))
+
+(element acr
+  (process-node-list-trim (attribute "text" (current-node))))
+
+(element const
+  (format-monospace (attribute "text" (current-node))))
+
+(element ty
+  (format-monospace (attribute "text" (current-node))))
+
+(element var
+  (format-monospace (attribute "text" (current-node))))
+
+(element code
+  (format-monospace (attribute "text" (current-node))))
+
+(element fun
+  (format-monospace (attribute "text" (current-node))))
+
+(element keyw
+  (format-monospace (attribute "text" (current-node))))
+
+(element prm
+  (format-em (attribute "text" (current-node))))
+
+(element dfn
+  (format-em (attribute "text" (current-node))))
+
+
