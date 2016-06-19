@@ -276,10 +276,3 @@
 ;; leading and trailing whitespace from leading and trailing text nodes.
 (define (process-children-trim)
   (process-node-list-trim (children (current-node))))
-
-;; register a default text mapping
-(text
- (literal (node-property 'data (current-node) default: "")))
-
-(default
-  (process-children))
