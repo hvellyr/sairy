@@ -289,7 +289,8 @@ namespace {
                                 HtmlProcessor* processor,
                                 const IFormattingObject* fo)
   {
-    auto fontsize = processor->property_or_none<fo::LengthSpec>(fo, "font-size");
+    auto fontsize =
+      processor->property_or_none<fo::LengthSpec>(fo, "font-size");
     auto fontcaps = processor->property_or_none<std::string>(fo, "font-caps");
     auto posptshift =
       processor->property_or_none<fo::LengthSpec>(fo, "position-point-shift");
@@ -307,12 +308,15 @@ namespace {
   {
     auto startindent =
       processor->property_or_none<fo::LengthSpec>(fo, "start-indent");
-    auto endindent = processor->property_or_none<fo::LengthSpec>(fo, "end-indent");
+    auto endindent =
+      processor->property_or_none<fo::LengthSpec>(fo, "end-indent");
     auto firstline_startindent =
-      processor->property_or_none<fo::LengthSpec>(fo, "first-line-start-indent");
+      processor->property_or_none<fo::LengthSpec>(fo,
+                                                  "first-line-start-indent");
     auto spacebefore =
       processor->property_or_none<fo::LengthSpec>(fo, "space-before");
-    auto spaceafter = processor->property_or_none<fo::LengthSpec>(fo, "space-after");
+    auto spaceafter =
+      processor->property_or_none<fo::LengthSpec>(fo, "space-after");
 
     set_attr(attrs, "padding-left", startindent);
     set_attr(attrs, "margin-right", endindent);
