@@ -587,6 +587,42 @@ namespace {
     }
   };
 
+
+  class HtmlPageNumberFoProcessor : public IFoProcessor<HtmlProcessor> {
+  public:
+    void render(HtmlProcessor* processor, const IFormattingObject* fo) const override
+    {
+      auto refid = processor->property(fo, "refid", std::string("#current"));
+      if (refid == "#current") {
+      }
+      else if (!refid.empty()) {
+        html::Tag with_tag(processor->ctx().port(), "a", {{"href", std::string("#") + refid}});
+        processor->ctx().port().write_text("*");
+      }
+    }
+  };
+
+
+  class HtmlAnchorFoProcessor : public IFoProcessor<HtmlProcessor> {
+  public:
+    void render(HtmlProcessor* processor, const IFormattingObject* fo) const override
+    {
+      if (auto id = processor->property_or_none<std::string>(fo, "id")) {
+        if (!id->empty())
+          processor->ctx().port().empty_tag("a", {{"id", *id}});
+      }
+    }
+  };
+
+
+  class HtmlSimpleColumnSetSequenceProcessor : public IFoProcessor<HtmlProcessor> {
+  public:
+    void render(HtmlProcessor* po, const IFormattingObject* fo) const override
+    {
+      html::Tag div_tag(po->ctx().port(), "div", {});
+      po->render_sosofo(&fo->port("text"));
+    }
+  };
 } // ns anon
 
 
@@ -637,6 +673,10 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
        std::make_shared<HtmlSimplePageSequenceFoProcessor>()},
       {"#sequence", std::make_shared<HtmlSequenceFoProcessor>()},
       {"#line-field", std::make_shared<HtmlLineFieldFoProcessor>()},
+      {"#anchor", std::make_shared<HtmlAnchorFoProcessor>()},
+      {"#page-number", std::make_shared<HtmlPageNumberFoProcessor>()},
+      {"#simple-column-set-sequence",
+       std::make_shared<HtmlSimpleColumnSetSequenceProcessor>()}
     };
 
   auto i_find = procs.find(fo_classname);
