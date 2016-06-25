@@ -528,6 +528,11 @@ namespace {
                          detail::StyleAttrs attrs;
                          set_attr(attrs, "width", html_width);
 
+                         auto start_margin = processor->property_or_none<fo::LengthSpec>(fo, "start-margin");
+                         set_attr(attrs, "margin-left", start_margin);
+                         auto end_margin = processor->property_or_none<fo::LengthSpec>(fo, "end-margin");
+                         set_attr(attrs, "margin-right", end_margin);
+
                          html::Tag with_tag(processor->ctx().port(), "div",
                                             tag_style_attrs(processor, "div",
                                                             attrs));
