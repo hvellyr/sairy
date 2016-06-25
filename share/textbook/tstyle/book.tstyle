@@ -55,6 +55,8 @@
                       font-size: 9pt
                       (process-node-list title-first))
 
+       html.width: 600px
+
        (process-children)
        )) ))
 
