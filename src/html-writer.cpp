@@ -19,8 +19,7 @@ namespace fs = filesystem;
 namespace html {
 
   namespace {
-    void escape_str_to_stream(std::ostream& os,
-                              const std::string& str,
+    void escape_str_to_stream(std::ostream& os, const std::string& str,
                               const detail::StyleCtx& ctx)
     {
       for (const auto c : str) {
@@ -49,7 +48,8 @@ namespace html {
           }
           break;
 
-        case ' ': case '\t':
+        case ' ':
+        case '\t':
           switch (ctx._wstreatment) {
           case detail::k_preserve_ws:
             os << "&nbsp;";
@@ -126,7 +126,7 @@ namespace html {
 
     std::error_code ec;
     _file.open(std::ios_base::out | std::ios_base::binary |
-               std::ios_base::trunc,
+                 std::ios_base::trunc,
                ec);
 
     if (ec) {
@@ -216,7 +216,7 @@ namespace html {
   {
     if (_stream.is_open()) {
       auto new_attrs = attrs;
-      new_attrs.insert(new_attrs.begin(), { "rel", rel});
+      new_attrs.insert(new_attrs.begin(), {"rel", rel});
 
       empty_tag("link", new_attrs);
       newln();
@@ -227,7 +227,7 @@ namespace html {
   {
     if (_file.is_open()) {
       _file.stream() << "<!DOCTYPE html PUBLIC '" << _doctype._publicid << "' '"
-              << _doctype._systemid << "'>";
+                     << _doctype._systemid << "'>";
       newln();
     }
   }
@@ -294,10 +294,7 @@ namespace html {
 
   //----------------------------------------------------------------------------
 
-  CSSWriter::CSSWriter(const std::string& generator)
-    : _generator(generator)
-  {
-  }
+  CSSWriter::CSSWriter(const std::string& generator) : _generator(generator) {}
 
 
   void CSSWriter::open(const filesystem::path& path)
@@ -323,7 +320,8 @@ namespace html {
     return _file.is_valid() && _file.is_open();
   }
 
-  void CSSWriter::write_rule(const std::string& selector, const std::string& props)
+  void CSSWriter::write_rule(const std::string& selector,
+                             const std::string& props)
   {
     if (is_open()) {
       _file.stream() << selector << " {" << std::endl
@@ -333,7 +331,8 @@ namespace html {
     }
   }
 
-  std::string CSSWriter::add_rule(const std::string& tag, const std::string& props)
+  std::string CSSWriter::add_rule(const std::string& tag,
+                                  const std::string& props)
   {
     if (is_open()) {
       auto key = tag + "~~" + props;
@@ -342,7 +341,8 @@ namespace html {
       if (i_find == _props_cache.end()) {
         static int counter = 0;
 
-        auto auto_class = std::string("auto-").append(std::to_string(++counter));
+        auto auto_class =
+          std::string("auto-").append(std::to_string(++counter));
         auto selector = tag + "." + auto_class;
 
         write_rule(selector, props);

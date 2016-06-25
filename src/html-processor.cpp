@@ -3,24 +3,24 @@
 
 #include "html-processor.hpp"
 
+#include "estd/memory.hpp"
 #include "fo-processor.hpp"
 #include "fo.hpp"
 #include "fos.hpp"
 #include "sosofo.hpp"
-#include "estd/memory.hpp"
 #include "utils.hpp"
 
 #include "program_options/program_options.hpp"
 
-#include "fspp/filesystem.hpp"
 #include "fspp/estd/optional.hpp"
+#include "fspp/filesystem.hpp"
 
 #include <iostream>
 #include <map>
 #include <memory>
-#include <unordered_set>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 
 
 namespace eyestep {
@@ -72,6 +72,7 @@ detail::CapsStyle detail::HtmlRenderContext::capsstyle()
 
   return k_normal_caps;
 }
+
 
 void detail::HtmlRenderContext::push_styles(const StyleAttrs& styles)
 {
@@ -142,8 +143,9 @@ namespace {
   {
     static const std::unordered_set<std::string> not_inherited =
       {"padding-left", "padding-bottom", "padding-right", "padding-top",
-       "padding", "height", "width", "bottom", "left", "right", "top",
-       "display", "margin", "margin-left", "margin-right", "margin-bottom",
+       "padding",      "height",         "width",         "bottom",
+       "left",         "right",          "top",           "display",
+       "margin",       "margin-left",    "margin-right",  "margin-bottom",
        "margin-top"};
     return not_inherited.find(prop) == not_inherited.end();
   }
@@ -244,14 +246,13 @@ namespace {
   }
 
 
-  html::Attrs tag_style_attrs(HtmlProcessor* processor,
-                              const std::string& tag,
+  html::Attrs tag_style_attrs(HtmlProcessor* processor, const std::string& tag,
                               const detail::StyleAttrs& attrs)
   {
     auto str = attrs_to_string(attrs);
     if (!str.empty()) {
       auto cls = processor->css_writer().add_rule(tag, str);
-      return {{ "class", cls }};
+      return {{"class", cls}};
     }
 
     return {};
@@ -374,9 +375,9 @@ namespace {
 
     detail::HtmlRenderContext& ctx = processor->ctx();
 
-    auto port = ::estd::make_unique<html::Writer>(doctype,
-                                                  k_TEXTBOOK_GENERATOR,
+    auto port = ::estd::make_unique<html::Writer>(doctype, k_TEXTBOOK_GENERATOR,
                                                   processor->style_ctx());
+
     port->open(path);
 
     ctx.push_port(std::move(port), path);
@@ -522,7 +523,8 @@ namespace {
                          set_attr(attrs, "width", html_width);
 
                          html::Tag with_tag(processor->ctx().port(), "div",
-                                            tag_style_attrs(processor, "div", attrs));
+                                            tag_style_attrs(processor, "div",
+                                                            attrs));
                          StyleScope style_scope(processor->ctx(), attrs);
 
                          processor->ctx().port().newln();
@@ -618,13 +620,15 @@ namespace {
 
   class HtmlPageNumberFoProcessor : public IFoProcessor<HtmlProcessor> {
   public:
-    void render(HtmlProcessor* processor, const IFormattingObject* fo) const override
+    void render(HtmlProcessor* processor,
+                const IFormattingObject* fo) const override
     {
       auto refid = processor->property(fo, "refid", std::string("#current"));
       if (refid == "#current") {
       }
       else if (!refid.empty()) {
-        html::Tag with_tag(processor->ctx().port(), "a", {{"href", std::string("#") + refid}});
+        html::Tag with_tag(processor->ctx().port(), "a",
+                           {{"href", std::string("#") + refid}});
         processor->ctx().port().write_text("*");
       }
     }
@@ -633,7 +637,8 @@ namespace {
 
   class HtmlAnchorFoProcessor : public IFoProcessor<HtmlProcessor> {
   public:
-    void render(HtmlProcessor* processor, const IFormattingObject* fo) const override
+    void render(HtmlProcessor* processor,
+                const IFormattingObject* fo) const override
     {
       if (auto id = processor->property_or_none<std::string>(fo, "id")) {
         if (!id->empty())
@@ -643,7 +648,8 @@ namespace {
   };
 
 
-  class HtmlSimpleColumnSetSequenceProcessor : public IFoProcessor<HtmlProcessor> {
+  class HtmlSimpleColumnSetSequenceProcessor
+    : public IFoProcessor<HtmlProcessor> {
   public:
     void render(HtmlProcessor* po, const IFormattingObject* fo) const override
     {
@@ -704,8 +710,7 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
       {"#anchor", std::make_shared<HtmlAnchorFoProcessor>()},
       {"#page-number", std::make_shared<HtmlPageNumberFoProcessor>()},
       {"#simple-column-set-sequence",
-       std::make_shared<HtmlSimpleColumnSetSequenceProcessor>()}
-    };
+       std::make_shared<HtmlSimpleColumnSetSequenceProcessor>()}};
 
   auto i_find = procs.find(fo_classname);
 
@@ -715,9 +720,9 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
 
 void HtmlProcessor::before_rendering()
 {
-  auto mainport = ::estd::make_unique<html::Writer>(html::k_XHTML_1_1_DTD,
-                                                    k_TEXTBOOK_GENERATOR,
-                                                    _style_ctx);
+  auto mainport =
+    ::estd::make_unique<html::Writer>(html::k_XHTML_1_1_DTD,
+                                      k_TEXTBOOK_GENERATOR, _style_ctx);
   _ctx.push_port(std::move(mainport), _output_file);
 }
 
