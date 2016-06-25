@@ -39,7 +39,6 @@ namespace tex_detail {
   enum WrapStyle {
     k_normal_wrap,
     k_asis_wrap,
-    // k_asis_wrap,
     k_no_wrap,
   };
 
