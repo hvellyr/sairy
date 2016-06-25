@@ -307,6 +307,56 @@ namespace {
   }
 
 
+  fo::Unit to_quantity_unit(sexp ctx, sexp val)
+  {
+    auto val_unit = sexp_quantity_unit(val);
+
+    if (auto unitv = string_from_symbol_sexp_or_none(ctx, val_unit)) {
+      if (*unitv == "cm") {
+        return fo::k_cm;
+      }
+      else if (*unitv == "em") {
+        return fo::k_em;
+      }
+      else if (*unitv == "m") {
+        return fo::k_m;
+      }
+      else if (*unitv == "mm") {
+        return fo::k_mm;
+      }
+      else if (*unitv == "pt") {
+        return fo::k_pt;
+      }
+      else if (*unitv == "px") {
+        return fo::k_px;
+      }
+      else if (*unitv == "in") {
+        return fo::k_in;
+      }
+    }
+
+    return fo::k_pt;
+  }
+
+
+  const double pt_ratio = 0.0003527778;
+
+
+  bool is_convertible_to_pt_unit(fo::Unit unit)
+  {
+    switch (unit) {
+    case fo::k_cm:
+    case fo::k_m:
+    case fo::k_mm:
+    case fo::k_pt:
+    case fo::k_in:
+      return true;
+    case fo::k_em:
+    case fo::k_px:
+      return false;
+    }
+  }
+
   sexp func_make_length_spec(sexp ctx, sexp self, sexp_sint_t n,
                              sexp type_arg,
                              sexp val_arg, sexp min_arg, sexp max_arg,
@@ -350,13 +400,33 @@ namespace {
           sexp_user_exception(ctx, self, "type: not a symbol", type_arg);
       }
 
+
+      auto val_unit = to_quantity_unit(ctx, val_arg);
+      auto min_unit = to_quantity_unit(ctx, min_arg);
+
+      auto result_unit = is_convertible_to_pt_unit(val_unit) == is_convertible_to_pt_unit(min_unit)
+        ? fo::k_pt
+        : val_unit;
+      auto norm_factor = is_convertible_to_pt_unit(val_unit)
+        ? pt_ratio
+        : 1.0;
+
       // the number is normalized to 'm' unit; rebase it to 'pt'
-      double val = sexp_quantity_normalize_to_double(ctx, val_arg) / 0.0003527778;
-      double minv = sexp_quantity_normalize_to_double(ctx, min_arg) / 0.0003527778;
+      double val = sexp_quantity_normalize_to_double(ctx, val_arg) / norm_factor;
+      double minv = sexp_quantity_normalize_to_double(ctx, min_arg) / norm_factor;
       double maxv = val;
 
       if (sexp_quantityp(max_arg)) {
-        maxv = sexp_quantity_normalize_to_double(ctx, max_arg) / 0.0003527778;
+        auto max_unit = to_quantity_unit(ctx, max_arg);
+
+        if (is_convertible_to_pt_unit(max_unit) == is_convertible_to_pt_unit(val_unit)) {
+          maxv = sexp_quantity_normalize_to_double(ctx, max_arg) / norm_factor;
+        }
+        else {
+          result = sexp_user_exception(ctx, self,
+                                         "unit: max argument unit is not convertible to value unit",
+                                       max_arg);
+        }
       }
       else if (auto symbv = string_from_symbol_sexp_or_none(ctx, max_arg)) {
         if (*symbv == "inf")
@@ -374,7 +444,7 @@ namespace {
         result = make_length_spec(ctx,
                                   fo::LengthSpec(type,
                                                  val,
-                                                 fo::k_pt,
+                                                 result_unit,
                                                  minv,
                                                  maxv,
                                                  bool(sexp_unbox_boolean(conditionalp_arg)),
@@ -1348,9 +1418,17 @@ namespace {
       result = fo::PropertySpec(key, int(sexp_unbox_fixnum(expr)));
     }
     else if (sexp_quantityp(expr)) {
+      auto unit = to_quantity_unit(ctx, expr);
       // the number is normalized to 'm' unit; rebase it to 'pt'
-      double val = sexp_quantity_normalize_to_double(ctx, expr) / 0.0003527778;
-      result = fo::PropertySpec(key, fo::LengthSpec(fo::kDimen, val, fo::k_pt));
+      auto norm_factor = is_convertible_to_pt_unit(unit)
+        ? pt_ratio
+        : 1.0;
+      auto result_unit = is_convertible_to_pt_unit(unit)
+        ? fo::k_pt
+        : unit;
+      auto val = sexp_quantity_normalize_to_double(ctx, expr) / norm_factor;
+
+      result = fo::PropertySpec(key, fo::LengthSpec(fo::kDimen, val, result_unit));
     }
     else if (sexp_check_tag(expr, length_spec_tag_p(ctx))) {
       const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(expr));
