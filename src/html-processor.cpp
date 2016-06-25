@@ -307,8 +307,10 @@ namespace {
 
     set_attr(attrs, "font-size", fontsize);
     set_capsstyle(attrs, fontcaps);
-    set_attr(attrs, "position", "relative");
-    set_attr(attrs, "top", posptshift);
+    if (posptshift && posptshift->_value != 0) {
+      set_attr(attrs, "position", "relative");
+      set_attr(attrs, "top", posptshift);
+    }
   }
 
 
@@ -328,10 +330,14 @@ namespace {
     auto spaceafter =
       processor->property_or_none<fo::LengthSpec>(fo, "space-after");
 
-    set_attr(attrs, "padding-left", startindent);
-    set_attr(attrs, "margin-right", endindent);
-    set_attr(attrs, "margin-top", spacebefore);
-    set_attr(attrs, "margin-bottom", spaceafter);
+    if (startindent && startindent->_value != 0)
+      set_attr(attrs, "padding-left", startindent);
+    if (endindent && endindent->_value != 0)
+      set_attr(attrs, "margin-right", endindent);
+    if (spacebefore && spacebefore->_value != 0)
+      set_attr(attrs, "margin-top", spacebefore);
+    if (spaceafter && spaceafter->_value != 0)
+      set_attr(attrs, "margin-bottom", spaceafter);
     set_attr(attrs, "text-indent", firstline_startindent);
   }
 
