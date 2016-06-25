@@ -16,6 +16,10 @@
 namespace eyestep {
 namespace html {
 
+  namespace detail {
+    struct StyleCtx;
+  }
+
   struct Attr {
     std::string _key;
     std::string _value;
@@ -35,9 +39,11 @@ namespace html {
     filesystem::File _file;
     Doctype _doctype;
     std::string _generator;
+    const detail::StyleCtx* _ctx;
 
   public:
-    Writer(const Doctype& doctype, const std::string& generator);
+    Writer(const Doctype& doctype, const std::string& generator,
+           const detail::StyleCtx& ctx);
 
     bool is_open() const;
     void open(const filesystem::path& path);

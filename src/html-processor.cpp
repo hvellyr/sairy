@@ -365,7 +365,9 @@ namespace {
 
     detail::HtmlRenderContext& ctx = processor->ctx();
 
-    auto port = ::estd::make_unique<html::Writer>(doctype, k_TEXTBOOK_GENERATOR);
+    auto port = ::estd::make_unique<html::Writer>(doctype,
+                                                  k_TEXTBOOK_GENERATOR,
+                                                  processor->style_ctx());
     port->open(path);
 
     ctx.push_port(std::move(port), path);
@@ -433,7 +435,25 @@ namespace {
                                                                 "font-posture"),
                        "italic"));
 
+        auto linesprops = processor->property(fo, "lines", std::string("wrap"));
+        if (linesprops == "asis")
+          processor->style_ctx()._wrapstyle = html::detail::k_asis_wrap;
+        else
+          processor->style_ctx()._wrapstyle = html::detail::k_normal_wrap;
+
+        auto old_wstreatment = processor->style_ctx()._wstreatment;
+        auto wstreatment = processor->property(fo, "whitespace-treatment",
+                                               std::string("collapse"));
+        if (wstreatment == "preserve")
+          processor->style_ctx()._wstreatment = html::detail::k_preserve_ws;
+        else if (wstreatment == "collapse")
+          processor->style_ctx()._wstreatment = html::detail::k_collapse_ws;
+        else if (wstreatment == "ignore")
+          processor->style_ctx()._wstreatment = html::detail::k_ignore_ws;
+
         processor->render_sosofo(&fo->port("text"));
+
+        processor->style_ctx()._wstreatment = old_wstreatment;
       }
       processor->ctx().port().newln();
     }
@@ -565,7 +585,6 @@ namespace {
 
       {
         auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
-
         html::Tag span_tag(field_width
                              ? optional_inline_block_tag(processor, d_attrs)
                              : optional_span_tag(processor, d_attrs));
@@ -687,8 +706,9 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
 
 void HtmlProcessor::before_rendering()
 {
-  auto mainport =
-    ::estd::make_unique<html::Writer>(html::k_XHTML_1_1_DTD, k_TEXTBOOK_GENERATOR);
+  auto mainport = ::estd::make_unique<html::Writer>(html::k_XHTML_1_1_DTD,
+                                                    k_TEXTBOOK_GENERATOR,
+                                                    _style_ctx);
   _ctx.push_port(std::move(mainport), _output_file);
 }
 
@@ -701,6 +721,12 @@ void HtmlProcessor::after_rendering()
 detail::HtmlRenderContext& HtmlProcessor::ctx()
 {
   return _ctx;
+}
+
+
+auto HtmlProcessor::style_ctx() -> html::detail::StyleCtx&
+{
+  return _style_ctx;
 }
 
 

@@ -2,6 +2,7 @@
 // All rights reserved.
 
 #include "html-writer.hpp"
+#include "html-types.hpp"
 
 #include "fspp/filesystem.hpp"
 #include "fspp/utils.hpp"
@@ -18,7 +19,9 @@ namespace fs = filesystem;
 namespace html {
 
   namespace {
-    void escape_str_to_stream(std::ostream& os, const std::string& str)
+    void escape_str_to_stream(std::ostream& os,
+                              const std::string& str,
+                              const detail::StyleCtx& ctx)
     {
       for (const auto c : str) {
         switch (c) {
@@ -31,6 +34,37 @@ namespace html {
         case '&':
           os << "&amp;";
           break;
+
+        case '\n':
+          switch (ctx._wrapstyle) {
+          case detail::k_asis_wrap:
+            os << "<br/>" << std::endl;
+            break;
+          case detail::k_normal_wrap:
+            os << std::endl;
+            break;
+          case detail::k_no_wrap:
+            os << "&nbsp;";
+            break;
+          }
+          break;
+
+        case ' ': case '\t':
+          switch (ctx._wstreatment) {
+          case detail::k_preserve_ws:
+            os << "&nbsp;";
+            break;
+          case detail::k_collapse_ws:
+            os << ' ';
+            break;
+          case detail::k_ignore_ws:
+            break;
+          }
+          break;
+
+        case '\r':
+          break;
+
         default:
           os << c;
         }
@@ -78,8 +112,9 @@ namespace html {
      "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"};
 
 
-  Writer::Writer(const Doctype& doctype, const std::string& generator)
-    : _doctype(doctype), _generator(generator)
+  Writer::Writer(const Doctype& doctype, const std::string& generator,
+                 const detail::StyleCtx& ctx)
+    : _doctype(doctype), _generator(generator), _ctx(&ctx)
   {
   }
 
@@ -152,7 +187,7 @@ namespace html {
   {
     if (_file.is_open()) {
       open_tag(tag, attrs);
-      escape_str_to_stream(_file.stream(), value);
+      escape_str_to_stream(_file.stream(), value, *_ctx);
       close_tag(tag);
     }
   }
@@ -161,7 +196,7 @@ namespace html {
   void Writer::write_text(const std::string& value)
   {
     if (_file.is_open()) {
-      escape_str_to_stream(_file.stream(), value);
+      escape_str_to_stream(_file.stream(), value, *_ctx);
     }
   }
 
