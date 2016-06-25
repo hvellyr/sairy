@@ -295,6 +295,15 @@ namespace {
     auto posptshift =
       processor->property_or_none<fo::LengthSpec>(fo, "position-point-shift");
 
+    if (auto fn = processor->property_or_none<std::string>(fo, "font-name")) {
+      if (*fn == "monospace")
+        set_attr(attrs, "font-family", "monospace");
+      else if (*fn == "sans-serif")
+        set_attr(attrs, "font-family", "sans-serif");
+      else if (*fn == "roman")
+        set_attr(attrs, "font-family", "serif");
+    }
+
     set_attr(attrs, "font-size", fontsize);
     set_capsstyle(attrs, fontcaps);
     set_attr(attrs, "position", "relative");
