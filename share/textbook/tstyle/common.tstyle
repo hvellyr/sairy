@@ -1,6 +1,9 @@
 ;;; Copyright (c) 2017 Gregor Klinke
 ;;; All rights reserved.
 
+(define (html-backend?)
+  (string=? %backend% "html"))
+
 ;; @doc format list in 'upright font-posture.  If @prm{seq} is a sosofo it is
 ;; taken asis, otherwise it is processed.
 (define (format-r seq)
