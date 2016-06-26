@@ -434,6 +434,17 @@ namespace {
       set_font_characteristics(attrs, processor, fo);
       set_space_characteristics(attrs, processor, fo);
 
+      auto quadding = processor->property(fo, "quadding", std::string("left"));
+      if (quadding == "left")
+        set_attr(attrs, "text-align", "left");
+      else if (quadding == "right")
+        set_attr(attrs, "text-align", "right");
+      else if (quadding == "center")
+        set_attr(attrs, "text-align", "center");
+      else if (quadding == "justify")
+        set_attr(attrs, "text-align", "justify");
+      set_attr(attrs, "text-justify", "inter-word");
+
       {
         auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
         html::Tag with_tag(processor->ctx().port(), "p",
