@@ -1,0 +1,48 @@
+;;; Copyright (c) 2015 Gregor Klinke
+;;; All rights reserved.
+
+(define (get-line-length nd)
+  (let loop ((c (children nd))
+             (maxlen 0))
+    (if (node-list-empty? c)
+        maxlen
+        (let* ((lines (string-split (data (node-list-first nd)) #\newline))
+               (ml (string-length (reduce (lambda (a b)
+                                            (if (> (string-length a)
+                                                   (string-length b))
+                                                a b))
+                                          0
+                                          lines))))pen
+          (loop (node-list-rest c)
+                (if (> ml maxlen) ml maxlen))) )))
+
+(define (example-start-indent nd)
+  (if (> (get-line-length nd) 60) -25mm 0pt))
+
+(mode verbatim-mode
+  (element p
+    (make paragraph
+      space-before: 0pt
+      space-after:  0pt
+      start-indent: (example-start-indent (parent (current-node)))
+      font-name:    "monospace"
+      font-size:    (if (html-backend?) 8pt 9pt)
+      line-spacing: 11pt
+      lines:        'asis
+      whitespace-treatment: 'preserve
+      (process-children)))
+  )
+
+(element example
+  (make display-group
+    space-before: 7pt
+    space-after:  7pt
+    (with-mode verbatim-mode
+      (process-children))))
+
+(element verbatim
+  (make display-group
+    space-before: 7pt
+    space-after:  7pt
+    (with-mode verbatim-mode
+      (process-children))))
