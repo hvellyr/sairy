@@ -603,16 +603,15 @@ namespace {
   };
 
 
-  class HtmlSimplePageSequenceFoProcessor : public IFoProcessor<HtmlProcessor> {
+  class HtmlScrollSequenceFoProcessor : public IFoProcessor<HtmlProcessor> {
   public:
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      auto title = processor->property(fo, "metadata.title", std::string());
+      auto title = processor->property(fo, "title", std::string());
       auto author = processor->property(fo, "metadata.author", std::string());
       auto desc = processor->property(fo, "metadata.desc", std::string());
-      auto page_width =
-        processor->property_or_none<fo::LengthSpec>(fo, "page-width");
+      auto width = processor->property_or_none<fo::LengthSpec>(fo, "width");
 
       if (!processor->ctx().port().has_header()) {
         processor->ctx().port().header(title, author, desc, [&](std::ostream&) {
@@ -625,24 +624,33 @@ namespace {
         });
       }
 
+      detail::StyleAttrs attrs;
+      set_attr(attrs, "width", width);
+
+      auto color = processor->property_or_none<fo::Color>(fo, "color");
+      if (color)
+        set_attr(attrs, "color", enc_color(*color));
+
+      auto bgcolor =
+        processor->property_or_none<fo::Color>(fo, "background-color");
+      if (bgcolor)
+        set_attr(attrs, "background-color", enc_color(*bgcolor));
+
+      auto start_margin =
+        processor->property_or_none<fo::LengthSpec>(fo, "start-margin");
+      set_attr(attrs, "margin-left", start_margin);
+      auto end_margin =
+        processor->property_or_none<fo::LengthSpec>(fo, "end-margin");
+      set_attr(attrs, "margin-right", end_margin);
+
       {
-        detail::StyleAttrs attrs;
-        set_attr(attrs, "width", page_width);
-
-        auto start_margin =
-          processor->property_or_none<fo::LengthSpec>(fo, "start-margin");
-        set_attr(attrs, "margin-left", start_margin);
-        auto end_margin =
-          processor->property_or_none<fo::LengthSpec>(fo, "end-margin");
-        set_attr(attrs, "margin-right", end_margin);
-
         html::Tag with_tag(processor->ctx().port(), "div",
                            tag_style_attrs(processor, "div", attrs));
         StyleScope style_scope(processor->ctx(), attrs);
 
         processor->ctx().port().newln();
 
-        processor->render_sosofo(&fo->port("text"));
+        processor->render_sosofo(&fo->port("scroll"));
       }
 
       processor->ctx().port().newln();
@@ -816,8 +824,7 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
       {"#paragraph", std::make_shared<HtmlParagraphFoProcessor>()},
       {"#paragraph-break", std::make_shared<HtmlParagraphBreakFoProcessor>()},
       {"#display-group", std::make_shared<HtmlDisplayGroupFoProcessor>()},
-      {"#simple-page-sequence",
-       std::make_shared<HtmlSimplePageSequenceFoProcessor>()},
+      {"#scroll-sequence", std::make_shared<HtmlScrollSequenceFoProcessor>()},
       {"#sequence", std::make_shared<HtmlSequenceFoProcessor>()},
       {"#line-field", std::make_shared<HtmlLineFieldFoProcessor>()},
       {"#anchor", std::make_shared<HtmlAnchorFoProcessor>()},

@@ -77,6 +77,7 @@ namespace fo {
     {"right-footer", false},           // Sosofo
     {"position-point-shift", false},   // LengthSpec
     {"text", false},                   // String
+    {"width", false},                  // LengthSpec
   };
 
 
@@ -498,6 +499,7 @@ namespace fo {
       PropertySpec("font-size", LengthSpec(kDimen, 10, k_pt)),
       PropertySpec("font-weight", "medium"),
       PropertySpec("title", false),
+      PropertySpec("width", LengthSpec(kDimen, 600, k_px)),
       PropertySpec("start-margin", LengthSpec(kDimen, 0, k_pt)),
       PropertySpec("end-margin", LengthSpec(kDimen, 0, k_pt)),
       PropertySpec("background-color", false),
