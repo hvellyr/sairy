@@ -89,6 +89,7 @@ class HtmlProcessor : public AbstractProcessor<HtmlProcessor> {
   html::detail::StyleCtx _style_ctx;
   bool _verbose;
   html::CSSWriter _css_port;
+  filesystem::path _css_file;
 
 public:
   HtmlProcessor();
@@ -110,6 +111,8 @@ public:
   html::CSSWriter& css_writer();
 
   bool is_verbose() const;
+
+  filesystem::path css_file() const;
 };
 
 

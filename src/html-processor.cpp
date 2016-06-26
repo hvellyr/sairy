@@ -413,11 +413,8 @@ namespace {
   };
 
 
-  template <typename Functor>
-  void with_html_file(HtmlProcessor* processor, const fs::path& path,
-                      const std::string& title, const std::string& author,
-                      const std::string& desc, const html::Doctype& doctype,
-                      Functor functor)
+  auto open_html_port(HtmlProcessor* processor, const fs::path& path,
+                      const html::Doctype& doctype) -> fs::path
   {
     auto csspath = path;
     csspath.replace_extension("css");
@@ -445,16 +442,35 @@ namespace {
 
     ctx.push_port(std::move(port), path);
 
-    ctx.port().header(title, author, desc, [&](std::ostream&) {
-      ctx.port().write_link("stylesheet", {{"media", "screen"},
-                                           {"type", "text/css"},
-                                           {"href", csspath.string()}});
+    return csspath;
+  }
+
+
+  void close_html_port(HtmlProcessor* processor)
+  {
+    processor->ctx().port().footer();
+    processor->ctx().pop_port();
+  }
+
+
+  template <typename Functor>
+  void with_html_file(HtmlProcessor* processor, const fs::path& path,
+                      const std::string& title, const std::string& author,
+                      const std::string& desc, const html::Doctype& doctype,
+                      Functor functor)
+  {
+    auto csspath = open_html_port(processor, path, doctype);
+
+    processor->ctx().port().header(title, author, desc, [&](std::ostream&) {
+      processor->ctx().port().write_link("stylesheet",
+                                         {{"media", "screen"},
+                                          {"type", "text/css"},
+                                          {"href", csspath.string()}});
     });
 
     functor(processor);
 
-    ctx.port().footer();
-    ctx.pop_port();
+    close_html_port(processor);
   }
 
 
@@ -598,35 +614,38 @@ namespace {
       auto html_width =
         processor->property_or_none<fo::LengthSpec>(fo, "html.width");
 
-      with_html_file(processor, processor->ctx().current_path(), title, author,
-                     desc, html::k_XHTML_1_1_DTD,
-                     [fo, html_width](HtmlProcessor* processor) {
-                       {
-                         detail::StyleAttrs attrs;
-                         set_attr(attrs, "width", html_width);
+      if (!processor->ctx().port().has_header()) {
+        processor->ctx().port().header(title, author, desc, [&](std::ostream&) {
+          processor->ctx()
+            .port()
+            .write_link("stylesheet",
+                        {{"media", "screen"},
+                         {"type", "text/css"},
+                         {"href", processor->css_file().string()}});
+        });
+      }
 
-                         auto start_margin =
-                           processor
-                             ->property_or_none<fo::LengthSpec>(fo,
-                                                                "start-margin");
-                         set_attr(attrs, "margin-left", start_margin);
-                         auto end_margin =
-                           processor
-                             ->property_or_none<fo::LengthSpec>(fo,
-                                                                "end-margin");
-                         set_attr(attrs, "margin-right", end_margin);
+      {
+        detail::StyleAttrs attrs;
+        set_attr(attrs, "width", html_width);
 
-                         html::Tag with_tag(processor->ctx().port(), "div",
-                                            tag_style_attrs(processor, "div",
-                                                            attrs));
-                         StyleScope style_scope(processor->ctx(), attrs);
+        auto start_margin =
+          processor->property_or_none<fo::LengthSpec>(fo, "start-margin");
+        set_attr(attrs, "margin-left", start_margin);
+        auto end_margin =
+          processor->property_or_none<fo::LengthSpec>(fo, "end-margin");
+        set_attr(attrs, "margin-right", end_margin);
 
-                         processor->ctx().port().newln();
+        html::Tag with_tag(processor->ctx().port(), "div",
+                           tag_style_attrs(processor, "div", attrs));
+        StyleScope style_scope(processor->ctx(), attrs);
 
-                         processor->render_sosofo(&fo->port("text"));
-                       }
-                       processor->ctx().port().newln();
-                     });
+        processor->ctx().port().newln();
+
+        processor->render_sosofo(&fo->port("text"));
+      }
+
+      processor->ctx().port().newln();
     }
   };
 
@@ -814,15 +833,13 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
 
 void HtmlProcessor::before_rendering()
 {
-  auto mainport =
-    ::estd::make_unique<html::Writer>(html::k_XHTML_1_1_DTD,
-                                      k_TEXTBOOK_GENERATOR, _style_ctx);
-  _ctx.push_port(std::move(mainport), _output_file);
+  _css_file = open_html_port(this, _output_file, html::k_XHTML_1_1_DTD);
 }
 
 
 void HtmlProcessor::after_rendering()
 {
+  close_html_port(this);
 }
 
 
@@ -853,6 +870,12 @@ html::CSSWriter& HtmlProcessor::css_writer()
 bool HtmlProcessor::is_verbose() const
 {
   return _verbose;
+}
+
+
+filesystem::path HtmlProcessor::css_file() const
+{
+  return _css_file;
 }
 
 } // ns eyestep

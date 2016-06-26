@@ -237,7 +237,7 @@ namespace html {
                       const std::string& desc,
                       const std::function<void(std::ostream&)>& style_proc)
   {
-    if (_file.is_open()) {
+    if (_file.is_open() && !_has_header) {
       doctype();
       open_tag("html", {Attr{"xmlns", "http://www.w3.org/1999/xhtml"}});
       newln();
@@ -270,8 +270,13 @@ namespace html {
       newln();
       open_tag("body");
       newln();
+
+      _has_header = true;
     }
   }
+
+
+  bool Writer::has_header() const { return _has_header; }
 
 
   void Writer::footer()

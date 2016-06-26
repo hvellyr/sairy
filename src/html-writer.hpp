@@ -40,6 +40,7 @@ namespace html {
     Doctype _doctype;
     std::string _generator;
     const detail::StyleCtx* _ctx;
+    bool _has_header = false;
 
   public:
     Writer(const Doctype& doctype, const std::string& generator,
@@ -66,6 +67,7 @@ namespace html {
                 const std::string& desc,
                 const std::function<void(std::ostream&)>& style_proc =
                   [](std::ostream&) {});
+    bool has_header() const;
     void footer();
 
     void newln();
