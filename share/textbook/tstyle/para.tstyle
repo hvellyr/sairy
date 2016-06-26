@@ -48,6 +48,9 @@
         (make paragraph
           first-line-start-indent: 0pt
           quadding: "justify"
+          space-before: (if (html-backend?)
+                            (display-space 7pt conditional?: #t)
+                            0pt)
           (process-node-list-left-trim-idx-ws (children (current-node))))
         )))
 
