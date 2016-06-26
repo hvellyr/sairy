@@ -15,11 +15,14 @@
 #include "fspp/estd/optional.hpp"
 #include "fspp/filesystem.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <unordered_set>
 
 
@@ -142,12 +145,66 @@ namespace {
   bool css_attribute_is_inherited(const std::string& prop)
   {
     static const std::unordered_set<std::string> not_inherited =
-      {"padding-left", "padding-bottom", "padding-right", "padding-top",
-       "padding",      "height",         "width",         "bottom",
-       "left",         "right",          "top",           "display",
-       "margin",       "margin-left",    "margin-right",  "margin-bottom",
-       "margin-top"};
+      {"padding-left", "padding-bottom",  "padding-right", "padding-top",
+       "padding",      "height",          "width",         "bottom",
+       "left",         "right",           "top",           "display",
+       "margin",       "margin-left",     "margin-right",  "margin-bottom",
+       "margin-top",   "background-color"};
     return not_inherited.find(prop) == not_inherited.end();
+  }
+
+
+  float normalize_co_value(float v)
+  {
+    if (v <= 0)
+      v = 0.0f;
+    if (v > 100.0f)
+      v = 100.0f;
+    return v;
+  }
+
+  std::tuple<int, int, int> convert_cmyk_to_rgb(fo::Color co)
+  {
+    auto c = normalize_co_value(co._cmyk._cyan) / 100;
+    auto m = normalize_co_value(co._cmyk._magenta) / 100;
+    auto y = normalize_co_value(co._cmyk._yellow) / 100;
+    auto k = normalize_co_value(co._cmyk._black) / 100;
+
+    auto r = 1 - std::min<float>(1, c * (1 - k) + k);
+    auto g = 1 - std::min<float>(1, m * (1 - k) + k);
+    auto b = 1 - std::min<float>(1, y * (1 - k) + k);
+
+    return std::make_tuple(floor(r * 255), floor(g * 255), floor(b * 255));
+  }
+
+  std::tuple<int, int, int> convert_gray_to_rgb(fo::Color co)
+  {
+    auto result = normalize_co_value(co._gray);
+    return std::make_tuple(floor(result * 255), floor(result * 255),
+                           floor(result * 255));
+  }
+
+
+  std::string enc_color(const fo::Color co)
+  {
+    auto rco = [&]() -> std::tuple<int, int, int> {
+      switch (co._space) {
+      case fo::kRGB:
+        return std::make_tuple(floor(co._rgb._red * 255),
+                               floor(co._rgb._green * 255),
+                               floor(co._rgb._blue * 255));
+      case fo::kCMYK:
+        return convert_cmyk_to_rgb(co);
+      case fo::kGray:
+        return convert_gray_to_rgb(co);
+      }
+    }();
+
+    std::stringstream ss;
+    ss << "#" << std::hex << std::get<0>(rco) << std::get<1>(rco)
+       << std::get<2>(rco);
+
+    return ss.str();
   }
 
 
@@ -445,6 +502,15 @@ namespace {
         set_attr(attrs, "text-align", "justify");
       set_attr(attrs, "text-justify", "inter-word");
 
+      auto color = processor->property_or_none<fo::Color>(fo, "color");
+      if (color)
+        set_attr(attrs, "color", enc_color(*color));
+
+      auto bgcolor =
+        processor->property_or_none<fo::Color>(fo, "background-color");
+      if (bgcolor)
+        set_attr(attrs, "background-color", enc_color(*bgcolor));
+
       {
         auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
         html::Tag with_tag(processor->ctx().port(), "p",
@@ -539,9 +605,15 @@ namespace {
                          detail::StyleAttrs attrs;
                          set_attr(attrs, "width", html_width);
 
-                         auto start_margin = processor->property_or_none<fo::LengthSpec>(fo, "start-margin");
+                         auto start_margin =
+                           processor
+                             ->property_or_none<fo::LengthSpec>(fo,
+                                                                "start-margin");
                          set_attr(attrs, "margin-left", start_margin);
-                         auto end_margin = processor->property_or_none<fo::LengthSpec>(fo, "end-margin");
+                         auto end_margin =
+                           processor
+                             ->property_or_none<fo::LengthSpec>(fo,
+                                                                "end-margin");
                          set_attr(attrs, "margin-right", end_margin);
 
                          html::Tag with_tag(processor->ctx().port(), "div",

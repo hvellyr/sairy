@@ -177,6 +177,8 @@ namespace fo {
       PropertySpec("numbered-lines?", false),
       PropertySpec("line-number-side", "start"),
       PropertySpec("position-point-shift", LengthSpec(kDimen, 0, k_pt)),
+      PropertySpec("color", ""),
+      PropertySpec("background-color", ""),
       // clang-format on
     };
     return propspecs;
@@ -234,6 +236,8 @@ namespace fo {
       PropertySpec("font-size", ""),
       PropertySpec("font-weight", ""),
       PropertySpec("lines", ""),
+      PropertySpec("color", ""),
+      PropertySpec("background-color", ""),
     };
     // clang-format on
     return propspecs;
