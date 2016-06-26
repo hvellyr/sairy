@@ -263,6 +263,12 @@ namespace {
   }
 
 
+  void set_attr(detail::StyleAttrs& attrs, const std::string& key, int val)
+  {
+    attrs._css_map[key] = std::to_string(val);
+  }
+
+
   const std::string k_normal = "normal";
   const std::string k_lower = "lower";
   const std::string k_caps = "caps";
@@ -774,7 +780,14 @@ namespace {
   public:
     void render(HtmlProcessor* po, const IFormattingObject* fo) const override
     {
-      html::Tag div_tag(po->ctx().port(), "div", {});
+      detail::StyleAttrs attrs;
+      auto col_num = po->property(fo, "column-number", 1);
+      set_attr(attrs, "column-count", col_num);
+
+      html::Tag with_tag(po->ctx().port(), "div",
+                         tag_style_attrs(po, "div", attrs));
+      StyleScope style_scope(po->ctx(), attrs);
+
       po->render_sosofo(&fo->port("text"));
     }
   };

@@ -37,6 +37,7 @@ namespace fo {
     {"field-width", false},            // LengthSpec
     {"field-align", false},            // Keyw: left, right, center
     {"first-line-start-indent", true}, // LengthSpec
+    {"column-number", false},          // Int
     {"gutter-width", false},           // LengthSpec
     {"last-line-end-indent", true},    // LengthSpec
     {"font-name", true},               // String
