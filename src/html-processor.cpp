@@ -611,8 +611,8 @@ namespace {
       auto title = processor->property(fo, "metadata.title", std::string());
       auto author = processor->property(fo, "metadata.author", std::string());
       auto desc = processor->property(fo, "metadata.desc", std::string());
-      auto html_width =
-        processor->property_or_none<fo::LengthSpec>(fo, "html.width");
+      auto page_width =
+        processor->property_or_none<fo::LengthSpec>(fo, "page-width");
 
       if (!processor->ctx().port().has_header()) {
         processor->ctx().port().header(title, author, desc, [&](std::ostream&) {
@@ -627,7 +627,7 @@ namespace {
 
       {
         detail::StyleAttrs attrs;
-        set_attr(attrs, "width", html_width);
+        set_attr(attrs, "width", page_width);
 
         auto start_margin =
           processor->property_or_none<fo::LengthSpec>(fo, "start-margin");
