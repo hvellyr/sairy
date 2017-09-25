@@ -39,11 +39,11 @@ TextbookScanner::TextbookScanner(
   : _debug(false)
 {
   if (!args.empty()) {
-    _prefix_path = utils::split_paths(args["sairy-prefix"].as<std::string>());
+    _prefix_path = utils::split_paths(args["textbook-prefix"].as<std::string>());
 
     _catalog_path = boost::copy_range<std::vector<fs::path>>(
       _prefix_path | boost::adaptors::transformed([](const fs::path& path) {
-        return path / "textbook" / "spec";
+        return path / "spec";
       }));
 
     _debug = args["debug"].as<bool>();

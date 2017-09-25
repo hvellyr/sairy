@@ -1,6 +1,6 @@
 ;;; textbook-mode.el --- major mode for editing textbook files -*- coding: utf-8 -*-
 ;;
-;; Copyright (c) 2011, 2015 Gregor C. Klinke
+;; Copyright (c) 2011, 2015,2017 Gregor C. Klinke
 ;; All rights reserved.
 ;;
 ;; This source code is released under the BSD License.
@@ -10,7 +10,7 @@
 ;;   2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
 ;;
 ;; Author: Gregor C. Klinke
-;; Date:   2015-03-29
+;; Date:   2017-09-25
 ;; Maintainer: hvellyr
 ;; Keywords: TEXTBOOK, docs
 ;;

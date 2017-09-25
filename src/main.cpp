@@ -26,7 +26,7 @@
 #include <iostream>
 #include <memory>
 
-#define SAIRY_DEFAULT_PREFIX "/usr/local/share/sairy"
+#define TEXTBOOK_DEFAULT_PREFIX "/usr/local/share/textbook"
 
 
 namespace fs = boost::filesystem;
@@ -164,7 +164,7 @@ int main(int argc, char** argv)
 
     po::options_description hidden("Hidden options");
     hidden.add_options()
-      ("sairy-prefix",   po::value<std::string>()->default_value(SAIRY_DEFAULT_PREFIX), "")
+      ("textbook-prefix",   po::value<std::string>()->default_value(TEXTBOOK_DEFAULT_PREFIX), "")
       ;
     // clang-format on
 
@@ -191,8 +191,8 @@ int main(int argc, char** argv)
                 .run(),
               vm);
     po::store(po::parse_environment(all_options, [](const std::string& opt) {
-      if (opt == "SAIRY_PREFIX")
-        return std::string("sairy-prefix");
+      if (opt == "TEXTBOOK_PREFIX")
+        return std::string("textbook-prefix");
       return std::string();
     }), vm);
     po::notify(vm);
@@ -204,7 +204,7 @@ int main(int argc, char** argv)
 
     std::string outf = vm["output"].as<std::string>();
     std::string templ_path = vm["template"].as<std::string>();
-    std::string prefix_path = vm["sairy-prefix"].as<std::string>();
+    std::string prefix_path = vm["textbook-prefix"].as<std::string>();
     std::string backend = vm["backend"].as<std::string>();
 
     if (vm["verbose"].as<bool>()) {
@@ -244,7 +244,7 @@ int main(int argc, char** argv)
           deduce_output_file(outf, sources,
                              processor->default_output_extension()));
 
-        eyestep::StyleEngine engine(prefix_path, backend);
+        auto engine = eyestep::StyleEngine(prefix_path, backend);
         if (engine.load_style(eff_templ_path)) {
           auto sosofo = std::move(engine.process_node(grove.root_node()));
 

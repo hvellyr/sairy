@@ -30,7 +30,7 @@ namespace {
 
     ctx->initialize(paths);
 
-    auto init_path = fs::path("sairy") / "init.scm";
+    auto init_path = fs::path("textbook") / "init.scm";
     if (!ctx->load_module_file(init_path)) {
       std::cerr << "Could not read " << init_path.string() << std::endl;
       return nullptr;
@@ -47,7 +47,7 @@ StyleEngine::StyleEngine(const std::string& prefix_path,
   : _backend_id(backend_id)
 {
   _ctx = setup_scheme_context(prefix_path);
-  _ctx->define_variable("%sairy-prefix-paths%", prefix_path);
+  _ctx->define_variable("%textbook-prefix-paths%", prefix_path);
 }
 
 

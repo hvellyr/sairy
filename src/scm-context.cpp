@@ -230,8 +230,8 @@ namespace {
   sexp make_nodelist(sexp ctx, const NodeList* obj);
 
 
-  sexp make_sairy_exception(sexp ctx, sexp self, const char *ms, sexp ir,
-                            sexp source)
+  sexp make_textbook_exception(sexp ctx, sexp self, const char *ms, sexp ir,
+                               sexp source)
   {
     sexp res;
     sexp_gc_var3(sym, str, irr);
@@ -1389,13 +1389,13 @@ namespace {
 
       if (!fo) {
         result =
-          make_sairy_exception(ctx, self, "Unknown fo-class: ", fo_class_arg,
-                               source);
+          make_textbook_exception(ctx, self, "Unknown fo-class: ", fo_class_arg,
+                                  source);
       }
       else if (!fo->accepts_fo(*sosofo)) {
         result =
-          make_sairy_exception(ctx, self, "bad FO nesting", fo_class_arg,
-                               source);
+          make_textbook_exception(ctx, self, "bad FO nesting", fo_class_arg,
+                                  source);
       }
       else
         result = make_sosofo(ctx, new Sosofo(fo));
@@ -1423,8 +1423,8 @@ namespace {
 
     auto fo_class = string_from_symbol_sexp_or_none(ctx, fo_class_arg);
     if (!fo_class) {
-      result = make_sairy_exception(ctx, self, "not a symbol", fo_class_arg,
-                                    source);
+      result = make_textbook_exception(ctx, self, "not a symbol", fo_class_arg,
+                                       source);
     }
 
     fo::PropertySpecs props;
@@ -1447,8 +1447,8 @@ namespace {
               }
               else {
                 result =
-                  make_sairy_exception(ctx, self, "use: requires style argument", ref,
-                                       source);
+                  make_textbook_exception(ctx, self, "use: requires style argument", ref,
+                                          source);
                 break;
               }
             }
@@ -1462,8 +1462,8 @@ namespace {
           }
           else {
             result =
-              make_sairy_exception(ctx, self, "value missing for keyword", ref,
-                                   source);
+              make_textbook_exception(ctx, self, "value missing for keyword", ref,
+                                      source);
             break;
           }
         }
@@ -1479,16 +1479,16 @@ namespace {
         auto key = string_from_keyword_or_none(ctx, ref);
 
         if (key) {
-          result = make_sairy_exception(ctx, self,
-                                        "unexpeced keyword in make body", ref,
-                                        source);
+          result = make_textbook_exception(ctx, self,
+                                           "unexpeced keyword in make body", ref,
+                                           source);
           break;
         }
         obj = ref;
       }
     }
     else {
-      result = make_sairy_exception(ctx, self, "not a list", args_arg, source);
+      result = make_textbook_exception(ctx, self, "not a list", args_arg, source);
     }
 
     if (result == SEXP_NULL && fo_class) {
@@ -1794,7 +1794,6 @@ namespace {
 
     for (const auto& p : paths) {
       auto src_path = (fs::path(p) / resource).replace_extension(".tstyle");
-      // std::cout << "test " << src_path << std::endl;
       if (fs::exists(src_path)) {
         return src_path;
       }
@@ -1818,7 +1817,7 @@ namespace {
       if (sexp_stringp(path)) {
         sexp tstyle_paths =
           sexp_env_ref(ctx, sexp_context_env(ctx),
-                       nm2 = sexp_intern(ctx, "%sairy-prefix-paths%", -1),
+                       nm2 = sexp_intern(ctx, "%textbook-prefix-paths%", -1),
                        SEXP_VOID);
         auto tstyle_paths_str = sexp_stringp(tstyle_paths)
                                   ? std::string(sexp_string_data(tstyle_paths))

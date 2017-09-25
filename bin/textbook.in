@@ -1,0 +1,3 @@
+#!/bin/sh
+
+TEXTBOOK_PREFIX="@PROJECT_BINARY_DIR@/scheme":./share/textbook "@textbook_executable_path@" "$@"

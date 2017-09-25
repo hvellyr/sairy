@@ -12,7 +12,7 @@ target_include_directories(nodes_test
 )
 
 target_link_libraries(nodes_test
-  sairy-utils
+  textbook-utils
   grove
 )
 
@@ -31,7 +31,7 @@ target_include_directories(utils_test
   PUBLIC "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}"
 )
 target_link_libraries(utils_test
-  sairy-utils
+  textbook-utils
   ${Boost_LIBRARIES}
 )
 
@@ -53,7 +53,7 @@ target_include_directories(textbook_test
 target_link_libraries(textbook_test
   grove
   textbook-parser
-  sairy-utils
+  textbook-utils
   ${Boost_LIBRARIES}
 )
 
@@ -74,7 +74,7 @@ target_include_directories(parser_test
 target_link_libraries(parser_test
   grove
   textbook-parser
-  sairy-utils
+  textbook-utils
   ${Boost_LIBRARIES}
 )
 

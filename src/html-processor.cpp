@@ -28,7 +28,7 @@ namespace eyestep {
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
-const std::string k_SAIRY_GENERATOR = "Sairy HTML Processor";
+const std::string k_TEXTBOOK_GENERATOR = "Textbook HTML Processor";
 
 
 detail::HtmlRenderContext::HtmlRenderContext()
@@ -346,7 +346,7 @@ namespace {
 
     detail::HtmlRenderContext& ctx = processor->ctx();
 
-    auto port = estd::make_unique<html::Writer>(doctype, k_SAIRY_GENERATOR);
+    auto port = estd::make_unique<html::Writer>(doctype, k_TEXTBOOK_GENERATOR);
     port->open(path);
 
     ctx.push_port(std::move(port), path);
@@ -623,7 +623,7 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
 void HtmlProcessor::before_rendering()
 {
   auto mainport =
-    estd::make_unique<html::Writer>(html::k_XHTML_1_1_DTD, k_SAIRY_GENERATOR);
+    estd::make_unique<html::Writer>(html::k_XHTML_1_1_DTD, k_TEXTBOOK_GENERATOR);
   _ctx.push_port(std::move(mainport), _output_file);
 }
 

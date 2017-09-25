@@ -1,14 +1,14 @@
-# Copyright (c) 2015 Gregor Klinke
+# Copyright (c) 2017 Gregor Klinke
 # All rights reserved.
 
 #------------------------------------------------------------------------------
-add_library(sairy-utils
+add_library(textbook-utils
   utils.cpp
   utils.hpp
 )
-target_include_directories(sairy-utils
+target_include_directories(textbook-utils
   PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
-target_compile_options(sairy-utils
+target_compile_options(textbook-utils
   PUBLIC ${cxx11_options} ${warning_options})
 
 
@@ -26,19 +26,6 @@ add_library(grove
 target_include_directories(grove
   PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
 target_compile_options(grove
-  PUBLIC ${cxx11_options} ${warning_options})
-
-
-#------------------------------------------------------------------------------
-add_library(cppscanner
-  cpp-lang.cpp
-  cpp-lang.hpp
-  cpp-scanner.cpp
-  cpp-scanner.hpp
-)
-target_include_directories(cppscanner
-  PUBLIC "$<BUILD_INTERFACE:${LibClang_INCLUDE_DIRS};${Boost_INCLUDE_DIRS}>")
-target_compile_options(cppscanner
   PUBLIC ${cxx11_options} ${warning_options})
 
 
@@ -134,7 +121,7 @@ target_compile_options(debug-processor
 #------------------------------------------------------------------------------
 add_definitions(-DSEXP_USE_KEYWORDS=1 -DSEXP_USE_QUANTITY=1)
 
-add_executable(sairy
+add_executable(textbook
   main.cpp
   processor-setup.cpp
   processor-setup.hpp
@@ -146,11 +133,10 @@ add_executable(sairy
   style-engine.cpp
   style-engine.hpp
 )
-target_include_directories(sairy
+target_include_directories(textbook
   PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>;${PROJECT_SOURCE_DIR}/third-party/chibi-scheme/include")
 
-target_link_libraries(sairy
-  cppscanner
+target_link_libraries(textbook
   textbook-scanner
   debug-processor
   fo
@@ -160,17 +146,16 @@ target_link_libraries(sairy
   processor-base
   scheme
   textbook-parser
-  sairy-utils
-  ${LibClang_LIBRARIES}
+  textbook-utils
   ${Boost_LIBRARIES})
 
-set(sairy_app "${PROJECT_BINARY_DIR}/app")
-set_target_properties(sairy
-  PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${sairy_app}")
-set_target_properties(sairy
-  PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG "${sairy_app}")
-set_target_properties(sairy
-  PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE "${sairy_app}")
+set(textbook_app "${PROJECT_BINARY_DIR}/app")
+set_target_properties(textbook
+  PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${textbook_app}")
+set_target_properties(textbook
+  PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG "${textbook_app}")
+set_target_properties(textbook
+  PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE "${textbook_app}")
 
 
 if(POLICY CMP0026)
@@ -178,8 +163,8 @@ cmake_policy(PUSH)
 cmake_policy(SET CMP0026 OLD)
 endif()
 
-get_property(sairy_executable_path TARGET sairy PROPERTY LOCATION)
-configure_file("${PROJECT_SOURCE_DIR}/bin/sairy.in" "${PROJECT_SOURCE_DIR}/bin/sairy"
+get_property(textbook_executable_path TARGET textbook PROPERTY LOCATION)
+configure_file("${PROJECT_SOURCE_DIR}/bin/textbook.in" "${PROJECT_SOURCE_DIR}/bin/textbook"
                @ONLY)
 
 if(POLICY CMP0026)

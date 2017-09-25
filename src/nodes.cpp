@@ -279,7 +279,7 @@ const Properties& Node::properties() const
 std::string next_auto_id()
 {
   static int counter = 0;
-  return std::string("sairy-nd-") + std::to_string(++counter);
+  return std::string("textbook-nd-") + std::to_string(++counter);
 }
 
 Node* Grove::make_node(const NodeClass* node_class)

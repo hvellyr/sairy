@@ -1,11 +1,11 @@
-# Copyright (c) 2015 Gregor Klinke
+# Copyright (c) 2017 Gregor Klinke
 # All rights reserved.
 
 cmake_minimum_required(VERSION 2.8.12)
 
-project(Sairy C CXX)
-set(Sairy_VERSION_MAJOR 0)
-set(Sairy_VERSION_MINOR 1)
+project(Textbook C CXX)
+set(Textbook_VERSION_MAJOR 0)
+set(Textbook_VERSION_MINOR 1)
 
 # Enable C++11
 include(CheckCXXCompilerFlag)
@@ -66,8 +66,6 @@ if(DEFINED Boost_INCLUDE_DIR)
   get_filename_component(Boost_INCLUDE_DIR ${Boost_INCLUDE_DIR} ABSOLUTE)
 endif()
 find_package(Boost 1.54 REQUIRED COMPONENTS program_options system filesystem date_time)
-
-find_package(LibClang 3.6 REQUIRED)
 
 include(FeatureSummary)
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
