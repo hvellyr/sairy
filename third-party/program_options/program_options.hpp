@@ -1,14 +1,16 @@
 #ifndef _PROGRAM_OPTIONS_HPP
 #define _PROGRAM_OPTIONS_HPP
 
-#include <map>
-#include <set>
-#include <vector>
-#include <memory>
 #include <cstring>
-#include <sstream>
 #include <functional>
+#include <map>
+#include <memory>
+#include <numeric>
 #include <regex>
+#include <set>
+#include <sstream>
+#include <vector>
+
 
 namespace program_options {
 
@@ -501,6 +503,21 @@ public:
 
     void add_option(const std::shared_ptr<const option_description>& desc);
 
+    options_description& add(const options_description& options) {
+      for (const auto group : options.groups_) {
+        groups_.push_back(group);
+      }
+
+      return *this;
+    }
+
+    bool empty() const {
+      return std::accumulate(begin(groups_), end(groups_), 0, [](int sum, const option_group& group)
+                             {
+                               return sum + group.options_.size();
+                             }) == 0;
+    }
+
 private:
     std::string help() const;
 
@@ -512,10 +529,13 @@ private:
     const size_t OPTION_LONGEST = 30;
     const size_t OPTION_DESC_GAP = 2;
 
-    std::string caption_;
-    std::map<std::string, std::shared_ptr<const option_description>> optmap_;
-    std::set<std::string> optset_;
-    std::vector<std::shared_ptr<const option_description>> options_;
+    struct option_group {
+      std::string caption_;
+      std::set<std::string> optset_;
+      std::vector<std::shared_ptr<const option_description>> options_;
+    };
+
+    std::vector<option_group> groups_;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const options_description& desc)
@@ -529,6 +549,7 @@ class variables_map {
 
 public:
     size_t count(const std::string& opt) const;
+    bool empty() const { return values_.empty(); }
 
     const variable_value& operator[](const std::string& opt) const;
 
@@ -596,12 +617,10 @@ inline const std::string& positional_options_description::name_for_position(unsi
 }
 
 inline options_description::options_description(const std::string& caption)
-    : caption_(caption)
 {
-    std::shared_ptr<const option_description> unknown_argvs_desc
-        = std::make_shared<const option_description>();
-
-    options_.push_back(unknown_argvs_desc);
+    option_group optgroup;
+    optgroup.caption_ = caption;
+    groups_.push_back(optgroup);
 }
 
 inline void options_description::add_option(const std::shared_ptr<const option_description>& desc)
@@ -609,57 +628,63 @@ inline void options_description::add_option(const std::shared_ptr<const option_d
     const auto& s = desc->s;
     const auto& l = desc->l;
 
-    if (! s.empty() && optset_.count(s))
+    if (! s.empty() && groups_.front().optset_.count(s))
         throw duplicate_option(s);
 
-    if (! l.empty() && optset_.count(l))
+    if (! l.empty() && groups_.front().optset_.count(l))
         throw duplicate_option(l);
 
-    options_.push_back(desc);
+    groups_.front().options_.push_back(desc);
 }
 
 inline std::string options_description::help() const
 {
-    std::string desc = caption_;
-    desc += "\nOptions:\n";
+    std::string desc;
+    desc += "Options:\n";
 
-    size_t longest = 0;
-
-    std::vector<std::string> opts;
-
-    for (const auto& o : options_) {
-        if (o->hide)
-            continue;
-
-        const auto& s = format_opt(o);
-        longest = std::max(longest, s.length());
-        opts.push_back(s);
-    }
-
-    longest = std::min(longest, OPTION_LONGEST);
-
-    // widest allowed description
-    size_t allowed = OPTION_LINE_LENGTH - longest - OPTION_DESC_GAP;
-
-    auto it = opts.cbegin();
-
-    for (const auto& o : options_) {
-        if (o->hide)
-            continue;
-
-        desc += *it;
-
-        if (it->length() > longest) {
-            desc += '\n';
-            desc.append(longest + OPTION_DESC_GAP, ' ');
-        } else {
-            desc.append(longest + OPTION_DESC_GAP - it->length(), ' ');
+    for (const auto group : groups_) {
+        if (!group.caption_.empty()) {
+            desc += "\n" + group.caption_ + ":\n";
         }
 
-        desc += format_desc(o, longest + OPTION_DESC_GAP, allowed);
-        desc += '\n';
+        size_t longest = 0;
 
-        ++it;
+        std::vector<std::string> opts;
+
+        for (const auto& o : group.options_) {
+            if (o->hide)
+                continue;
+
+            const auto& s = format_opt(o);
+            longest = std::max(longest, s.length());
+            opts.push_back(s);
+        }
+
+        longest = std::min(longest, OPTION_LONGEST);
+
+        // widest allowed description
+        size_t allowed = OPTION_LINE_LENGTH - longest - OPTION_DESC_GAP;
+
+        auto it = opts.cbegin();
+
+        for (const auto& o : group.options_) {
+            if (o->hide)
+                continue;
+
+            desc += *it;
+
+            if (it->length() > longest) {
+                desc += '\n';
+                desc.append(longest + OPTION_DESC_GAP, ' ');
+            } else {
+                desc.append(longest + OPTION_DESC_GAP - it->length(), ' ');
+            }
+
+            desc += format_desc(o, longest + OPTION_DESC_GAP, allowed);
+            desc += '\n';
+
+            ++it;
+        }
     }
 
     return desc;
@@ -771,25 +796,27 @@ inline parsed_options parse_command_line(int argc, const char* const argv[],
 {
     parsed_options results;
 
-    for (const auto& opt : desc.options_) {
-        std::shared_ptr<variable_value> value = opt->semantic->create_value();
-        bool pos = false;
+    for (const auto& group : desc.groups_) {
+        for (const auto& opt : group.options_) {
+            std::shared_ptr<variable_value> value = opt->semantic->create_value();
+            bool pos = false;
 
-        if (opt->s.empty() && opt->l.empty()) {
-            results.emplace(opt->s, value);
-            pos = true;
-        } else {
-            if (! opt->s.empty()) {
+            if (opt->s.empty() && opt->l.empty()) {
                 results.emplace(opt->s, value);
-                pos |= pos_desc.contains(opt->s);
+                pos = true;
+            } else {
+                if (! opt->s.empty()) {
+                    results.emplace(opt->s, value);
+                    pos |= pos_desc.contains(opt->s);
+                }
+                if (! opt->l.empty()) {
+                    results.emplace(opt->l, value);
+                    pos |= pos_desc.contains(opt->l);
+                }
             }
-            if (! opt->l.empty()) {
-                results.emplace(opt->l, value);
-                pos |= pos_desc.contains(opt->l);
-            }
-        }
 
-        value->is_pos() = pos;
+            value->is_pos() = pos;
+        }
     }
 
     auto is_option = [](const char* arg) -> bool {
