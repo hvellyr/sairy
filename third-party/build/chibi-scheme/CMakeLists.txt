@@ -1,6 +1,15 @@
 # Copyright (c) 2017 Gregor Klinke
 # All rights reserved.
 
+# if(CMAKE_CXX_COMPILER_ID STREQUAL Clang
+#     OR CMAKE_CXX_COMPILER_ID STREQUAL AppleClang)
+#   set(add_warning_options
+#     -Wno-shift-negative-value
+#   )
+# elseif(MSVC)
+#   set(add_warning_options )
+# endif()
+
 #configure_file(<input> <output>
 #               [COPYONLY] [ESCAPE_QUOTES] [@ONLY]
 #               [NEWLINE_STYLE [UNIX|DOS|WIN32|LF|CRLF] ])
@@ -27,7 +36,7 @@ target_include_directories(scheme PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../chibi-scheme/include>"
   ../../chibi-scheme/include)
 target_compile_options(scheme
-  PUBLIC ${warning_options} )
+  PUBLIC ${warning_options} ${add_warning_options} )
 
 
 set(modules_output "${PROJECT_BINARY_DIR}/scheme/lib")
