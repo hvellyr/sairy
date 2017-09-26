@@ -181,7 +181,7 @@ namespace textbook {
         }
       }
 
-      return std::move(docspec);
+      return docspec;
     }
 
 
@@ -207,7 +207,7 @@ namespace textbook {
                            false  // is_mixed
                            ));
 
-      return std::move(docspec);
+      return docspec;
     }
 
 

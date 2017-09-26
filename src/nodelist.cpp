@@ -215,8 +215,8 @@ const Node* SiblingsNodeListStrategy::head() const
 NodeList SiblingsNodeListStrategy::rest() const
 {
   if (_start + 1 < _end) {
-    return NodeList(std::move(
-      estd::make_unique<SiblingsNodeListStrategy>(_node, _start + 1, _end)));
+    return NodeList(
+      estd::make_unique<SiblingsNodeListStrategy>(_node, _start + 1, _end));
   }
   return NodeList();
 }

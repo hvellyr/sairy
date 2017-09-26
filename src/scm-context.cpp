@@ -789,7 +789,7 @@ namespace {
 
     if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
       const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
-      result = make_nodelist(ctx, new NodeList(std::move(nl->rest())));
+      result = make_nodelist(ctx, new NodeList(nl->rest()));
     }
     else {
       result = sexp_user_exception(ctx, self, "not a node-list", nl_arg);
@@ -1981,7 +1981,7 @@ namespace {
 
       sexp_gc_release1(_ctx);
 
-      return std::move(result);
+      return result;
     }
   };
 

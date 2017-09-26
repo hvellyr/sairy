@@ -254,7 +254,7 @@ int main(int argc, char** argv)
 
         auto engine = eyestep::StyleEngine(prefix_path, backend);
         if (engine.load_style(eff_templ_path)) {
-          auto sosofo = std::move(engine.process_node(grove.root_node()));
+          auto sosofo = engine.process_node(grove.root_node());
 
           processor->render_processed_node(sosofo.get());
         }

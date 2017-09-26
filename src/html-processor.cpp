@@ -238,11 +238,11 @@ namespace {
   {
     if (val_or_none) {
       if (*val_or_none == exp_val) {
-        return std::move(html::Tag(processor->ctx().port(), tag));
+        return html::Tag(processor->ctx().port(), tag);
       }
     }
 
-    return std::move(html::Tag());
+    return html::Tag();
   }
 
 
@@ -261,11 +261,11 @@ namespace {
                               const detail::StyleAttrs& attrs)
   {
     if (!attrs._css_map.empty()) {
-      return std::move(html::Tag(processor->ctx().port(), "span",
-                                 style_str2attrs(attrs_to_string(attrs))));
+      return html::Tag(processor->ctx().port(), "span",
+                       style_str2attrs(attrs_to_string(attrs)));
     }
 
-    return std::move(html::Tag());
+    return html::Tag();
   }
 
   html::Tag optional_inline_block_tag(HtmlProcessor* processor,
@@ -276,11 +276,11 @@ namespace {
     extAttrs._css_map["text-indent"] = "0em";
 
     if (!extAttrs._css_map.empty()) {
-      return std::move(html::Tag(processor->ctx().port(), "span",
-                                 style_str2attrs(attrs_to_string(extAttrs))));
+      return html::Tag(processor->ctx().port(), "span",
+                       style_str2attrs(attrs_to_string(extAttrs)));
     }
 
-    return std::move(html::Tag());
+    return html::Tag();
   }
 
 
@@ -401,16 +401,16 @@ namespace {
                            style_str2attrs(attrs_to_string(d_attrs)));
         StyleScope style_scope(processor->ctx(), d_attrs);
 
-        html::Tag b_tag(std::move(
+        html::Tag b_tag(
           optional_tag(processor, "b",
                        processor->property_or_none<std::string>(fo,
                                                                 "font-weight"),
-                       "bold")));
-        html::Tag i_tag(std::move(
+                       "bold"));
+        html::Tag i_tag(
           optional_tag(processor, "i",
                        processor->property_or_none<std::string>(fo,
                                                                 "font-posture"),
-                       "italic")));
+                       "italic"));
 
         processor->render_sosofo(&fo->port("text"));
       }
@@ -499,16 +499,16 @@ namespace {
         html::Tag span_tag(optional_span_tag(processor, d_attrs));
         StyleScope style_scope(processor->ctx(), d_attrs);
 
-        html::Tag b_tag(std::move(
+        html::Tag b_tag(
           optional_tag(processor, "b",
                        processor->property_or_none<std::string>(fo,
                                                                 "font-weight"),
-                       "bold")));
-        html::Tag i_tag(std::move(
+                       "bold"));
+        html::Tag i_tag(
           optional_tag(processor, "i",
                        processor->property_or_none<std::string>(fo,
                                                                 "font-posture"),
-                       "italic")));
+                       "italic"));
 
         processor->render_sosofo(&fo->port("text"));
       }
@@ -549,16 +549,16 @@ namespace {
                              : optional_span_tag(processor, d_attrs));
         StyleScope style_scope(processor->ctx(), d_attrs);
 
-        html::Tag b_tag(std::move(
+        html::Tag b_tag(
           optional_tag(processor, "b",
                        processor->property_or_none<std::string>(fo,
                                                                 "font-weight"),
-                       "bold")));
-        html::Tag i_tag(std::move(
+                       "bold"));
+        html::Tag i_tag(
           optional_tag(processor, "i",
                        processor->property_or_none<std::string>(fo,
                                                                 "font-posture"),
-                       "italic")));
+                       "italic"));
 
         processor->render_sosofo(&fo->port("text"));
       }

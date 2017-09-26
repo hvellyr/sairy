@@ -36,7 +36,7 @@ namespace {
       return nullptr;
     }
 
-    return std::move(ctx);
+    return ctx;
   }
 
 } // ns anon
@@ -71,7 +71,7 @@ std::unique_ptr<Sosofo> StyleEngine::process_node(const Node* root)
 {
   assert(_ctx);
 
-  return std::move(_ctx->process_root_node(root));
+  return _ctx->process_root_node(root);
 }
 
 } // ns eyestep
