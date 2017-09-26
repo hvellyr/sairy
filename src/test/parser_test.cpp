@@ -8,14 +8,14 @@
 #include "../textbook-model.hpp"
 #include "../textbook-parser.hpp"
 
+#include "program_options/program_options.hpp"
+
 #include "json_spirit/json_spirit_value.h"
 #include "json_spirit/json_spirit_reader_template.h"
 #include "json_spirit/json_spirit_writer_template.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/program_options.hpp>
-#include <boost/program_options/parsers.hpp>
 
 #include <functional>
 #include <iostream>
@@ -25,7 +25,7 @@
 
 using namespace eyestep;
 namespace fs = boost::filesystem;
-namespace po = boost::program_options;
+namespace po = program_options;
 
 namespace {
 Node* with_parser_scan(Grove& grove,
@@ -67,7 +67,7 @@ json_spirit::Value reparse_node_as_json(Node* nd)
 void serialize_node_if_missing(Node* nd, const fs::path& path,
                                const po::variables_map& vm)
 {
-  if (vm["serialize"].as<bool>()) {
+  if (vm.count("serialize")) {
     serialize(std::cout, nd, true);
   }
 }
@@ -131,7 +131,7 @@ bool test_file(const fs::path& path, const po::variables_map& vm)
 
       std::cerr << "FAILED" << std::endl
                 << "    parsed and expected outcome differ" << std::endl;
-      if (vm["verbose"].as<bool>()) {
+      if (vm.count("verbose")) {
         std::cerr << "EXPECTED:" << std::endl;
         json_spirit::write_stream(expected_root_elt, std::cerr, true);
         std::cerr << std::endl
@@ -207,26 +207,22 @@ int main(int argc, char** argv)
 
   // clang-format off
   all_options.add_options()
-    ("help,h",         po::bool_switch(), "produce help message")
-    ("verbose,v",      po::bool_switch(), "being verbose")
-    ("serialize,S",    po::bool_switch(), "parse & print json to stdout")
+    ("help,h",         "produce help message")
+    ("verbose,v",      "being verbose")
+    ("serialize,S",    "parse & print json to stdout")
     ("input-file",     po::value<std::vector<std::string>>(),
                        "input file")
     ;
   // clang-format on
 
-  po::positional_options_description p;
-  p.add("input-file", -1);
+  po::positional_options_description pos_options;
+  pos_options.add("input-file", -1);
 
   po::variables_map vm;
-  po::store(po::command_line_parser(argc, argv)
-              .options(all_options)
-              .positional(p)
-              .run(),
-            vm);
+  po::store(po::parse_command_line(argc, argv, all_options, pos_options), vm);
   po::notify(vm);
 
-  if (vm["help"].as<bool>()) {
+  if (vm.count("help")) {
     std::cout << all_options << std::endl;
     exit(1);
   }

@@ -10,6 +10,8 @@
 #include "sosofo.hpp"
 #include "utils.hpp"
 
+#include "program_options/program_options.hpp"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/variant/apply_visitor.hpp>
@@ -28,7 +30,7 @@
 namespace eyestep {
 
 namespace fs = boost::filesystem;
-namespace po = boost::program_options;
+namespace po = program_options;
 
 
 //------------------------------------------------------------------------------
@@ -805,7 +807,7 @@ TexProcessor::TexProcessor()
 TexProcessor::TexProcessor(const po::variables_map& args) : TexProcessor()
 {
   if (!args.empty()) {
-    _verbose = args["verbose"].as<bool>();
+    _verbose = args.count("verbose") != 0;
 
     if (args.count("cropmarks")) {
       auto cropmarks = args["cropmarks"].as<std::string>();

@@ -6,6 +6,7 @@
 #include "scanner.hpp"
 #include "utils.hpp"
 
+#include "program_options/program_options.hpp"
 #include "textbook-scanner.hpp"
 
 #include <boost/filesystem.hpp>
@@ -20,7 +21,7 @@
 namespace eyestep {
 
 namespace fs = boost::filesystem;
-namespace po = boost::program_options;
+namespace po = program_options;
 
 namespace {
   using ScannerFactoryFunc =
@@ -73,7 +74,10 @@ po::options_description scanner_options()
     auto scanner = reg.second(po::variables_map{});
     if (scanner) {
       parsers.push_back(scanner->scanner_id());
-      options.push_back(scanner->program_options());
+      auto opts = scanner->program_options();
+      if (!opts.empty()) {
+        options.push_back(opts);
+      }
     }
   }
 

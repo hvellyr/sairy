@@ -9,6 +9,8 @@
 #include "textbook-parser.hpp"
 #include "utils.hpp"
 
+#include "program_options/program_options.hpp"
+
 #include <boost/range/iterator.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/range/adaptor/transformed.hpp>
@@ -35,7 +37,7 @@ TextbookScanner::TextbookScanner() : _debug(false)
 }
 
 TextbookScanner::TextbookScanner(
-  const boost::program_options::variables_map& args)
+  const program_options::variables_map& args)
   : _debug(false)
 {
   if (!args.empty()) {
@@ -46,7 +48,7 @@ TextbookScanner::TextbookScanner(
         return path / "spec";
       }));
 
-    _debug = args["debug"].as<bool>();
+    _debug = args.count("debug") != 0;
   }
 }
 
@@ -60,10 +62,9 @@ std::unordered_set<std::string> TextbookScanner::supported_extensions() const
   return {".tb", ".textbook"};
 }
 
-boost::program_options::options_description
-TextbookScanner::program_options() const
+program_options::options_description TextbookScanner::program_options() const
 {
-  namespace po = boost::program_options;
+  namespace po = program_options;
 
   std::string opts_title =
     std::string("Textbook parser [selector: '") + scanner_id() + "']";

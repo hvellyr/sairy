@@ -91,7 +91,7 @@ add_library(html-processor
   html-writer.hpp
 )
 target_include_directories(html-processor
-  PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>")
+  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
 target_compile_options(html-processor
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -102,7 +102,7 @@ add_library(tex-processor
   tex-processor.hpp
 )
 target_include_directories(tex-processor
-  PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>")
+  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
 target_compile_options(tex-processor
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -113,7 +113,7 @@ add_library(debug-processor
   debug-processor.hpp
 )
 target_include_directories(debug-processor
-  PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>")
+  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
 target_compile_options(debug-processor
   PUBLIC ${cxx11_options} ${warning_options})
 

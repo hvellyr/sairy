@@ -6,10 +6,11 @@
 #include "fo.hpp"
 #include "abstract-processor.hpp"
 
+#include "program_options/program_options.hpp"
+
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/optional/optional.hpp>
-#include <boost/program_options.hpp>
 
 #include <list>
 #include <map>
@@ -75,11 +76,11 @@ class TexProcessor : public AbstractProcessor<TexProcessor> {
 
 public:
   TexProcessor();
-  TexProcessor(const boost::program_options::variables_map& args);
+  TexProcessor(const program_options::variables_map& args);
 
   std::string proc_id() const override;
   std::string default_output_extension() const override;
-  boost::program_options::options_description program_options() const override;
+  program_options::options_description program_options() const override;
 
   const IFoProcessor<TexProcessor>*
   lookup_fo_processor(const std::string& fo_classname) const override;

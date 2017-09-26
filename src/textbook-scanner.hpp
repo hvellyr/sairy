@@ -4,7 +4,8 @@
 #pragma once
 
 #include "scanner.hpp"
-#include <boost/program_options.hpp>
+
+#include "program_options/program_options.hpp"
 
 #include <string>
 #include <vector>
@@ -22,11 +23,11 @@ class TextbookScanner : public IScanner {
 
 public:
   TextbookScanner();
-  TextbookScanner(const boost::program_options::variables_map& /*args*/);
+  TextbookScanner(const program_options::variables_map& /*args*/);
 
   std::string scanner_id() const override;
   std::unordered_set<std::string> supported_extensions() const override;
-  boost::program_options::options_description program_options() const override;
+  program_options::options_description program_options() const override;
 
   Node* scan_file(eyestep::Grove& grove,
                   const boost::filesystem::path& srcfile) override;

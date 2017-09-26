@@ -5,8 +5,9 @@
 
 #include "abstract-processor.hpp"
 
+#include "program_options/program_options.hpp"
+
 #include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
 
 #include <string>
 
@@ -24,11 +25,11 @@ class DebugProcessor : public AbstractProcessor<DebugProcessor> {
 
 public:
   DebugProcessor();
-  DebugProcessor(const boost::program_options::variables_map& args);
+  DebugProcessor(const program_options::variables_map& args);
 
   std::string proc_id() const override;
   std::string default_output_extension() const override;
-  boost::program_options::options_description program_options() const override;
+  program_options::options_description program_options() const override;
 
   const IFoProcessor<DebugProcessor>*
   lookup_fo_processor(const std::string& fo_classname) const override;

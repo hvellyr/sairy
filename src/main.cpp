@@ -15,10 +15,10 @@
 
 #include "processor-setup.hpp"
 
+#include "program_options/program_options.hpp"
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-#include <boost/program_options/parsers.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 
@@ -32,7 +32,7 @@
 namespace fs = boost::filesystem;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
-namespace po = boost::program_options;
+namespace po = program_options;
 
 namespace {
 
@@ -137,6 +137,15 @@ fs::path deduce_templ_from_document(eyestep::Grove& grove,
   return fs::path();
 }
 
+
+std::string textbook_prefix()
+{
+  if (auto opt = std::getenv("TEXTBOOK_PREFIX")) {
+    return std::string(opt);
+  }
+
+  return TEXTBOOK_DEFAULT_PREFIX;
+}
 } // anon namespace
 
 
@@ -144,14 +153,13 @@ int main(int argc, char** argv)
 {
   try {
     // Declare the supported options.
-    po::options_description desc("Allowed options");
+    po::options_description desc("");
 
     // clang-format off
     desc.add_options()
-      ("help,h",         po::bool_switch(), "produce help message")
-      ("verbose,v",      po::bool_switch(), "being verbose")
-      ("debug",          po::bool_switch(),
-                         "being very verbose printing a lot of internal details (for debugging)")
+      ("help,h",         "produce help message")
+      ("verbose,v",      "being verbose")
+      ("debug",          "being very verbose printing a lot of internal details (for debugging)")
       ("output,o",       po::value<std::string>()->default_value(std::string()),
                          "write result to arg")
       ("backend,b",      po::value<std::string>()->default_value(std::string("auto")),
@@ -164,12 +172,12 @@ int main(int argc, char** argv)
 
     po::options_description hidden("Hidden options");
     hidden.add_options()
-      ("textbook-prefix",   po::value<std::string>()->default_value(TEXTBOOK_DEFAULT_PREFIX), "")
+      ("textbook-prefix",   po::value<std::string>()->default_value(textbook_prefix()), "")
       ;
     // clang-format on
 
-    po::options_description all_options;
-    po::options_description visible_options;
+    po::options_description all_options("All");
+    po::options_description visible_options("");
 
     all_options.add(desc).add(hidden);
     visible_options.add(desc);
@@ -180,24 +188,14 @@ int main(int argc, char** argv)
     all_options.add(eyestep::processor_options());
     visible_options.add(eyestep::processor_options());
 
-    po::positional_options_description p;
-    p.add("input-file", -1);
+    po::positional_options_description pos_options;
+    pos_options.add("input-file", -1);
 
     po::variables_map vm;
-    po::store(po::command_line_parser(argc, argv)
-                .options(all_options)
-                .positional(p)
-                //.allow_unregistered()
-                .run(),
-              vm);
-    po::store(po::parse_environment(all_options, [](const std::string& opt) {
-      if (opt == "TEXTBOOK_PREFIX")
-        return std::string("textbook-prefix");
-      return std::string();
-    }), vm);
+    po::store(po::parse_command_line(argc, argv, all_options, pos_options), vm);
     po::notify(vm);
 
-    if (vm["help"].as<bool>()) {
+    if (vm.count("help")) {
       std::cout << visible_options << "\n";
       exit(1);
     }
@@ -207,7 +205,7 @@ int main(int argc, char** argv)
     std::string prefix_path = vm["textbook-prefix"].as<std::string>();
     std::string backend = vm["backend"].as<std::string>();
 
-    if (vm["verbose"].as<bool>()) {
+    if (vm.count("verbose")) {
       std::cout << "outf        : " << outf << std::endl;
       std::cout << "prefix path : " << prefix_path << std::endl;
       std::cout << "templ_path  : " << templ_path << std::endl;
@@ -222,7 +220,7 @@ int main(int argc, char** argv)
     }
 
     eyestep::Grove grove = scan_sources(sources, vm);
-    if (vm["debug"].as<bool>()) {
+    if (vm.count("debug")) {
       eyestep::serialize(std::cout, grove.root_node());
     }
 
@@ -235,7 +233,7 @@ int main(int argc, char** argv)
         exit(1);
       }
 
-      if (vm["verbose"].as<bool>())
+      if (vm.count("verbose"))
         std::cout << "use template  : " << eff_templ_path << std::endl;
 
       auto processor = eyestep::make_processor_for_file(backend, vm);
