@@ -17,24 +17,36 @@
 
 #include "program_options/program_options.hpp"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 
-#include <string>
+#include <chrono>
+#include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <memory>
+#include <sstream>
+#include <string>
+
 
 #define TEXTBOOK_DEFAULT_PREFIX "/usr/local/share/textbook"
 
 
 namespace fs = boost::filesystem;
-using namespace boost::posix_time;
-using namespace boost::gregorian;
 namespace po = program_options;
 
 namespace {
+
+std::string to_iso_timestring(std::chrono::system_clock::time_point tp)
+{
+  auto t = std::chrono::system_clock::to_time_t(tp);
+
+  std::stringstream ss;
+  ss << std::put_time(std::localtime(&t), "%FT%T%z");
+  return ss.str();
+}
+
 
 eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
                             const po::variables_map& args)
@@ -42,8 +54,7 @@ eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
   eyestep::Grove grove;
   eyestep::Node* root = grove.set_root_node(eyestep::root_class_definition());
 
-  root->set_property("start-time",
-                     to_iso_extended_string(microsec_clock::local_time()));
+  root->set_property("start-time", to_iso_timestring(std::chrono::system_clock::now()));
 
   if (!sources.empty()) {
     for (const auto& src : sources) {
@@ -65,8 +76,7 @@ eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
     }
   }
 
-  root->set_property("end-time",
-                     to_iso_extended_string(microsec_clock::local_time()));
+  root->set_property("end-time", to_iso_timestring(std::chrono::system_clock::now()));
 
   return grove;
 }
