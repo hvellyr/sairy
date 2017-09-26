@@ -2,3 +2,4 @@
 # All rights reserved.
 
 add_subdirectory(build/chibi-scheme)
+add_subdirectory(program_options)

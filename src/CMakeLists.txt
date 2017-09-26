@@ -147,6 +147,7 @@ target_link_libraries(textbook
   scheme
   textbook-parser
   textbook-utils
+  program_options
   ${Boost_LIBRARIES})
 
 set(textbook_app "${PROJECT_BINARY_DIR}/app")

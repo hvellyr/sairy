@@ -75,6 +75,7 @@ target_link_libraries(parser_test
   grove
   textbook-parser
   textbook-utils
+  program_options
   ${Boost_LIBRARIES}
 )
 
