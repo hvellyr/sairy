@@ -1,0 +1,3 @@
+[submodule "third-party/fspplib"]
+	path = third-party/fspplib
+	url = git@github.com:hvellyr/fspplib.git
