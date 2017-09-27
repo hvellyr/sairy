@@ -5,9 +5,6 @@
 #include "nodeclass.hpp"
 #include "estd/memory.hpp"
 
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/variant/static_visitor.hpp>
-
 #include <algorithm>
 #include <cassert>
 #include <iostream>
@@ -48,6 +45,23 @@ std::ostream& operator<<(std::ostream& os, const Node& node)
   }
   os << "}";
 
+  return os;
+}
+
+
+std::ostream& operator<<(std::ostream& os, const PropertyValue& prop)
+{
+  struct PropValueVisitor {
+    using return_type = void;
+
+    void operator()(const Undefined& val, std::ostream& os) { os << val; }
+    void operator()(const int& val, std::ostream& os) { os << val; }
+    void operator()(const std::string& val, std::ostream& os) { os << val; }
+    void operator()(const Node* val, std::ostream& os) { os << *val; }
+    void operator()(const Nodes& val, std::ostream& os) { os << val; }
+  };
+
+  apply(PropValueVisitor(), prop, os);
   return os;
 }
 
@@ -183,7 +197,7 @@ void Node::add_attribute(const std::string& attrname, Node* nd)
     set_property(CommonProps::k_attrs, nl);
   }
   else {
-    if (Nodes* nds = boost::get<Nodes>(&_properties[CommonProps::k_attrs])) {
+    if (Nodes* nds = get<Nodes>(&_properties[CommonProps::k_attrs])) {
       nds->push_back(nd);
     }
   }
@@ -257,7 +271,7 @@ void Node::add_node(const std::string& propname, Node* child)
     _properties[propname] = Nodes{child};
   }
   else {
-    if (Nodes* nl = boost::get<Nodes>(&i_find->second)) {
+    if (Nodes* nl = get<Nodes>(&i_find->second)) {
       child->_properties[CommonProps::k_parent] = this;
       nl->emplace_back(child);
     }

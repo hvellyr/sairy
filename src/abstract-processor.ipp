@@ -7,8 +7,6 @@
 
 #include "fspp/filesystem.hpp"
 
-#include <boost/variant/get.hpp>
-
 #include <iostream>
 #include <string>
 

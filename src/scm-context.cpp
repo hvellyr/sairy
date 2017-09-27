@@ -18,8 +18,6 @@
 
 #include <boost/optional/optional.hpp>
 #include <boost/range/algorithm/find_if.hpp>
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/variant/static_visitor.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
 #include <iostream>
@@ -496,13 +494,14 @@ namespace {
   sexp func_node_property(sexp ctx, sexp self, sexp_sint_t n, sexp propname_arg,
                           sexp node_arg)
   {
-    class SexpPropVisitor : public boost::static_visitor<sexp> {
+    struct SexpPropVisitor {
+      using return_type = sexp;
+
       sexp _ctx;
       sexp _self;
       sexp _propname;
       sexp _default_value;
 
-    public:
       SexpPropVisitor(sexp ctx, sexp self, sexp propname, sexp default_value)
         : _ctx(ctx), _self(self), _propname(propname),
           _default_value(default_value)
@@ -574,23 +573,23 @@ namespace {
           result = sexp_user_exception(ctx, self, "not a symbol", propname_arg);
         }
         else if (propname == CommonProps::k_id) {
-          SexpPropVisitor visitor(ctx, self, propname_arg, default_value);
+          auto visitor = SexpPropVisitor(ctx, self, propname_arg, default_value);
 
           if (node->has_property(CommonProps::k_id)) {
             PropertyValue value = (*node)[CommonProps::k_id];
-            result = boost::apply_visitor(visitor, value);
+            result = apply(visitor, value);
           }
           else if (node->has_property(CommonProps::k_auto_id)) {
             PropertyValue value = (*node)[CommonProps::k_auto_id];
-            result = boost::apply_visitor(visitor, value);
+            result = apply(visitor, value);
           }
           else
             result = default_value;
         }
         else {
-          SexpPropVisitor visitor(ctx, self, propname_arg, default_value);
+          auto visitor = SexpPropVisitor(ctx, self, propname_arg, default_value);
           PropertyValue value = (*node)[*propname];
-          result = boost::apply_visitor(visitor, value);
+          result = apply(visitor, value);
         }
       }
       else {

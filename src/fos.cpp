@@ -6,8 +6,6 @@
 #include "fo.hpp"
 #include "sosofo.hpp"
 
-#include <boost/variant/get.hpp>
-
 #include <iostream>
 #include <limits>
 #include <ostream>

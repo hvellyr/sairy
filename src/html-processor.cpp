@@ -14,8 +14,6 @@
 #include "fspp/filesystem.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/variant/static_visitor.hpp>
 #include <boost/optional/optional.hpp>
 
 #include <iostream>
