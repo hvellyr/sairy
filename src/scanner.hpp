@@ -5,7 +5,7 @@
 
 #include "program_options/program_options.hpp"
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
 
 #include <string>
 #include <vector>
@@ -27,7 +27,7 @@ public:
   virtual program_options::options_description program_options() const = 0;
 
   virtual Node* scan_file(eyestep::Grove& grove,
-                          const boost::filesystem::path& srcfile) = 0;
+                          const filesystem::path& srcfile) = 0;
 };
 
 } // ns eyestep

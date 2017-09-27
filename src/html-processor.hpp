@@ -9,7 +9,8 @@
 
 #include "program_options/program_options.hpp"
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
+
 #include <boost/optional/optional.hpp>
 
 #include <list>
@@ -53,11 +54,11 @@ namespace detail {
 
   using RefRegistry = std::unordered_map<std::string, std::string>;
   using PortTuple =
-    std::tuple<std::unique_ptr<html::Writer>, boost::filesystem::path>;
+    std::tuple<std::unique_ptr<html::Writer>, filesystem::path>;
 
   class HtmlRenderContext {
     std::unique_ptr<html::Writer> _port;
-    boost::filesystem::path _path;
+    filesystem::path _path;
     std::list<PortTuple> _ports;
     RefRegistry _ref_registry;
     // std::list<Sosofo> _foot_notes;
@@ -67,10 +68,10 @@ namespace detail {
     HtmlRenderContext();
 
     html::Writer& port();
-    boost::filesystem::path current_path();
+    filesystem::path current_path();
 
     void push_port(std::unique_ptr<html::Writer> port,
-                   const boost::filesystem::path& path);
+                   const filesystem::path& path);
     void pop_port();
 
     CapsStyle capsstyle();

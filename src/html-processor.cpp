@@ -11,8 +11,9 @@
 
 #include "program_options/program_options.hpp"
 
+#include "fspp/filesystem.hpp"
+
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/optional/optional.hpp>
@@ -27,7 +28,7 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 namespace po = program_options;
 
 const std::string k_TEXTBOOK_GENERATOR = "Textbook HTML Processor";
@@ -42,7 +43,7 @@ html::Writer& detail::HtmlRenderContext::port()
   return *_port.get();
 }
 
-boost::filesystem::path detail::HtmlRenderContext::current_path()
+fs::path detail::HtmlRenderContext::current_path()
 {
   return _path;
 }
@@ -348,7 +349,7 @@ namespace {
 
     detail::HtmlRenderContext& ctx = processor->ctx();
 
-    auto port = estd::make_unique<html::Writer>(doctype, k_TEXTBOOK_GENERATOR);
+    auto port = ::estd::make_unique<html::Writer>(doctype, k_TEXTBOOK_GENERATOR);
     port->open(path);
 
     ctx.push_port(std::move(port), path);
@@ -625,7 +626,7 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
 void HtmlProcessor::before_rendering()
 {
   auto mainport =
-    estd::make_unique<html::Writer>(html::k_XHTML_1_1_DTD, k_TEXTBOOK_GENERATOR);
+    ::estd::make_unique<html::Writer>(html::k_XHTML_1_1_DTD, k_TEXTBOOK_GENERATOR);
   _ctx.push_port(std::move(mainport), _output_file);
 }
 

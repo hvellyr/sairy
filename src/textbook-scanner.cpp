@@ -11,10 +11,11 @@
 
 #include "program_options/program_options.hpp"
 
+#include "fspp/filesystem.hpp"
+
 #include <boost/range/iterator.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/range/adaptor/transformed.hpp>
-#include <boost/filesystem.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -28,7 +29,7 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 
 //----------------------------------------------------------------------------------------
 

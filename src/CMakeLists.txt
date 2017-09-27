@@ -1,13 +1,16 @@
 # Copyright (c) 2017 Gregor Klinke
 # All rights reserved.
 
+set(fspp_LIBRARIES "${PROJECT_BINARY_DIR}/lib/libfspplib.a")
+set(include_dirs "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS};${PROJECT_BINARY_DIR}/include;${PROJECT_SOURCE_DIR}/third-party/chibi-scheme/include")
+
+
 #------------------------------------------------------------------------------
 add_library(textbook-utils
   utils.cpp
   utils.hpp
 )
-target_include_directories(textbook-utils
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_include_directories(textbook-utils PUBLIC "${include_dirs}")
 target_compile_options(textbook-utils
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -23,8 +26,7 @@ add_library(grove
   nodeutils.cpp
   nodeutils.hpp
 )
-target_include_directories(grove
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_include_directories(grove PUBLIC "${include_dirs}")
 target_compile_options(grove
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -35,8 +37,7 @@ add_library(textbook-parser
   textbook-parser.cpp
   textbook-parser.hpp
 )
-target_include_directories(textbook-parser
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_include_directories(textbook-parser PUBLIC "${include_dirs}")
 target_compile_options(textbook-parser
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -46,8 +47,7 @@ add_library(textbook-scanner
   textbook-scanner.cpp
   textbook-scanner.hpp
 )
-target_include_directories(textbook-scanner
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_include_directories(textbook-scanner PUBLIC "${include_dirs}")
 target_compile_options(textbook-scanner
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -62,8 +62,7 @@ add_library(fo
   colors.hpp
   colors.cpp
 )
-target_include_directories(fo
-  PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>")
+target_include_directories(fo PUBLIC "${include_dirs}")
 target_compile_options(fo
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -77,8 +76,7 @@ add_library(processor-base
   propstack.cpp
   propstack.hpp
 )
-target_include_directories(processor-base
-  PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>")
+target_include_directories(processor-base PUBLIC "${include_dirs}")
 target_compile_options(processor-base
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -90,8 +88,7 @@ add_library(html-processor
   html-writer.cpp
   html-writer.hpp
 )
-target_include_directories(html-processor
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_include_directories(html-processor PUBLIC "${include_dirs}")
 target_compile_options(html-processor
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -101,8 +98,7 @@ add_library(tex-processor
   tex-processor.cpp
   tex-processor.hpp
 )
-target_include_directories(tex-processor
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_include_directories(tex-processor PUBLIC "${include_dirs}")
 target_compile_options(tex-processor
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -112,8 +108,7 @@ add_library(debug-processor
   debug-processor.cpp
   debug-processor.hpp
 )
-target_include_directories(debug-processor
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_include_directories(debug-processor PUBLIC "${include_dirs}")
 target_compile_options(debug-processor
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -133,9 +128,7 @@ add_executable(textbook
   style-engine.cpp
   style-engine.hpp
 )
-target_include_directories(textbook
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>;${PROJECT_SOURCE_DIR}/third-party/chibi-scheme/include")
-
+target_include_directories(textbook PUBLIC "${include_dirs}")
 target_link_libraries(textbook
   textbook-scanner
   debug-processor
@@ -148,6 +141,7 @@ target_link_libraries(textbook
   textbook-parser
   textbook-utils
   program_options
+  ${fspp_LIBRARIES}
   ${Boost_LIBRARIES})
 
 set(textbook_app "${PROJECT_BINARY_DIR}/app")

@@ -8,8 +8,9 @@
 
 #include "program_options/program_options.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
+#include "fspp/filesystem.hpp"
+#include "fspp/utils.hpp"
+
 #include <boost/optional/optional.hpp>
 
 #include <list>
@@ -19,6 +20,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <istream>
 
 
 namespace eyestep {
@@ -71,7 +73,7 @@ namespace tex_detail {
 
 class TexProcessor : public AbstractProcessor<TexProcessor> {
   bool _verbose;
-  boost::filesystem::ofstream _stream;
+  filesystem::File _file;
   tex_detail::TexStyleContext _style_ctx;
 
 public:
@@ -93,7 +95,7 @@ public:
   fo::LengthSpec paper_width() const;
   fo::LengthSpec paper_height() const;
 
-  boost::filesystem::ofstream& stream();
+  std::iostream& stream();
   tex_detail::TexStyleContext& style_ctx();
 
   void finalize_breaks();

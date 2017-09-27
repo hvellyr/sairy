@@ -9,10 +9,11 @@
 #include "textbook-parser.hpp"
 #include "utils.hpp"
 
+#include "fspp/filesystem.hpp"
+#include "fspp/utils.hpp"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
 #include <algorithm>
@@ -51,17 +52,19 @@ namespace textbook {
   const std::string k_TEXT_opt = "#TEXT";
 
 
-  namespace fs = boost::filesystem;
+  namespace fs = filesystem;
 
   namespace {
     std::string load_file_into_string(const fs::path& path)
     {
       std::stringstream result;
 
-      fs::ifstream in(path, std::ios::in | std::ios::binary);
-      in.exceptions(std::ifstream::failbit);
-
-      result << in.rdbuf();
+      std::error_code ec;
+      fs::with_stream(path, std::ios::in | std::ios::binary,
+                      ec, [&](std::istream& in)
+                      {
+                        result << in.rdbuf();
+                      });
 
       return result.str();
     }
@@ -113,7 +116,7 @@ namespace textbook {
 
     std::unique_ptr<DocSpec> make_docspec(const Node* nd)
     {
-      auto docspec = estd::make_unique<DocSpec>();
+      auto docspec = ::estd::make_unique<DocSpec>();
 
       for (const auto* tagnd : nd->property<Nodes>(CommonProps::k_children)) {
         if (tagnd->gi() == k_tag_tag) {
@@ -187,7 +190,7 @@ namespace textbook {
 
     std::unique_ptr<DocSpec> model_doc_type_doc_spec()
     {
-      auto docspec = estd::make_unique<DocSpec>();
+      auto docspec = ::estd::make_unique<DocSpec>();
 
       docspec->add(
         TagSpec(k_tag_tag,

@@ -5,9 +5,10 @@
 
 #include "utils.hpp"
 
+#include "fspp/filesystem.hpp"
+
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/iterator.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -27,7 +28,7 @@
 namespace eyestep {
 namespace utils {
 
-  namespace fs = boost::filesystem;
+  namespace fs = eyestep::filesystem;
 
   std::string join(const std::vector<std::string>& strlist,
                    const std::string& gap)

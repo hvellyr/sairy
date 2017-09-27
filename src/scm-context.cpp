@@ -33,7 +33,7 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 
 namespace {
   static const Node* s_root_node;
@@ -1990,7 +1990,7 @@ namespace {
 
 std::unique_ptr<ISchemeContext> create_scheme_context()
 {
-  return estd::make_unique<SchemeContext>();
+  return ::estd::make_unique<SchemeContext>();
 }
 
 } // ns eyestep

@@ -15,7 +15,7 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 
 namespace {
   std::unique_ptr<ISchemeContext>
@@ -51,7 +51,7 @@ StyleEngine::StyleEngine(const std::string& prefix_path,
 }
 
 
-bool StyleEngine::load_style(const boost::filesystem::path& path)
+bool StyleEngine::load_style(const filesystem::path& path)
 {
   assert(_ctx);
 

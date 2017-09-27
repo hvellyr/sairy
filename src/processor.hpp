@@ -7,7 +7,7 @@
 
 #include "program_options/program_options.hpp"
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
 
 #include <string>
 
@@ -21,7 +21,7 @@ class IProcessor {
 public:
   virtual ~IProcessor() {}
 
-  virtual void set_output_file(const boost::filesystem::path& output_file) = 0;
+  virtual void set_output_file(const filesystem::path& output_file) = 0;
   virtual std::string default_output_extension() const = 0;
   virtual program_options::options_description program_options() const = 0;
 

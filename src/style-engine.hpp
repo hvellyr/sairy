@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -23,7 +24,7 @@ public:
   StyleEngine(const std::string& prefix_path,
               const std::string& backend_id);
 
-  bool load_style(const boost::filesystem::path& path);
+  bool load_style(const filesystem::path& path);
 
   std::unique_ptr<Sosofo> process_node(const Node* node);
 };

@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
+#include "fspp/filesystem.hpp"
+#include "fspp/utils.hpp"
 
 #include <ostream>
 #include <string>
@@ -30,15 +30,15 @@ namespace html {
   extern const Doctype k_XHTML_1_1_DTD;
 
   class Writer {
-    boost::filesystem::path _path;
-    boost::filesystem::ofstream _stream;
+    filesystem::path _path;
+    filesystem::File _file;
     Doctype _doctype;
     std::string _generator;
 
   public:
     Writer(const Doctype& doctype, const std::string& generator);
 
-    void open(const boost::filesystem::path& path);
+    void open(const filesystem::path& path);
 
     void write_attrs(const Attrs& attrs);
 

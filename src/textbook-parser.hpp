@@ -5,7 +5,8 @@
 
 #include "nodes.hpp"
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
+
 #include <boost/optional/optional.hpp>
 
 #include <list>
@@ -63,16 +64,16 @@ namespace textbook {
     char _current_c;
     size_t _nc;
     size_t _line_no;
-    boost::filesystem::path _fpath;
+    filesystem::path _fpath;
     std::string _data;
 
   public:
     Stream(boost::optional<std::string> data,
-           boost::optional<boost::filesystem::path> path,
+           boost::optional<filesystem::path> path,
            size_t start_line_no = 0);
     char current_c() const;
     size_t line_no() const;
-    boost::filesystem::path fpath() const;
+    filesystem::path fpath() const;
     std::string srcpos() const;
     char read();
     char unread(const std::string& buf);
@@ -85,7 +86,7 @@ namespace textbook {
 
   class Parser {
     bool _verbose;
-    std::vector<boost::filesystem::path> _catalog_path;
+    std::vector<filesystem::path> _catalog_path;
     std::shared_ptr<Stream> _stream;
     std::list<std::shared_ptr<Stream>> _stream_stack;
     std::stringstream _text;
@@ -102,12 +103,12 @@ namespace textbook {
   public:
     Parser(eyestep::Grove& grove, GroveBuilder& grovebuilder,
            VariableEnv& _vars, Catalog& catalog, DocSpec* docspec,
-           const std::vector<boost::filesystem::path>& catalog_path,
+           const std::vector<filesystem::path>& catalog_path,
            bool is_mixed_content = false, bool is_verbose = false);
 
     std::string doctype() const;
 
-    Node* parse_file(const boost::filesystem::path& fpath);
+    Node* parse_file(const filesystem::path& fpath);
     Node* parse_string(const std::string& buf, size_t start_line_no = 0);
     Node* parse_stream(std::shared_ptr<Stream> stream);
 
@@ -140,8 +141,7 @@ namespace textbook {
     void parse_varlookup();
     void parse_endtag();
     void parse_let();
-    boost::filesystem::path
-    path_for_include(const boost::filesystem::path& fpath);
+    filesystem::path path_for_include(const filesystem::path& fpath);
     void parse_include();
     void parse_tag_with_params(const std::string& tag);
     void parse_tag();

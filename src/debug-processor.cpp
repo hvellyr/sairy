@@ -8,7 +8,8 @@
 
 #include "program_options/program_options.hpp"
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
+
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 
@@ -20,7 +21,7 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 namespace po = program_options;
 
 

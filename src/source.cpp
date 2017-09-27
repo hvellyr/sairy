@@ -6,7 +6,7 @@
 #include "json_spirit/json_spirit_value.h"
 #include "json_spirit/json_spirit_reader_template.h"
 
-#include <boost/filesystem/fstream.hpp>
+#include "fspp/filesystem.hpp"
 
 #include <string>
 #include <vector>
@@ -14,7 +14,7 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 
 namespace {
 

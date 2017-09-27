@@ -7,8 +7,6 @@
 
 #include "program_options/program_options.hpp"
 
-#include <boost/filesystem.hpp>
-
 #include <string>
 
 

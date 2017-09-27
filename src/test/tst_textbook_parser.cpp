@@ -10,7 +10,7 @@
 
 #include "catch/catch.hpp"
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
 
 #include <functional>
 #include <iostream>
@@ -19,7 +19,7 @@
 
 
 using namespace eyestep;
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 
 namespace {
 Node* with_parser_scan(Grove& grove,

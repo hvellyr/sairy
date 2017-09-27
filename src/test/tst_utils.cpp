@@ -5,11 +5,11 @@
 
 #include "../utils.hpp"
 
-#include "boost/filesystem.hpp"
+#include "fspp/filesystem.hpp"
 
 #include <iostream>
 
-namespace fs = boost::filesystem;
+namespace fs = eyestep::filesystem;
 
 
 TEST_CASE("Make relative paths", "[utils]")

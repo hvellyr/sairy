@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
 
 #include <memory>
 #include <vector>
@@ -18,10 +18,9 @@ class ISchemeContext {
 public:
   virtual ~ISchemeContext(){};
 
-  virtual void
-  initialize(const std::vector<boost::filesystem::path>& module_paths) = 0;
-  virtual bool load_module_file(const boost::filesystem::path& script_file) = 0;
-  virtual bool load_script(const boost::filesystem::path& script_file) = 0;
+  virtual void initialize(const std::vector<filesystem::path>& module_paths) = 0;
+  virtual bool load_module_file(const filesystem::path& script_file) = 0;
+  virtual bool load_script(const filesystem::path& script_file) = 0;
 
   virtual void define_variable(const std::string& name, const std::string& value) = 0;
 

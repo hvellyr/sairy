@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
+
 #include <string>
 #include <vector>
 
@@ -17,10 +18,10 @@ namespace utils {
   std::vector<std::string> join_list(const std::vector<std::string>& one,
                                      const std::vector<std::string>& sec);
 
-  std::vector<boost::filesystem::path> split_paths(const std::string& path);
+  std::vector<filesystem::path> split_paths(const std::string& path);
 
-  boost::filesystem::path make_relative(const boost::filesystem::path& from,
-                                        const boost::filesystem::path& to);
+  filesystem::path make_relative(const filesystem::path& from,
+                                 const filesystem::path& to);
 
   std::u16string utf8_to_u16string(const std::string& str);
   std::string u16string_to_utf8(const std::u16string& str);

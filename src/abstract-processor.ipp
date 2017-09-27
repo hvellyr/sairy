@@ -5,7 +5,8 @@
 #include "fo-processor.hpp"
 #include "sosofo.hpp"
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
+
 #include <boost/variant/get.hpp>
 
 #include <iostream>
@@ -14,7 +15,7 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 
 
 template <typename ProcessorT>

@@ -1,15 +1,16 @@
 # Copyright (c) 2015 Gregor Klinke
 # All rights reserved.
 
+set(fspp_LIBRARIES "${PROJECT_BINARY_DIR}/lib/libfspplib.a")
+set(include_dirs "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS};${PROJECT_BINARY_DIR}/include")
+
 add_executable(nodes_test
   tst_main.cpp
   tst_nodes.cpp
   tst_nodelist.cpp
   tst_nodeutils.cpp
 )
-target_include_directories(nodes_test
-  PUBLIC "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}"
-)
+target_include_directories(nodes_test PUBLIC "${include_dirs}")
 
 target_link_libraries(nodes_test
   textbook-utils
@@ -27,11 +28,10 @@ add_executable(utils_test
   tst_main.cpp
   tst_utils.cpp
 )
-target_include_directories(utils_test
-  PUBLIC "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}"
-)
+target_include_directories(utils_test PUBLIC "${include_dirs}")
 target_link_libraries(utils_test
   textbook-utils
+  ${fspp_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 
@@ -46,14 +46,13 @@ add_executable(textbook_test
   tst_main.cpp
   tst_textbook_parser.cpp
 )
-target_include_directories(textbook_test
-  PUBLIC "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}"
-)
+target_include_directories(textbook_test PUBLIC "${include_dirs}")
 
 target_link_libraries(textbook_test
   grove
   textbook-parser
   textbook-utils
+  ${fspp_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 
@@ -67,15 +66,14 @@ add_test(NAME textbook_test_case
 add_executable(parser_test
   parser_test.cpp
 )
-target_include_directories(parser_test
-  PUBLIC "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}"
-)
+target_include_directories(parser_test PUBLIC "${include_dirs}")
 
 target_link_libraries(parser_test
   grove
   textbook-parser
   textbook-utils
   program_options
+  ${fspp_LIBRARIES}
   ${Boost_LIBRARIES}
 )
 

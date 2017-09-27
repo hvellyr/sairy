@@ -17,7 +17,8 @@
 
 #include "program_options/program_options.hpp"
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
+
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 
@@ -33,7 +34,7 @@
 #define TEXTBOOK_DEFAULT_PREFIX "/usr/local/share/textbook"
 
 
-namespace fs = boost::filesystem;
+namespace fs = eyestep::filesystem;
 namespace po = program_options;
 
 namespace {
@@ -211,8 +212,8 @@ int main(int argc, char** argv)
     }
 
     std::string outf = vm["output"].as<std::string>();
-    std::string templ_path = vm["template"].as<std::string>();
-    std::string prefix_path = vm["textbook-prefix"].as<std::string>();
+    auto templ_path = fs::path(vm["template"].as<std::string>());
+    auto prefix_path = vm["textbook-prefix"].as<std::string>();
     std::string backend = vm["backend"].as<std::string>();
 
     if (vm.count("verbose")) {
@@ -238,7 +239,7 @@ int main(int argc, char** argv)
       auto eff_templ_path = templ_path == "auto"
                               ? deduce_templ_from_document(grove, prefix_path)
                               : templ_path;
-      if (eff_templ_path.string().empty()) {
+      if (eff_templ_path.empty()) {
         std::cerr << "No stylesheet found" << std::endl;
         exit(1);
       }

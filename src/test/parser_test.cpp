@@ -10,11 +10,13 @@
 
 #include "program_options/program_options.hpp"
 
+#include "fspp/filesystem.hpp"
+#include "fspp/utils.hpp"
+
 #include "json_spirit/json_spirit_value.h"
 #include "json_spirit/json_spirit_reader_template.h"
 #include "json_spirit/json_spirit_writer_template.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
 #include <functional>
@@ -24,7 +26,7 @@
 
 
 using namespace eyestep;
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 namespace po = program_options;
 
 namespace {
@@ -109,7 +111,8 @@ bool test_file(const fs::path& path, const po::variables_map& vm)
     excp_path.replace_extension(".js");
 
     if (fs::exists(excp_path)) {
-      fs::ifstream inp(excp_path);
+      auto file = fs::File(excp_path);
+      auto& inp = file.open(std::ios::in | std::ios::binary);
 
       json_spirit::Value expected_root_elt;
       bool reading_expected_file_succeeded =
@@ -159,7 +162,7 @@ int test_in_dir(const fs::path& path, const po::variables_map& vm)
   std::copy(fs::directory_iterator(path), fs::directory_iterator(),
             std::back_inserter(dirents));
   for (const auto& dirent : dirents) {
-    if (dirent.status().type() == fs::regular_file) {
+    if (dirent.status().type() == fs::file_type::regular) {
       if (!test_file(dirent.path(), vm)) {
         result = 1;
       }

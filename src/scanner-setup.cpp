@@ -9,7 +9,7 @@
 #include "program_options/program_options.hpp"
 #include "textbook-scanner.hpp"
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -20,7 +20,7 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 namespace po = program_options;
 
 namespace {
@@ -43,7 +43,7 @@ namespace {
     const auto i_find = s_scanner_factory_map.find(id);
     assert(i_find == s_scanner_factory_map.end());
     s_scanner_factory_map[id] = [](const po::variables_map& args) {
-      return estd::make_unique<ScannerClass>(args);
+      return ::estd::make_unique<ScannerClass>(args);
     };
 
     for (const auto& ext : scanner.supported_extensions()) {
