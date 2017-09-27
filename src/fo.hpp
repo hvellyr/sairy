@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 
+
 namespace eyestep {
 
 class Sosofo;
@@ -62,11 +63,7 @@ namespace fo {
   std::ostream& operator<<(std::ostream& os, const LengthSpec& ls);
 
 
-  enum ColorSpace {
-    kGray,
-    kRGB,
-    kCMYK
-  };
+  enum ColorSpace { kGray, kRGB, kCMYK };
 
   struct Color {
     Color() = default;
@@ -93,21 +90,24 @@ namespace fo {
     };
   };
 
-  inline Color make_gray_color(float v) {
+  inline Color make_gray_color(float v)
+  {
     Color co;
     co._space = kGray;
     co._gray = v;
     return co;
   }
 
-  inline Color make_rgb_color(float r, float g, float b) {
+  inline Color make_rgb_color(float r, float g, float b)
+  {
     Color co;
     co._space = kRGB;
     co._rgb = {r, g, b};
     return co;
   }
 
-  inline Color make_cmyk_color(float c, float m, float y, float b) {
+  inline Color make_cmyk_color(float c, float m, float y, float b)
+  {
     Color co;
     co._space = kCMYK;
     co._cmyk = {c, m, y, b};
@@ -167,24 +167,25 @@ namespace fo {
     const ValueType _value;
   };
 
+
   using PropertySpecOrNone = boost::optional<fo::PropertySpec>;
 
-  class PropertySpecs
-  {
+  class PropertySpecs {
   public:
     using storage_type = std::map<std::string, PropertySpec>;
 
-    class PropertySpecIterator : public std::iterator<std::random_access_iterator_tag,
-                                                      PropertySpec>
-    {
+    class PropertySpecIterator
+      : public std::iterator<std::random_access_iterator_tag, PropertySpec> {
       typename storage_type::const_iterator _i_ptr;
+
     public:
       PropertySpecIterator(typename storage_type::const_iterator i_ptr)
         : _i_ptr(i_ptr)
-      {}
+      {
+      }
 
       PropertySpecIterator(const PropertySpecIterator&) = default;
-      PropertySpecIterator& operator=(const PropertySpecIterator& ) = default;
+      PropertySpecIterator& operator=(const PropertySpecIterator&) = default;
 
       bool operator==(const PropertySpecIterator& other) const
       {
@@ -222,22 +223,16 @@ namespace fo {
         return tmp;
       }
 
-      const PropertySpec& operator*() const
-      {
-        return _i_ptr->second;
-      }
+      const PropertySpec& operator*() const { return _i_ptr->second; }
 
-      const PropertySpec* operator->() const
-      {
-        return &_i_ptr->second;
-      }
+      const PropertySpec* operator->() const { return &_i_ptr->second; }
     };
 
     using const_iterator = PropertySpecIterator;
 
     PropertySpecs() = default;
-    PropertySpecs(const PropertySpecs& ) = default;
-    PropertySpecs(PropertySpecs&& ) = default;
+    PropertySpecs(const PropertySpecs&) = default;
+    PropertySpecs(PropertySpecs&&) = default;
 
     PropertySpecs(std::initializer_list<PropertySpec> si)
     {
@@ -246,8 +241,8 @@ namespace fo {
       }
     }
 
-    PropertySpecs& operator=(const PropertySpecs& ) = default;
-    PropertySpecs& operator=(PropertySpecs&& ) = default;
+    PropertySpecs& operator=(const PropertySpecs&) = default;
+    PropertySpecs& operator=(PropertySpecs&&) = default;
 
     void set(const fo::PropertySpec& spec)
     {
@@ -257,9 +252,8 @@ namespace fo {
     PropertySpecOrNone lookup_key(const std::string& key) const
     {
       auto i_find = _specs.find(key);
-      return i_find != _specs.end()
-        ? PropertySpecOrNone(i_find->second)
-        : boost::none;
+      return i_find != _specs.end() ? PropertySpecOrNone(i_find->second)
+                                    : boost::none;
     }
 
     const_iterator begin() const
@@ -267,10 +261,7 @@ namespace fo {
       return PropertySpecIterator(_specs.begin());
     }
 
-    const_iterator end() const
-    {
-      return PropertySpecIterator(_specs.end());
-    }
+    const_iterator end() const { return PropertySpecIterator(_specs.end()); }
 
     storage_type _specs;
   };
