@@ -122,7 +122,7 @@ namespace fo {
   std::string Literal::text() const
   {
     if (auto spec = _props.lookup_key("text")) {
-      if (const std::string* val = boost::get<const std::string>(&spec->_value)) {
+      if (const std::string* val = fo::get<const std::string>(&spec->_value)) {
         return *val;
       }
     }

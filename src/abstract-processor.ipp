@@ -92,7 +92,7 @@ AbstractProcessor<ProcessorT>::property_or_none(const IFormattingObject* fo,
 {
   auto prop = property(fo, key);
   if (prop) {
-    if (const T* val = boost::get<const T>(&prop->_value)) {
+    if (const T* val = fo::get<const T>(&prop->_value)) {
       return *val;
     }
   }
@@ -108,7 +108,7 @@ T AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
 {
   auto prop = property(fo, key);
   if (prop) {
-    if (const T* val = boost::get<const T>(&prop->_value)) {
+    if (const T* val = fo::get<const T>(&prop->_value)) {
       return *val;
     }
   }
