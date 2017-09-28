@@ -38,11 +38,20 @@
         seq
         (process-node-list seq))))
 
-;; @doc format list in 'bold font-weight.  If @prm{seq} is a sosofo it is taken
+;; @doc format list in 'small-caps font-caps.  If @prm{seq} is a sosofo it is taken
 ;; asis, otherwise it is processed.
 (define (format-ss seq)
   (make sequence
     font-caps: 'smallcaps
+    (if (sosofo? seq)
+        seq
+        (process-node-list seq))))
+
+;; @doc format list in 'caps font-caps.  If @prm{seq} is a sosofo it is taken
+;; asis, otherwise it is processed.
+(define (format-upper seq)
+  (make sequence
+    font-caps: 'caps
     (if (sosofo? seq)
         seq
         (process-node-list seq))))
