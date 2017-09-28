@@ -25,5 +25,12 @@ namespace utils {
 
   std::u16string utf8_to_u16string(const std::string& str);
   std::string u16string_to_utf8(const std::u16string& str);
+
+  std::u32string utf8_to_u32string(const std::string& str);
+  std::string u32string_to_utf8(const std::u32string& str);
+
+  std::string to_lower(const std::string& src);
+  std::string to_upper(const std::string& src);
+
 } // ns utils
 } // ns eyestep

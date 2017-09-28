@@ -4,6 +4,7 @@
 #include "config.hpp"
 
 #include "utils.hpp"
+#include "casefold.hpp"
 
 #include "fspp/filesystem.hpp"
 
@@ -19,6 +20,7 @@
 #include <boost/locale/encoding_utf.hpp>
 #endif
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -119,6 +121,18 @@ namespace utils {
     return conv8.to_bytes(str);
   }
 
+  std::u32string utf8_to_u32string(const std::string& str)
+  {
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv32;
+    return conv32.from_bytes(str);
+  }
+
+  std::string u32string_to_utf8(const std::u32string& str)
+  {
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv32;
+    return conv32.to_bytes(str);
+  }
+
 #else
 
   std::u16string utf8_to_u16string(const std::string& str)
@@ -133,6 +147,37 @@ namespace utils {
     return utf_to_utf<char>(str.c_str(), str.c_str() + str.size());
   }
 #endif
+
+  std::string to_lower(const std::string& src)
+  {
+    using namespace std;
+
+    auto u32src = utf8_to_u32string(src);
+    auto u32dst = u32string(u32src.size(), 0);
+
+    transform(begin(u32src), end(u32src), back_inserter(u32dst),
+              [](const char32_t c) {
+                return utils::towlower(c);
+              });
+
+    return u32string_to_utf8(u32dst);
+  }
+
+
+  std::string to_upper(const std::string& src)
+  {
+    using namespace std;
+
+    auto u32src = utf8_to_u32string(src);
+    auto u32dst = u32string(u32src.size(), 0);
+
+    transform(begin(u32src), end(u32src), back_inserter(u32dst),
+              [](const char32_t c) {
+                return utils::towupper(c);
+              });
+
+    return u32string_to_utf8(u32dst);
+  }
 
 } // ns utils
 } // ns eyestep

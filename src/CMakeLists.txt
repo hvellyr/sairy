@@ -7,6 +7,8 @@ set(include_dirs "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS};${PROJ
 
 #------------------------------------------------------------------------------
 add_library(textbook-utils
+  casefold.cpp
+  casefold.hpp
   utils.cpp
   utils.hpp
 )
