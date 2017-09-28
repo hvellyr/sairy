@@ -8,12 +8,12 @@
 #include "fos.hpp"
 #include "sosofo.hpp"
 #include "estd/memory.hpp"
+#include "utils.hpp"
 
 #include "program_options/program_options.hpp"
 
 #include "fspp/filesystem.hpp"
 
-#include <boost/algorithm/string.hpp>
 #include <boost/optional/optional.hpp>
 
 #include <iostream>
@@ -373,10 +373,10 @@ namespace {
         processor->ctx().port().write_text(str);
       }
       else if (capsstyle == detail::k_lower_caps) {
-        processor->ctx().port().write_text(boost::to_lower_copy(str));
+        processor->ctx().port().write_text(utils::to_lower(str));
       }
       else if (capsstyle == detail::k_upper_caps) {
-        processor->ctx().port().write_text(boost::to_upper_copy(str));
+        processor->ctx().port().write_text(utils::to_upper(str));
       }
       else if (capsstyle == detail::k_small_caps) {
         processor->ctx().port().write_text(str);

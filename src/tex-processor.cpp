@@ -14,7 +14,6 @@
 
 #include "fspp/filesystem.hpp"
 
-#include <boost/algorithm/string.hpp>
 #include <boost/optional/optional.hpp>
 
 #include <cassert>
@@ -368,11 +367,11 @@ namespace {
         escape_str_to_stream(po->stream(), str, po->style_ctx());
         break;
       case tex_detail::k_lower_caps:
-        escape_str_to_stream(po->stream(), boost::to_lower_copy(str),
+        escape_str_to_stream(po->stream(), utils::to_lower(str),
                              po->style_ctx());
         break;
       case tex_detail::k_upper_caps:
-        escape_str_to_stream(po->stream(), boost::to_upper_copy(str),
+        escape_str_to_stream(po->stream(), utils::to_upper(str),
                              po->style_ctx());
         break;
       case tex_detail::k_small_caps:
