@@ -141,9 +141,9 @@ namespace {
   void escape_str_to_stream(std::ostream& os, const std::string& str,
                             tex_detail::TexStyleContext& ctx)
   {
-    std::u16string str16 = utils::utf8_to_u16string(str);
+    std::u32string str32 = utils::utf8_to_u32string(str);
 
-    for (const auto c : str16) {
+    for (const auto c : str32) {
       switch (c) {
       case '\\':
         os << "\\textbackslash{}";
@@ -238,7 +238,7 @@ namespace {
         break;
 
       default:
-        os << utils::u16string_to_utf8(std::u16string() + c);
+        os << utils::u32string_to_utf8(std::u32string() + c);
       }
     }
   }
