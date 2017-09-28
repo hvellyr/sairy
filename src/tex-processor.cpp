@@ -14,8 +14,6 @@
 
 #include "fspp/filesystem.hpp"
 
-#include <boost/optional/optional.hpp>
-
 #include <cassert>
 #include <iostream>
 #include <map>

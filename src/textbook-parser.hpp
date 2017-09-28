@@ -5,9 +5,8 @@
 
 #include "nodes.hpp"
 
+#include "fspp/estd/optional.hpp"
 #include "fspp/filesystem.hpp"
-
-#include <boost/optional/optional.hpp>
 
 #include <list>
 #include <map>
@@ -68,8 +67,8 @@ namespace textbook {
     std::string _data;
 
   public:
-    Stream(boost::optional<std::string> data,
-           boost::optional<filesystem::path> path,
+    Stream(estd::optional<std::string> data,
+           estd::optional<filesystem::path> path,
            size_t start_line_no = 0);
     char current_c() const;
     size_t line_no() const;
@@ -114,7 +113,7 @@ namespace textbook {
 
   private:
     using Args = std::vector<std::string>;
-    using AttrsAndId = std::tuple<Nodes, boost::optional<std::string>>;
+    using AttrsAndId = std::tuple<Nodes, estd::optional<std::string>>;
 
     void push_stream(std::shared_ptr<Stream> stream);
     void pop_stream();

@@ -16,17 +16,18 @@
 #include "chibi/eval.h"
 #include "chibi/sexp.h"
 
-#include <boost/optional/optional.hpp>
+#include "fspp/estd/optional.hpp"
+
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
+#include <cassert>
 #include <iostream>
-#include <sstream>
 #include <memory>
+#include <sstream>
+#include <stdarg.h>
 #include <string>
 #include <vector>
-#include <cassert>
-#include <stdarg.h>
 
 
 namespace eyestep {
@@ -187,13 +188,13 @@ namespace {
   }
 
 
-  boost::optional<std::string> string_from_symbol_sexp_or_none(sexp ctx,
-                                                               sexp obj)
+  estd::optional<std::string> string_from_symbol_sexp_or_none(sexp ctx,
+                                                              sexp obj)
   {
     sexp_gc_var1(str);
     sexp_gc_preserve1(ctx, str);
 
-    boost::optional<std::string> result;
+    estd::optional<std::string> result;
     if (sexp_isymbolp(obj)) {
       str = sexp_symbol_to_string(ctx, obj);
       result = sexp_string_data(str);
@@ -208,12 +209,12 @@ namespace {
   }
 
 
-  boost::optional<std::string> string_from_keyword_or_none(sexp ctx, sexp obj)
+  estd::optional<std::string> string_from_keyword_or_none(sexp ctx, sexp obj)
   {
     sexp_gc_var1(str);
     sexp_gc_preserve1(ctx, str);
 
-    boost::optional<std::string> result;
+    estd::optional<std::string> result;
     if (sexp_keywordp(obj)) {
       str = sexp_keyword_to_string(ctx, obj);
       result = sexp_string_data(str);
@@ -572,7 +573,7 @@ namespace {
         if (!propname) {
           result = sexp_user_exception(ctx, self, "not a symbol", propname_arg);
         }
-        else if (propname == CommonProps::k_id) {
+        else if (propname.value() == CommonProps::k_id) {
           auto visitor = SexpPropVisitor(ctx, self, propname_arg, default_value);
 
           if (node->has_property(CommonProps::k_id)) {
@@ -1319,11 +1320,11 @@ namespace {
   }
 
 
-  boost::optional<fo::PropertySpec>
+  estd::optional<fo::PropertySpec>
   evaluate_keyword_parameter(sexp ctx, sexp self, const std::string& key,
                              sexp expr)
   {
-    boost::optional<fo::PropertySpec> result;
+    estd::optional<fo::PropertySpec> result;
 
     sexp_gc_var1(excep);
     sexp_gc_preserve1(ctx, excep);
@@ -1784,9 +1785,9 @@ namespace {
         [](const fs::path& path) { return path / "tstyle"; }));
   }
 
-  boost::optional<fs::path> search_in_path(const std::string& resource,
-                                           const fs::path& parent_path,
-                                           const std::string& prefix_path)
+  estd::optional<fs::path> search_in_path(const std::string& resource,
+                                          const fs::path& parent_path,
+                                          const std::string& prefix_path)
   {
     std::vector<fs::path> paths(prepare_tstyle_search_path(prefix_path));
     paths.insert(paths.begin(), parent_path);
@@ -1798,7 +1799,7 @@ namespace {
       }
     }
 
-    return boost::none;
+    return {};
   }
 
   sexp func_use(sexp ctx, sexp self, sexp_sint_t n, sexp res_arg)

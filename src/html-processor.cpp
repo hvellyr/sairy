@@ -13,8 +13,7 @@
 #include "program_options/program_options.hpp"
 
 #include "fspp/filesystem.hpp"
-
-#include <boost/optional/optional.hpp>
+#include "fspp/estd/optional.hpp"
 
 #include <iostream>
 #include <map>
@@ -87,7 +86,7 @@ void detail::HtmlRenderContext::pop_styles()
   }
 }
 
-boost::optional<std::string>
+estd::optional<std::string>
 detail::HtmlRenderContext::css_property(const std::string& key) const
 {
   for (const auto& styles : _styles_stack) {
@@ -97,7 +96,7 @@ detail::HtmlRenderContext::css_property(const std::string& key) const
     }
   }
 
-  return boost::none;
+  return {};
 }
 
 
@@ -181,7 +180,7 @@ namespace {
 
   template <typename T>
   void set_attr(detail::StyleAttrs& attrs, const std::string& key,
-                boost::optional<T> val_or_none)
+                estd::optional<T> val_or_none)
   {
     if (val_or_none) {
       attrs._css_map[key] = *val_or_none;
@@ -190,7 +189,7 @@ namespace {
 
 
   void set_attr(detail::StyleAttrs& attrs, const std::string& key,
-                boost::optional<fo::LengthSpec> val_or_none)
+                estd::optional<fo::LengthSpec> val_or_none)
   {
     if (val_or_none) {
       attrs._css_map[key] = length_spec2css(*val_or_none);
@@ -211,7 +210,7 @@ namespace {
   const std::string k_small_caps = "small-caps";
 
   void set_capsstyle(detail::StyleAttrs& attrs,
-                     boost::optional<std::string> val_or_none)
+                     estd::optional<std::string> val_or_none)
   {
     if (val_or_none) {
       if (*val_or_none == k_normal) {
@@ -232,7 +231,7 @@ namespace {
 
 
   html::Tag optional_tag(HtmlProcessor* processor, const std::string& tag,
-                         boost::optional<std::string> val_or_none,
+                         estd::optional<std::string> val_or_none,
                          const std::string& exp_val)
   {
     if (val_or_none) {

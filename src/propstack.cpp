@@ -46,7 +46,7 @@ PropertiesStack::get(const std::string& key,
   if (auto spec = defaults.lookup_key(key))
     return spec;
 
-  return boost::none;
+  return {};
 }
 
 

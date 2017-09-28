@@ -11,8 +11,6 @@
 #include "fspp/filesystem.hpp"
 #include "fspp/utils.hpp"
 
-#include <boost/optional/optional.hpp>
-
 #include <list>
 #include <map>
 #include <memory>

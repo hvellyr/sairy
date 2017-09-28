@@ -8,8 +8,7 @@
 #include "propstack.hpp"
 
 #include "fspp/filesystem.hpp"
-
-#include <boost/optional/optional.hpp>
+#include "fspp/estd/optional.hpp"
 
 #include <string>
 
@@ -49,8 +48,8 @@ public:
              T default_value) const;
 
   template <typename T>
-  boost::optional<T> property_or_none(const IFormattingObject* fo,
-                                      const std::string& key) const;
+  estd::optional<T> property_or_none(const IFormattingObject* fo,
+                                     const std::string& key) const;
 };
 
 } // ns eyestep

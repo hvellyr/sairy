@@ -5,14 +5,14 @@
 
 #include "nodes.hpp"
 
-#include <boost/optional/optional.hpp>
+#include "fspp/estd/optional.hpp"
 
 #include <list>
-#include <unordered_map>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 
@@ -88,14 +88,14 @@ namespace textbook {
   public:
     void add(const TagSpec& tagspec) { _model[tagspec.tag_name()] = tagspec; }
 
-    boost::optional<TagSpec> lookup(const std::string& tagnm)
+    estd::optional<TagSpec> lookup(const std::string& tagnm)
     {
       auto i_find = _model.find(tagnm);
       if (i_find != _model.end()) {
         return i_find->second;
       }
 
-      return boost::none;
+      return {};
     }
   };
 

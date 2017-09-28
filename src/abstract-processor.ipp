@@ -84,7 +84,7 @@ AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
 
 template <typename ProcessorT>
 template <typename T>
-boost::optional<T>
+estd::optional<T>
 AbstractProcessor<ProcessorT>::property_or_none(const IFormattingObject* fo,
                                                 const std::string& key) const
 {
@@ -95,7 +95,7 @@ AbstractProcessor<ProcessorT>::property_or_none(const IFormattingObject* fo,
     }
   }
 
-  return boost::none;
+  return {};
 }
 
 template <typename ProcessorT>

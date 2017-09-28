@@ -9,6 +9,7 @@
 #include "textbook-parser.hpp"
 #include "utils.hpp"
 
+#include "fspp/estd/optional.hpp"
 #include "fspp/filesystem.hpp"
 #include "fspp/utils.hpp"
 
@@ -83,7 +84,7 @@ namespace textbook {
       return fs::path();
     }
 
-    boost::optional<fs::path>
+    estd::optional<fs::path>
     find_model_spec(const std::string& tag,
                     const std::vector<fs::path>& catalog_search_path)
     {
@@ -95,7 +96,7 @@ namespace textbook {
         }
       }
 
-      return boost::none;
+      return {};
     }
 
 
@@ -257,8 +258,8 @@ namespace textbook {
 
   //------------------------------------------------------------------------------
 
-  Stream::Stream(boost::optional<std::string> data,
-                 boost::optional<fs::path> path, size_t start_line_no)
+  Stream::Stream(estd::optional<std::string> data,
+                 estd::optional<fs::path> path, size_t start_line_no)
     : _unread_nc(0u), _current_c(' '), _nc(0u), _line_no(start_line_no),
       _fpath(path ? *path : fs::path("<data>")),
       _data(data ? *data : (path ? load_file_into_string(*path) : ""))
@@ -452,13 +453,12 @@ namespace textbook {
 
   Node* Parser::parse_file(const fs::path& fpath)
   {
-    return parse_stream(std::make_shared<Stream>(boost::none, fpath));
+    return parse_stream(std::make_shared<Stream>(estd::optional<std::string>{}, fpath));
   }
 
   Node* Parser::parse_string(const std::string& buf, size_t start_line_no)
   {
-    return parse_stream(
-      std::make_shared<Stream>(buf, boost::none, start_line_no));
+    return parse_stream(std::make_shared<Stream>(buf, estd::optional<filesystem::path>{}, start_line_no));
   }
 
   Node* Parser::parse_stream(std::shared_ptr<Stream> stream)
@@ -638,7 +638,7 @@ namespace textbook {
                                      size_t lineno_at_start)
   {
     Nodes nl;
-    boost::optional<std::string> idstr;
+    estd::optional<std::string> idstr;
 
     const auto& attrspecs = tagspec.attrspecs();
     size_t attrc = 0;
@@ -853,7 +853,7 @@ namespace textbook {
         std::cerr << "include: " << inclfp << std::endl;
       }
 
-      auto stream = std::make_shared<Stream>(boost::none, inclfp);
+      auto stream = std::make_shared<Stream>(estd::optional<std::string>{}, inclfp);
       push_stream(stream);
     }
     catch (const ParseException& pe) {

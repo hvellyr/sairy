@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <boost/optional/optional.hpp>
+#include "fspp/estd/optional.hpp"
 
 #include <initializer_list>
 #include <iterator>
@@ -40,12 +40,12 @@ namespace fo {
   struct LengthSpec {
     LengthSpec() : _value(0), _unit(k_pt), _min(0), _max(0) {}
     LengthSpec(LengthSpecType spec_type, double value, Unit unit,
-               boost::optional<double> min = boost::none,
-               boost::optional<double> max = boost::none,
+               estd::optional<double> min = {},
+               estd::optional<double> max = {},
                bool conditionalp = true, int priority = 1)
       : _spec_type(spec_type), _conditionalp(conditionalp), _priority(priority),
-        _value(value), _unit(unit), _min(min != boost::none ? *min : value),
-        _max(max != boost::none ? *max : value)
+        _value(value), _unit(unit), _min(min ? *min : value),
+        _max(max ? *max : value)
     {
     }
 
@@ -331,7 +331,7 @@ namespace fo {
   };
 
 
-  using PropertySpecOrNone = boost::optional<fo::PropertySpec>;
+  using PropertySpecOrNone = estd::optional<fo::PropertySpec>;
 
   class PropertySpecs {
   public:
@@ -415,8 +415,9 @@ namespace fo {
     PropertySpecOrNone lookup_key(const std::string& key) const
     {
       auto i_find = _specs.find(key);
-      return i_find != _specs.end() ? PropertySpecOrNone(i_find->second)
-                                    : boost::none;
+      return i_find != _specs.end()
+        ? PropertySpecOrNone(i_find->second)
+        : PropertySpecOrNone();
     }
 
     const_iterator begin() const

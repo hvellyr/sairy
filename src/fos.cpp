@@ -625,7 +625,7 @@ namespace fo {
   {
     register_fo_class_factory<FoClass>(
       [](const PropertySpecs& p, const Sosofo& s) {
-        return estd::make_unique<FoClass>(p, s);
+        return ::estd::make_unique<FoClass>(p, s);
       });
   }
 
@@ -634,7 +634,7 @@ namespace fo {
   {
     register_fo_class_factory<FoClass>(
       [](const PropertySpecs& p, const Sosofo&) {
-        return estd::make_unique<FoClass>(p);
+        return ::estd::make_unique<FoClass>(p);
       });
   }
 
@@ -648,7 +648,7 @@ namespace fo {
 
       register_fo_class_factory<ParagraphBreak>(
         [](const PropertySpecs&, const Sosofo&) {
-          return estd::make_unique<ParagraphBreak>();
+          return ::estd::make_unique<ParagraphBreak>();
         });
 
       register_fo_class_factory<Paragraph>();

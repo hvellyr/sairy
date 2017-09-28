@@ -10,8 +10,7 @@
 #include "program_options/program_options.hpp"
 
 #include "fspp/filesystem.hpp"
-
-#include <boost/optional/optional.hpp>
+#include "fspp/estd/optional.hpp"
 
 #include <list>
 #include <map>
@@ -79,7 +78,7 @@ namespace detail {
     void push_styles(const StyleAttrs& map);
     void pop_styles();
 
-    boost::optional<std::string> css_property(const std::string& key) const;
+    estd::optional<std::string> css_property(const std::string& key) const;
   };
 } // ns detail
 
