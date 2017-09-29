@@ -32,5 +32,13 @@ namespace utils {
   std::string to_lower(const std::string& src);
   std::string to_upper(const std::string& src);
 
+  std::u32string& trim_left(std::u32string& src);
+  std::u32string& trim_right(std::u32string& src);
+  std::u32string& trim(std::u32string& src);
+
+  std::string trim_left_copy(const std::string& src);
+  std::string trim_right_copy(const std::string& src);
+  std::string trim_copy(const std::string& src);
+
 } // ns utils
 } // ns eyestep

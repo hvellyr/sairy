@@ -21,6 +21,7 @@
 #endif
 
 #include <algorithm>
+#include <cctype>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -177,6 +178,71 @@ namespace utils {
               });
 
     return u32string_to_utf8(u32dst);
+  }
+
+
+  bool iswspace(char32_t c)
+  {
+    return (c >= 0x0009 && c <= 0x000d) // <control-0009>..<control-000D>
+      || c == 0x0020   // SPACE
+      || c == 0x0085   // <control-0085>
+      || c == 0x00a0   // NO-BREAK SPACE
+      || c == 0x1680   // OGHAM SPACE MARK
+      || (c >= 0x2000 && c <= 0x200a)  // EN QUAD..HAIR SPACE
+      || c == 0x2028   // LINE SEPARATOR
+      || c == 0x2029   // PARAGRAPH SEPARATOR
+      || c == 0x202f   // NARROW NO-BREAK SPACE
+      || c == 0x205f   // MEDIUM MATHEMATICAL SPACE
+      || c == 0x3000;  // IDEOGRAPHIC SPACE
+  }
+
+
+  std::u32string& trim_left(std::u32string& src)
+  {
+    using namespace std;
+    src.erase(begin(src),
+              std::find_if_not(begin(src), end(src),
+                               [](const char32_t c) { return iswspace(c); }));
+    return src;
+  }
+
+
+  std::u32string& trim_right(std::u32string& src)
+  {
+    using namespace std;
+    src.erase(std::find_if_not(src.rbegin(), src.rend(),
+                               [](const char32_t c) { return iswspace(c); }).base(),
+              src.end());
+    return src;
+  }
+
+
+  std::u32string& trim(std::u32string& src)
+  {
+    trim_left(src);
+    trim_right(src);
+    return src;
+  }
+
+
+  std::string trim_left_copy(const std::string& src)
+  {
+    auto u32src = utf8_to_u32string(src);
+    return u32string_to_utf8(trim_left(u32src));
+  }
+
+
+  std::string trim_right_copy(const std::string& src)
+  {
+    auto u32src = utf8_to_u32string(src);
+    return u32string_to_utf8(trim_right(u32src));
+  }
+
+
+  std::string trim_copy(const std::string& src)
+  {
+    auto u32src = utf8_to_u32string(src);
+    return u32string_to_utf8(trim(u32src));
   }
 
 } // ns utils

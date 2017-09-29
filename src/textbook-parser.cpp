@@ -110,7 +110,7 @@ namespace textbook {
 
       return boost::copy_range<std::vector<std::string>>(
         steps | transformed([](const std::string& value) {
-          return boost::trim_copy(value);
+          return utils::trim_copy(value);
         }));
     }
 
@@ -124,10 +124,10 @@ namespace textbook {
           auto attrs = tagnd->attributes();
 
           if (attrs.size() >= 3) {
-            auto gi_spec = boost::trim_copy(node_data(attrs[0]));
-            auto attr_spec = boost::trim_copy(node_data(attrs[1]));
-            auto body_spec = boost::trim_copy(node_data(attrs[2]));
-            auto opt = attrs.size() >= 4 ? boost::trim_copy(node_data(attrs[3]))
+            auto gi_spec = utils::trim_copy(node_data(attrs[0]));
+            auto attr_spec = utils::trim_copy(node_data(attrs[1]));
+            auto body_spec = utils::trim_copy(node_data(attrs[2]));
+            auto opt = attrs.size() >= 4 ? utils::trim_copy(node_data(attrs[3]))
                                          : std::string();
 
             size_t min_attr = 0;
@@ -243,7 +243,7 @@ namespace textbook {
           if (textbook_nd) {
             auto attrs = textbook_nd->attributes();
             if (!attrs.empty() &&
-                boost::trim_copy(node_data(attrs[0])) == "1.0") {
+                utils::trim_copy(node_data(attrs[0])) == "1.0") {
               return make_docspec(nd);
             }
           }
@@ -624,7 +624,7 @@ namespace textbook {
         throw ParseException(srcpos(), "Unclosed {");
       }
 
-      args.push_back(boost::trim_copy(arg.str()));
+      args.push_back(utils::trim_copy(arg.str()));
       skipped_ws = skip_ws();
     }
 
@@ -647,11 +647,11 @@ namespace textbook {
       // don't reparse argument if ID type
       if (attrspecs[attrc].type() == k_attr_id) {
         if (!idstr) {
-          idstr = boost::trim_copy(arg);
+          idstr = utils::trim_copy(arg);
         }
       }
       else if (attrspecs[attrc].type() == k_attr_fref) {
-        auto abspath = path_rel_to_cwd(_stream->fpath(), boost::trim_copy(arg));
+        auto abspath = path_rel_to_cwd(_stream->fpath(), utils::trim_copy(arg));
         auto textnd = _grove.make_text_node(abspath.string());
         textnd->set_property(CommonProps::k_attr_name, attrspecs[attrc].name());
         nl.push_back(textnd);
@@ -796,7 +796,7 @@ namespace textbook {
 
       if (args.size() == 1) {
         if (args[0] != k_p_tag) {
-          end_tag(boost::trim_copy(args[0]));
+          end_tag(utils::trim_copy(args[0]));
         }
       }
       else {
