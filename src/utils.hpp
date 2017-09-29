@@ -15,6 +15,9 @@ namespace utils {
   std::string join(const std::vector<std::string>& strlist,
                    const std::string& gap);
 
+  std::vector<std::string> split(const std::string& str, const std::string& seps,
+                                 bool trim_token = false);
+
   std::vector<std::string> join_list(const std::vector<std::string>& one,
                                      const std::vector<std::string>& sec);
 

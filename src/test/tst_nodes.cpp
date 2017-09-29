@@ -7,8 +7,6 @@
 #include "../nodes.hpp"
 #include "../nodeutils.hpp"
 
-#include <boost/range/irange.hpp>
-
 #include <string>
 #include <sstream>
 #include <tuple>
@@ -136,7 +134,7 @@ TEST_CASE("Attributes add nodelist", "[nodes][attributes]")
   nd->add_attribute("gaz", nodes);
 
   REQUIRE(nd->attributes().size() == texts.size());
-  for (auto i : boost::irange(0, int(texts.size()))) {
+  for (auto i = 0u; i < texts.size(); ++i) {
     REQUIRE(nd->attributes()[i]->classname() == "text");
     REQUIRE(nd->attributes()[i]->property<std::string>(
               CommonProps::k_attr_name) == "gaz");
@@ -173,7 +171,7 @@ TEST_CASE("Attributes setting attributes removes previous attributes",
   nd->set_attributes(nodes);
 
   REQUIRE(nd->attributes().size() == texts.size());
-  for (auto i : boost::irange(0, int(texts.size()))) {
+  for (auto i = 0u; i < texts.size(); ++i) {
     REQUIRE(nd->attributes()[i]->classname() == "text");
     REQUIRE(nd->attributes()[i]->property<std::string>(
               CommonProps::k_attr_name) == attrnms[i]);
@@ -208,7 +206,7 @@ TEST_CASE("Attributes access", "[nodes][attributes]")
 
   REQUIRE(nd->attributes().size() == texts.size());
 
-  for (auto i : boost::irange(0, int(texts.size()))) {
+  for (auto i = 0u; i < texts.size(); ++i) {
     auto* n2 = nd->attribute(attrnms[i]);
     REQUIRE(n2 != nullptr);
     REQUIRE(n2->property<std::string>(CommonProps::k_data) == texts[i]);

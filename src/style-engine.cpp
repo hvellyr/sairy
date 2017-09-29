@@ -6,8 +6,7 @@
 #include "style-engine.hpp"
 #include "utils.hpp"
 
-#include <boost/range/adaptor/transformed.hpp>
-
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <string>
@@ -23,12 +22,16 @@ namespace {
   {
     auto ctx = create_scheme_context();
 
-    auto paths = boost::copy_range<std::vector<fs::path>>(
-      eyestep::utils::split_paths(prefix_path)
-      | boost::adaptors::transformed(
-                       [](const fs::path& path) { return path / "lib"; }));
+    auto pfx_paths = utils::split_paths(prefix_path);
 
-    ctx->initialize(paths);
+    auto lib_paths = std::vector<fs::path>{};
+    transform(begin(pfx_paths), end(pfx_paths), back_inserter(lib_paths),
+              [](const fs::path& path)
+              {
+                return path / "lib";
+              });
+
+    ctx->initialize(lib_paths);
 
     auto init_path = fs::path("textbook") / "init.scm";
     if (!ctx->load_module_file(init_path)) {

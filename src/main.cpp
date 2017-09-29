@@ -19,9 +19,7 @@
 
 #include "fspp/filesystem.hpp"
 
-#include <boost/range/adaptor/transformed.hpp>
-#include <boost/range/adaptor/filtered.hpp>
-
+#include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
@@ -121,28 +119,19 @@ std::vector<std::string> document_root_elements_gi(eyestep::Grove& grove)
 
 
 fs::path deduce_templ_from_document(eyestep::Grove& grove,
-                                    std::string prefix_path)
+                                    const std::string& prefix_path)
 {
   using namespace eyestep;
-  using namespace boost::adaptors;
 
   auto gis = document_root_elements_gi(grove);
   if (!gis.empty()) {
     auto style_file = fs::path(gis[0]).replace_extension(".tstyle");
 
-    // clang-format off
-    auto paths = boost::copy_range<std::vector<fs::path>>(
-      eyestep::utils::split_paths(prefix_path)
-      | transformed([style_file](const fs::path& path) {
-          return path / "tstyle" / style_file;
-        })
-      | filtered([](const fs::path& path) {
-          return fs::exists(path);
-        })
-      );
-    // clang-format on
-
-    return paths.empty() ? fs::path() : paths[0];
+    for (const auto& path : utils::split_paths(prefix_path)) {
+      auto p = path / "tstyle" / style_file;
+      if (fs::exists(p))
+        return p;
+    }
   }
 
   return fs::path();

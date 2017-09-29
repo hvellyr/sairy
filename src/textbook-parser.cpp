@@ -13,20 +13,16 @@
 #include "fspp/filesystem.hpp"
 #include "fspp/utils.hpp"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/range/adaptor/transformed.hpp>
-
 #include <algorithm>
 #include <cassert>
 #include <exception>
 #include <iostream>
 #include <map>
-#include <unordered_map>
 #include <set>
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 
@@ -102,16 +98,7 @@ namespace textbook {
 
     std::vector<std::string> split_attrs(const std::string& str)
     {
-      using namespace boost::adaptors;
-      using namespace boost::algorithm;
-
-      std::vector<std::string> steps;
-      split(steps, str, is_any_of(","), token_compress_on);
-
-      return boost::copy_range<std::vector<std::string>>(
-        steps | transformed([](const std::string& value) {
-          return utils::trim_copy(value);
-        }));
+      return utils::split(str, ",", true);
     }
 
 

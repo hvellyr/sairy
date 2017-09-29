@@ -8,12 +8,6 @@
 
 #include "fspp/filesystem.hpp"
 
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/range/adaptor/transformed.hpp>
-#include <boost/range/iterator.hpp>
-#include <boost/range/iterator_range.hpp>
-
 #ifdef HAVE_STD_CODECVT
 #include <codecvt>
 #else
@@ -36,16 +30,18 @@ namespace utils {
   std::string join(const std::vector<std::string>& strlist,
                    const std::string& gap)
   {
-    std::stringstream result;
+    using namespace std;
+
+    stringstream result;
 
     if (!strlist.empty()) {
       result << strlist.front();
 
-      for (const auto& str :
-           boost::make_iterator_range(boost::next(strlist.begin()),
-                                      strlist.end())) {
-        result << gap << str;
-      }
+      for_each(next(begin(strlist)), end(strlist),
+               [&](const string& str)
+               {
+                 result << gap << str;
+               });
     }
 
     return result.str();
@@ -55,24 +51,73 @@ namespace utils {
   std::vector<std::string> join_list(const std::vector<std::string>& one,
                                      const std::vector<std::string>& sec)
   {
-    std::vector<std::string> result;
-    result.insert(result.end(), one.begin(), one.end());
-    result.insert(result.end(), sec.begin(), sec.end());
+    using namespace std;
+
+    auto result = vector<string>{};
+    result.insert(end(result), begin(one), end(one));
+    result.insert(end(result), begin(sec), end(sec));
+    return result;
+  }
+
+
+  std::vector<std::string> split(const std::string& str,
+                                 const std::string& seps,
+                                 bool trim_token)
+  {
+    using namespace std;
+
+    const auto push_substr = [&](vector<string>& res, const std::string& src,
+                                 size_t p, size_t count)
+    {
+      const auto tmp = src.substr(p, count);
+      res.emplace_back(trim_token ? trim_copy(tmp) : tmp);
+    };
+
+    auto result = vector<string>{};
+
+    auto pos = std::size_t{0};
+
+    pos = str.find_first_not_of(seps, pos);
+    if (pos == std::string::npos) {
+      return result;
+    }
+
+    while (pos < str.size()) {
+      auto idx = str.find_first_of(seps, pos);
+      if (idx == std::string::npos) {
+        push_substr(result, str, pos, std::string::npos);
+        return result;
+      }
+
+      push_substr(result, str, pos, idx - pos);
+
+      idx = str.find_first_not_of(seps, idx);
+      if (idx == std::string::npos) {
+        return result;
+      }
+      pos = idx;
+    }
+
     return result;
   }
 
 
   std::vector<fs::path> split_paths(const std::string& path)
   {
-    using namespace boost::adaptors;
-    using namespace boost::algorithm;
+    using namespace std;
 
-    std::vector<std::string> steps;
-    split(steps, path, is_any_of(":"), token_compress_on);
+    auto components = split(path, ":", true);
 
-    return boost::copy_range<std::vector<fs::path>>(
-      steps |
-      transformed([](const std::string& value) { return fs::path(value); }));
+    auto result = vector<fs::path>{};
+    result.reserve(components.size());
+
+    transform(begin(components), end(components), back_inserter(result),
+              [](const string& val)
+              {
+                return fs::path{val};
+              });
+
+    return result;
   }
 
 

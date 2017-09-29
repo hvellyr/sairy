@@ -13,10 +13,6 @@
 
 #include "fspp/filesystem.hpp"
 
-#include <boost/range/iterator.hpp>
-#include <boost/range/iterator_range.hpp>
-#include <boost/range/adaptor/transformed.hpp>
-
 #include <algorithm>
 #include <cassert>
 #include <iostream>
@@ -44,10 +40,11 @@ TextbookScanner::TextbookScanner(
   if (!args.empty()) {
     _prefix_path = utils::split_paths(args["textbook-prefix"].as<std::string>());
 
-    _catalog_path = boost::copy_range<std::vector<fs::path>>(
-      _prefix_path | boost::adaptors::transformed([](const fs::path& path) {
-        return path / "spec";
-      }));
+    transform(begin(_prefix_path), end(_prefix_path), back_inserter(_catalog_path),
+              [](const fs::path& path)
+              {
+                return path / "spec";
+              });
 
     _debug = args.count("debug") != 0;
   }

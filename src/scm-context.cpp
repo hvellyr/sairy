@@ -18,9 +18,7 @@
 
 #include "fspp/estd/optional.hpp"
 
-#include <boost/range/algorithm/find_if.hpp>
-#include <boost/range/adaptor/transformed.hpp>
-
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <memory>
@@ -957,6 +955,8 @@ namespace {
   sexp func_abs_first_element_sibling_p(sexp ctx, sexp self, sexp_sint_t n,
                                         sexp nl_arg)
   {
+    using namespace std;
+
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -966,9 +966,10 @@ namespace {
       const Node* parent = node->parent();
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
-        auto i_find = boost::find_if(siblings, [&node](const Node* lnd) {
-          return lnd->node_class() == element_class_definition();
-        });
+        auto i_find = find_if(begin(siblings), end(siblings),
+                              [&node](const Node* lnd) {
+                                return lnd->node_class() == element_class_definition();
+                              });
         if (i_find != siblings.end()) {
           result = *i_find == node ? SEXP_TRUE : SEXP_FALSE;
         }
@@ -1017,6 +1018,8 @@ namespace {
   sexp func_abs_last_element_sibling_p(sexp ctx, sexp self, sexp_sint_t n,
                                        sexp nl_arg)
   {
+    using namespace std;
+
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -1028,9 +1031,10 @@ namespace {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
         std::reverse(siblings.begin(), siblings.end());
 
-        auto i_find = boost::find_if(siblings, [&node](Node* lnd) {
-          return lnd && lnd->node_class() == element_class_definition();
-        });
+        auto i_find = find_if(begin(siblings), end(siblings),
+                              [&node](Node* lnd) {
+                                return lnd && lnd->node_class() == element_class_definition();
+                              });
         if (i_find != siblings.end()) {
           result = *i_find == node ? SEXP_TRUE : SEXP_FALSE;
         }
@@ -1779,10 +1783,18 @@ namespace {
   std::vector<fs::path>
   prepare_tstyle_search_path(const std::string& prefix_path)
   {
-    return boost::copy_range<std::vector<fs::path>>(
-      eyestep::utils::split_paths(prefix_path) |
-      boost::adaptors::transformed(
-        [](const fs::path& path) { return path / "tstyle"; }));
+    using namespace std;
+
+    auto pfx_paths = utils::split_paths(prefix_path);
+    auto tstyle_paths = vector<fs::path>{};
+    tstyle_paths.resize(pfx_paths.size());
+
+    transform(begin(pfx_paths), end(pfx_paths), back_inserter(tstyle_paths),
+              [](const fs::path& path)
+              {
+                return path / "tstyle";
+              });
+    return tstyle_paths;
   }
 
   estd::optional<fs::path> search_in_path(const std::string& resource,
