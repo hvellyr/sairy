@@ -13,9 +13,7 @@
 #include "fspp/filesystem.hpp"
 #include "fspp/utils.hpp"
 
-#include "json_spirit/json_spirit_value.h"
-#include "json_spirit/json_spirit_reader_template.h"
-#include "json_spirit/json_spirit_writer_template.h"
+#include "json.hpp"
 
 #include <functional>
 #include <iostream>
@@ -26,6 +24,9 @@
 using namespace eyestep;
 namespace fs = filesystem;
 namespace po = program_options;
+
+using json = nlohmann::json;
+
 
 namespace {
 Node* with_parser_scan(Grove& grove,
@@ -51,17 +52,12 @@ Node* with_parser_scan(Grove& grove,
   return doc_node;
 }
 
-json_spirit::Value reparse_node_as_json(Node* nd)
+json reparse_node_as_json(Node* nd)
 {
   std::stringstream buf;
   serialize(buf, nd, false);
 
-  json_spirit::Value root_elt;
-  if (json_spirit::read_string(buf.str(), root_elt)) {
-    return root_elt;
-  }
-
-  return json_spirit::Value();
+  return json::parse(buf.str());
 }
 
 void serialize_node_if_missing(Node* nd, const fs::path& path,
@@ -112,17 +108,9 @@ bool test_file(const fs::path& path, const po::variables_map& vm)
       auto file = fs::File(excp_path);
       auto& inp = file.open(std::ios::in | std::ios::binary);
 
-      json_spirit::Value expected_root_elt;
-      bool reading_expected_file_succeeded =
-        json_spirit::read_stream(inp, expected_root_elt);
-      if (!reading_expected_file_succeeded) {
-        std::cerr << "FAILED" << std::endl
-                  << "    failed to read expected json file" << std::endl;
-        serialize_node_if_missing(nd, path, vm);
-        return false;
-      }
+      auto expected_root_elt = json::parse(inp);
 
-      json_spirit::Value parsed_json = reparse_node_as_json(nd);
+      auto parsed_json = reparse_node_as_json(nd);
 
       if (expected_root_elt == parsed_json) {
         std::cerr << "ok" << std::endl;
@@ -134,10 +122,10 @@ bool test_file(const fs::path& path, const po::variables_map& vm)
                 << "    parsed and expected outcome differ" << std::endl;
       if (vm.count("verbose")) {
         std::cerr << "EXPECTED:" << std::endl;
-        json_spirit::write_stream(expected_root_elt, std::cerr, true);
+        std::cerr << std::setw(4) << expected_root_elt;
         std::cerr << std::endl
                   << "ACTUAL:" << std::endl;
-        json_spirit::write_stream(parsed_json, std::cerr, true);
+        std::cerr << std::setw(4) << parsed_json;
         std::cerr << std::endl;
       }
       return false;
@@ -192,14 +180,6 @@ int run_tests(const std::vector<fs::path>& sources, const po::variables_map& vm)
 }
 
 } // anon ns
-
-namespace json_spirit {
-std::ostream& operator<<(std::ostream& os, const Value& value)
-{
-  write_stream(value, os, true);
-  return os;
-}
-} // ns json_spirit
 
 
 int main(int argc, char** argv)

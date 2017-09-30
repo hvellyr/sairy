@@ -2,7 +2,7 @@
 # All rights reserved.
 
 set(fspp_LIBRARIES "${PROJECT_BINARY_DIR}/lib/libfspplib.a")
-set(include_dirs "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS};${PROJECT_BINARY_DIR}/include")
+set(include_dirs "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS};${PROJECT_BINARY_DIR}/include;${PROJECT_SOURCE_DIR}/third-party/nlohmann_json")
 
 add_executable(nodes_test
   tst_main.cpp
