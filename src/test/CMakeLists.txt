@@ -2,7 +2,7 @@
 # All rights reserved.
 
 set(fspp_LIBRARIES "${PROJECT_BINARY_DIR}/lib/libfspplib.a")
-set(include_dirs "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS};${PROJECT_BINARY_DIR}/include;${PROJECT_SOURCE_DIR}/third-party/nlohmann_json")
+set(include_dirs "${PROJECT_SOURCE_DIR}/third-party;${PROJECT_BINARY_DIR}/include;${PROJECT_SOURCE_DIR}/third-party/nlohmann_json")
 
 add_executable(nodes_test
   tst_main.cpp
@@ -32,7 +32,6 @@ target_include_directories(utils_test PUBLIC "${include_dirs}")
 target_link_libraries(utils_test
   textbook-utils
   ${fspp_LIBRARIES}
-  ${Boost_LIBRARIES}
 )
 
 add_test(NAME utils_test_case
@@ -53,7 +52,6 @@ target_link_libraries(textbook_test
   textbook-parser
   textbook-utils
   ${fspp_LIBRARIES}
-  ${Boost_LIBRARIES}
 )
 
 add_test(NAME textbook_test_case
@@ -74,7 +72,6 @@ target_link_libraries(parser_test
   textbook-utils
   program_options
   ${fspp_LIBRARIES}
-  ${Boost_LIBRARIES}
 )
 
 add_test(NAME parser_test_case

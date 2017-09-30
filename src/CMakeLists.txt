@@ -2,7 +2,7 @@
 # All rights reserved.
 
 set(fspp_LIBRARIES "${PROJECT_BINARY_DIR}/lib/libfspplib.a")
-set(include_dirs "${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS};${PROJECT_BINARY_DIR}/include;${PROJECT_SOURCE_DIR}/third-party/chibi-scheme/include")
+set(include_dirs "${PROJECT_SOURCE_DIR}/third-party;${PROJECT_BINARY_DIR}/include;${PROJECT_SOURCE_DIR}/third-party/chibi-scheme/include")
 
 
 #------------------------------------------------------------------------------
@@ -143,8 +143,7 @@ target_link_libraries(textbook
   textbook-parser
   textbook-utils
   program_options
-  ${fspp_LIBRARIES}
-  ${Boost_LIBRARIES})
+  ${fspp_LIBRARIES})
 
 set(textbook_app "${PROJECT_BINARY_DIR}/app")
 set_target_properties(textbook
