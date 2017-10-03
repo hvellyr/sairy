@@ -3,24 +3,27 @@
 
 #include "html-processor.hpp"
 
+#include "estd/memory.hpp"
 #include "fo-processor.hpp"
 #include "fo.hpp"
 #include "fos.hpp"
 #include "sosofo.hpp"
-#include "estd/memory.hpp"
 #include "utils.hpp"
 
 #include "program_options/program_options.hpp"
 
-#include "fspp/filesystem.hpp"
 #include "fspp/estd/optional.hpp"
+#include "fspp/filesystem.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <memory>
-#include <unordered_set>
 #include <sstream>
 #include <string>
+#include <tuple>
+#include <unordered_set>
 
 
 namespace eyestep {
@@ -72,6 +75,7 @@ detail::CapsStyle detail::HtmlRenderContext::capsstyle()
 
   return k_normal_caps;
 }
+
 
 void detail::HtmlRenderContext::push_styles(const StyleAttrs& styles)
 {
@@ -141,11 +145,66 @@ namespace {
   bool css_attribute_is_inherited(const std::string& prop)
   {
     static const std::unordered_set<std::string> not_inherited =
-      {"padding-left", "padding-bottom", "padding-right", "padding-top",
-       "padding", "height", "width", "bottom", "left", "right", "top",
-       "display", "margin", "margin-left", "margin-right", "margin-bottom",
-       "margin-top"};
+      {"padding-left", "padding-bottom",  "padding-right", "padding-top",
+       "padding",      "height",          "width",         "bottom",
+       "left",         "right",           "top",           "display",
+       "margin",       "margin-left",     "margin-right",  "margin-bottom",
+       "margin-top",   "background-color"};
     return not_inherited.find(prop) == not_inherited.end();
+  }
+
+
+  float normalize_co_value(float v)
+  {
+    if (v <= 0)
+      v = 0.0f;
+    if (v > 100.0f)
+      v = 100.0f;
+    return v;
+  }
+
+  std::tuple<int, int, int> convert_cmyk_to_rgb(fo::Color co)
+  {
+    auto c = normalize_co_value(co._cmyk._cyan) / 100;
+    auto m = normalize_co_value(co._cmyk._magenta) / 100;
+    auto y = normalize_co_value(co._cmyk._yellow) / 100;
+    auto k = normalize_co_value(co._cmyk._black) / 100;
+
+    auto r = 1 - std::min<float>(1, c * (1 - k) + k);
+    auto g = 1 - std::min<float>(1, m * (1 - k) + k);
+    auto b = 1 - std::min<float>(1, y * (1 - k) + k);
+
+    return std::make_tuple(floor(r * 255), floor(g * 255), floor(b * 255));
+  }
+
+  std::tuple<int, int, int> convert_gray_to_rgb(fo::Color co)
+  {
+    auto result = normalize_co_value(co._gray);
+    return std::make_tuple(floor(result * 255), floor(result * 255),
+                           floor(result * 255));
+  }
+
+
+  std::string enc_color(const fo::Color co)
+  {
+    auto rco = [&]() -> std::tuple<int, int, int> {
+      switch (co._space) {
+      case fo::kRGB:
+        return std::make_tuple(floor(co._rgb._red * 255),
+                               floor(co._rgb._green * 255),
+                               floor(co._rgb._blue * 255));
+      case fo::kCMYK:
+        return convert_cmyk_to_rgb(co);
+      case fo::kGray:
+        return convert_gray_to_rgb(co);
+      }
+    }();
+
+    std::stringstream ss;
+    ss << "#" << std::hex << std::get<0>(rco) << std::get<1>(rco)
+       << std::get<2>(rco);
+
+    return ss.str();
   }
 
 
@@ -204,6 +263,12 @@ namespace {
   }
 
 
+  void set_attr(detail::StyleAttrs& attrs, const std::string& key, int val)
+  {
+    attrs._css_map[key] = std::to_string(val);
+  }
+
+
   const std::string k_normal = "normal";
   const std::string k_lower = "lower";
   const std::string k_caps = "caps";
@@ -244,14 +309,16 @@ namespace {
   }
 
 
-  html::Attrs style_str2attrs(const std::string& str)
+  html::Attrs tag_style_attrs(HtmlProcessor* processor, const std::string& tag,
+                              const detail::StyleAttrs& attrs)
   {
-    html::Attrs attrs;
+    auto str = attrs_to_string(attrs);
     if (!str.empty()) {
-      attrs.push_back(html::Attr{"style", str});
+      auto cls = processor->css_writer().add_rule(tag, str);
+      return {{"class", cls}};
     }
 
-    return attrs;
+    return {};
   }
 
 
@@ -260,7 +327,7 @@ namespace {
   {
     if (!attrs._css_map.empty()) {
       return html::Tag(processor->ctx().port(), "span",
-                       style_str2attrs(attrs_to_string(attrs)));
+                       tag_style_attrs(processor, "span", attrs));
     }
 
     return html::Tag();
@@ -275,7 +342,7 @@ namespace {
 
     if (!extAttrs._css_map.empty()) {
       return html::Tag(processor->ctx().port(), "span",
-                       style_str2attrs(attrs_to_string(extAttrs)));
+                       tag_style_attrs(processor, "span", extAttrs));
     }
 
     return html::Tag();
@@ -286,15 +353,27 @@ namespace {
                                 HtmlProcessor* processor,
                                 const IFormattingObject* fo)
   {
-    auto fontsize = processor->property_or_none<fo::LengthSpec>(fo, "font-size");
+    auto fontsize =
+      processor->property_or_none<fo::LengthSpec>(fo, "font-size");
     auto fontcaps = processor->property_or_none<std::string>(fo, "font-caps");
     auto posptshift =
       processor->property_or_none<fo::LengthSpec>(fo, "position-point-shift");
 
+    if (auto fn = processor->property_or_none<std::string>(fo, "font-name")) {
+      if (*fn == "monospace")
+        set_attr(attrs, "font-family", "monospace");
+      else if (*fn == "sans-serif")
+        set_attr(attrs, "font-family", "sans-serif");
+      else if (*fn == "roman")
+        set_attr(attrs, "font-family", "serif");
+    }
+
     set_attr(attrs, "font-size", fontsize);
     set_capsstyle(attrs, fontcaps);
-    set_attr(attrs, "position", "relative");
-    set_attr(attrs, "top", posptshift);
+    if (posptshift && posptshift->_value != 0) {
+      set_attr(attrs, "position", "relative");
+      set_attr(attrs, "top", posptshift);
+    }
   }
 
 
@@ -304,17 +383,24 @@ namespace {
   {
     auto startindent =
       processor->property_or_none<fo::LengthSpec>(fo, "start-indent");
-    auto endindent = processor->property_or_none<fo::LengthSpec>(fo, "end-indent");
+    auto endindent =
+      processor->property_or_none<fo::LengthSpec>(fo, "end-indent");
     auto firstline_startindent =
-      processor->property_or_none<fo::LengthSpec>(fo, "first-line-start-indent");
+      processor->property_or_none<fo::LengthSpec>(fo,
+                                                  "first-line-start-indent");
     auto spacebefore =
       processor->property_or_none<fo::LengthSpec>(fo, "space-before");
-    auto spaceafter = processor->property_or_none<fo::LengthSpec>(fo, "space-after");
+    auto spaceafter =
+      processor->property_or_none<fo::LengthSpec>(fo, "space-after");
 
-    set_attr(attrs, "padding-left", startindent);
-    set_attr(attrs, "margin-right", endindent);
-    set_attr(attrs, "margin-top", spacebefore);
-    set_attr(attrs, "margin-bottom", spaceafter);
+    if (startindent && startindent->_value != 0)
+      set_attr(attrs, "padding-left", startindent);
+    if (endindent && endindent->_value != 0)
+      set_attr(attrs, "margin-right", endindent);
+    if (spacebefore && spacebefore->_value != 0)
+      set_attr(attrs, "margin-top", spacebefore);
+    if (spaceafter && spaceafter->_value != 0)
+      set_attr(attrs, "margin-bottom", spaceafter);
     set_attr(attrs, "text-indent", firstline_startindent);
   }
 
@@ -333,12 +419,21 @@ namespace {
   };
 
 
-  template <typename Functor>
-  void withHtmlFile(HtmlProcessor* processor, const fs::path& path,
-                    const std::string& title, const std::string& author,
-                    const std::string& desc, const html::Doctype& doctype,
-                    Functor functor)
+  auto open_html_port(HtmlProcessor* processor, const fs::path& path,
+                      const html::Doctype& doctype) -> fs::path
   {
+    auto csspath = path;
+    csspath.replace_extension("css");
+
+    if (!processor->css_writer().is_open()) {
+      if (processor->is_verbose()) {
+        std::cout << processor->proc_id() << ": Create css file: '" << csspath
+                  << "'" << std::endl;
+      }
+
+      processor->css_writer().open(csspath);
+    }
+
     if (processor->is_verbose()) {
       std::cout << processor->proc_id() << ": Create output file: '"
                 << path.string() << "'" << std::endl;
@@ -346,17 +441,42 @@ namespace {
 
     detail::HtmlRenderContext& ctx = processor->ctx();
 
-    auto port = ::estd::make_unique<html::Writer>(doctype, k_TEXTBOOK_GENERATOR);
+    auto port = ::estd::make_unique<html::Writer>(doctype, k_TEXTBOOK_GENERATOR,
+                                                  processor->style_ctx());
+
     port->open(path);
 
     ctx.push_port(std::move(port), path);
 
-    ctx.port().header(title, author, desc, [](std::ostream&) {});
+    return csspath;
+  }
+
+
+  void close_html_port(HtmlProcessor* processor)
+  {
+    processor->ctx().port().footer();
+    processor->ctx().pop_port();
+  }
+
+
+  template <typename Functor>
+  void with_html_file(HtmlProcessor* processor, const fs::path& path,
+                      const std::string& title, const std::string& author,
+                      const std::string& desc, const html::Doctype& doctype,
+                      Functor functor)
+  {
+    auto csspath = open_html_port(processor, path, doctype);
+
+    processor->ctx().port().header(title, author, desc, [&](std::ostream&) {
+      processor->ctx().port().write_link("stylesheet",
+                                         {{"media", "screen"},
+                                          {"type", "text/css"},
+                                          {"href", csspath.string()}});
+    });
 
     functor(processor);
 
-    ctx.port().footer();
-    ctx.pop_port();
+    close_html_port(processor);
   }
 
 
@@ -393,10 +513,30 @@ namespace {
       set_font_characteristics(attrs, processor, fo);
       set_space_characteristics(attrs, processor, fo);
 
+      auto quadding = processor->property(fo, "quadding", std::string("left"));
+      if (quadding == "left")
+        set_attr(attrs, "text-align", "left");
+      else if (quadding == "right")
+        set_attr(attrs, "text-align", "right");
+      else if (quadding == "center")
+        set_attr(attrs, "text-align", "center");
+      else if (quadding == "justify")
+        set_attr(attrs, "text-align", "justify");
+      set_attr(attrs, "text-justify", "inter-word");
+
+      auto color = processor->property_or_none<fo::Color>(fo, "color");
+      if (color)
+        set_attr(attrs, "color", enc_color(*color));
+
+      auto bgcolor =
+        processor->property_or_none<fo::Color>(fo, "background-color");
+      if (bgcolor)
+        set_attr(attrs, "background-color", enc_color(*bgcolor));
+
       {
         auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
         html::Tag with_tag(processor->ctx().port(), "p",
-                           style_str2attrs(attrs_to_string(d_attrs)));
+                           tag_style_attrs(processor, "p", d_attrs));
         StyleScope style_scope(processor->ctx(), d_attrs);
 
         html::Tag b_tag(
@@ -410,7 +550,25 @@ namespace {
                                                                 "font-posture"),
                        "italic"));
 
+        auto linesprops = processor->property(fo, "lines", std::string("wrap"));
+        if (linesprops == "asis")
+          processor->style_ctx()._wrapstyle = html::detail::k_asis_wrap;
+        else
+          processor->style_ctx()._wrapstyle = html::detail::k_normal_wrap;
+
+        auto old_wstreatment = processor->style_ctx()._wstreatment;
+        auto wstreatment = processor->property(fo, "whitespace-treatment",
+                                               std::string("collapse"));
+        if (wstreatment == "preserve")
+          processor->style_ctx()._wstreatment = html::detail::k_preserve_ws;
+        else if (wstreatment == "collapse")
+          processor->style_ctx()._wstreatment = html::detail::k_collapse_ws;
+        else if (wstreatment == "ignore")
+          processor->style_ctx()._wstreatment = html::detail::k_ignore_ws;
+
         processor->render_sosofo(&fo->port("text"));
+
+        processor->style_ctx()._wstreatment = old_wstreatment;
       }
       processor->ctx().port().newln();
     }
@@ -440,7 +598,7 @@ namespace {
       {
         auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
         html::Tag with_tag(processor->ctx().port(), "div",
-                           style_str2attrs(attrs_to_string(d_attrs)));
+                           tag_style_attrs(processor, "div", d_attrs));
         StyleScope style_scope(processor->ctx(), d_attrs);
 
         processor->ctx().port().newln();
@@ -451,35 +609,57 @@ namespace {
   };
 
 
-  class HtmlSimplePageSequenceFoProcessor : public IFoProcessor<HtmlProcessor> {
+  class HtmlScrollSequenceFoProcessor : public IFoProcessor<HtmlProcessor> {
   public:
     void render(HtmlProcessor* processor,
                 const IFormattingObject* fo) const override
     {
-      auto title = processor->property(fo, "metadata.title", std::string());
+      auto title = processor->property(fo, "title", std::string());
       auto author = processor->property(fo, "metadata.author", std::string());
       auto desc = processor->property(fo, "metadata.desc", std::string());
-      auto html_width =
-        processor->property_or_none<fo::LengthSpec>(fo, "html.width");
+      auto width = processor->property_or_none<fo::LengthSpec>(fo, "width");
 
-      withHtmlFile(processor, processor->ctx().current_path(), title, author,
-                   desc, html::k_XHTML_1_1_DTD,
-                   [fo, html_width](HtmlProcessor* processor) {
-                     {
-                       detail::StyleAttrs attrs;
-                       set_attr(attrs, "width", html_width);
+      if (!processor->ctx().port().has_header()) {
+        processor->ctx().port().header(title, author, desc, [&](std::ostream&) {
+          processor->ctx()
+            .port()
+            .write_link("stylesheet",
+                        {{"media", "screen"},
+                         {"type", "text/css"},
+                         {"href", processor->css_file().string()}});
+        });
+      }
 
-                       html::Tag with_tag(processor->ctx().port(), "div",
-                                          style_str2attrs(
-                                            attrs_to_string(attrs)));
-                       StyleScope style_scope(processor->ctx(), attrs);
+      detail::StyleAttrs attrs;
+      set_attr(attrs, "width", width);
 
-                       processor->ctx().port().newln();
+      auto color = processor->property_or_none<fo::Color>(fo, "color");
+      if (color)
+        set_attr(attrs, "color", enc_color(*color));
 
-                       processor->render_sosofo(&fo->port("text"));
-                     }
-                     processor->ctx().port().newln();
-                   });
+      auto bgcolor =
+        processor->property_or_none<fo::Color>(fo, "background-color");
+      if (bgcolor)
+        set_attr(attrs, "background-color", enc_color(*bgcolor));
+
+      auto start_margin =
+        processor->property_or_none<fo::LengthSpec>(fo, "start-margin");
+      set_attr(attrs, "margin-left", start_margin);
+      auto end_margin =
+        processor->property_or_none<fo::LengthSpec>(fo, "end-margin");
+      set_attr(attrs, "margin-right", end_margin);
+
+      {
+        html::Tag with_tag(processor->ctx().port(), "div",
+                           tag_style_attrs(processor, "div", attrs));
+        StyleScope style_scope(processor->ctx(), attrs);
+
+        processor->ctx().port().newln();
+
+        processor->render_sosofo(&fo->port("scroll"));
+      }
+
+      processor->ctx().port().newln();
     }
   };
 
@@ -531,7 +711,9 @@ namespace {
       auto field_align =
         processor->property_or_none<std::string>(fo, "field-align");
 
-      set_attr(attrs, "width", field_width);
+      if (field_width && field_width->_value > 0) {
+        set_attr(attrs, "width", field_width);
+      }
       if (field_align) {
         if (*field_align == k_left || *field_align == k_center ||
             *field_align == k_right) {
@@ -541,7 +723,6 @@ namespace {
 
       {
         auto d_attrs = intersect_css_attrs(processor->ctx(), attrs);
-
         html::Tag span_tag(field_width
                              ? optional_inline_block_tag(processor, d_attrs)
                              : optional_span_tag(processor, d_attrs));
@@ -563,15 +744,63 @@ namespace {
     }
   };
 
+
+  class HtmlPageNumberFoProcessor : public IFoProcessor<HtmlProcessor> {
+  public:
+    void render(HtmlProcessor* processor,
+                const IFormattingObject* fo) const override
+    {
+      auto refid = processor->property(fo, "refid", std::string("#current"));
+      if (refid == "#current") {
+      }
+      else if (!refid.empty()) {
+        html::Tag with_tag(processor->ctx().port(), "a",
+                           {{"href", std::string("#") + refid}});
+        processor->ctx().port().write_text("*");
+      }
+    }
+  };
+
+
+  class HtmlAnchorFoProcessor : public IFoProcessor<HtmlProcessor> {
+  public:
+    void render(HtmlProcessor* processor,
+                const IFormattingObject* fo) const override
+    {
+      if (auto id = processor->property_or_none<std::string>(fo, "id")) {
+        if (!id->empty())
+          processor->ctx().port().empty_tag("a", {{"id", *id}});
+      }
+    }
+  };
+
+
+  class HtmlSimpleColumnSetSequenceProcessor
+    : public IFoProcessor<HtmlProcessor> {
+  public:
+    void render(HtmlProcessor* po, const IFormattingObject* fo) const override
+    {
+      detail::StyleAttrs attrs;
+      auto col_num = po->property(fo, "column-number", 1);
+      set_attr(attrs, "column-count", col_num);
+
+      html::Tag with_tag(po->ctx().port(), "div",
+                         tag_style_attrs(po, "div", attrs));
+      StyleScope style_scope(po->ctx(), attrs);
+
+      po->render_sosofo(&fo->port("text"));
+    }
+  };
 } // ns anon
 
 
-HtmlProcessor::HtmlProcessor() : _verbose(false)
+HtmlProcessor::HtmlProcessor()
+  : _verbose(false), _css_port(k_TEXTBOOK_GENERATOR)
 {
 }
 
 
-HtmlProcessor::HtmlProcessor(const po::variables_map& args) : _verbose(false)
+HtmlProcessor::HtmlProcessor(const po::variables_map& args) : HtmlProcessor()
 {
   if (!args.empty()) {
     _verbose = args.count("verbose") != 0;
@@ -608,11 +837,13 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
       {"#paragraph", std::make_shared<HtmlParagraphFoProcessor>()},
       {"#paragraph-break", std::make_shared<HtmlParagraphBreakFoProcessor>()},
       {"#display-group", std::make_shared<HtmlDisplayGroupFoProcessor>()},
-      {"#simple-page-sequence",
-       std::make_shared<HtmlSimplePageSequenceFoProcessor>()},
+      {"#scroll-sequence", std::make_shared<HtmlScrollSequenceFoProcessor>()},
       {"#sequence", std::make_shared<HtmlSequenceFoProcessor>()},
       {"#line-field", std::make_shared<HtmlLineFieldFoProcessor>()},
-    };
+      {"#anchor", std::make_shared<HtmlAnchorFoProcessor>()},
+      {"#page-number", std::make_shared<HtmlPageNumberFoProcessor>()},
+      {"#simple-column-set-sequence",
+       std::make_shared<HtmlSimpleColumnSetSequenceProcessor>()}};
 
   auto i_find = procs.find(fo_classname);
 
@@ -622,14 +853,13 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
 
 void HtmlProcessor::before_rendering()
 {
-  auto mainport =
-    ::estd::make_unique<html::Writer>(html::k_XHTML_1_1_DTD, k_TEXTBOOK_GENERATOR);
-  _ctx.push_port(std::move(mainport), _output_file);
+  _css_file = open_html_port(this, _output_file, html::k_XHTML_1_1_DTD);
 }
 
 
 void HtmlProcessor::after_rendering()
 {
+  close_html_port(this);
 }
 
 
@@ -639,15 +869,33 @@ detail::HtmlRenderContext& HtmlProcessor::ctx()
 }
 
 
+auto HtmlProcessor::style_ctx() -> html::detail::StyleCtx&
+{
+  return _style_ctx;
+}
+
+
 html::Writer& HtmlProcessor::writer()
 {
   return _ctx.port();
 }
 
 
+html::CSSWriter& HtmlProcessor::css_writer()
+{
+  return _css_port;
+}
+
+
 bool HtmlProcessor::is_verbose() const
 {
   return _verbose;
+}
+
+
+filesystem::path HtmlProcessor::css_file() const
+{
+  return _css_file;
 }
 
 } // ns eyestep

@@ -37,6 +37,7 @@ namespace fo {
     {"field-width", false},            // LengthSpec
     {"field-align", false},            // Keyw: left, right, center
     {"first-line-start-indent", true}, // LengthSpec
+    {"column-number", false},          // Int
     {"gutter-width", false},           // LengthSpec
     {"last-line-end-indent", true},    // LengthSpec
     {"font-name", true},               // String
@@ -77,6 +78,7 @@ namespace fo {
     {"right-footer", false},           // Sosofo
     {"position-point-shift", false},   // LengthSpec
     {"text", false},                   // String
+    {"width", false},                  // LengthSpec
   };
 
 
@@ -177,6 +179,8 @@ namespace fo {
       PropertySpec("numbered-lines?", false),
       PropertySpec("line-number-side", "start"),
       PropertySpec("position-point-shift", LengthSpec(kDimen, 0, k_pt)),
+      PropertySpec("color", ""),
+      PropertySpec("background-color", ""),
       // clang-format on
     };
     return propspecs;
@@ -234,6 +238,8 @@ namespace fo {
       PropertySpec("font-size", ""),
       PropertySpec("font-weight", ""),
       PropertySpec("lines", ""),
+      PropertySpec("color", ""),
+      PropertySpec("background-color", ""),
     };
     // clang-format on
     return propspecs;
@@ -494,6 +500,7 @@ namespace fo {
       PropertySpec("font-size", LengthSpec(kDimen, 10, k_pt)),
       PropertySpec("font-weight", "medium"),
       PropertySpec("title", false),
+      PropertySpec("width", LengthSpec(kDimen, 600, k_px)),
       PropertySpec("start-margin", LengthSpec(kDimen, 0, k_pt)),
       PropertySpec("end-margin", LengthSpec(kDimen, 0, k_pt)),
       PropertySpec("background-color", false),

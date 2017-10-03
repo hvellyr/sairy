@@ -1,6 +1,9 @@
 ;;; Copyright (c) 2017 Gregor Klinke
 ;;; All rights reserved.
 
+(define (html-backend?)
+  (string=? %backend% "html"))
+
 ;; @doc format list in 'upright font-posture.  If @prm{seq} is a sosofo it is
 ;; taken asis, otherwise it is processed.
 (define (format-r seq)
@@ -59,7 +62,7 @@
 ;; @doc return a sosofo with @prm{before} and @prm{after} put around @prm{seq}.
 ;; If @prm{seq} is a sosofo it is taken asis, otherwise it is processed.  If
 ;; @prm{before} or @prm{after} are sosofos they are taken asis, otherwise they
-;; are expected to strings and are handed to @fun{literal}.
+;; are expected to be strings and are handed to @fun{literal}.
 (define (enclose before seq after)
   (sosofo-append
    (if (sosofo? before)

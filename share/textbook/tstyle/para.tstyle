@@ -4,6 +4,57 @@
 (use 'common)
 
 
+;; ------------------------------------------------------------------------------
+
+(define (invisible-tag? snl)
+  (case (gi snl)
+    ((idx) #t)
+    (else #f)))
+
+(define (empty-text-node? snl)
+  (and (equal? (class snl) 'text)
+       (= (string-length (string-trim-both (node-property 'data snl))) 0)))
+
+(define (process-node-list-left-trim-idx-ws nl)
+  (let loop ((np nl)
+             (sosofo (empty-sosofo))
+             (skip-ws? #f))
+    (if (node-list-empty? np)
+        sosofo
+        (let ((snl (node-list-first np)))
+          (if (invisible-tag? snl)
+              (loop (node-list-rest np)
+                    (sosofo-append sosofo (process-node-list snl))
+                    #t)
+              (cond
+               ((and (empty-text-node? snl) skip-ws?)
+                (loop (node-list-rest np) sosofo #t))
+               ((and (equal? (class snl) 'text) skip-ws?)
+                (loop (node-list-rest np)
+                      (sosofo-append sosofo
+                                     (process-node-list-trim snl right?: #f))
+                      #t))
+               (else (sosofo-append sosofo (process-node-list np))))
+              )))))
+
+(element p
+  (let ((nds (node-list-filter (lambda (snl)
+                                 (not (or (invisible-tag? snl)
+                                          (empty-text-node? snl))))
+                               (children (current-node)))))
+    (if (node-list-empty? nds)
+        (make display-group
+          (process-node-list-left-trim-idx-ws (children (current-node))))
+        (make paragraph
+          first-line-start-indent: 0pt
+          quadding: "justify"
+          space-before: (if (html-backend?)
+                            (display-space 7pt conditional?: #t)
+                            0pt)
+          (process-node-list-left-trim-idx-ws (children (current-node))))
+        )))
+
+
 ;; #-----------------------------------------------------------------------------
 ;; # definitions and lists
 
@@ -22,12 +73,23 @@
 (element (definitions p)
   (let ((item (node-list-first (children (current-node)))))
     (if (equal? (gi item) 'item)
-        (make paragraph
-          first-line-start-indent: -70pt
-          start-indent: 70pt
-          (sosofo-append
-           (process-node-list (node-list-first (children (current-node))))
-           (process-node-list-trim (node-list-rest (children (current-node))))))
+        (if (> (string-length (data (attribute "text" item))) 15)
+            (sosofo-append
+             (make paragraph
+               first-line-start-indent: 0pt
+               start-indent: 0pt
+               (process-node-list (node-list-first (children (current-node)))))
+             (make paragraph
+               first-line-start-indent: 0pt
+               start-indent: 70pt
+               (process-node-list-trim (node-list-rest (children (current-node)))))
+             )
+            (make paragraph
+              first-line-start-indent: -70pt
+              start-indent: 70pt
+              (sosofo-append
+               (process-node-list (node-list-first (children (current-node))))
+               (process-node-list-trim (node-list-rest (children (current-node)))))))
         (make paragraph
           first-line-start-indent: 0pt
           start-indent: 70pt
@@ -68,9 +130,46 @@
   )
 
 
-(element p
-  (make paragraph
-    mandoc.section: "para"
-    first-line-start-indent: 0pt
-    quadding: "justify"
-    (process-children)))
+;;------------------------------------------------------------------------------
+
+(define (item-number nd)
+  (let* ((nds (select-elements (preced (parent nd)) 'p))
+         (item-nds (node-list-filter (lambda (snl)
+                                       (let ((c (children snl)))
+                                         (and (not (node-list-empty? c))
+                                              (eqv? (gi (node-list-first c)) 'item))))
+                                     nds)))
+    (+ (node-list-length item-nds) 1)))
+
+(element enumerate
+  (make display-group
+    space-before: 7pt
+    space-after: 7pt
+    (process-children-trim)))
+
+(element (enumerate p item)
+  (make line-field
+    field-width: 12pt
+    field-align: 'left
+    (let ((txt (attribute "text" (current-node))))
+      (if (node-list-empty? txt)
+          (sosofo-append
+           (literal (number->string (item-number (current-node))))
+           (literal ". "))
+          (process-node-list-trim txt) )) ))
+
+(element (enumerate p)
+  (let ((item (node-list-first (children (current-node)))))
+    (if (equal? (gi item) 'item)
+        (make paragraph
+          first-line-start-indent: -12pt
+          start-indent: 12pt
+          (sosofo-append
+           (process-node-list (node-list-first (children (current-node))))
+           (process-node-list-trim (node-list-rest (children (current-node))))))
+        (make paragraph
+          first-line-start-indent: 0pt
+          start-indent: 12pt
+          (process-children-trim)
+          ) ))
+  )

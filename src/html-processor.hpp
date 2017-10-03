@@ -6,6 +6,7 @@
 #include "fo.hpp"
 #include "abstract-processor.hpp"
 #include "html-writer.hpp"
+#include "html-types.hpp"
 
 #include "program_options/program_options.hpp"
 
@@ -85,7 +86,10 @@ namespace detail {
 
 class HtmlProcessor : public AbstractProcessor<HtmlProcessor> {
   detail::HtmlRenderContext _ctx;
+  html::detail::StyleCtx _style_ctx;
   bool _verbose;
+  html::CSSWriter _css_port;
+  filesystem::path _css_file;
 
 public:
   HtmlProcessor();
@@ -102,9 +106,13 @@ public:
   void after_rendering() override;
 
   detail::HtmlRenderContext& ctx();
+  html::detail::StyleCtx& style_ctx();
   html::Writer& writer();
+  html::CSSWriter& css_writer();
 
   bool is_verbose() const;
+
+  filesystem::path css_file() const;
 };
 
 
