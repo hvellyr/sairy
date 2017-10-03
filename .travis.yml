@@ -10,23 +10,14 @@ addons:
     sources:
       - kubuntu-backports
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.7
-      - boost-latest
     packages:
       - cmake
       - gcc-4.9
       - g++-4.9
-      - libclang-3.7-dev
-      - libclang1-3.7
-      - libclang-common-3.7-dev
-      - libboost-system1.55-dev
-      - libboost-filesystem1.55-dev
-      - libboost-date-time1.55-dev
-      - libboost-program-options1.55-dev
 
 before_script:
     - mkdir build && cd build
-    - CXX=g++-4.9 CC=gcc-4.9 cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DLibClang_ROOT_DIR=/usr/lib/llvm-3.7
+    - CXX=g++-4.9 CC=gcc-4.9 cmake ..
 
 script:
     - CXX=g++-4.9 CC=gcc-4.9 cmake --build .
