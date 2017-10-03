@@ -7,9 +7,10 @@
 #include "abstract-processor.hpp"
 #include "html-writer.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/optional/optional.hpp>
-#include <boost/program_options.hpp>
+#include "program_options/program_options.hpp"
+
+#include "fspp/filesystem.hpp"
+#include "fspp/estd/optional.hpp"
 
 #include <list>
 #include <map>
@@ -52,11 +53,11 @@ namespace detail {
 
   using RefRegistry = std::unordered_map<std::string, std::string>;
   using PortTuple =
-    std::tuple<std::unique_ptr<html::Writer>, boost::filesystem::path>;
+    std::tuple<std::unique_ptr<html::Writer>, filesystem::path>;
 
   class HtmlRenderContext {
     std::unique_ptr<html::Writer> _port;
-    boost::filesystem::path _path;
+    filesystem::path _path;
     std::list<PortTuple> _ports;
     RefRegistry _ref_registry;
     // std::list<Sosofo> _foot_notes;
@@ -66,10 +67,10 @@ namespace detail {
     HtmlRenderContext();
 
     html::Writer& port();
-    boost::filesystem::path current_path();
+    filesystem::path current_path();
 
     void push_port(std::unique_ptr<html::Writer> port,
-                   const boost::filesystem::path& path);
+                   const filesystem::path& path);
     void pop_port();
 
     CapsStyle capsstyle();
@@ -77,7 +78,7 @@ namespace detail {
     void push_styles(const StyleAttrs& map);
     void pop_styles();
 
-    boost::optional<std::string> css_property(const std::string& key) const;
+    estd::optional<std::string> css_property(const std::string& key) const;
   };
 } // ns detail
 
@@ -88,11 +89,11 @@ class HtmlProcessor : public AbstractProcessor<HtmlProcessor> {
 
 public:
   HtmlProcessor();
-  HtmlProcessor(const boost::program_options::variables_map& args);
+  HtmlProcessor(const program_options::variables_map& args);
 
   std::string proc_id() const override;
   std::string default_output_extension() const override;
-  boost::program_options::options_description program_options() const override;
+  program_options::options_description program_options() const override;
 
   const IFoProcessor<HtmlProcessor>*
   lookup_fo_processor(const std::string& fo_classname) const override;

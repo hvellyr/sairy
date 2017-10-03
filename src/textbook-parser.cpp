@@ -9,22 +9,20 @@
 #include "textbook-parser.hpp"
 #include "utils.hpp"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/range/adaptor/transformed.hpp>
+#include "fspp/estd/optional.hpp"
+#include "fspp/filesystem.hpp"
+#include "fspp/utils.hpp"
 
 #include <algorithm>
 #include <cassert>
 #include <exception>
 #include <iostream>
 #include <map>
-#include <unordered_map>
 #include <set>
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 
@@ -51,17 +49,19 @@ namespace textbook {
   const std::string k_TEXT_opt = "#TEXT";
 
 
-  namespace fs = boost::filesystem;
+  namespace fs = filesystem;
 
   namespace {
     std::string load_file_into_string(const fs::path& path)
     {
       std::stringstream result;
 
-      fs::ifstream in(path, std::ios::in | std::ios::binary);
-      in.exceptions(std::ifstream::failbit);
-
-      result << in.rdbuf();
+      std::error_code ec;
+      fs::with_stream(path, std::ios::in | std::ios::binary,
+                      ec, [&](std::istream& in)
+                      {
+                        result << in.rdbuf();
+                      });
 
       return result.str();
     }
@@ -80,7 +80,7 @@ namespace textbook {
       return fs::path();
     }
 
-    boost::optional<fs::path>
+    estd::optional<fs::path>
     find_model_spec(const std::string& tag,
                     const std::vector<fs::path>& catalog_search_path)
     {
@@ -92,38 +92,29 @@ namespace textbook {
         }
       }
 
-      return boost::none;
+      return {};
     }
 
 
     std::vector<std::string> split_attrs(const std::string& str)
     {
-      using namespace boost::adaptors;
-      using namespace boost::algorithm;
-
-      std::vector<std::string> steps;
-      split(steps, str, is_any_of(","), token_compress_on);
-
-      return boost::copy_range<std::vector<std::string>>(
-        steps | transformed([](const std::string& value) {
-          return boost::trim_copy(value);
-        }));
+      return utils::split(str, ",", true);
     }
 
 
     std::unique_ptr<DocSpec> make_docspec(const Node* nd)
     {
-      auto docspec = estd::make_unique<DocSpec>();
+      auto docspec = ::estd::make_unique<DocSpec>();
 
       for (const auto* tagnd : nd->property<Nodes>(CommonProps::k_children)) {
         if (tagnd->gi() == k_tag_tag) {
           auto attrs = tagnd->attributes();
 
           if (attrs.size() >= 3) {
-            auto gi_spec = boost::trim_copy(node_data(attrs[0]));
-            auto attr_spec = boost::trim_copy(node_data(attrs[1]));
-            auto body_spec = boost::trim_copy(node_data(attrs[2]));
-            auto opt = attrs.size() >= 4 ? boost::trim_copy(node_data(attrs[3]))
+            auto gi_spec = utils::trim_copy(node_data(attrs[0]));
+            auto attr_spec = utils::trim_copy(node_data(attrs[1]));
+            auto body_spec = utils::trim_copy(node_data(attrs[2]));
+            auto opt = attrs.size() >= 4 ? utils::trim_copy(node_data(attrs[3]))
                                          : std::string();
 
             size_t min_attr = 0;
@@ -181,13 +172,13 @@ namespace textbook {
         }
       }
 
-      return std::move(docspec);
+      return docspec;
     }
 
 
     std::unique_ptr<DocSpec> model_doc_type_doc_spec()
     {
-      auto docspec = estd::make_unique<DocSpec>();
+      auto docspec = ::estd::make_unique<DocSpec>();
 
       docspec->add(
         TagSpec(k_tag_tag,
@@ -207,7 +198,7 @@ namespace textbook {
                            false  // is_mixed
                            ));
 
-      return std::move(docspec);
+      return docspec;
     }
 
 
@@ -239,7 +230,7 @@ namespace textbook {
           if (textbook_nd) {
             auto attrs = textbook_nd->attributes();
             if (!attrs.empty() &&
-                boost::trim_copy(node_data(attrs[0])) == "1.0") {
+                utils::trim_copy(node_data(attrs[0])) == "1.0") {
               return make_docspec(nd);
             }
           }
@@ -254,8 +245,8 @@ namespace textbook {
 
   //------------------------------------------------------------------------------
 
-  Stream::Stream(boost::optional<std::string> data,
-                 boost::optional<fs::path> path, size_t start_line_no)
+  Stream::Stream(estd::optional<std::string> data,
+                 estd::optional<fs::path> path, size_t start_line_no)
     : _unread_nc(0u), _current_c(' '), _nc(0u), _line_no(start_line_no),
       _fpath(path ? *path : fs::path("<data>")),
       _data(data ? *data : (path ? load_file_into_string(*path) : ""))
@@ -449,13 +440,12 @@ namespace textbook {
 
   Node* Parser::parse_file(const fs::path& fpath)
   {
-    return parse_stream(std::make_shared<Stream>(boost::none, fpath));
+    return parse_stream(std::make_shared<Stream>(estd::optional<std::string>{}, fpath));
   }
 
   Node* Parser::parse_string(const std::string& buf, size_t start_line_no)
   {
-    return parse_stream(
-      std::make_shared<Stream>(buf, boost::none, start_line_no));
+    return parse_stream(std::make_shared<Stream>(buf, estd::optional<filesystem::path>{}, start_line_no));
   }
 
   Node* Parser::parse_stream(std::shared_ptr<Stream> stream)
@@ -621,7 +611,7 @@ namespace textbook {
         throw ParseException(srcpos(), "Unclosed {");
       }
 
-      args.push_back(boost::trim_copy(arg.str()));
+      args.push_back(utils::trim_copy(arg.str()));
       skipped_ws = skip_ws();
     }
 
@@ -635,7 +625,7 @@ namespace textbook {
                                      size_t lineno_at_start)
   {
     Nodes nl;
-    boost::optional<std::string> idstr;
+    estd::optional<std::string> idstr;
 
     const auto& attrspecs = tagspec.attrspecs();
     size_t attrc = 0;
@@ -644,11 +634,11 @@ namespace textbook {
       // don't reparse argument if ID type
       if (attrspecs[attrc].type() == k_attr_id) {
         if (!idstr) {
-          idstr = boost::trim_copy(arg);
+          idstr = utils::trim_copy(arg);
         }
       }
       else if (attrspecs[attrc].type() == k_attr_fref) {
-        auto abspath = path_rel_to_cwd(_stream->fpath(), boost::trim_copy(arg));
+        auto abspath = path_rel_to_cwd(_stream->fpath(), utils::trim_copy(arg));
         auto textnd = _grove.make_text_node(abspath.string());
         textnd->set_property(CommonProps::k_attr_name, attrspecs[attrc].name());
         nl.push_back(textnd);
@@ -793,7 +783,7 @@ namespace textbook {
 
       if (args.size() == 1) {
         if (args[0] != k_p_tag) {
-          end_tag(boost::trim_copy(args[0]));
+          end_tag(utils::trim_copy(args[0]));
         }
       }
       else {
@@ -850,7 +840,7 @@ namespace textbook {
         std::cerr << "include: " << inclfp << std::endl;
       }
 
-      auto stream = std::make_shared<Stream>(boost::none, inclfp);
+      auto stream = std::make_shared<Stream>(estd::optional<std::string>{}, inclfp);
       push_stream(stream);
     }
     catch (const ParseException& pe) {

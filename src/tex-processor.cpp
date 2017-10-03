@@ -10,11 +10,9 @@
 #include "sosofo.hpp"
 #include "utils.hpp"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/variant/static_visitor.hpp>
-#include <boost/optional/optional.hpp>
+#include "program_options/program_options.hpp"
+
+#include "fspp/filesystem.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -27,8 +25,8 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
-namespace po = boost::program_options;
+namespace fs = filesystem;
+namespace po = program_options;
 
 
 //------------------------------------------------------------------------------
@@ -141,9 +139,9 @@ namespace {
   void escape_str_to_stream(std::ostream& os, const std::string& str,
                             tex_detail::TexStyleContext& ctx)
   {
-    std::u16string str16 = utils::utf8_to_u16string(str);
+    std::u32string str32 = utils::utf8_to_u32string(str);
 
-    for (const auto c : str16) {
+    for (const auto c : str32) {
       switch (c) {
       case '\\':
         os << "\\textbackslash{}";
@@ -238,7 +236,7 @@ namespace {
         break;
 
       default:
-        os << utils::u16string_to_utf8(std::u16string() + c);
+        os << utils::u32string_to_utf8(std::u32string() + c);
       }
     }
   }
@@ -367,11 +365,11 @@ namespace {
         escape_str_to_stream(po->stream(), str, po->style_ctx());
         break;
       case tex_detail::k_lower_caps:
-        escape_str_to_stream(po->stream(), boost::to_lower_copy(str),
+        escape_str_to_stream(po->stream(), utils::to_lower(str),
                              po->style_ctx());
         break;
       case tex_detail::k_upper_caps:
-        escape_str_to_stream(po->stream(), boost::to_upper_copy(str),
+        escape_str_to_stream(po->stream(), utils::to_upper(str),
                              po->style_ctx());
         break;
       case tex_detail::k_small_caps:
@@ -805,7 +803,7 @@ TexProcessor::TexProcessor()
 TexProcessor::TexProcessor(const po::variables_map& args) : TexProcessor()
 {
   if (!args.empty()) {
-    _verbose = args["verbose"].as<bool>();
+    _verbose = args.count("verbose") != 0;
 
     if (args.count("cropmarks")) {
       auto cropmarks = args["cropmarks"].as<std::string>();
@@ -917,48 +915,50 @@ TexProcessor::lookup_fo_processor(const std::string& fo_classname) const
 
 void TexProcessor::before_rendering()
 {
-  _stream.open(_output_file.string(), std::ios_base::out |
-                                        std::ios_base::binary |
-                                        std::ios_base::trunc);
-  if (_stream.fail()) {
+  _file = fs::File(_output_file.string());
+
+  std::error_code ec;
+  _file.open(std::ios_base::out | std::ios_base::binary | std::ios_base::trunc, ec);
+
+  if (ec) {
     std::cerr << "Opening file '" << _output_file << "' failed" << std::endl;
   }
 
   //_stream << "\\usepackage{listings}" << std::endl
-  _stream << "\\documentclass{textbook}" << std::endl
-          << "\\usepackage[utf8]{inputenc}" << std::endl
-          << "\\usepackage{makeidx}" << std::endl
-          << "\\makeindex" << std::endl;
+  _file.stream() << "\\documentclass{textbook}" << std::endl
+                 << "\\usepackage[utf8]{inputenc}" << std::endl
+                 << "\\usepackage{makeidx}" << std::endl
+                 << "\\makeindex" << std::endl;
   switch (_cropmarks) {
   case tex_detail::kCamera:
-    _stream << "\\newcommand*\\infofont[1]{{\\textsf{\\fontsize{7}{8.5}"
-               "\\selectfont#1}}}" << std::endl
-            << "\\usepackage[cam," << crop_paper_size(_paper_dimen)
-            << ",horigin=0in,vorigin=0in,font=infofont]{crop}" << std::endl;
+    _file.stream() << "\\newcommand*\\infofont[1]{{\\textsf{\\fontsize{7}{8.5}"
+                      "\\selectfont#1}}}" << std::endl
+                   << "\\usepackage[cam," << crop_paper_size(_paper_dimen)
+                   << ",horigin=0in,vorigin=0in,font=infofont]{crop}" << std::endl;
     break;
   case tex_detail::kFrame:
-    _stream << "\\usepackage[frame," << crop_paper_size(_paper_dimen)
-            << ",horigin=0in,vorigin=0in,noinfo]{crop}" << std::endl;
+    _file.stream() << "\\usepackage[frame," << crop_paper_size(_paper_dimen)
+                   << ",horigin=0in,vorigin=0in,noinfo]{crop}" << std::endl;
     break;
   case tex_detail::kOff:
-    _stream << "\\usepackage[off," << crop_paper_size(_paper_dimen)
-            << ",horigin=0in,vorigin=0in,noinfo]{crop}" << std::endl;
+    _file.stream() << "\\usepackage[off," << crop_paper_size(_paper_dimen)
+                   << ",horigin=0in,vorigin=0in,noinfo]{crop}" << std::endl;
     break;
   }
 
-  _stream << "\\begin{document}" << std::endl;
+  _file.stream() << "\\begin{document}" << std::endl;
 }
 
 
 void TexProcessor::after_rendering()
 {
-  _stream << "\\end{document}" << std::endl;
+  stream() << "\\end{document}" << std::endl;
 }
 
 
-boost::filesystem::ofstream& TexProcessor::stream()
+std::iostream& TexProcessor::stream()
 {
-  return _stream;
+  return _file.stream();
 }
 
 tex_detail::TexStyleContext& TexProcessor::style_ctx()

@@ -7,8 +7,8 @@
 #include "processor.hpp"
 #include "propstack.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/optional/optional.hpp>
+#include "fspp/filesystem.hpp"
+#include "fspp/estd/optional.hpp"
 
 #include <string>
 
@@ -24,11 +24,11 @@ class IFoProcessor;
 template <typename ProcessorT>
 class AbstractProcessor : public IProcessor {
 protected:
-  boost::filesystem::path _output_file;
+  filesystem::path _output_file;
   PropertiesStack _props;
 
 public:
-  void set_output_file(const boost::filesystem::path& output_file) override;
+  void set_output_file(const filesystem::path& output_file) override;
   void render_processed_node(const Sosofo* sosofo) override;
 
   void render_sosofo(const Sosofo* sosofo) override;
@@ -48,8 +48,8 @@ public:
              T default_value) const;
 
   template <typename T>
-  boost::optional<T> property_or_none(const IFormattingObject* fo,
-                                      const std::string& key) const;
+  estd::optional<T> property_or_none(const IFormattingObject* fo,
+                                     const std::string& key) const;
 };
 
 } // ns eyestep

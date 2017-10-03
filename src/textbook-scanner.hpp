@@ -4,7 +4,10 @@
 #pragma once
 
 #include "scanner.hpp"
-#include <boost/program_options.hpp>
+
+#include "program_options/program_options.hpp"
+
+#include "fspp/filesystem.hpp"
 
 #include <string>
 #include <vector>
@@ -17,19 +20,18 @@ class Grove;
 
 class TextbookScanner : public IScanner {
   bool _debug;
-  std::vector<boost::filesystem::path> _prefix_path;
-  std::vector<boost::filesystem::path> _catalog_path;
+  std::vector<filesystem::path> _prefix_path;
+  std::vector<filesystem::path> _catalog_path;
 
 public:
   TextbookScanner();
-  TextbookScanner(const boost::program_options::variables_map& /*args*/);
+  TextbookScanner(const program_options::variables_map& /*args*/);
 
   std::string scanner_id() const override;
   std::unordered_set<std::string> supported_extensions() const override;
-  boost::program_options::options_description program_options() const override;
+  program_options::options_description program_options() const override;
 
-  Node* scan_file(eyestep::Grove& grove,
-                  const boost::filesystem::path& srcfile) override;
+  Node* scan_file(eyestep::Grove& grove, const filesystem::path& srcfile) override;
 };
 
 } // ns eyestep

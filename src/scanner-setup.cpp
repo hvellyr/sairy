@@ -6,10 +6,10 @@
 #include "scanner.hpp"
 #include "utils.hpp"
 
-#include "cpp-scanner.hpp"
+#include "program_options/program_options.hpp"
 #include "textbook-scanner.hpp"
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -20,8 +20,8 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
-namespace po = boost::program_options;
+namespace fs = filesystem;
+namespace po = program_options;
 
 namespace {
   using ScannerFactoryFunc =
@@ -43,7 +43,7 @@ namespace {
     const auto i_find = s_scanner_factory_map.find(id);
     assert(i_find == s_scanner_factory_map.end());
     s_scanner_factory_map[id] = [](const po::variables_map& args) {
-      return estd::make_unique<ScannerClass>(args);
+      return ::estd::make_unique<ScannerClass>(args);
     };
 
     for (const auto& ext : scanner.supported_extensions()) {
@@ -57,7 +57,6 @@ namespace {
   ScannerClassFactoryMap& scanner_registry()
   {
     if (s_scanner_factory_map.empty()) {
-      register_scanner_factory<CppScanner>();
       register_scanner_factory<TextbookScanner>();
     }
 
@@ -75,7 +74,10 @@ po::options_description scanner_options()
     auto scanner = reg.second(po::variables_map{});
     if (scanner) {
       parsers.push_back(scanner->scanner_id());
-      options.push_back(scanner->program_options());
+      auto opts = scanner->program_options();
+      if (!opts.empty()) {
+        options.push_back(opts);
+      }
     }
   }
 

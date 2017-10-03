@@ -9,10 +9,9 @@
 #include "textbook-parser.hpp"
 #include "utils.hpp"
 
-#include <boost/range/iterator.hpp>
-#include <boost/range/iterator_range.hpp>
-#include <boost/range/adaptor/transformed.hpp>
-#include <boost/filesystem.hpp>
+#include "program_options/program_options.hpp"
+
+#include "fspp/filesystem.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -26,7 +25,7 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 
 //----------------------------------------------------------------------------------------
 
@@ -35,18 +34,19 @@ TextbookScanner::TextbookScanner() : _debug(false)
 }
 
 TextbookScanner::TextbookScanner(
-  const boost::program_options::variables_map& args)
+  const program_options::variables_map& args)
   : _debug(false)
 {
   if (!args.empty()) {
-    _prefix_path = utils::split_paths(args["sairy-prefix"].as<std::string>());
+    _prefix_path = utils::split_paths(args["textbook-prefix"].as<std::string>());
 
-    _catalog_path = boost::copy_range<std::vector<fs::path>>(
-      _prefix_path | boost::adaptors::transformed([](const fs::path& path) {
-        return path / "textbook" / "spec";
-      }));
+    transform(begin(_prefix_path), end(_prefix_path), back_inserter(_catalog_path),
+              [](const fs::path& path)
+              {
+                return path / "spec";
+              });
 
-    _debug = args["debug"].as<bool>();
+    _debug = args.count("debug") != 0;
   }
 }
 
@@ -60,10 +60,9 @@ std::unordered_set<std::string> TextbookScanner::supported_extensions() const
   return {".tb", ".textbook"};
 }
 
-boost::program_options::options_description
-TextbookScanner::program_options() const
+program_options::options_description TextbookScanner::program_options() const
 {
-  namespace po = boost::program_options;
+  namespace po = program_options;
 
   std::string opts_title =
     std::string("Textbook parser [selector: '") + scanner_id() + "']";

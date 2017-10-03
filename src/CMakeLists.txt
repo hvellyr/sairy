@@ -1,14 +1,19 @@
-# Copyright (c) 2015 Gregor Klinke
+# Copyright (c) 2017 Gregor Klinke
 # All rights reserved.
 
+set(fspp_LIBRARIES "${PROJECT_BINARY_DIR}/lib/libfspplib.a")
+set(include_dirs "${PROJECT_SOURCE_DIR}/third-party;${PROJECT_BINARY_DIR}/include;${PROJECT_SOURCE_DIR}/third-party/chibi-scheme/include")
+
+
 #------------------------------------------------------------------------------
-add_library(sairy-utils
+add_library(textbook-utils
+  casefold.cpp
+  casefold.hpp
   utils.cpp
   utils.hpp
 )
-target_include_directories(sairy-utils
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
-target_compile_options(sairy-utils
+target_include_directories(textbook-utils PUBLIC "${include_dirs}")
+target_compile_options(textbook-utils
   PUBLIC ${cxx11_options} ${warning_options})
 
 
@@ -23,22 +28,8 @@ add_library(grove
   nodeutils.cpp
   nodeutils.hpp
 )
-target_include_directories(grove
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_include_directories(grove PUBLIC "${include_dirs}")
 target_compile_options(grove
-  PUBLIC ${cxx11_options} ${warning_options})
-
-
-#------------------------------------------------------------------------------
-add_library(cppscanner
-  cpp-lang.cpp
-  cpp-lang.hpp
-  cpp-scanner.cpp
-  cpp-scanner.hpp
-)
-target_include_directories(cppscanner
-  PUBLIC "$<BUILD_INTERFACE:${LibClang_INCLUDE_DIRS};${Boost_INCLUDE_DIRS}>")
-target_compile_options(cppscanner
   PUBLIC ${cxx11_options} ${warning_options})
 
 
@@ -48,8 +39,7 @@ add_library(textbook-parser
   textbook-parser.cpp
   textbook-parser.hpp
 )
-target_include_directories(textbook-parser
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_include_directories(textbook-parser PUBLIC "${include_dirs}")
 target_compile_options(textbook-parser
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -59,8 +49,7 @@ add_library(textbook-scanner
   textbook-scanner.cpp
   textbook-scanner.hpp
 )
-target_include_directories(textbook-scanner
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>")
+target_include_directories(textbook-scanner PUBLIC "${include_dirs}")
 target_compile_options(textbook-scanner
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -75,8 +64,7 @@ add_library(fo
   colors.hpp
   colors.cpp
 )
-target_include_directories(fo
-  PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>")
+target_include_directories(fo PUBLIC "${include_dirs}")
 target_compile_options(fo
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -90,8 +78,7 @@ add_library(processor-base
   propstack.cpp
   propstack.hpp
 )
-target_include_directories(processor-base
-  PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>")
+target_include_directories(processor-base PUBLIC "${include_dirs}")
 target_compile_options(processor-base
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -103,8 +90,7 @@ add_library(html-processor
   html-writer.cpp
   html-writer.hpp
 )
-target_include_directories(html-processor
-  PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>")
+target_include_directories(html-processor PUBLIC "${include_dirs}")
 target_compile_options(html-processor
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -114,8 +100,7 @@ add_library(tex-processor
   tex-processor.cpp
   tex-processor.hpp
 )
-target_include_directories(tex-processor
-  PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>")
+target_include_directories(tex-processor PUBLIC "${include_dirs}")
 target_compile_options(tex-processor
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -125,8 +110,7 @@ add_library(debug-processor
   debug-processor.cpp
   debug-processor.hpp
 )
-target_include_directories(debug-processor
-  PUBLIC "$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>")
+target_include_directories(debug-processor PUBLIC "${include_dirs}")
 target_compile_options(debug-processor
   PUBLIC ${cxx11_options} ${warning_options})
 
@@ -134,7 +118,7 @@ target_compile_options(debug-processor
 #------------------------------------------------------------------------------
 add_definitions(-DSEXP_USE_KEYWORDS=1 -DSEXP_USE_QUANTITY=1)
 
-add_executable(sairy
+add_executable(textbook
   main.cpp
   processor-setup.cpp
   processor-setup.hpp
@@ -146,11 +130,8 @@ add_executable(sairy
   style-engine.cpp
   style-engine.hpp
 )
-target_include_directories(sairy
-  PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party;${Boost_INCLUDE_DIRS}>;${PROJECT_SOURCE_DIR}/third-party/chibi-scheme/include")
-
-target_link_libraries(sairy
-  cppscanner
+target_include_directories(textbook PUBLIC "${include_dirs}")
+target_link_libraries(textbook
   textbook-scanner
   debug-processor
   fo
@@ -160,17 +141,17 @@ target_link_libraries(sairy
   processor-base
   scheme
   textbook-parser
-  sairy-utils
-  ${LibClang_LIBRARIES}
-  ${Boost_LIBRARIES})
+  textbook-utils
+  program_options
+  ${fspp_LIBRARIES})
 
-set(sairy_app "${PROJECT_BINARY_DIR}/app")
-set_target_properties(sairy
-  PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${sairy_app}")
-set_target_properties(sairy
-  PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG "${sairy_app}")
-set_target_properties(sairy
-  PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE "${sairy_app}")
+set(textbook_app "${PROJECT_BINARY_DIR}/app")
+set_target_properties(textbook
+  PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${textbook_app}")
+set_target_properties(textbook
+  PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG "${textbook_app}")
+set_target_properties(textbook
+  PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE "${textbook_app}")
 
 
 if(POLICY CMP0026)
@@ -178,8 +159,8 @@ cmake_policy(PUSH)
 cmake_policy(SET CMP0026 OLD)
 endif()
 
-get_property(sairy_executable_path TARGET sairy PROPERTY LOCATION)
-configure_file("${PROJECT_SOURCE_DIR}/bin/sairy.in" "${PROJECT_SOURCE_DIR}/bin/sairy"
+get_property(textbook_executable_path TARGET textbook PROPERTY LOCATION)
+configure_file("${PROJECT_SOURCE_DIR}/bin/textbook.in" "${PROJECT_SOURCE_DIR}/bin/textbook"
                @ONLY)
 
 if(POLICY CMP0026)

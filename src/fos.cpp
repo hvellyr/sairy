@@ -1,19 +1,17 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
+#include "fos.hpp"
 #include "estd/memory.hpp"
 #include "fo.hpp"
-#include "fos.hpp"
 #include "sosofo.hpp"
 
-#include <boost/variant/get.hpp>
-
-#include <string>
-#include <vector>
+#include <iostream>
 #include <limits>
 #include <ostream>
-#include <iostream>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 
 namespace eyestep {
@@ -107,8 +105,7 @@ namespace fo {
   const PropertySpecs& Literal::default_properties() const
   {
     static const PropertySpecs propspecs = {
-      PropertySpec("text", ""),
-      PropertySpec("language", ""),
+      PropertySpec("text", ""), PropertySpec("language", ""),
     };
 
     return propspecs;
@@ -123,7 +120,7 @@ namespace fo {
   std::string Literal::text() const
   {
     if (auto spec = _props.lookup_key("text")) {
-      if (const std::string* val = boost::get<const std::string>(&spec->_value)) {
+      if (const std::string* val = fo::get<const std::string>(&spec->_value)) {
         return *val;
       }
     }
@@ -143,7 +140,7 @@ namespace fo {
 
   bool Paragraph::accepts_fo(const Sosofo& fo) const
   {
-    for (int i = 0 ; i < fo.length() ; i++) {
+    for (int i = 0; i < fo.length(); i++) {
       if (dynamic_cast<const Paragraph*>(fo[i]) != nullptr)
         return false;
     }
@@ -386,7 +383,8 @@ namespace fo {
   const PropertySpecs& SimplePageSequence::default_properties() const
   {
     static PropertySpecs propspecs =
-      {PropertySpec("font-caps", "normal"), PropertySpec("font-name", "serif"),
+      {PropertySpec("font-caps", "normal"),
+       PropertySpec("font-name", "serif"),
        PropertySpec("font-posture", "upright"),
        PropertySpec("font-size", LengthSpec(kDimen, 10, k_pt)),
        PropertySpec("font-weight", "medium"),
@@ -490,7 +488,8 @@ namespace fo {
   const PropertySpecs& ScrollSequence::default_properties() const
   {
     static PropertySpecs propspecs = {
-      PropertySpec("font-caps", "normal"), PropertySpec("font-name", "serif"),
+      PropertySpec("font-caps", "normal"),
+      PropertySpec("font-name", "serif"),
       PropertySpec("font-posture", "upright"),
       PropertySpec("font-size", LengthSpec(kDimen, 10, k_pt)),
       PropertySpec("font-weight", "medium"),
@@ -626,7 +625,7 @@ namespace fo {
   {
     register_fo_class_factory<FoClass>(
       [](const PropertySpecs& p, const Sosofo& s) {
-        return estd::make_unique<FoClass>(p, s);
+        return ::estd::make_unique<FoClass>(p, s);
       });
   }
 
@@ -635,7 +634,7 @@ namespace fo {
   {
     register_fo_class_factory<FoClass>(
       [](const PropertySpecs& p, const Sosofo&) {
-        return estd::make_unique<FoClass>(p);
+        return ::estd::make_unique<FoClass>(p);
       });
   }
 
@@ -649,7 +648,7 @@ namespace fo {
 
       register_fo_class_factory<ParagraphBreak>(
         [](const PropertySpecs&, const Sosofo&) {
-          return estd::make_unique<ParagraphBreak>();
+          return ::estd::make_unique<ParagraphBreak>();
         });
 
       register_fo_class_factory<Paragraph>();
@@ -719,14 +718,16 @@ namespace fo {
 
     switch (co._space) {
     case kRGB:
-      os << "rgb:" << co._rgb._red << "," << co._rgb._green << "," << co._rgb._blue;
+      os << "rgb:" << co._rgb._red << "," << co._rgb._green << ","
+         << co._rgb._blue;
       break;
     case kCMYK:
-      os << "cmyk" << co._cmyk._cyan << "," << co._cmyk._magenta
-         << "," << co._cmyk._yellow << "," << co._cmyk._black;
+      os << "cmyk" << co._cmyk._cyan << "," << co._cmyk._magenta << ","
+         << co._cmyk._yellow << "," << co._cmyk._black;
       break;
     case kGray:
-      os << "gray:" << co._gray; break;
+      os << "gray:" << co._gray;
+      break;
     }
 
     os << ">";

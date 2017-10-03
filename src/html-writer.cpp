@@ -9,6 +9,9 @@
 
 
 namespace eyestep {
+
+namespace fs = filesystem;
+
 namespace html {
 
   namespace {
@@ -78,13 +81,17 @@ namespace html {
   }
 
 
-  void Writer::open(const boost::filesystem::path& path)
+  void Writer::open(const fs::path& path)
   {
     _path = path;
-    _stream.open(path.string(), std::ios_base::out | std::ios_base::binary |
-                                  std::ios_base::trunc);
+    _file = fs::File(path.string());
 
-    if (_stream.fail()) {
+    std::error_code ec;
+    _file.open(std::ios_base::out | std::ios_base::binary |
+               std::ios_base::trunc,
+               ec);
+
+    if (ec) {
       std::cerr << "Opening file '" << _path << "' failed" << std::endl;
     }
   }
@@ -92,47 +99,47 @@ namespace html {
 
   void Writer::write_attrs(const Attrs& attrs)
   {
-    if (_stream.is_open()) {
+    if (_file.is_open()) {
       for (const auto& attr : attrs) {
-        _stream << " " << attr._key << "='";
-        escape_attr_str_to_stream(_stream, attr._value);
-        _stream << "'";
+        _file.stream() << " " << attr._key << "='";
+        escape_attr_str_to_stream(_file.stream(), attr._value);
+        _file.stream() << "'";
       }
     }
   }
 
   void Writer::entity(const std::string& name)
   {
-    if (_stream.is_open()) {
-      _stream << "&" << name << ";";
+    if (_file.is_open()) {
+      _file.stream() << "&" << name << ";";
     }
   }
 
 
   void Writer::open_tag(const std::string& tag, const Attrs& attrs)
   {
-    if (_stream.is_open()) {
-      _stream << "<" << tag;
+    if (_file.is_open()) {
+      _file.stream() << "<" << tag;
       write_attrs(attrs);
-      _stream << ">";
+      _file.stream() << ">";
     }
   }
 
 
   void Writer::close_tag(const std::string& tag)
   {
-    if (_stream.is_open()) {
-      _stream << "</" << tag << ">";
+    if (_file.is_open()) {
+      _file.stream() << "</" << tag << ">";
     }
   }
 
 
   void Writer::empty_tag(const std::string& tag, const Attrs& attrs)
   {
-    if (_stream.is_open()) {
-      _stream << "<" << tag;
+    if (_file.is_open()) {
+      _file.stream() << "<" << tag;
       write_attrs(attrs);
-      _stream << "/>";
+      _file.stream() << "/>";
     }
   }
 
@@ -140,9 +147,9 @@ namespace html {
   void Writer::text_tag(const std::string& tag, const std::string& value,
                         const Attrs& attrs)
   {
-    if (_stream.is_open()) {
+    if (_file.is_open()) {
       open_tag(tag, attrs);
-      escape_str_to_stream(_stream, value);
+      escape_str_to_stream(_file.stream(), value);
       close_tag(tag);
     }
   }
@@ -150,18 +157,18 @@ namespace html {
 
   void Writer::write_text(const std::string& value)
   {
-    if (_stream.is_open()) {
-      escape_str_to_stream(_stream, value);
+    if (_file.is_open()) {
+      escape_str_to_stream(_file.stream(), value);
     }
   }
 
 
   void Writer::write_style(const std::string& text)
   {
-    if (_stream.is_open()) {
+    if (_file.is_open()) {
       open_tag("style", {{"type", "text/css"}});
       newln();
-      _stream << text;
+      _file.stream() << text;
       close_tag("style");
       newln();
     }
@@ -170,8 +177,8 @@ namespace html {
 
   void Writer::doctype()
   {
-    if (_stream.is_open()) {
-      _stream << "<!DOCTYPE html PUBLIC '" << _doctype._publicid << "' '"
+    if (_file.is_open()) {
+      _file.stream() << "<!DOCTYPE html PUBLIC '" << _doctype._publicid << "' '"
               << _doctype._systemid << "'>";
       newln();
     }
@@ -182,7 +189,7 @@ namespace html {
                       const std::string& desc,
                       const std::function<void(std::ostream&)>& style_proc)
   {
-    if (_stream.is_open()) {
+    if (_file.is_open()) {
       doctype();
       open_tag("html", {Attr{"xmlns", "http://www.w3.org/1999/xhtml"}});
       newln();
@@ -209,7 +216,7 @@ namespace html {
                 {Attr{"name", "generator"}, Attr{"content", _generator}});
       newln();
 
-      style_proc(_stream);
+      style_proc(_file.stream());
 
       close_tag("head");
       newln();
@@ -221,7 +228,7 @@ namespace html {
 
   void Writer::footer()
   {
-    if (_stream.is_open()) {
+    if (_file.is_open()) {
       close_tag("body");
       newln();
       close_tag("html");
@@ -231,8 +238,8 @@ namespace html {
 
   void Writer::newln()
   {
-    if (_stream.is_open()) {
-      _stream << std::endl;
+    if (_file.is_open()) {
+      _file.stream() << std::endl;
     }
   }
 

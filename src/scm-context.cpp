@@ -16,24 +16,21 @@
 #include "chibi/eval.h"
 #include "chibi/sexp.h"
 
-#include <boost/optional/optional.hpp>
-#include <boost/range/algorithm/find_if.hpp>
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/variant/static_visitor.hpp>
-#include <boost/range/adaptor/transformed.hpp>
+#include "fspp/estd/optional.hpp"
 
+#include <algorithm>
+#include <cassert>
 #include <iostream>
-#include <sstream>
 #include <memory>
+#include <sstream>
+#include <stdarg.h>
 #include <string>
 #include <vector>
-#include <cassert>
-#include <stdarg.h>
 
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 
 namespace {
   static const Node* s_root_node;
@@ -189,13 +186,13 @@ namespace {
   }
 
 
-  boost::optional<std::string> string_from_symbol_sexp_or_none(sexp ctx,
-                                                               sexp obj)
+  estd::optional<std::string> string_from_symbol_sexp_or_none(sexp ctx,
+                                                              sexp obj)
   {
     sexp_gc_var1(str);
     sexp_gc_preserve1(ctx, str);
 
-    boost::optional<std::string> result;
+    estd::optional<std::string> result;
     if (sexp_isymbolp(obj)) {
       str = sexp_symbol_to_string(ctx, obj);
       result = sexp_string_data(str);
@@ -210,12 +207,12 @@ namespace {
   }
 
 
-  boost::optional<std::string> string_from_keyword_or_none(sexp ctx, sexp obj)
+  estd::optional<std::string> string_from_keyword_or_none(sexp ctx, sexp obj)
   {
     sexp_gc_var1(str);
     sexp_gc_preserve1(ctx, str);
 
-    boost::optional<std::string> result;
+    estd::optional<std::string> result;
     if (sexp_keywordp(obj)) {
       str = sexp_keyword_to_string(ctx, obj);
       result = sexp_string_data(str);
@@ -230,8 +227,8 @@ namespace {
   sexp make_nodelist(sexp ctx, const NodeList* obj);
 
 
-  sexp make_sairy_exception(sexp ctx, sexp self, const char *ms, sexp ir,
-                            sexp source)
+  sexp make_textbook_exception(sexp ctx, sexp self, const char *ms, sexp ir,
+                               sexp source)
   {
     sexp res;
     sexp_gc_var3(sym, str, irr);
@@ -496,13 +493,14 @@ namespace {
   sexp func_node_property(sexp ctx, sexp self, sexp_sint_t n, sexp propname_arg,
                           sexp node_arg)
   {
-    class SexpPropVisitor : public boost::static_visitor<sexp> {
+    struct SexpPropVisitor {
+      using return_type = sexp;
+
       sexp _ctx;
       sexp _self;
       sexp _propname;
       sexp _default_value;
 
-    public:
       SexpPropVisitor(sexp ctx, sexp self, sexp propname, sexp default_value)
         : _ctx(ctx), _self(self), _propname(propname),
           _default_value(default_value)
@@ -573,24 +571,24 @@ namespace {
         if (!propname) {
           result = sexp_user_exception(ctx, self, "not a symbol", propname_arg);
         }
-        else if (propname == CommonProps::k_id) {
-          SexpPropVisitor visitor(ctx, self, propname_arg, default_value);
+        else if (propname.value() == CommonProps::k_id) {
+          auto visitor = SexpPropVisitor(ctx, self, propname_arg, default_value);
 
           if (node->has_property(CommonProps::k_id)) {
             PropertyValue value = (*node)[CommonProps::k_id];
-            result = boost::apply_visitor(visitor, value);
+            result = apply(visitor, value);
           }
           else if (node->has_property(CommonProps::k_auto_id)) {
             PropertyValue value = (*node)[CommonProps::k_auto_id];
-            result = boost::apply_visitor(visitor, value);
+            result = apply(visitor, value);
           }
           else
             result = default_value;
         }
         else {
-          SexpPropVisitor visitor(ctx, self, propname_arg, default_value);
+          auto visitor = SexpPropVisitor(ctx, self, propname_arg, default_value);
           PropertyValue value = (*node)[*propname];
-          result = boost::apply_visitor(visitor, value);
+          result = apply(visitor, value);
         }
       }
       else {
@@ -789,7 +787,7 @@ namespace {
 
     if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
       const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
-      result = make_nodelist(ctx, new NodeList(std::move(nl->rest())));
+      result = make_nodelist(ctx, new NodeList(nl->rest()));
     }
     else {
       result = sexp_user_exception(ctx, self, "not a node-list", nl_arg);
@@ -957,6 +955,8 @@ namespace {
   sexp func_abs_first_element_sibling_p(sexp ctx, sexp self, sexp_sint_t n,
                                         sexp nl_arg)
   {
+    using namespace std;
+
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -966,9 +966,10 @@ namespace {
       const Node* parent = node->parent();
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
-        auto i_find = boost::find_if(siblings, [&node](const Node* lnd) {
-          return lnd->node_class() == element_class_definition();
-        });
+        auto i_find = find_if(begin(siblings), end(siblings),
+                              [&node](const Node* lnd) {
+                                return lnd->node_class() == element_class_definition();
+                              });
         if (i_find != siblings.end()) {
           result = *i_find == node ? SEXP_TRUE : SEXP_FALSE;
         }
@@ -1017,6 +1018,8 @@ namespace {
   sexp func_abs_last_element_sibling_p(sexp ctx, sexp self, sexp_sint_t n,
                                        sexp nl_arg)
   {
+    using namespace std;
+
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -1028,9 +1031,10 @@ namespace {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
         std::reverse(siblings.begin(), siblings.end());
 
-        auto i_find = boost::find_if(siblings, [&node](Node* lnd) {
-          return lnd && lnd->node_class() == element_class_definition();
-        });
+        auto i_find = find_if(begin(siblings), end(siblings),
+                              [&node](Node* lnd) {
+                                return lnd && lnd->node_class() == element_class_definition();
+                              });
         if (i_find != siblings.end()) {
           result = *i_find == node ? SEXP_TRUE : SEXP_FALSE;
         }
@@ -1320,11 +1324,11 @@ namespace {
   }
 
 
-  boost::optional<fo::PropertySpec>
+  estd::optional<fo::PropertySpec>
   evaluate_keyword_parameter(sexp ctx, sexp self, const std::string& key,
                              sexp expr)
   {
-    boost::optional<fo::PropertySpec> result;
+    estd::optional<fo::PropertySpec> result;
 
     sexp_gc_var1(excep);
     sexp_gc_preserve1(ctx, excep);
@@ -1389,13 +1393,13 @@ namespace {
 
       if (!fo) {
         result =
-          make_sairy_exception(ctx, self, "Unknown fo-class: ", fo_class_arg,
-                               source);
+          make_textbook_exception(ctx, self, "Unknown fo-class: ", fo_class_arg,
+                                  source);
       }
       else if (!fo->accepts_fo(*sosofo)) {
         result =
-          make_sairy_exception(ctx, self, "bad FO nesting", fo_class_arg,
-                               source);
+          make_textbook_exception(ctx, self, "bad FO nesting", fo_class_arg,
+                                  source);
       }
       else
         result = make_sosofo(ctx, new Sosofo(fo));
@@ -1423,8 +1427,8 @@ namespace {
 
     auto fo_class = string_from_symbol_sexp_or_none(ctx, fo_class_arg);
     if (!fo_class) {
-      result = make_sairy_exception(ctx, self, "not a symbol", fo_class_arg,
-                                    source);
+      result = make_textbook_exception(ctx, self, "not a symbol", fo_class_arg,
+                                       source);
     }
 
     fo::PropertySpecs props;
@@ -1447,8 +1451,8 @@ namespace {
               }
               else {
                 result =
-                  make_sairy_exception(ctx, self, "use: requires style argument", ref,
-                                       source);
+                  make_textbook_exception(ctx, self, "use: requires style argument", ref,
+                                          source);
                 break;
               }
             }
@@ -1462,8 +1466,8 @@ namespace {
           }
           else {
             result =
-              make_sairy_exception(ctx, self, "value missing for keyword", ref,
-                                   source);
+              make_textbook_exception(ctx, self, "value missing for keyword", ref,
+                                      source);
             break;
           }
         }
@@ -1479,16 +1483,16 @@ namespace {
         auto key = string_from_keyword_or_none(ctx, ref);
 
         if (key) {
-          result = make_sairy_exception(ctx, self,
-                                        "unexpeced keyword in make body", ref,
-                                        source);
+          result = make_textbook_exception(ctx, self,
+                                           "unexpeced keyword in make body", ref,
+                                           source);
           break;
         }
         obj = ref;
       }
     }
     else {
-      result = make_sairy_exception(ctx, self, "not a list", args_arg, source);
+      result = make_textbook_exception(ctx, self, "not a list", args_arg, source);
     }
 
     if (result == SEXP_NULL && fo_class) {
@@ -1779,28 +1783,35 @@ namespace {
   std::vector<fs::path>
   prepare_tstyle_search_path(const std::string& prefix_path)
   {
-    return boost::copy_range<std::vector<fs::path>>(
-      eyestep::utils::split_paths(prefix_path) |
-      boost::adaptors::transformed(
-        [](const fs::path& path) { return path / "tstyle"; }));
+    using namespace std;
+
+    auto pfx_paths = utils::split_paths(prefix_path);
+    auto tstyle_paths = vector<fs::path>{};
+    tstyle_paths.resize(pfx_paths.size());
+
+    transform(begin(pfx_paths), end(pfx_paths), back_inserter(tstyle_paths),
+              [](const fs::path& path)
+              {
+                return path / "tstyle";
+              });
+    return tstyle_paths;
   }
 
-  boost::optional<fs::path> search_in_path(const std::string& resource,
-                                           const fs::path& parent_path,
-                                           const std::string& prefix_path)
+  estd::optional<fs::path> search_in_path(const std::string& resource,
+                                          const fs::path& parent_path,
+                                          const std::string& prefix_path)
   {
     std::vector<fs::path> paths(prepare_tstyle_search_path(prefix_path));
     paths.insert(paths.begin(), parent_path);
 
     for (const auto& p : paths) {
       auto src_path = (fs::path(p) / resource).replace_extension(".tstyle");
-      // std::cout << "test " << src_path << std::endl;
       if (fs::exists(src_path)) {
         return src_path;
       }
     }
 
-    return boost::none;
+    return {};
   }
 
   sexp func_use(sexp ctx, sexp self, sexp_sint_t n, sexp res_arg)
@@ -1818,7 +1829,7 @@ namespace {
       if (sexp_stringp(path)) {
         sexp tstyle_paths =
           sexp_env_ref(ctx, sexp_context_env(ctx),
-                       nm2 = sexp_intern(ctx, "%sairy-prefix-paths%", -1),
+                       nm2 = sexp_intern(ctx, "%textbook-prefix-paths%", -1),
                        SEXP_VOID);
         auto tstyle_paths_str = sexp_stringp(tstyle_paths)
                                   ? std::string(sexp_string_data(tstyle_paths))
@@ -1982,7 +1993,7 @@ namespace {
 
       sexp_gc_release1(_ctx);
 
-      return std::move(result);
+      return result;
     }
   };
 
@@ -1991,7 +2002,7 @@ namespace {
 
 std::unique_ptr<ISchemeContext> create_scheme_context()
 {
-  return estd::make_unique<SchemeContext>();
+  return ::estd::make_unique<SchemeContext>();
 }
 
 } // ns eyestep

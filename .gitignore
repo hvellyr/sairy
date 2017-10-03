@@ -1,1 +1,4 @@
 /build/
+bin/textbook
+.dir-locals.el
+.projectile

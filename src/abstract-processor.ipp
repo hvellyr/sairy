@@ -5,8 +5,7 @@
 #include "fo-processor.hpp"
 #include "sosofo.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/variant/get.hpp>
+#include "fspp/filesystem.hpp"
 
 #include <iostream>
 #include <string>
@@ -14,7 +13,7 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 
 
 template <typename ProcessorT>
@@ -85,18 +84,18 @@ AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
 
 template <typename ProcessorT>
 template <typename T>
-boost::optional<T>
+estd::optional<T>
 AbstractProcessor<ProcessorT>::property_or_none(const IFormattingObject* fo,
                                                 const std::string& key) const
 {
   auto prop = property(fo, key);
   if (prop) {
-    if (const T* val = boost::get<const T>(&prop->_value)) {
+    if (const T* val = fo::get<const T>(&prop->_value)) {
       return *val;
     }
   }
 
-  return boost::none;
+  return {};
 }
 
 template <typename ProcessorT>
@@ -107,7 +106,7 @@ T AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
 {
   auto prop = property(fo, key);
   if (prop) {
-    if (const T* val = boost::get<const T>(&prop->_value)) {
+    if (const T* val = fo::get<const T>(&prop->_value)) {
       return *val;
     }
   }

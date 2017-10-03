@@ -8,12 +8,12 @@
 #include "fos.hpp"
 #include "sosofo.hpp"
 #include "estd/memory.hpp"
+#include "utils.hpp"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/variant/static_visitor.hpp>
-#include <boost/optional/optional.hpp>
+#include "program_options/program_options.hpp"
+
+#include "fspp/filesystem.hpp"
+#include "fspp/estd/optional.hpp"
 
 #include <iostream>
 #include <map>
@@ -25,10 +25,10 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
-namespace po = boost::program_options;
+namespace fs = filesystem;
+namespace po = program_options;
 
-const std::string k_SAIRY_GENERATOR = "Sairy HTML Processor";
+const std::string k_TEXTBOOK_GENERATOR = "Textbook HTML Processor";
 
 
 detail::HtmlRenderContext::HtmlRenderContext()
@@ -40,7 +40,7 @@ html::Writer& detail::HtmlRenderContext::port()
   return *_port.get();
 }
 
-boost::filesystem::path detail::HtmlRenderContext::current_path()
+fs::path detail::HtmlRenderContext::current_path()
 {
   return _path;
 }
@@ -86,7 +86,7 @@ void detail::HtmlRenderContext::pop_styles()
   }
 }
 
-boost::optional<std::string>
+estd::optional<std::string>
 detail::HtmlRenderContext::css_property(const std::string& key) const
 {
   for (const auto& styles : _styles_stack) {
@@ -96,7 +96,7 @@ detail::HtmlRenderContext::css_property(const std::string& key) const
     }
   }
 
-  return boost::none;
+  return {};
 }
 
 
@@ -180,7 +180,7 @@ namespace {
 
   template <typename T>
   void set_attr(detail::StyleAttrs& attrs, const std::string& key,
-                boost::optional<T> val_or_none)
+                estd::optional<T> val_or_none)
   {
     if (val_or_none) {
       attrs._css_map[key] = *val_or_none;
@@ -189,7 +189,7 @@ namespace {
 
 
   void set_attr(detail::StyleAttrs& attrs, const std::string& key,
-                boost::optional<fo::LengthSpec> val_or_none)
+                estd::optional<fo::LengthSpec> val_or_none)
   {
     if (val_or_none) {
       attrs._css_map[key] = length_spec2css(*val_or_none);
@@ -210,7 +210,7 @@ namespace {
   const std::string k_small_caps = "small-caps";
 
   void set_capsstyle(detail::StyleAttrs& attrs,
-                     boost::optional<std::string> val_or_none)
+                     estd::optional<std::string> val_or_none)
   {
     if (val_or_none) {
       if (*val_or_none == k_normal) {
@@ -231,16 +231,16 @@ namespace {
 
 
   html::Tag optional_tag(HtmlProcessor* processor, const std::string& tag,
-                         boost::optional<std::string> val_or_none,
+                         estd::optional<std::string> val_or_none,
                          const std::string& exp_val)
   {
     if (val_or_none) {
       if (*val_or_none == exp_val) {
-        return std::move(html::Tag(processor->ctx().port(), tag));
+        return html::Tag(processor->ctx().port(), tag);
       }
     }
 
-    return std::move(html::Tag());
+    return html::Tag();
   }
 
 
@@ -259,11 +259,11 @@ namespace {
                               const detail::StyleAttrs& attrs)
   {
     if (!attrs._css_map.empty()) {
-      return std::move(html::Tag(processor->ctx().port(), "span",
-                                 style_str2attrs(attrs_to_string(attrs))));
+      return html::Tag(processor->ctx().port(), "span",
+                       style_str2attrs(attrs_to_string(attrs)));
     }
 
-    return std::move(html::Tag());
+    return html::Tag();
   }
 
   html::Tag optional_inline_block_tag(HtmlProcessor* processor,
@@ -274,11 +274,11 @@ namespace {
     extAttrs._css_map["text-indent"] = "0em";
 
     if (!extAttrs._css_map.empty()) {
-      return std::move(html::Tag(processor->ctx().port(), "span",
-                                 style_str2attrs(attrs_to_string(extAttrs))));
+      return html::Tag(processor->ctx().port(), "span",
+                       style_str2attrs(attrs_to_string(extAttrs)));
     }
 
-    return std::move(html::Tag());
+    return html::Tag();
   }
 
 
@@ -346,7 +346,7 @@ namespace {
 
     detail::HtmlRenderContext& ctx = processor->ctx();
 
-    auto port = estd::make_unique<html::Writer>(doctype, k_SAIRY_GENERATOR);
+    auto port = ::estd::make_unique<html::Writer>(doctype, k_TEXTBOOK_GENERATOR);
     port->open(path);
 
     ctx.push_port(std::move(port), path);
@@ -372,10 +372,10 @@ namespace {
         processor->ctx().port().write_text(str);
       }
       else if (capsstyle == detail::k_lower_caps) {
-        processor->ctx().port().write_text(boost::to_lower_copy(str));
+        processor->ctx().port().write_text(utils::to_lower(str));
       }
       else if (capsstyle == detail::k_upper_caps) {
-        processor->ctx().port().write_text(boost::to_upper_copy(str));
+        processor->ctx().port().write_text(utils::to_upper(str));
       }
       else if (capsstyle == detail::k_small_caps) {
         processor->ctx().port().write_text(str);
@@ -399,16 +399,16 @@ namespace {
                            style_str2attrs(attrs_to_string(d_attrs)));
         StyleScope style_scope(processor->ctx(), d_attrs);
 
-        html::Tag b_tag(std::move(
+        html::Tag b_tag(
           optional_tag(processor, "b",
                        processor->property_or_none<std::string>(fo,
                                                                 "font-weight"),
-                       "bold")));
-        html::Tag i_tag(std::move(
+                       "bold"));
+        html::Tag i_tag(
           optional_tag(processor, "i",
                        processor->property_or_none<std::string>(fo,
                                                                 "font-posture"),
-                       "italic")));
+                       "italic"));
 
         processor->render_sosofo(&fo->port("text"));
       }
@@ -497,16 +497,16 @@ namespace {
         html::Tag span_tag(optional_span_tag(processor, d_attrs));
         StyleScope style_scope(processor->ctx(), d_attrs);
 
-        html::Tag b_tag(std::move(
+        html::Tag b_tag(
           optional_tag(processor, "b",
                        processor->property_or_none<std::string>(fo,
                                                                 "font-weight"),
-                       "bold")));
-        html::Tag i_tag(std::move(
+                       "bold"));
+        html::Tag i_tag(
           optional_tag(processor, "i",
                        processor->property_or_none<std::string>(fo,
                                                                 "font-posture"),
-                       "italic")));
+                       "italic"));
 
         processor->render_sosofo(&fo->port("text"));
       }
@@ -547,16 +547,16 @@ namespace {
                              : optional_span_tag(processor, d_attrs));
         StyleScope style_scope(processor->ctx(), d_attrs);
 
-        html::Tag b_tag(std::move(
+        html::Tag b_tag(
           optional_tag(processor, "b",
                        processor->property_or_none<std::string>(fo,
                                                                 "font-weight"),
-                       "bold")));
-        html::Tag i_tag(std::move(
+                       "bold"));
+        html::Tag i_tag(
           optional_tag(processor, "i",
                        processor->property_or_none<std::string>(fo,
                                                                 "font-posture"),
-                       "italic")));
+                       "italic"));
 
         processor->render_sosofo(&fo->port("text"));
       }
@@ -574,7 +574,7 @@ HtmlProcessor::HtmlProcessor() : _verbose(false)
 HtmlProcessor::HtmlProcessor(const po::variables_map& args) : _verbose(false)
 {
   if (!args.empty()) {
-    _verbose = args["verbose"].as<bool>();
+    _verbose = args.count("verbose") != 0;
   }
 }
 
@@ -623,7 +623,7 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const
 void HtmlProcessor::before_rendering()
 {
   auto mainport =
-    estd::make_unique<html::Writer>(html::k_XHTML_1_1_DTD, k_SAIRY_GENERATOR);
+    ::estd::make_unique<html::Writer>(html::k_XHTML_1_1_DTD, k_TEXTBOOK_GENERATOR);
   _ctx.push_port(std::move(mainport), _output_file);
 }
 

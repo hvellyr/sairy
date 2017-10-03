@@ -1,6 +1,6 @@
 ;;; tstyle-mode.el --- major mode for editing textbook style files -*- coding: utf-8 -*-
 ;;
-;; Copyright (c) 2015 Gregor C. Klinke
+;; Copyright (c) 2017 Gregor C. Klinke
 ;; All rights reserved.
 ;;
 ;; This source code is released under the BSD License.

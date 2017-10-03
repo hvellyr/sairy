@@ -147,52 +147,49 @@ namespace {
     }
   };
 
-  void serialize(const JsPrinter& pp, const Node* nd, int depth);
-
-  class SerializeVisitor : public boost::static_visitor<> {
-    JsPrinter _pp;
-    int _depth;
-
-  public:
-    SerializeVisitor(const JsPrinter& pp, int depth) : _pp(pp), _depth(depth) {}
-
-    void operator()(const Undefined&) {}
-
-    void operator()(const int& val) { _pp.print_value(val); }
-
-    void operator()(const std::string& val) { _pp.print_value(val); }
-
-    void operator()(const Node* nd)
-    {
-      _pp.newln();
-      serialize(_pp, nd, _depth);
-    }
-
-    void operator()(const Nodes& nl)
-    {
-      if (!nl.empty()) {
-        _pp.open_array();
-        bool first = true;
-        for (auto* nd : nl) {
-          if (!first) {
-            _pp.sep();
-          }
-          else {
-            first = false;
-          }
-          serialize(_pp, nd, _depth);
-        }
-        _pp.newln().indent(_depth, -1).close_array();
-      }
-      else {
-        _pp.empty_array();
-      }
-    }
-  };
-
   void serialize(const JsPrinter& pp, const Node* nd, int depth)
   {
-    pp.indent(depth, 0).open_obj().print_attrnm("type").print_value(
+    struct SerializeVisitor {
+      using return_type = void;
+
+      JsPrinter _pp;
+      int _depth;
+
+      SerializeVisitor(const JsPrinter& pp, int depth) : _pp(pp), _depth(depth) {}
+
+      void operator()(const Undefined&) {}
+
+      void operator()(const int& val) { _pp.print_value(val); }
+
+      void operator()(const std::string& val) { _pp.print_value(val); }
+
+      void operator()(const Node* nd) {
+        _pp.newln();
+        serialize(_pp, nd, _depth);
+      }
+
+      void operator()(const Nodes& nl) {
+        if (!nl.empty()) {
+          _pp.open_array();
+          bool first = true;
+          for (auto* nd : nl) {
+            if (!first) {
+              _pp.sep();
+            }
+            else {
+              first = false;
+            }
+            serialize(_pp, nd, _depth);
+          }
+          _pp.newln().indent(_depth, -1).close_array();
+        }
+        else {
+          _pp.empty_array();
+        }
+      }
+    };
+
+  pp.indent(depth, 0).open_obj().print_attrnm("type").print_value(
       nd->classname());
 
     if (nd->node_class() == element_class_definition()) {
@@ -205,8 +202,7 @@ namespace {
           prop.first != CommonProps::k_auto_id) {
         pp.sep().indent(depth, 1).print_attrnm(prop.first);
 
-        SerializeVisitor visitor(pp, depth + 1);
-        boost::apply_visitor(visitor, prop.second);
+        apply(SerializeVisitor(pp, depth + 1), prop.second);
       }
     }
 

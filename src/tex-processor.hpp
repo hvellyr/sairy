@@ -6,10 +6,10 @@
 #include "fo.hpp"
 #include "abstract-processor.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/optional/optional.hpp>
-#include <boost/program_options.hpp>
+#include "program_options/program_options.hpp"
+
+#include "fspp/filesystem.hpp"
+#include "fspp/utils.hpp"
 
 #include <list>
 #include <map>
@@ -18,6 +18,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <istream>
 
 
 namespace eyestep {
@@ -70,16 +71,16 @@ namespace tex_detail {
 
 class TexProcessor : public AbstractProcessor<TexProcessor> {
   bool _verbose;
-  boost::filesystem::ofstream _stream;
+  filesystem::File _file;
   tex_detail::TexStyleContext _style_ctx;
 
 public:
   TexProcessor();
-  TexProcessor(const boost::program_options::variables_map& args);
+  TexProcessor(const program_options::variables_map& args);
 
   std::string proc_id() const override;
   std::string default_output_extension() const override;
-  boost::program_options::options_description program_options() const override;
+  program_options::options_description program_options() const override;
 
   const IFoProcessor<TexProcessor>*
   lookup_fo_processor(const std::string& fo_classname) const override;
@@ -92,7 +93,7 @@ public:
   fo::LengthSpec paper_width() const;
   fo::LengthSpec paper_height() const;
 
-  boost::filesystem::ofstream& stream();
+  std::iostream& stream();
   tex_detail::TexStyleContext& style_ctx();
 
   void finalize_breaks();

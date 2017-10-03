@@ -10,6 +10,8 @@
 #include "html-processor.hpp"
 #include "tex-processor.hpp"
 
+#include "program_options/program_options.hpp"
+
 #include <map>
 #include <string>
 #include <cassert>
@@ -18,7 +20,7 @@
 
 namespace eyestep {
 
-namespace po = boost::program_options;
+namespace po = program_options;
 
 namespace {
   using ProcessorFactoryFunc =
@@ -36,7 +38,7 @@ namespace {
     const auto i_find = s_processor_factory_map.find(id);
     assert(i_find == s_processor_factory_map.end());
     s_processor_factory_map[id] =
-      [](const po::variables_map& args) { return estd::make_unique<T>(args); };
+      [](const po::variables_map& args) { return ::estd::make_unique<T>(args); };
   }
 
 
@@ -62,7 +64,11 @@ po::options_description processor_options()
     auto processor = reg.second(po::variables_map{});
     if (processor) {
       procs.push_back(processor->proc_id());
-      options.push_back(processor->program_options());
+
+      auto opts = processor->program_options();
+      if (!opts.empty()) {
+        options.push_back(opts);
+      }
     }
   }
 

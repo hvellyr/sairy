@@ -3,15 +3,17 @@
 
 #pragma once
 
-#include <boost/optional/optional.hpp>
-#include <boost/variant/variant.hpp>
+#include "fspp/estd/optional.hpp"
 
 #include <initializer_list>
 #include <iterator>
 #include <map>
 #include <memory>
 #include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
+
 
 namespace eyestep {
 
@@ -38,12 +40,12 @@ namespace fo {
   struct LengthSpec {
     LengthSpec() : _value(0), _unit(k_pt), _min(0), _max(0) {}
     LengthSpec(LengthSpecType spec_type, double value, Unit unit,
-               boost::optional<double> min = boost::none,
-               boost::optional<double> max = boost::none,
+               estd::optional<double> min = {},
+               estd::optional<double> max = {},
                bool conditionalp = true, int priority = 1)
       : _spec_type(spec_type), _conditionalp(conditionalp), _priority(priority),
-        _value(value), _unit(unit), _min(min != boost::none ? *min : value),
-        _max(max != boost::none ? *max : value)
+        _value(value), _unit(unit), _min(min ? *min : value),
+        _max(max ? *max : value)
     {
     }
 
@@ -62,11 +64,7 @@ namespace fo {
   std::ostream& operator<<(std::ostream& os, const LengthSpec& ls);
 
 
-  enum ColorSpace {
-    kGray,
-    kRGB,
-    kCMYK
-  };
+  enum ColorSpace { kGray, kRGB, kCMYK };
 
   struct Color {
     Color() = default;
@@ -93,21 +91,24 @@ namespace fo {
     };
   };
 
-  inline Color make_gray_color(float v) {
+  inline Color make_gray_color(float v)
+  {
     Color co;
     co._space = kGray;
     co._gray = v;
     return co;
   }
 
-  inline Color make_rgb_color(float r, float g, float b) {
+  inline Color make_rgb_color(float r, float g, float b)
+  {
     Color co;
     co._space = kRGB;
     co._rgb = {r, g, b};
     return co;
   }
 
-  inline Color make_cmyk_color(float c, float m, float y, float b) {
+  inline Color make_cmyk_color(float c, float m, float y, float b)
+  {
     Color co;
     co._space = kCMYK;
     co._cmyk = {c, m, y, b};
@@ -117,14 +118,176 @@ namespace fo {
   std::ostream& operator<<(std::ostream& os, const Color& co);
 
 
+  struct ValueType {
+    enum Kind { k_length, k_bool, k_int, k_string, k_sosofo, k_color };
+
+    Kind _kind = k_bool;
+    union {
+      bool _bool;
+      int _int;
+      LengthSpec _length;
+      std::string _string;
+      std::shared_ptr<Sosofo> _sosofo;
+      Color _color;
+    };
+
+    ValueType() : ValueType(false) {}
+    ValueType(bool val) : _kind(k_bool), _bool(val) {}
+    ValueType(int val) : _kind(k_int), _int(val) {}
+    ValueType(LengthSpec val) : _kind(k_length), _length(std::move(val)) {}
+    ValueType(std::string val) : _kind(k_string), _string(std::move(val)) {}
+    ValueType(std::shared_ptr<Sosofo> val)
+      : _kind(k_sosofo), _sosofo(std::move(val))
+    {
+    }
+    ValueType(Color val) : _kind(k_color), _color(std::move(val)) {}
+
+    ValueType(const ValueType& rhs) { *this = rhs; }
+
+    ~ValueType() { clear(); }
+
+    void clear()
+    {
+      switch (_kind) {
+      case k_bool:
+      case k_int:
+        break;
+      case k_color:
+        _color.~Color();
+        break;
+      case k_length:
+        _length.~LengthSpec();
+        break;
+      case k_string:
+        _string.~basic_string<char>();
+        break;
+      case k_sosofo:
+        _sosofo.~shared_ptr<Sosofo>();
+        break;
+      }
+      _bool = false;
+      _kind = k_bool;
+    }
+
+    ValueType& operator=(const ValueType& rhs)
+    {
+      if (this != &rhs) {
+        clear();
+
+        _kind = rhs._kind;
+
+        switch (rhs._kind) {
+        case k_length:
+          new (&_length) LengthSpec(rhs._length);
+          break;
+        case k_bool:
+          _bool = rhs._bool;
+          break;
+        case k_int:
+          _int = rhs._int;
+          break;
+        case k_string:
+          new (&_string) std::string(rhs._string);
+          break;
+        case k_sosofo:
+          new (&_sosofo) std::shared_ptr<Sosofo>(rhs._sosofo);
+          break;
+        case k_color:
+          new (&_color) Color(rhs._color);
+          break;
+        }
+      }
+
+      return *this;
+    }
+  };
+
+
+  template <typename T>
+  struct ValueTrait {
+    static ValueType::Kind value_type();
+    static const T* get(const ValueType* val);
+  };
+
+  template <>
+  struct ValueTrait<bool> {
+    static ValueType::Kind value_type() { return ValueType::k_bool; }
+    static const bool* get(const ValueType* val) { return &val->_bool; }
+  };
+
+  template <>
+  struct ValueTrait<int> {
+    static ValueType::Kind value_type() { return ValueType::k_int; }
+    static const int* get(const ValueType* val) { return &val->_int; }
+  };
+
+  template <>
+  struct ValueTrait<LengthSpec> {
+    static ValueType::Kind value_type() { return ValueType::k_length; }
+    static const LengthSpec* get(const ValueType* val) { return &val->_length; }
+  };
+
+  template <>
+  struct ValueTrait<std::string> {
+    static ValueType::Kind value_type() { return ValueType::k_string; }
+    static const std::string* get(const ValueType* val)
+    {
+      return &val->_string;
+    }
+  };
+
+  template <>
+  struct ValueTrait<std::shared_ptr<Sosofo>> {
+    static ValueType::Kind value_type() { return ValueType::k_sosofo; }
+    static const std::shared_ptr<Sosofo>* get(const ValueType* val)
+    {
+      return &val->_sosofo;
+    }
+  };
+
+  template <>
+  struct ValueTrait<Color> {
+    static ValueType::Kind value_type() { return ValueType::k_color; }
+    static const Color* get(const ValueType* val) { return &val->_color; }
+  };
+
+  template <typename T>
+  const T* get(const ValueType* val)
+  {
+    return val &&
+               ValueTrait<typename std::remove_cv<T>::type>::value_type() ==
+                 val->_kind
+             ? ValueTrait<typename std::remove_cv<T>::type>::get(val)
+             : nullptr;
+  }
+
+
+  template <typename F, typename R = void>
+  R apply(F&& f, const ValueType& val)
+  {
+    switch (val._kind) {
+    case ValueType::k_length:
+      return f(val._length);
+    case ValueType::k_bool:
+      return f(val._bool);
+    case ValueType::k_int:
+      return f(val._int);
+    case ValueType::k_string:
+      return f(val._string);
+    case ValueType::k_sosofo:
+      return f(val._sosofo);
+    case ValueType::k_color:
+      return f(val._color);
+    }
+
+    return R();
+  }
+
+
   class PropertySpec {
   public:
-    using ValueType =
-      boost::variant<LengthSpec, bool, int, std::string, std::shared_ptr<Sosofo>,
-                     Color>;
-
     PropertySpec(std::string name, LengthSpec val)
-      : _name(std::move(name)), _value(val)
+      : _name(std::move(name)), _value(std::move(val))
     {
     }
 
@@ -149,7 +312,7 @@ namespace fo {
     }
 
     PropertySpec(std::string name, Color val)
-      : _name(std::move(name)), _value(val)
+      : _name(std::move(name)), _value(std::move(val))
     {
     }
 
@@ -167,24 +330,25 @@ namespace fo {
     const ValueType _value;
   };
 
-  using PropertySpecOrNone = boost::optional<fo::PropertySpec>;
 
-  class PropertySpecs
-  {
+  using PropertySpecOrNone = estd::optional<fo::PropertySpec>;
+
+  class PropertySpecs {
   public:
     using storage_type = std::map<std::string, PropertySpec>;
 
-    class PropertySpecIterator : public std::iterator<std::random_access_iterator_tag,
-                                                      PropertySpec>
-    {
+    class PropertySpecIterator
+      : public std::iterator<std::random_access_iterator_tag, PropertySpec> {
       typename storage_type::const_iterator _i_ptr;
+
     public:
       PropertySpecIterator(typename storage_type::const_iterator i_ptr)
         : _i_ptr(i_ptr)
-      {}
+      {
+      }
 
       PropertySpecIterator(const PropertySpecIterator&) = default;
-      PropertySpecIterator& operator=(const PropertySpecIterator& ) = default;
+      PropertySpecIterator& operator=(const PropertySpecIterator&) = default;
 
       bool operator==(const PropertySpecIterator& other) const
       {
@@ -222,22 +386,16 @@ namespace fo {
         return tmp;
       }
 
-      const PropertySpec& operator*() const
-      {
-        return _i_ptr->second;
-      }
+      const PropertySpec& operator*() const { return _i_ptr->second; }
 
-      const PropertySpec* operator->() const
-      {
-        return &_i_ptr->second;
-      }
+      const PropertySpec* operator->() const { return &_i_ptr->second; }
     };
 
     using const_iterator = PropertySpecIterator;
 
     PropertySpecs() = default;
-    PropertySpecs(const PropertySpecs& ) = default;
-    PropertySpecs(PropertySpecs&& ) = default;
+    PropertySpecs(const PropertySpecs&) = default;
+    PropertySpecs(PropertySpecs&&) = default;
 
     PropertySpecs(std::initializer_list<PropertySpec> si)
     {
@@ -246,8 +404,8 @@ namespace fo {
       }
     }
 
-    PropertySpecs& operator=(const PropertySpecs& ) = default;
-    PropertySpecs& operator=(PropertySpecs&& ) = default;
+    PropertySpecs& operator=(const PropertySpecs&) = default;
+    PropertySpecs& operator=(PropertySpecs&&) = default;
 
     void set(const fo::PropertySpec& spec)
     {
@@ -259,7 +417,7 @@ namespace fo {
       auto i_find = _specs.find(key);
       return i_find != _specs.end()
         ? PropertySpecOrNone(i_find->second)
-        : boost::none;
+        : PropertySpecOrNone();
     }
 
     const_iterator begin() const
@@ -267,10 +425,7 @@ namespace fo {
       return PropertySpecIterator(_specs.begin());
     }
 
-    const_iterator end() const
-    {
-      return PropertySpecIterator(_specs.end());
-    }
+    const_iterator end() const { return PropertySpecIterator(_specs.end()); }
 
     storage_type _specs;
   };

@@ -7,8 +7,6 @@
 #include "../nodes.hpp"
 #include "../nodeutils.hpp"
 
-#include <boost/range/irange.hpp>
-
 #include <string>
 #include <sstream>
 #include <tuple>

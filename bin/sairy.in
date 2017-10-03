@@ -1,3 +1,0 @@
-#!/bin/sh
-
-SAIRY_PREFIX="@PROJECT_BINARY_DIR@/scheme":./share/sairy "@sairy_executable_path@" "$@"

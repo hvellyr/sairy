@@ -6,8 +6,6 @@
 #include "fo.hpp"
 #include "sosofo.hpp"
 
-#include <boost/variant/variant.hpp>
-
 #include <string>
 #include <vector>
 

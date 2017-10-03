@@ -6,9 +6,9 @@
 #include "fo.hpp"
 #include "sosofo.hpp"
 
-#include <boost/filesystem.hpp>
-#include <boost/variant/apply_visitor.hpp>
-#include <boost/variant/static_visitor.hpp>
+#include "program_options/program_options.hpp"
+
+#include "fspp/filesystem.hpp"
 
 #include <iostream>
 #include <string>
@@ -18,50 +18,45 @@
 
 namespace eyestep {
 
-namespace fs = boost::filesystem;
-namespace po = boost::program_options;
+namespace fs = filesystem;
+namespace po = program_options;
 
 
 namespace {
-  class DebugPropertySpecVisitor : public boost::static_visitor<> {
-  public:
-    void operator()(const fo::LengthSpec& ls) { std::cout << ls; }
-    void operator()(bool val) { std::cout << (val ? "yes" : "no"); }
-    void operator()(int val) { std::cout << val; }
-    void operator()(const std::string& val) { std::cout << val; }
-    void operator()(const fo::Color& co) { std::cout << co; }
-    void operator()(const std::shared_ptr<Sosofo>& val)
-    {
-      std::cout << "<sosofo>";
-    }
-  };
-
   class DebugFoProcessor : public IFoProcessor<DebugProcessor> {
   public:
     void render(DebugProcessor* processor,
                 const IFormattingObject* fo) const override
     {
+      struct DebugPropertySpecVisitor {
+        void operator()(const fo::LengthSpec& ls) { std::cout << ls; }
+        void operator()(bool val) { std::cout << (val ? "yes" : "no"); }
+        void operator()(int val) { std::cout << val; }
+        void operator()(const std::string& val) { std::cout << val; }
+        void operator()(const fo::Color& co) { std::cout << co; }
+        void operator()(const std::shared_ptr<Sosofo>& val) {
+          std::cout << "<sosofo>";
+        }
+      };
+
       for (const auto& spec : fo->properties()) {
         std::cout << "      {" << spec._name << ": ";
 
-        DebugPropertySpecVisitor visitor;
-        boost::apply_visitor(visitor, spec._value);
+        fo::apply(DebugPropertySpecVisitor(), spec._value);
 
         std::cout << " }" << std::endl;
       }
 
 #if 0
       for (const auto& spec : fo->default_properties()) {
-        DebugPropertySpecVisitor visitor;
-
         auto prop = processor->property(fo, spec._name);
         if (prop) {
           std::cout << "      {" << spec._name << ": ";
-          boost::apply_visitor(visitor, spec._value);
+          fo::apply(DebugPropertySpecVisitor(), spec._value);
           std::cout << " } -> ";
 
           std::cout << " [" << spec._name << ": ";
-          boost::apply_visitor(visitor, prop->_value);
+          fo::apply(DebugPropertySpecVisitor(), prop->_value);
           std::cout << " ]" << std::endl;
         }
       }

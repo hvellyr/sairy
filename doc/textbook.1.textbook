@@ -1,0 +1,58 @@
+@c -*-textbook-*-
+@manpage{textbook}{text processing tool}{1}
+@info
+@author{Gregor Klinke}{gck@@eyestep.org}
+@copyright{Copyright (c) 2017 Gregor Klinke. All Rights Reserved.}
+@end info
+
+@synopsis
+@app{textbook} [@op{-b} @val{backend}] [@op{-t} @val{style-sheet}] @val{FileName} …
+@end synopsis
+
+@section{Description}
+
+@app{textbook} is a parser and style sheet processor for textbook documentation
+files.  It reads @val{FileName}, parses it according to the root tag found, and
+applies appropriate style sheets to it, using @val{backend} as output renderer.
+
+Style sheets are written in the textbook stylesheets language, a language
+loosely modelled on @acr{DSSSL}.
+
+The @app{textbook} system features a number of things:
+
+@itemize
+@item multiple input parsers; the main syntax is textbook
+@item a grove system and generalized node tree
+@item a style engine working on the grove system producing formatting objects
+@item multiple formatting object rendering backends (builtin examples: html,
+mandoc, tex, …)
+@end itemize
+
+Usage:
+
+@definitions
+@item{@op{-b} @val{backend}} Choose the output renderer to use.  If not set (or
+given as “auto”) a default one is chosen most appropriate to the format and
+document specification.
+
+@item{@op{-t} @val{style-sheet}} The style sheet to use for processing.  If not
+set (or given as “auto”) a default one is chosen most appropriate to the
+document specification.
+@end definitions
+
+@end section
+
+
+@section{Diagnostics}
+
+The @app{textbook} utility exits 0 on success, and >0 if an error occurs.
+
+@end section
+
+
+@seealso
+@mref{textbook}{7}
+@mref{textbook-style}{7}
+@end seealso
+
+@end manpage

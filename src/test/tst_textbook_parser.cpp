@@ -10,7 +10,7 @@
 
 #include "catch/catch.hpp"
 
-#include <boost/filesystem.hpp>
+#include "fspp/filesystem.hpp"
 
 #include <functional>
 #include <iostream>
@@ -19,7 +19,7 @@
 
 
 using namespace eyestep;
-namespace fs = boost::filesystem;
+namespace fs = filesystem;
 
 namespace {
 Node* with_parser_scan(Grove& grove,
@@ -28,7 +28,7 @@ Node* with_parser_scan(Grove& grove,
   Node* doc_node = grove.make_node(document_class_definition());
 
   std::vector<fs::path> _catalog_path;
-  _catalog_path.push_back("share/sairy/textbook/spec");
+  _catalog_path.push_back("share/textbook/spec");
 
   textbook::GroveBuilder grove_builder(doc_node);
   textbook::VariableEnv vars;
