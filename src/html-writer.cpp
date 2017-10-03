@@ -119,10 +119,12 @@ namespace html {
   }
 
 
+  bool Writer::is_open() const { return _file.is_valid() && _file.is_open(); }
+
   void Writer::open(const fs::path& path)
   {
     _path = path;
-    _file = fs::File(path.string());
+    _file = fs::File(path);
 
     std::error_code ec;
     _file.open(std::ios_base::out | std::ios_base::binary |
@@ -137,7 +139,7 @@ namespace html {
 
   void Writer::write_attrs(const Attrs& attrs)
   {
-    if (_file.is_open()) {
+    if (is_open()) {
       for (const auto& attr : attrs) {
         _file.stream() << " " << attr._key << "='";
         escape_attr_str_to_stream(_file.stream(), attr._value);
@@ -148,7 +150,7 @@ namespace html {
 
   void Writer::entity(const std::string& name)
   {
-    if (_file.is_open()) {
+    if (is_open()) {
       _file.stream() << "&" << name << ";";
     }
   }
@@ -156,7 +158,7 @@ namespace html {
 
   void Writer::open_tag(const std::string& tag, const Attrs& attrs)
   {
-    if (_file.is_open()) {
+    if (is_open()) {
       _file.stream() << "<" << tag;
       write_attrs(attrs);
       _file.stream() << ">";
@@ -166,7 +168,7 @@ namespace html {
 
   void Writer::close_tag(const std::string& tag)
   {
-    if (_file.is_open()) {
+    if (is_open()) {
       _file.stream() << "</" << tag << ">";
     }
   }
@@ -174,7 +176,7 @@ namespace html {
 
   void Writer::empty_tag(const std::string& tag, const Attrs& attrs)
   {
-    if (_file.is_open()) {
+    if (is_open()) {
       _file.stream() << "<" << tag;
       write_attrs(attrs);
       _file.stream() << "/>";
@@ -185,7 +187,7 @@ namespace html {
   void Writer::text_tag(const std::string& tag, const std::string& value,
                         const Attrs& attrs)
   {
-    if (_file.is_open()) {
+    if (is_open()) {
       open_tag(tag, attrs);
       escape_str_to_stream(_file.stream(), value, *_ctx);
       close_tag(tag);
@@ -195,7 +197,7 @@ namespace html {
 
   void Writer::write_text(const std::string& value)
   {
-    if (_file.is_open()) {
+    if (is_open()) {
       escape_str_to_stream(_file.stream(), value, *_ctx);
     }
   }
@@ -203,7 +205,7 @@ namespace html {
 
   void Writer::write_style(const std::string& text)
   {
-    if (_file.is_open()) {
+    if (is_open()) {
       open_tag("style", {{"type", "text/css"}});
       newln();
       _file.stream() << text;
@@ -214,7 +216,7 @@ namespace html {
 
   void Writer::write_link(const std::string& rel, const Attrs& attrs)
   {
-    if (_stream.is_open()) {
+    if (is_open()) {
       auto new_attrs = attrs;
       new_attrs.insert(new_attrs.begin(), {"rel", rel});
 
@@ -225,7 +227,7 @@ namespace html {
 
   void Writer::doctype()
   {
-    if (_file.is_open()) {
+    if (is_open()) {
       _file.stream() << "<!DOCTYPE html PUBLIC '" << _doctype._publicid << "' '"
                      << _doctype._systemid << "'>";
       newln();
@@ -237,7 +239,7 @@ namespace html {
                       const std::string& desc,
                       const std::function<void(std::ostream&)>& style_proc)
   {
-    if (_file.is_open() && !_has_header) {
+    if (is_open() && !_has_header) {
       doctype();
       open_tag("html", {Attr{"xmlns", "http://www.w3.org/1999/xhtml"}});
       newln();
@@ -281,7 +283,7 @@ namespace html {
 
   void Writer::footer()
   {
-    if (_file.is_open()) {
+    if (is_open()) {
       close_tag("body");
       newln();
       close_tag("html");
@@ -291,7 +293,7 @@ namespace html {
 
   void Writer::newln()
   {
-    if (_file.is_open()) {
+    if (is_open()) {
       _file.stream() << std::endl;
     }
   }
