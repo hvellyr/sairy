@@ -1,18 +1,12 @@
 # Copyright (c) 2017 Gregor Klinke
 # All rights reserved.
 
-# if(CMAKE_CXX_COMPILER_ID STREQUAL Clang
-#     OR CMAKE_CXX_COMPILER_ID STREQUAL AppleClang)
-#   set(add_warning_options
-#     -Wno-shift-negative-value
-#   )
-# elseif(MSVC)
-#   set(add_warning_options )
-# endif()
-
-#configure_file(<input> <output>
-#               [COPYONLY] [ESCAPE_QUOTES] [@ONLY]
-#               [NEWLINE_STYLE [UNIX|DOS|WIN32|LF|CRLF] ])
+if(TEXTBOOK_HAVE_WARNING_SHIFT_NEGATIVE_VALUE)
+  set(add_warning_options ${add_warning_options} -Wno-shift-negative-value)
+endif()
+if(TEXTBOOK_HAVE_WARNING_EXPANSION_TO_DEFINED)
+  set(add_warning_options ${add_warning_options} -Wno-expansion-to-defined)
+endif()
 
 add_definitions(-DSEXP_USE_MODULES=1 -DSEXP_USE_BOEHM=0 -DSEXP_USE_DL=1
                 -DSEXP_USE_UTF8_STRINGS=1 -DSEXP_USE_KEYWORDS=1 -DSEXP_USE_QUANTITY=1)

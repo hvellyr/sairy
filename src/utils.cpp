@@ -8,7 +8,7 @@
 
 #include "fspp/filesystem.hpp"
 
-#ifdef HAVE_STD_CODECVT
+#ifdef TEXTBOOK_HAVE_STD_CODECVT
 #include <codecvt>
 #else
 #include <boost/locale/encoding_utf.hpp>
@@ -154,7 +154,7 @@ namespace utils {
 
   //------------------------------------------------------------------------------
 
-#ifdef HAVE_STD_CODECVT
+#ifdef TEXTBOOK_HAVE_STD_CODECVT
   std::u16string utf8_to_u16string(const std::string& str)
   {
     std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> conv16;
