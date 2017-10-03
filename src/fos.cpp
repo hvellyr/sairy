@@ -6,7 +6,7 @@
 #include "fo.hpp"
 #include "sosofo.hpp"
 
-#include <iostream>
+#include <algorithm>
 #include <limits>
 #include <ostream>
 #include <string>
