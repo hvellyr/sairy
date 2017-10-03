@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/hvellyr/textbook.svg?branch=master)](https://travis-ci.org/hvellyr/textbook)
+
 Textbook is an experimental documentation preparation facility.  It will use a
 pluggable and extensible architecture.
 
