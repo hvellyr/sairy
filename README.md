@@ -14,12 +14,16 @@ Development is happening mostly on Mac OS X for now.
 Build and Test
 --------------
 
-  git submodule update --init --recursive
-  mkdir build
-  cd build
-  cmake ..
-  cmake --build .
+```
+git submodule update --init --recursive
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
 
 The unit tests can be executed with ctest:
 
-  ctest -V
+```
+ctest -V
+```
