@@ -3,6 +3,7 @@
 
 #include "html-processor.hpp"
 
+#include "config.hpp"
 #include "estd/memory.hpp"
 #include "fo-processor.hpp"
 #include "fo.hpp"
@@ -31,7 +32,7 @@ namespace eyestep {
 namespace fs = filesystem;
 namespace po = program_options;
 
-const std::string k_TEXTBOOK_GENERATOR = "Textbook HTML Processor";
+const auto k_TEXTBOOK_GENERATOR = std::string{"Textbook HTML Processor vr. "} + TEXTBOOK_VERSION;
 
 
 detail::HtmlRenderContext::HtmlRenderContext()

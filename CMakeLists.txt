@@ -1,11 +1,14 @@
+# -*-cmake-*-
 # Copyright (c) 2017 Gregor Klinke
 # All rights reserved.
 
 cmake_minimum_required(VERSION 2.8.12)
 
 project(Textbook C CXX)
-set(Textbook_VERSION_MAJOR 0)
-set(Textbook_VERSION_MINOR 1)
+set(TEXTBOOK_VERSION_MAJOR 0)
+set(TEXTBOOK_VERSION_MINOR 1)
+set(TEXTBOOK_VERSION "0.1")
+set(TEXTBOOK_COPYRIGHT "2017 (c) Gregor Klinke")
 
 # Enable C++11
 include(CheckCXXCompilerFlag)
@@ -51,7 +54,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 set(CMAKE_MACOSX_RPATH ON)
 
-CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/src/config.hpp.in ${PROJECT_BINARY_DIR}/src/config.hpp)
+configure_file(${PROJECT_SOURCE_DIR}/src/config.hpp.in ${PROJECT_BINARY_DIR}/src/config.hpp)
 
 enable_testing()
 
