@@ -167,6 +167,91 @@ namespace utils {
 
 #else
 
+  std::u32string utf8_to_u32string(const std::string& src)
+  {
+    using namespace std;
+
+    auto tmp = vector<char32_t>{};
+    tmp.reserve(src.length());
+
+    auto i_src = begin(src);
+    auto i_end = end(src);
+
+    while (i_src != i_end) {
+      if (!(*i_src & 0x80)) {
+        tmp.emplace_back(static_cast<char32_t>(*i_src));
+        ++i_src;
+      }
+      else {
+        auto d = char32_t(0xfffd);
+
+        if ((*i_src & 0xe0) == 0xc0) {
+          if (distance(i_src, i_end) >= 1) {
+            d = static_cast<char32_t>(((static_cast<char32_t>(*i_src) & 0x1F) << 6)
+                                      | (static_cast<char32_t>(*next(i_src)) & 0x3F));
+            advance(i_src, 2);
+          }
+          else
+            throw runtime_error("incomplete utf8 character sequence");
+        }
+        else if ((*i_src & 0xF0) == 0xE0) {
+          if (distance(i_src, i_end) >= 2) {
+            d = static_cast<char32_t>(((static_cast<char32_t>(*i_src) & 0x0F) << 12)
+                                      | ((static_cast<char32_t>(*next(i_src)) & 0x3F) << 6)
+                                      | (static_cast<char32_t>(*next(i_src, 2)) & 0x3F));
+            advance(i_src, 3);
+          }
+          else
+            throw runtime_error("incomplete utf8 character sequence");
+        }
+        else if ((*i_src & 0xF8) == 0xF0) {
+          if (distance(i_src, i_end) >= 3) {
+            d = static_cast<char32_t>(((static_cast<char32_t>(*i_src) & 0x07) << 18)
+                                      | ((static_cast<char32_t>(*next(i_src)) & 0x3F) << 12)
+                                      | ((static_cast<char32_t>(*next(i_src, 2)) & 0x3F) <<  6)
+                                      | ((static_cast<char32_t>(*next(i_src, 3)) & 0x3F)));
+            advance(i_src, 4);
+          }
+          else
+            throw runtime_error("incomplete utf8 character sequence");
+        }
+        else {
+          throw runtime_error("invalid utf8 character sequence");
+        }
+
+        tmp.emplace_back(d);
+      }
+    }
+
+    return {begin(tmp), end(tmp)};
+  }
+
+  std::string u32string_to_utf8(const std::u32string& src)
+  {
+    using namespace std;
+
+    auto tmp = vector<char>{};
+    tmp.reserve(src.length());
+
+    for (const auto c : src) {
+      if (c & 0xff80) {
+        if (c & 0xf800) {
+          tmp.emplace_back(static_cast<unsigned char>(0xe0 | (c >> 12)));
+          tmp.emplace_back(static_cast<unsigned char>(0x80 | ((c >> 6) & 0x3f)));
+        }
+        else {
+          tmp.emplace_back(static_cast<unsigned char>(0xc0 | ((c >> 6) & 0x3f)));
+        }
+
+        tmp.emplace_back(static_cast<unsigned char>(0x80 | (c & 0x3f)));
+      }
+      else {
+        tmp.emplace_back(static_cast<unsigned char>(c));
+      }
+    }
+
+    return {begin(tmp), end(tmp)};
+  }
 
 #endif
 
