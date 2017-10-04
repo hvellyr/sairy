@@ -22,10 +22,8 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
-#include <iomanip>
 #include <iostream>
 #include <memory>
-#include <sstream>
 #include <string>
 
 
@@ -41,9 +39,9 @@ std::string to_iso_timestring(std::chrono::system_clock::time_point tp)
 {
   auto t = std::chrono::system_clock::to_time_t(tp);
 
-  std::stringstream ss;
-  ss << std::put_time(std::localtime(&t), "%FT%T%z");
-  return ss.str();
+  char mbstr[128];
+  std::strftime(mbstr, sizeof(mbstr), "%FT%T%z", std::localtime(&t));
+  return {mbstr};
 }
 
 
