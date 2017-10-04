@@ -10,8 +10,6 @@
 
 #ifdef TEXTBOOK_HAVE_STD_CODECVT
 #include <codecvt>
-#else
-#include <boost/locale/encoding_utf.hpp>
 #endif
 
 #include <algorithm>
@@ -155,18 +153,6 @@ namespace utils {
   //------------------------------------------------------------------------------
 
 #ifdef TEXTBOOK_HAVE_STD_CODECVT
-  std::u16string utf8_to_u16string(const std::string& str)
-  {
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> conv16;
-    return conv16.from_bytes(str);
-  }
-
-  std::string u16string_to_utf8(const std::u16string& str)
-  {
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> conv8;
-    return conv8.to_bytes(str);
-  }
-
   std::u32string utf8_to_u32string(const std::string& str)
   {
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv32;
@@ -181,17 +167,7 @@ namespace utils {
 
 #else
 
-  std::u16string utf8_to_u16string(const std::string& str)
-  {
-    using boost::locale::conv::utf_to_utf;
-    return utf_to_utf<char16_t>(str.c_str(), str.c_str() + str.size());
-  }
 
-  std::string u16string_to_utf8(const std::u16string& str)
-  {
-    using boost::locale::conv::utf_to_utf;
-    return utf_to_utf<char>(str.c_str(), str.c_str() + str.size());
-  }
 #endif
 
   std::string to_lower(const std::string& src)

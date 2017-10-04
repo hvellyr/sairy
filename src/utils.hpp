@@ -26,9 +26,6 @@ namespace utils {
   filesystem::path make_relative(const filesystem::path& from,
                                  const filesystem::path& to);
 
-  std::u16string utf8_to_u16string(const std::string& str);
-  std::string u16string_to_utf8(const std::u16string& str);
-
   std::u32string utf8_to_u32string(const std::string& str);
   std::string u32string_to_utf8(const std::u32string& str);
 
