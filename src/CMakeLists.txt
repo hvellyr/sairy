@@ -143,7 +143,8 @@ target_link_libraries(textbook
   textbook-parser
   textbook-utils
   program_options
-  ${fspp_LIBRARIES})
+  ${fspp_LIBRARIES}
+  ${CMAKE_DL_LIBS})
 
 set(textbook_app "${PROJECT_BINARY_DIR}/app")
 set_target_properties(textbook
