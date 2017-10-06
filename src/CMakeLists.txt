@@ -168,5 +168,10 @@ if(POLICY CMP0026)
 cmake_policy(POP)
 endif()
 
+
+install(TARGETS textbook
+        RUNTIME DESTINATION bin)
+
+
 #------------------------------------------------------------------------------
 add_subdirectory(test)

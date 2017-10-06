@@ -40,3 +40,6 @@ target_compile_options(scheme
   PUBLIC ${warning_options} ${add_warning_options} )
 
 
+install(DIRECTORY ../../chibi-scheme/lib/
+        DESTINATION share/textbook/lib/
+        FILES_MATCHING REGEX ".*\\.(scm|sld)$")

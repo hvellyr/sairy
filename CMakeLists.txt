@@ -10,6 +10,9 @@ set(TEXTBOOK_VERSION_MINOR 1)
 set(TEXTBOOK_VERSION "0.1")
 set(TEXTBOOK_COPYRIGHT "2017 (c) Gregor Klinke")
 
+set(TEXTBOOK_DEFAULT_PREFIX "${CMAKE_INSTALL_PREFIX}/share/textbook")
+
+
 # Enable C++11
 include(CheckCXXCompilerFlag)
 if(WIN32)
@@ -65,3 +68,8 @@ feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
 add_subdirectory(third-party)
 add_subdirectory(src)
+
+
+install(DIRECTORY share/textbook
+        DESTINATION share
+        FILES_MATCHING REGEX ".*\\.(scm|sld|spec|cls|sty|tstyle)")

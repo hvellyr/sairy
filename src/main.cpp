@@ -1,6 +1,7 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
+#include "config.hpp"
 #include "estd/memory.hpp"
 #include "nodeclass.hpp"
 #include "nodes.hpp"
@@ -27,7 +28,9 @@
 #include <string>
 
 
+#if !defined(TEXTBOOK_DEFAULT_PREFIX)
 #define TEXTBOOK_DEFAULT_PREFIX "/usr/local/share/textbook"
+#endif
 
 
 namespace fs = eyestep::filesystem;
