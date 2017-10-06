@@ -8,11 +8,17 @@ if(TEXTBOOK_HAVE_WARNING_EXPANSION_TO_DEFINED)
   set(add_warning_options ${add_warning_options} -Wno-expansion-to-defined)
 endif()
 
-add_definitions(-DSEXP_USE_MODULES=1 -DSEXP_USE_BOEHM=0 -DSEXP_USE_DL=1
-                -DSEXP_USE_UTF8_STRINGS=1 -DSEXP_USE_KEYWORDS=1 -DSEXP_USE_QUANTITY=1
-                -DSEXP_INITIAL_HEAP_SIZE=42*1024*1024)
+add_definitions(-DSEXP_USE_MODULES=1
+                -DSEXP_USE_BOEHM=0
+                -DSEXP_USE_UTF8_STRINGS=1
+                -DSEXP_USE_KEYWORDS=1
+                -DSEXP_USE_QUANTITY=1
+                -DSEXP_INITIAL_HEAP_SIZE=42*1024*1024
+                -DSEXP_USE_STATIC_LIBS=1
+                -DSEXP_USE_STATIC_LIBS_NO_INCLUDE=1)
 
-add_library(scheme SHARED
+add_library(scheme STATIC
+  clibs.c
   ../../chibi-scheme/gc.c
   ../../chibi-scheme/sexp.c
   ../../chibi-scheme/bignum.c
@@ -34,71 +40,3 @@ target_compile_options(scheme
   PUBLIC ${warning_options} ${add_warning_options} )
 
 
-set(modules_output "${PROJECT_BINARY_DIR}/scheme/lib")
-
-
-add_library(param MODULE
-  ../../chibi-scheme/lib/srfi/39/param.c
-)
-target_include_directories(param PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../chibi-scheme/include>"
-  ../../chibi-scheme/include)
-target_compile_options(param
-  PUBLIC ${warning_options} )
-target_link_libraries(param
-  scheme)
-
-set(modules_output_srfi39 "${modules_output}/srfi/39")
-file(MAKE_DIRECTORY "${modules_output_srfi39}")
-set_target_properties(param
-  PROPERTIES PREFIX ""
-             SUFFIX ".so"
-             LIBRARY_OUTPUT_DIRECTORY ${modules_output_srfi39}
-             LIBRARY_OUTPUT_DIRECTORY_DEBUG ${modules_output_srfi39}
-             LIBRARY_OUTPUT_DIRECTORY_RELEASE ${modules_output_srfi39})
-
-
-add_library(hash MODULE
-  ../../chibi-scheme/lib/srfi/69/hash.c
-)
-target_include_directories(hash PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../chibi-scheme/include>"
-  ../../chibi-scheme/include)
-target_compile_options(hash
-  PUBLIC ${warning_options} )
-target_link_libraries(hash
-  scheme)
-
-set(modules_output_srfi69 "${modules_output}/srfi/69")
-file(MAKE_DIRECTORY "${modules_output_srfi69}")
-set_target_properties(hash
-  PROPERTIES PREFIX ""
-             SUFFIX ".so"
-             LIBRARY_OUTPUT_DIRECTORY ${modules_output_srfi69}
-             LIBRARY_OUTPUT_DIRECTORY_DEBUG ${modules_output_srfi69}
-             LIBRARY_OUTPUT_DIRECTORY_RELEASE ${modules_output_srfi69})
-
-
-add_library(qsort MODULE
-  ../../chibi-scheme/lib/srfi/95/qsort.c
-)
-target_include_directories(qsort PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../chibi-scheme/include>"
-  ../../chibi-scheme/include)
-target_compile_options(qsort
-  PUBLIC ${warning_options} )
-target_link_libraries(qsort
-  scheme)
-
-set(modules_output_srfi95 "${modules_output}/srfi/95")
-file(MAKE_DIRECTORY "${modules_output_srfi95}")
-set_target_properties(qsort
-  PROPERTIES PREFIX ""
-             SUFFIX ".so"
-             LIBRARY_OUTPUT_DIRECTORY ${modules_output_srfi95}
-             LIBRARY_OUTPUT_DIRECTORY_DEBUG ${modules_output_srfi95}
-             LIBRARY_OUTPUT_DIRECTORY_RELEASE ${modules_output_srfi95})
-
-
-file(COPY ../../chibi-scheme/lib/ DESTINATION "${modules_output}"
-     FILES_MATCHING REGEX ".*\\.(scm|sld)$")
