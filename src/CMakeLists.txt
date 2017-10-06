@@ -6,19 +6,11 @@ set(include_dirs "${PROJECT_SOURCE_DIR}/third-party;${PROJECT_BINARY_DIR}/includ
 
 
 #------------------------------------------------------------------------------
-add_library(textbook-utils
+add_library(textbook-core
   casefold.cpp
   casefold.hpp
   utils.cpp
   utils.hpp
-)
-target_include_directories(textbook-utils PUBLIC "${include_dirs}")
-target_compile_options(textbook-utils
-  PUBLIC ${cxx11_options} ${warning_options})
-
-
-#------------------------------------------------------------------------------
-add_library(grove
   nodeclass.cpp
   nodeclass.hpp
   nodelist.cpp
@@ -27,35 +19,11 @@ add_library(grove
   nodes.hpp
   nodeutils.cpp
   nodeutils.hpp
-)
-target_include_directories(grove PUBLIC "${include_dirs}")
-target_compile_options(grove
-  PUBLIC ${cxx11_options} ${warning_options})
-
-
-#------------------------------------------------------------------------------
-add_library(textbook-parser
   textbook-model.hpp
   textbook-parser.cpp
   textbook-parser.hpp
-)
-target_include_directories(textbook-parser PUBLIC "${include_dirs}")
-target_compile_options(textbook-parser
-  PUBLIC ${cxx11_options} ${warning_options})
-
-
-#------------------------------------------------------------------------------
-add_library(textbook-scanner
   textbook-scanner.cpp
   textbook-scanner.hpp
-)
-target_include_directories(textbook-scanner PUBLIC "${include_dirs}")
-target_compile_options(textbook-scanner
-  PUBLIC ${cxx11_options} ${warning_options})
-
-
-#------------------------------------------------------------------------------
-add_library(fo
   fo.hpp
   fos.cpp
   fos.hpp
@@ -63,55 +31,23 @@ add_library(fo
   sosofo.hpp
   colors.hpp
   colors.cpp
-)
-target_include_directories(fo PUBLIC "${include_dirs}")
-target_compile_options(fo
-  PUBLIC ${cxx11_options} ${warning_options})
-
-
-#------------------------------------------------------------------------------
-add_library(processor-base
   abstract-processor.hpp
   abstract-processor.ipp
   fo-processor.hpp
   processor.hpp
   propstack.cpp
   propstack.hpp
-)
-target_include_directories(processor-base PUBLIC "${include_dirs}")
-target_compile_options(processor-base
-  PUBLIC ${cxx11_options} ${warning_options})
-
-
-#------------------------------------------------------------------------------
-add_library(html-processor
   html-processor.cpp
   html-processor.hpp
   html-writer.cpp
   html-writer.hpp
-)
-target_include_directories(html-processor PUBLIC "${include_dirs}")
-target_compile_options(html-processor
-  PUBLIC ${cxx11_options} ${warning_options})
-
-
-#------------------------------------------------------------------------------
-add_library(tex-processor
   tex-processor.cpp
   tex-processor.hpp
-)
-target_include_directories(tex-processor PUBLIC "${include_dirs}")
-target_compile_options(tex-processor
-  PUBLIC ${cxx11_options} ${warning_options})
-
-
-#------------------------------------------------------------------------------
-add_library(debug-processor
   debug-processor.cpp
   debug-processor.hpp
 )
-target_include_directories(debug-processor PUBLIC "${include_dirs}")
-target_compile_options(debug-processor
+target_include_directories(textbook-core PUBLIC "${include_dirs}")
+target_compile_options(textbook-core
   PUBLIC ${cxx11_options} ${warning_options})
 
 
@@ -131,17 +67,11 @@ add_executable(textbook
   style-engine.hpp
 )
 target_include_directories(textbook PUBLIC "${include_dirs}")
+target_compile_options(textbook
+  PUBLIC ${cxx11_options} ${warning_options})
 target_link_libraries(textbook
-  textbook-scanner
-  debug-processor
-  fo
-  grove
-  html-processor
-  tex-processor
-  processor-base
+  textbook-core
   scheme
-  textbook-parser
-  textbook-utils
   program_options
   ${fspp_LIBRARIES}
   ${CMAKE_DL_LIBS})

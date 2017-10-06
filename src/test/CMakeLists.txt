@@ -13,8 +13,7 @@ add_executable(nodes_test
 target_include_directories(nodes_test PUBLIC "${include_dirs}")
 
 target_link_libraries(nodes_test
-  textbook-utils
-  grove
+  textbook-core
 )
 
 add_test(NAME nodes_test_case
@@ -30,7 +29,7 @@ add_executable(utils_test
 )
 target_include_directories(utils_test PUBLIC "${include_dirs}")
 target_link_libraries(utils_test
-  textbook-utils
+  textbook-core
   ${fspp_LIBRARIES}
 )
 
@@ -48,9 +47,7 @@ add_executable(textbook_test
 target_include_directories(textbook_test PUBLIC "${include_dirs}")
 
 target_link_libraries(textbook_test
-  grove
-  textbook-parser
-  textbook-utils
+  textbook-core
   ${fspp_LIBRARIES}
 )
 
@@ -67,9 +64,7 @@ add_executable(parser_test
 target_include_directories(parser_test PUBLIC "${include_dirs}")
 
 target_link_libraries(parser_test
-  grove
-  textbook-parser
-  textbook-utils
+  textbook-core
   program_options
   ${fspp_LIBRARIES}
 )
