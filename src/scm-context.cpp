@@ -1,6 +1,7 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
+#include "scm-context.hpp"
 #include "colors.hpp"
 #include "estd/memory.hpp"
 #include "fo.hpp"
@@ -8,22 +9,21 @@
 #include "nodelist.hpp"
 #include "nodes.hpp"
 #include "nodeutils.hpp"
-#include "scm-context.hpp"
+#include "propstack.hpp"
 #include "sosofo.hpp"
 #include "utils.hpp"
-#include "propstack.hpp"
 
 #include "chibi/eval.h"
 #include "chibi/sexp.h"
 
 #include "fspp/estd/optional.hpp"
 
+#include <stdarg.h>
 #include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <memory>
 #include <sstream>
-#include <stdarg.h>
 #include <string>
 #include <vector>
 
@@ -35,7 +35,9 @@ namespace fs = filesystem;
 namespace {
   static const Node* s_root_node;
 
-  const Node* root_node() { return s_root_node; }
+  const Node* root_node() {
+    return s_root_node;
+  }
 
 
 #define NODELIST_TAG "<node-list>"
@@ -56,8 +58,7 @@ namespace {
 
   //----------------------------------------------------------------------------
 
-  bool check_exception_p(sexp ctx, sexp res)
-  {
+  bool check_exception_p(sexp ctx, sexp res) {
     sexp_gc_var3(err, sym, tmp);
 
     if (res && sexp_exceptionp(res)) {
@@ -79,52 +80,13 @@ namespace {
   }
 
 
-  int length_spec_tag_p(sexp ctx)
-  {
-    int retv = 0;
-    sexp_gc_var2(ty, nm);
-    sexp_gc_preserve2(ctx, ty, nm);
-
-    ty =
-      sexp_env_ref(ctx, sexp_context_env(ctx),
-                   nm = sexp_intern(ctx, LENGTH_SPEC_TAG, LENGTH_SPEC_TAG_SIZE), SEXP_VOID);
-    if (sexp_typep(ty)) {
-      retv = sexp_type_tag(ty);
-    }
-
-    sexp_gc_release2(ctx);
-
-    return retv;
-  }
-
-
-  int color_tag_p(sexp ctx)
-  {
-    int retv = 0;
-    sexp_gc_var2(ty, nm);
-    sexp_gc_preserve2(ctx, ty, nm);
-
-    ty =
-      sexp_env_ref(ctx, sexp_context_env(ctx),
-                   nm = sexp_intern(ctx, COLOR_TAG, COLOR_TAG_SIZE), SEXP_VOID);
-    if (sexp_typep(ty)) {
-      retv = sexp_type_tag(ty);
-    }
-
-    sexp_gc_release2(ctx);
-
-    return retv;
-  }
-
-
-  int nodelist_tag_p(sexp ctx)
-  {
+  int length_spec_tag_p(sexp ctx) {
     int retv = 0;
     sexp_gc_var2(ty, nm);
     sexp_gc_preserve2(ctx, ty, nm);
 
     ty = sexp_env_ref(ctx, sexp_context_env(ctx),
-                      nm = sexp_intern(ctx, NODELIST_TAG, NODELIST_TAG_SIZE),
+                      nm = sexp_intern(ctx, LENGTH_SPEC_TAG, LENGTH_SPEC_TAG_SIZE),
                       SEXP_VOID);
     if (sexp_typep(ty)) {
       retv = sexp_type_tag(ty);
@@ -136,15 +98,13 @@ namespace {
   }
 
 
-  int sosofo_tag_p(sexp ctx)
-  {
+  int color_tag_p(sexp ctx) {
     int retv = 0;
     sexp_gc_var2(ty, nm);
     sexp_gc_preserve2(ctx, ty, nm);
 
     ty = sexp_env_ref(ctx, sexp_context_env(ctx),
-                      nm = sexp_intern(ctx, SOSOFO_TAG, SOSOFO_TAG_SIZE),
-                      SEXP_VOID);
+                      nm = sexp_intern(ctx, COLOR_TAG, COLOR_TAG_SIZE), SEXP_VOID);
     if (sexp_typep(ty)) {
       retv = sexp_type_tag(ty);
     }
@@ -155,15 +115,47 @@ namespace {
   }
 
 
-  int style_tag_p(sexp ctx)
-  {
+  int nodelist_tag_p(sexp ctx) {
     int retv = 0;
     sexp_gc_var2(ty, nm);
     sexp_gc_preserve2(ctx, ty, nm);
 
     ty = sexp_env_ref(ctx, sexp_context_env(ctx),
-                      nm = sexp_intern(ctx, STYLE_TAG, STYLE_TAG_SIZE),
-                      SEXP_VOID);
+                      nm = sexp_intern(ctx, NODELIST_TAG, NODELIST_TAG_SIZE), SEXP_VOID);
+    if (sexp_typep(ty)) {
+      retv = sexp_type_tag(ty);
+    }
+
+    sexp_gc_release2(ctx);
+
+    return retv;
+  }
+
+
+  int sosofo_tag_p(sexp ctx) {
+    int retv = 0;
+    sexp_gc_var2(ty, nm);
+    sexp_gc_preserve2(ctx, ty, nm);
+
+    ty = sexp_env_ref(ctx, sexp_context_env(ctx),
+                      nm = sexp_intern(ctx, SOSOFO_TAG, SOSOFO_TAG_SIZE), SEXP_VOID);
+    if (sexp_typep(ty)) {
+      retv = sexp_type_tag(ty);
+    }
+
+    sexp_gc_release2(ctx);
+
+    return retv;
+  }
+
+
+  int style_tag_p(sexp ctx) {
+    int retv = 0;
+    sexp_gc_var2(ty, nm);
+    sexp_gc_preserve2(ctx, ty, nm);
+
+    ty = sexp_env_ref(ctx, sexp_context_env(ctx),
+                      nm = sexp_intern(ctx, STYLE_TAG, STYLE_TAG_SIZE), SEXP_VOID);
     if (sexp_typep(ty))
       retv = sexp_type_tag(ty);
 
@@ -173,8 +165,7 @@ namespace {
   }
 
 
-  const Node* singleton_node_from_list(sexp ctx, sexp arg)
-  {
+  const Node* singleton_node_from_list(sexp ctx, sexp arg) {
     if (sexp_check_tag(arg, nodelist_tag_p(ctx))) {
       const NodeList* nl = (const NodeList*)(sexp_cpointer_value(arg));
       if (nl->length() == 1) {
@@ -186,9 +177,7 @@ namespace {
   }
 
 
-  estd::optional<std::string> string_from_symbol_sexp_or_none(sexp ctx,
-                                                              sexp obj)
-  {
+  estd::optional<std::string> string_from_symbol_sexp_or_none(sexp ctx, sexp obj) {
     sexp_gc_var1(str);
     sexp_gc_preserve1(ctx, str);
 
@@ -207,8 +196,7 @@ namespace {
   }
 
 
-  estd::optional<std::string> string_from_keyword_or_none(sexp ctx, sexp obj)
-  {
+  estd::optional<std::string> string_from_keyword_or_none(sexp ctx, sexp obj) {
     sexp_gc_var1(str);
     sexp_gc_preserve1(ctx, str);
 
@@ -227,19 +215,18 @@ namespace {
   sexp make_nodelist(sexp ctx, const NodeList* obj);
 
 
-  sexp make_textbook_exception(sexp ctx, sexp self, const char *ms, sexp ir,
-                               sexp source)
-  {
+  sexp make_textbook_exception(sexp ctx, sexp self, const char* ms, sexp ir,
+                               sexp source) {
     sexp res;
     sexp_gc_var3(sym, str, irr);
     sexp_gc_preserve3(ctx, sym, str, irr);
-    res = sexp_make_exception(ctx,
-                              sym = sexp_intern(ctx, "read", -1), // kind
-                              str = sexp_c_string(ctx, ms, -1), // msg
+    res = sexp_make_exception(ctx, sym = sexp_intern(ctx, "read", -1), // kind
+                              str = sexp_c_string(ctx, ms, -1),        // msg
                               ((sexp_pairp(ir) || sexp_nullp(ir))
-                               ? ir : (irr = sexp_list1(ctx, ir))), // irritants
-                              self, // procedure
-                              source); // source
+                                 ? ir
+                                 : (irr = sexp_list1(ctx, ir))), // irritants
+                              self,                              // procedure
+                              source);                           // source
     sexp_gc_release3(ctx);
     return res;
   }
@@ -247,15 +234,13 @@ namespace {
 
   //------------------------------------------------------------------------------
 
-  sexp make_length_spec(sexp ctx, fo::LengthSpec ls)
-  {
+  sexp make_length_spec(sexp ctx, fo::LengthSpec ls) {
     sexp_gc_var4(ty, tmp, result, nm);
     sexp_gc_preserve4(ctx, ty, tmp, result, nm);
 
-    ty =
-      sexp_env_ref(ctx, sexp_context_env(ctx),
-                   nm = sexp_intern(ctx, LENGTH_SPEC_TAG, LENGTH_SPEC_TAG_SIZE),
-                   SEXP_VOID);
+    ty = sexp_env_ref(ctx, sexp_context_env(ctx),
+                      nm = sexp_intern(ctx, LENGTH_SPEC_TAG, LENGTH_SPEC_TAG_SIZE),
+                      SEXP_VOID);
 
     if (sexp_typep(ty)) {
       result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
@@ -273,8 +258,7 @@ namespace {
   }
 
 
-  sexp free_length_spec(sexp ctx, sexp self, sexp_sint_t n, sexp ls_arg)
-  {
+  sexp free_length_spec(sexp ctx, sexp self, sexp_sint_t n, sexp ls_arg) {
     const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(ls_arg));
     delete ls;
 
@@ -283,8 +267,7 @@ namespace {
   }
 
 
-  sexp func_displace_space_p(sexp ctx, sexp self, sexp_sint_t n, sexp q)
-  {
+  sexp func_displace_space_p(sexp ctx, sexp self, sexp_sint_t n, sexp q) {
     if (sexp_check_tag(q, length_spec_tag_p(ctx))) {
       const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(q));
       if (ls->_spec_type == fo::kDisplay)
@@ -295,8 +278,7 @@ namespace {
   }
 
 
-  sexp func_inline_space_p(sexp ctx, sexp self, sexp_sint_t n, sexp q)
-  {
+  sexp func_inline_space_p(sexp ctx, sexp self, sexp_sint_t n, sexp q) {
     if (sexp_check_tag(q, length_spec_tag_p(ctx))) {
       const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(q));
       if (ls->_spec_type == fo::kInline)
@@ -307,8 +289,7 @@ namespace {
   }
 
 
-  fo::Unit to_quantity_unit(sexp ctx, sexp val)
-  {
+  fo::Unit to_quantity_unit(sexp ctx, sexp val) {
     auto val_unit = sexp_quantity_unit(val);
 
     if (auto unitv = string_from_symbol_sexp_or_none(ctx, val_unit)) {
@@ -342,8 +323,7 @@ namespace {
   const double pt_ratio = 0.0003527778;
 
 
-  bool is_convertible_to_pt_unit(fo::Unit unit)
-  {
+  bool is_convertible_to_pt_unit(fo::Unit unit) {
     switch (unit) {
     case fo::k_cm:
     case fo::k_m:
@@ -357,31 +337,26 @@ namespace {
     }
   }
 
-  sexp func_make_length_spec(sexp ctx, sexp self, sexp_sint_t n,
-                             sexp type_arg,
+  sexp func_make_length_spec(sexp ctx, sexp self, sexp_sint_t n, sexp type_arg,
                              sexp val_arg, sexp min_arg, sexp max_arg,
-                             sexp conditionalp_arg, sexp priority_arg)
-  {
+                             sexp conditionalp_arg, sexp priority_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
     result = SEXP_VOID;
 
     if (!sexp_quantityp(val_arg)) {
-      result =
-        sexp_user_exception(ctx, self, "val: not a quantity", val_arg);
+      result = sexp_user_exception(ctx, self, "val: not a quantity", val_arg);
     }
     else if (!sexp_quantityp(min_arg)) {
-      result =
-        sexp_user_exception(ctx, self, "min: not a quantity", min_arg);
+      result = sexp_user_exception(ctx, self, "min: not a quantity", min_arg);
     }
     else if (!sexp_booleanp(conditionalp_arg)) {
       result =
         sexp_user_exception(ctx, self, "conditional?: not a bool", conditionalp_arg);
     }
     else if (!sexp_fixnump(priority_arg)) {
-      result =
-        sexp_user_exception(ctx, self, "priority: not a integer", priority_arg);
+      result = sexp_user_exception(ctx, self, "priority: not a integer", priority_arg);
     }
     else {
       auto type = fo::kDimen;
@@ -396,20 +371,18 @@ namespace {
             sexp_user_exception(ctx, self, "type: not supported space type", type_arg);
       }
       else {
-        result =
-          sexp_user_exception(ctx, self, "type: not a symbol", type_arg);
+        result = sexp_user_exception(ctx, self, "type: not a symbol", type_arg);
       }
 
 
       auto val_unit = to_quantity_unit(ctx, val_arg);
       auto min_unit = to_quantity_unit(ctx, min_arg);
 
-      auto result_unit = is_convertible_to_pt_unit(val_unit) == is_convertible_to_pt_unit(min_unit)
-        ? fo::k_pt
-        : val_unit;
-      auto norm_factor = is_convertible_to_pt_unit(val_unit)
-        ? pt_ratio
-        : 1.0;
+      auto result_unit =
+        is_convertible_to_pt_unit(val_unit) == is_convertible_to_pt_unit(min_unit)
+          ? fo::k_pt
+          : val_unit;
+      auto norm_factor = is_convertible_to_pt_unit(val_unit) ? pt_ratio : 1.0;
 
       // the number is normalized to 'm' unit; rebase it to 'pt'
       double val = sexp_quantity_normalize_to_double(ctx, val_arg) / norm_factor;
@@ -423,32 +396,26 @@ namespace {
           maxv = sexp_quantity_normalize_to_double(ctx, max_arg) / norm_factor;
         }
         else {
-          result = sexp_user_exception(ctx, self,
-                                         "unit: max argument unit is not convertible to value unit",
-                                       max_arg);
+          result = sexp_user_exception(
+            ctx, self, "unit: max argument unit is not convertible to value unit",
+            max_arg);
         }
       }
       else if (auto symbv = string_from_symbol_sexp_or_none(ctx, max_arg)) {
         if (*symbv == "inf")
           maxv = std::numeric_limits<double>::infinity();
         else
-          result =
-            sexp_user_exception(ctx, self, "max: symbol must be 'inf", max_arg);
+          result = sexp_user_exception(ctx, self, "max: symbol must be 'inf", max_arg);
       }
       else {
-        result =
-          sexp_user_exception(ctx, self, "max: not a quantity or real", max_arg);
+        result = sexp_user_exception(ctx, self, "max: not a quantity or real", max_arg);
       }
 
       if (result == SEXP_VOID) {
-        result = make_length_spec(ctx,
-                                  fo::LengthSpec(type,
-                                                 val,
-                                                 result_unit,
-                                                 minv,
-                                                 maxv,
-                                                 bool(sexp_unbox_boolean(conditionalp_arg)),
-                                                 sexp_unbox_fixnum(priority_arg)));
+        result =
+          make_length_spec(ctx, fo::LengthSpec(type, val, result_unit, minv, maxv,
+                                               bool(sexp_unbox_boolean(conditionalp_arg)),
+                                               sexp_unbox_fixnum(priority_arg)));
       }
     }
 
@@ -458,8 +425,7 @@ namespace {
   }
 
 
-  void init_length_spec_functions(sexp ctx)
-  {
+  void init_length_spec_functions(sexp ctx) {
     sexp_gc_var3(nm, ty, op);
     sexp_gc_preserve3(ctx, nm, ty, op);
 
@@ -470,10 +436,9 @@ namespace {
     sexp_env_cell_define(ctx, sexp_context_env(ctx),
                          nm = sexp_intern(ctx, LENGTH_SPEC_TAG, LENGTH_SPEC_TAG_SIZE), ty,
                          NULL);
-    op =
-      sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "length-spec?", -1), ty);
-    sexp_env_define(ctx, sexp_context_env(ctx),
-                    nm = sexp_intern(ctx, "length-spec?", -1), op);
+    op = sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "length-spec?", -1), ty);
+    sexp_env_define(ctx, sexp_context_env(ctx), nm = sexp_intern(ctx, "length-spec?", -1),
+                    op);
 
     // register functions
     sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-length-spec", 6,
@@ -489,8 +454,7 @@ namespace {
 
   //------------------------------------------------------------------------------
 
-  sexp func_gi(sexp ctx, sexp self, sexp n, sexp node_arg)
-  {
+  sexp func_gi(sexp ctx, sexp self, sexp n, sexp node_arg) {
     sexp_gc_var2(result, str);
     sexp_gc_preserve2(ctx, result, str);
 
@@ -498,12 +462,10 @@ namespace {
 
     if (const Node* node = singleton_node_from_list(ctx, node_arg)) {
       result =
-        sexp_string_to_symbol(ctx,
-                              str = sexp_c_string(ctx, node->gi().c_str(), -1));
+        sexp_string_to_symbol(ctx, str = sexp_c_string(ctx, node->gi().c_str(), -1));
     }
     else {
-      result =
-        sexp_user_exception(ctx, self, "not a singleton node-list", node_arg);
+      result = sexp_user_exception(ctx, self, "not a singleton node-list", node_arg);
     }
 
     sexp_gc_release2(ctx);
@@ -512,8 +474,7 @@ namespace {
   }
 
 
-  sexp func_parent(sexp ctx, sexp self, sexp n, sexp node_arg)
-  {
+  sexp func_parent(sexp ctx, sexp self, sexp n, sexp node_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -525,8 +486,7 @@ namespace {
       }
     }
     else {
-      result =
-        sexp_user_exception(ctx, self, "not a singleton node-list", node_arg);
+      result = sexp_user_exception(ctx, self, "not a singleton node-list", node_arg);
     }
 
     sexp_gc_release1(ctx);
@@ -535,8 +495,7 @@ namespace {
   }
 
 
-  sexp func_class(sexp ctx, sexp self, sexp n, sexp node_arg)
-  {
+  sexp func_class(sexp ctx, sexp self, sexp n, sexp node_arg) {
     sexp_gc_var2(result, str);
     sexp_gc_preserve2(ctx, result, str);
 
@@ -545,13 +504,10 @@ namespace {
     if (const Node* node = singleton_node_from_list(ctx, node_arg)) {
       result =
         sexp_string_to_symbol(ctx,
-                              str =
-                                sexp_c_string(ctx, node->classname().c_str(),
-                                              -1));
+                              str = sexp_c_string(ctx, node->classname().c_str(), -1));
     }
     else {
-      result =
-        sexp_user_exception(ctx, self, "not a singleton node-list", node_arg);
+      result = sexp_user_exception(ctx, self, "not a singleton node-list", node_arg);
     }
 
     sexp_gc_release2(ctx);
@@ -561,9 +517,9 @@ namespace {
 
 
   sexp func_node_property(sexp ctx, sexp self, sexp_sint_t n, sexp propname_arg,
-                          sexp node_arg)
-  {
-    struct SexpPropVisitor {
+                          sexp node_arg) {
+    struct SexpPropVisitor
+    {
       using return_type = sexp;
 
       sexp _ctx;
@@ -572,36 +528,33 @@ namespace {
       sexp _default_value;
 
       SexpPropVisitor(sexp ctx, sexp self, sexp propname, sexp default_value)
-        : _ctx(ctx), _self(self), _propname(propname),
-          _default_value(default_value)
-      {
-      }
+        : _ctx(ctx)
+        , _self(self)
+        , _propname(propname)
+        , _default_value(default_value) {}
 
-      sexp operator()(const Undefined&)
-      {
+      sexp operator()(const Undefined&) {
         if (_default_value != SEXP_VOID) {
           return _default_value;
         }
         else {
-          return sexp_user_exception(_ctx, _self, "Undefined property",
-                                     _propname);
+          return sexp_user_exception(_ctx, _self, "Undefined property", _propname);
         }
       }
 
-      sexp operator()(const int& val) { return sexp_make_integer(_ctx, val); }
+      sexp operator()(const int& val) {
+        return sexp_make_integer(_ctx, val);
+      }
 
-      sexp operator()(const std::string& val)
-      {
+      sexp operator()(const std::string& val) {
         return sexp_c_string(_ctx, val.c_str(), -1);
       }
 
-      sexp operator()(Node* nd)
-      {
+      sexp operator()(Node* nd) {
         return make_nodelist(_ctx, new NodeList(Nodes{nd}));
       }
 
-      sexp operator()(const Nodes& nl)
-      {
+      sexp operator()(const Nodes& nl) {
         return make_nodelist(_ctx, new NodeList(nl));
       }
     };
@@ -662,8 +615,7 @@ namespace {
         }
       }
       else {
-        result =
-          sexp_user_exception(ctx, self, "not a singleton node-list", node_arg);
+        result = sexp_user_exception(ctx, self, "not a singleton node-list", node_arg);
       }
     }
 
@@ -673,15 +625,13 @@ namespace {
   }
 
 
-  sexp func_grove_root(sexp ctx, sexp self, sexp_sint_t n)
-  {
+  sexp func_grove_root(sexp ctx, sexp self, sexp_sint_t n) {
     return make_nodelist(ctx, new NodeList(ConstNodes{root_node()}));
   }
 
 
   sexp func_named_node(sexp ctx, sexp self, sexp_sint_t n, sexp string_arg,
-                       sexp nnl_arg)
-  {
+                       sexp nnl_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -730,8 +680,7 @@ namespace {
   }
 
 
-  void init_node_functions(sexp ctx)
-  {
+  void init_node_functions(sexp ctx) {
     sexp_define_foreign(ctx, sexp_context_env(ctx), "gi", 1, &func_gi);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "parent", 1, &func_parent);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "class", 1, &func_class);
@@ -740,23 +689,19 @@ namespace {
                             SEXP_PROC_VARIADIC, (sexp_proc1)&func_node_property,
                             SEXP_TRUE);
 
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "grove-root", 0,
-                        &func_grove_root);
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "named-node", 2,
-                        &func_named_node);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "grove-root", 0, &func_grove_root);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "named-node", 2, &func_named_node);
   }
 
 
   //----------------------------------------------------------------------------
 
-  sexp make_nodelist(sexp ctx, const NodeList* obj)
-  {
+  sexp make_nodelist(sexp ctx, const NodeList* obj) {
     sexp_gc_var4(ty, tmp, result, nm);
     sexp_gc_preserve4(ctx, ty, tmp, result, nm);
 
     ty = sexp_env_ref(ctx, sexp_context_env(ctx),
-                      nm = sexp_intern(ctx, NODELIST_TAG, NODELIST_TAG_SIZE),
-                      SEXP_VOID);
+                      nm = sexp_intern(ctx, NODELIST_TAG, NODELIST_TAG_SIZE), SEXP_VOID);
 
     if (sexp_typep(ty)) {
       result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
@@ -774,8 +719,7 @@ namespace {
   }
 
 
-  sexp free_nodelist(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp free_nodelist(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
     delete nl;
 
@@ -784,14 +728,12 @@ namespace {
   }
 
 
-  sexp func_empty_node_list(sexp ctx, sexp self, sexp_sint_t n)
-  {
+  sexp func_empty_node_list(sexp ctx, sexp self, sexp_sint_t n) {
     return make_nodelist(ctx, new NodeList);
   }
 
 
-  sexp func_node_list_empty_p(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_node_list_empty_p(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -811,8 +753,7 @@ namespace {
   }
 
 
-  sexp func_node_list_length(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_node_list_length(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -830,8 +771,7 @@ namespace {
   }
 
 
-  sexp func_node_list_first(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_node_list_first(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -850,8 +790,7 @@ namespace {
   }
 
 
-  sexp func_node_list_rest(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_node_list_rest(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -869,8 +808,8 @@ namespace {
   }
 
 
-  sexp func_node_list_equal(sexp ctx, sexp self, sexp_sint_t n, sexp nl0_arg, sexp nl1_arg)
-  {
+  sexp func_node_list_equal(sexp ctx, sexp self, sexp_sint_t n, sexp nl0_arg,
+                            sexp nl1_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -908,8 +847,7 @@ namespace {
   }
 
 
-  sexp func_node_list_ctor(sexp ctx, sexp self, sexp_sint_t n, sexp args_arg)
-  {
+  sexp func_node_list_ctor(sexp ctx, sexp self, sexp_sint_t n, sexp args_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -940,8 +878,7 @@ namespace {
 
 
   sexp make_nodelist_on_axis(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg,
-                             NodeList::Kind kind)
-  {
+                             NodeList::Kind kind) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -949,8 +886,7 @@ namespace {
       result = make_nodelist(ctx, new NodeList(node, kind));
     }
     else {
-      result =
-        sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
+      result = sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
     }
 
     sexp_gc_release1(ctx);
@@ -959,44 +895,37 @@ namespace {
   }
 
 
-  sexp func_children(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_children(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     return make_nodelist_on_axis(ctx, self, n, nl_arg, NodeList::k_children);
   }
 
 
-  sexp func_ancestors(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_ancestors(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     return make_nodelist_on_axis(ctx, self, n, nl_arg, NodeList::k_ancestors);
   }
 
 
-  sexp func_descendants(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_descendants(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     return make_nodelist_on_axis(ctx, self, n, nl_arg, NodeList::k_descendants);
   }
 
 
-  sexp func_siblings(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_siblings(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     return make_nodelist_on_axis(ctx, self, n, nl_arg, NodeList::k_siblings);
   }
 
 
-  sexp func_follow(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_follow(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     return make_nodelist_on_axis(ctx, self, n, nl_arg, NodeList::k_follow);
   }
 
 
-  sexp func_preced(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_preced(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     return make_nodelist_on_axis(ctx, self, n, nl_arg, NodeList::k_preced);
   }
 
 
-  sexp func_abs_first_sibling_p(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_abs_first_sibling_p(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -1012,8 +941,7 @@ namespace {
       }
     }
     else {
-      result =
-        sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
+      result = sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
     }
 
     sexp_gc_release1(ctx);
@@ -1022,9 +950,7 @@ namespace {
   }
 
 
-  sexp func_abs_first_element_sibling_p(sexp ctx, sexp self, sexp_sint_t n,
-                                        sexp nl_arg)
-  {
+  sexp func_abs_first_element_sibling_p(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     using namespace std;
 
     sexp_gc_var1(result);
@@ -1036,18 +962,16 @@ namespace {
       const Node* parent = node->parent();
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
-        auto i_find = find_if(begin(siblings), end(siblings),
-                              [&node](const Node* lnd) {
-                                return lnd->node_class() == element_class_definition();
-                              });
+        auto i_find = find_if(begin(siblings), end(siblings), [&node](const Node* lnd) {
+          return lnd->node_class() == element_class_definition();
+        });
         if (i_find != siblings.end()) {
           result = *i_find == node ? SEXP_TRUE : SEXP_FALSE;
         }
       }
     }
     else {
-      result =
-        sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
+      result = sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
     }
 
     sexp_gc_release1(ctx);
@@ -1056,8 +980,7 @@ namespace {
   }
 
 
-  sexp func_abs_last_sibling_p(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_abs_last_sibling_p(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -1075,8 +998,7 @@ namespace {
       }
     }
     else {
-      result =
-        sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
+      result = sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
     }
 
     sexp_gc_release1(ctx);
@@ -1085,9 +1007,7 @@ namespace {
   }
 
 
-  sexp func_abs_last_element_sibling_p(sexp ctx, sexp self, sexp_sint_t n,
-                                       sexp nl_arg)
-  {
+  sexp func_abs_last_element_sibling_p(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     using namespace std;
 
     sexp_gc_var1(result);
@@ -1101,18 +1021,16 @@ namespace {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
         std::reverse(siblings.begin(), siblings.end());
 
-        auto i_find = find_if(begin(siblings), end(siblings),
-                              [&node](Node* lnd) {
-                                return lnd && lnd->node_class() == element_class_definition();
-                              });
+        auto i_find = find_if(begin(siblings), end(siblings), [&node](Node* lnd) {
+          return lnd && lnd->node_class() == element_class_definition();
+        });
         if (i_find != siblings.end()) {
           result = *i_find == node ? SEXP_TRUE : SEXP_FALSE;
         }
       }
     }
     else {
-      result =
-        sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
+      result = sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
     }
 
     sexp_gc_release1(ctx);
@@ -1122,8 +1040,7 @@ namespace {
 
 
   sexp func_elements_with_id(sexp ctx, sexp self, sexp_sint_t n, sexp id_arg,
-                             sexp nl_arg)
-  {
+                             sexp nl_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -1144,8 +1061,7 @@ namespace {
         }
       }
       else {
-        result =
-          sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
+        result = sexp_user_exception(ctx, self, "not a singleton node-list", nl_arg);
       }
     }
     else {
@@ -1162,8 +1078,7 @@ namespace {
   }
 
 
-  sexp func_data(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg)
-  {
+  sexp func_data(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -1192,23 +1107,20 @@ namespace {
   }
 
 
-  void init_nodelist_functions(sexp ctx)
-  {
+  void init_nodelist_functions(sexp ctx) {
     sexp_gc_var3(nm, ty, op);
     sexp_gc_preserve3(ctx, nm, ty, op);
 
     // register qobject type
-    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "node-list", -1),
-                              &free_nodelist);
+    ty =
+      sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "node-list", -1), &free_nodelist);
     sexp_env_cell_define(ctx, sexp_context_env(ctx),
-                         nm = sexp_intern(ctx, NODELIST_TAG, NODELIST_TAG_SIZE),
-                         ty, NULL);
+                         nm = sexp_intern(ctx, NODELIST_TAG, NODELIST_TAG_SIZE), ty,
+                         NULL);
 
-    op =
-      sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "node-list?", -1),
-                               ty);
-    sexp_env_define(ctx, sexp_context_env(ctx),
-                    nm = sexp_intern(ctx, "node-list?", -1), op);
+    op = sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "node-list?", -1), ty);
+    sexp_env_define(ctx, sexp_context_env(ctx), nm = sexp_intern(ctx, "node-list?", -1),
+                    op);
 
     sexp_define_foreign(ctx, sexp_context_env(ctx), "empty-node-list", 0,
                         &func_empty_node_list);
@@ -1225,27 +1137,21 @@ namespace {
     sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list=?", 2,
                         &func_node_list_equal);
 
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "children", 1,
-                        &func_children);
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "siblings", 1,
-                        &func_siblings);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "children", 1, &func_children);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "siblings", 1, &func_siblings);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "follow", 1, &func_follow);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "preced", 1, &func_preced);
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "ancestors", 1,
-                        &func_ancestors);
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "descendants", 1,
-                        &func_descendants);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "ancestors", 1, &func_ancestors);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "descendants", 1, &func_descendants);
 
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "absolute-first-sibling?",
-                        1, &func_abs_first_sibling_p);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "absolute-first-sibling?", 1,
+                        &func_abs_first_sibling_p);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "absolute-last-sibling?", 1,
                         &func_abs_last_sibling_p);
 
-    sexp_define_foreign(ctx, sexp_context_env(ctx),
-                        "absolute-first-element-sibling?", 1,
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "absolute-first-element-sibling?", 1,
                         &func_abs_first_element_sibling_p);
-    sexp_define_foreign(ctx, sexp_context_env(ctx),
-                        "absolute-last-element-sibling?", 1,
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "absolute-last-element-sibling?", 1,
                         &func_abs_last_element_sibling_p);
 
     sexp_define_foreign(ctx, sexp_context_env(ctx), "elements-with-id", 2,
@@ -1259,14 +1165,12 @@ namespace {
 
   //----------------------------------------------------------------------------
 
-  sexp make_sosofo(sexp ctx, const Sosofo* obj)
-  {
+  sexp make_sosofo(sexp ctx, const Sosofo* obj) {
     sexp_gc_var4(ty, tmp, result, nm);
     sexp_gc_preserve4(ctx, ty, tmp, result, nm);
 
     ty = sexp_env_ref(ctx, sexp_context_env(ctx),
-                      nm = sexp_intern(ctx, SOSOFO_TAG, SOSOFO_TAG_SIZE),
-                      SEXP_VOID);
+                      nm = sexp_intern(ctx, SOSOFO_TAG, SOSOFO_TAG_SIZE), SEXP_VOID);
 
     if (sexp_typep(ty)) {
       result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
@@ -1284,8 +1188,7 @@ namespace {
   }
 
 
-  sexp free_sosofo(sexp ctx, sexp self, sexp_sint_t n, sexp sosofo_arg)
-  {
+  sexp free_sosofo(sexp ctx, sexp self, sexp_sint_t n, sexp sosofo_arg) {
     const Sosofo* sosofo = (const Sosofo*)(sexp_cpointer_value(sosofo_arg));
     delete sosofo;
 
@@ -1294,14 +1197,12 @@ namespace {
   }
 
 
-  sexp func_empty_sosofo(sexp ctx, sexp self, sexp_sint_t n)
-  {
+  sexp func_empty_sosofo(sexp ctx, sexp self, sexp_sint_t n) {
     return make_sosofo(ctx, new Sosofo());
   }
 
 
-  sexp func_sosofo_append(sexp ctx, sexp self, sexp_sint_t n, sexp sosofo_arg)
-  {
+  sexp func_sosofo_append(sexp ctx, sexp self, sexp_sint_t n, sexp sosofo_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -1331,22 +1232,17 @@ namespace {
   }
 
 
-  void init_sosofo_functions(sexp ctx)
-  {
+  void init_sosofo_functions(sexp ctx) {
     sexp_gc_var3(nm, ty, op);
     sexp_gc_preserve3(ctx, nm, ty, op);
 
     // register qobject type
-    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "sosofo", -1),
-                              &free_sosofo);
+    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "sosofo", -1), &free_sosofo);
     sexp_env_cell_define(ctx, sexp_context_env(ctx),
-                         nm = sexp_intern(ctx, SOSOFO_TAG, SOSOFO_TAG_SIZE), ty,
-                         NULL);
+                         nm = sexp_intern(ctx, SOSOFO_TAG, SOSOFO_TAG_SIZE), ty, NULL);
 
-    op =
-      sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "sosofo?", -1), ty);
-    sexp_env_define(ctx, sexp_context_env(ctx),
-                    nm = sexp_intern(ctx, "sosofo?", -1), op);
+    op = sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "sosofo?", -1), ty);
+    sexp_env_define(ctx, sexp_context_env(ctx), nm = sexp_intern(ctx, "sosofo?", -1), op);
 
     sexp_define_foreign(ctx, sexp_context_env(ctx), "empty-sosofo", 0,
                         &func_empty_sosofo);
@@ -1359,14 +1255,12 @@ namespace {
 
   //----------------------------------------------------------------------------
 
-  sexp make_style(sexp ctx, const fo::PropertySpecs* obj)
-  {
+  sexp make_style(sexp ctx, const fo::PropertySpecs* obj) {
     sexp_gc_var3(ty, result, nm);
     sexp_gc_preserve3(ctx, ty, result, nm);
 
     ty = sexp_env_ref(ctx, sexp_context_env(ctx),
-                      nm = sexp_intern(ctx, STYLE_TAG, STYLE_TAG_SIZE),
-                      SEXP_VOID);
+                      nm = sexp_intern(ctx, STYLE_TAG, STYLE_TAG_SIZE), SEXP_VOID);
 
     if (sexp_typep(ty)) {
       result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
@@ -1384,9 +1278,9 @@ namespace {
   }
 
 
-  sexp free_style(sexp ctx, sexp self, sexp_sint_t n, sexp style_arg)
-  {
-    const fo::PropertySpecs* style = (const fo::PropertySpecs*)(sexp_cpointer_value(style_arg));
+  sexp free_style(sexp ctx, sexp self, sexp_sint_t n, sexp style_arg) {
+    const fo::PropertySpecs* style =
+      (const fo::PropertySpecs*)(sexp_cpointer_value(style_arg));
     delete style;
 
     sexp_cpointer_value(style_arg) = nullptr;
@@ -1395,9 +1289,7 @@ namespace {
 
 
   estd::optional<fo::PropertySpec>
-  evaluate_keyword_parameter(sexp ctx, sexp self, const std::string& key,
-                             sexp expr)
-  {
+  evaluate_keyword_parameter(sexp ctx, sexp self, const std::string& key, sexp expr) {
     estd::optional<fo::PropertySpec> result;
 
     sexp_gc_var1(excep);
@@ -1420,12 +1312,8 @@ namespace {
     else if (sexp_quantityp(expr)) {
       auto unit = to_quantity_unit(ctx, expr);
       // the number is normalized to 'm' unit; rebase it to 'pt'
-      auto norm_factor = is_convertible_to_pt_unit(unit)
-        ? pt_ratio
-        : 1.0;
-      auto result_unit = is_convertible_to_pt_unit(unit)
-        ? fo::k_pt
-        : unit;
+      auto norm_factor = is_convertible_to_pt_unit(unit) ? pt_ratio : 1.0;
+      auto result_unit = is_convertible_to_pt_unit(unit) ? fo::k_pt : unit;
       auto val = sexp_quantity_normalize_to_double(ctx, expr) / norm_factor;
 
       result = fo::PropertySpec(key, fo::LengthSpec(fo::kDimen, val, result_unit));
@@ -1452,32 +1340,26 @@ namespace {
   }
 
 
-  sexp make_fo(sexp ctx, sexp self, const std::string& fo_class,
-               sexp fo_class_arg,
-               const fo::PropertySpecs& props, sexp principal_port,
-               sexp source)
-  {
+  sexp make_fo(sexp ctx, sexp self, const std::string& fo_class, sexp fo_class_arg,
+               const fo::PropertySpecs& props, sexp principal_port, sexp source) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
     result = SEXP_NULL;
 
     if (sexp_check_tag(principal_port, sosofo_tag_p(ctx))) {
-      const Sosofo* sosofo =
-        (const Sosofo*)(sexp_cpointer_value(principal_port));
+      const Sosofo* sosofo = (const Sosofo*)(sexp_cpointer_value(principal_port));
 
       std::shared_ptr<IFormattingObject> fo(
         fo::create_fo_by_classname(std::string("#") + fo_class, props, *sosofo));
 
       if (!fo) {
         result =
-          make_textbook_exception(ctx, self, "Unknown fo-class: ", fo_class_arg,
-                                  source);
+          make_textbook_exception(ctx, self, "Unknown fo-class: ", fo_class_arg, source);
       }
       else if (!fo->accepts_fo(*sosofo)) {
         result =
-          make_textbook_exception(ctx, self, "bad FO nesting", fo_class_arg,
-                                  source);
+          make_textbook_exception(ctx, self, "bad FO nesting", fo_class_arg, source);
       }
       else
         result = make_sosofo(ctx, new Sosofo(fo));
@@ -1494,9 +1376,8 @@ namespace {
   }
 
 
-  sexp func_make_fo(sexp ctx, sexp self, sexp_sint_t n, sexp fo_class_arg,
-                    sexp args_arg, sexp source)
-  {
+  sexp func_make_fo(sexp ctx, sexp self, sexp_sint_t n, sexp fo_class_arg, sexp args_arg,
+                    sexp source) {
     sexp_gc_var2(result, obj);
     sexp_gc_preserve2(ctx, result, obj);
 
@@ -1505,8 +1386,7 @@ namespace {
 
     auto fo_class = string_from_symbol_sexp_or_none(ctx, fo_class_arg);
     if (!fo_class) {
-      result = make_textbook_exception(ctx, self, "not a symbol", fo_class_arg,
-                                       source);
+      result = make_textbook_exception(ctx, self, "not a symbol", fo_class_arg, source);
     }
 
     fo::PropertySpecs props;
@@ -1535,17 +1415,15 @@ namespace {
               }
             }
             else {
-              auto prop =
-                evaluate_keyword_parameter(ctx, self, *key, ref);
+              auto prop = evaluate_keyword_parameter(ctx, self, *key, ref);
               if (prop) {
                 props.set(*prop);
               }
             }
           }
           else {
-            result =
-              make_textbook_exception(ctx, self, "value missing for keyword", ref,
-                                      source);
+            result = make_textbook_exception(ctx, self, "value missing for keyword", ref,
+                                             source);
             break;
           }
         }
@@ -1561,9 +1439,8 @@ namespace {
         auto key = string_from_keyword_or_none(ctx, ref);
 
         if (key) {
-          result = make_textbook_exception(ctx, self,
-                                           "unexpeced keyword in make body", ref,
-                                           source);
+          result = make_textbook_exception(ctx, self, "unexpeced keyword in make body",
+                                           ref, source);
           break;
         }
         obj = ref;
@@ -1583,8 +1460,7 @@ namespace {
   }
 
 
-  sexp func_make_style(sexp ctx, sexp self, sexp_sint_t n, sexp args_arg)
-  {
+  sexp func_make_style(sexp ctx, sexp self, sexp_sint_t n, sexp args_arg) {
     sexp_gc_var2(result, obj);
     sexp_gc_preserve2(ctx, result, obj);
 
@@ -1622,14 +1498,12 @@ namespace {
             }
           }
           else {
-            result =
-              sexp_user_exception(ctx, self, "value missing for keyword", ref);
+            result = sexp_user_exception(ctx, self, "value missing for keyword", ref);
             break;
           }
         }
         else {
-          result = sexp_user_exception(ctx, self,
-                                       "unexpeced keyword in style list", ref);
+          result = sexp_user_exception(ctx, self, "unexpeced keyword in style list", ref);
           break;
         }
 
@@ -1650,33 +1524,26 @@ namespace {
   }
 
 
-  void init_make_functions(sexp ctx)
-  {
+  void init_make_functions(sexp ctx) {
     sexp_gc_var3(nm, ty, op);
     sexp_gc_preserve3(ctx, nm, ty, op);
 
     // register qobject type
-    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "style", -1),
-                              &free_style);
+    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "style", -1), &free_style);
 
     sexp_env_cell_define(ctx, sexp_context_env(ctx),
-                         nm = sexp_intern(ctx, STYLE_TAG, STYLE_TAG_SIZE), ty,
-                         NULL);
+                         nm = sexp_intern(ctx, STYLE_TAG, STYLE_TAG_SIZE), ty, NULL);
     op = sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "style?", -1), ty);
-    sexp_env_define(ctx, sexp_context_env(ctx),
-                    nm = sexp_intern(ctx, "style?", -1), op);
+    sexp_env_define(ctx, sexp_context_env(ctx), nm = sexp_intern(ctx, "style?", -1), op);
 
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-fo", 3,
-                        &func_make_fo);
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "make-style", 1,
-                        &func_make_style);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-fo", 3, &func_make_fo);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "make-style", 1, &func_make_style);
   }
 
 
   //----------------------------------------------------------------------------
 
-  sexp free_color(sexp ctx, sexp self, sexp_sint_t n, sexp co_arg)
-  {
+  sexp free_color(sexp ctx, sexp self, sexp_sint_t n, sexp co_arg) {
     const fo::Color* co = (const fo::Color*)(sexp_cpointer_value(co_arg));
     delete co;
 
@@ -1690,8 +1557,7 @@ namespace {
     sexp_gc_preserve3(ctx, ty, result, nm);
 
     ty = sexp_env_ref(ctx, sexp_context_env(ctx),
-                      nm = sexp_intern(ctx, COLOR_TAG, COLOR_TAG_SIZE),
-                      SEXP_VOID);
+                      nm = sexp_intern(ctx, COLOR_TAG, COLOR_TAG_SIZE), SEXP_VOID);
 
     if (sexp_typep(ty)) {
       result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
@@ -1726,8 +1592,8 @@ namespace {
       result = make_color(ctx, fo::make_rgb_color(redv, greenv, bluev));
     }
     else
-      result = sexp_user_exception(ctx, self,
-                                   "3 reals expected for 'rgb' color space", args_arg);
+      result = sexp_user_exception(ctx, self, "3 reals expected for 'rgb' color space",
+                                   args_arg);
 
     sexp_gc_release2(ctx);
 
@@ -1754,8 +1620,8 @@ namespace {
       result = make_color(ctx, fo::make_cmyk_color(cyanv, magentav, yellowv, blackv));
     }
     else
-      result = sexp_user_exception(ctx, self,
-                                   "4 reals expected for 'cmyk' color space", args_arg);
+      result = sexp_user_exception(ctx, self, "4 reals expected for 'cmyk' color space",
+                                   args_arg);
 
     sexp_gc_release2(ctx);
 
@@ -1769,10 +1635,8 @@ namespace {
 
     if (sexp_numberp(args_arg)) {
       float val = (sexp_fixnump(args_arg)
-                   ? sexp_unbox_fixnum(args_arg)
-                   : (sexp_flonump(args_arg)
-                      ? sexp_flonum_value(args_arg)
-                       : 0.0));
+                     ? sexp_unbox_fixnum(args_arg)
+                     : (sexp_flonump(args_arg) ? sexp_flonum_value(args_arg) : 0.0));
       result = make_color(ctx, fo::make_gray_color(val));
     }
     else
@@ -1800,8 +1664,7 @@ namespace {
   }
 
 
-  sexp func_color(sexp ctx, sexp self, sexp_sint_t n, sexp space_arg, sexp args_arg)
-  {
+  sexp func_color(sexp ctx, sexp self, sexp_sint_t n, sexp space_arg, sexp args_arg) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
@@ -1832,25 +1695,19 @@ namespace {
   }
 
 
-  void init_color_functions(sexp ctx)
-  {
+  void init_color_functions(sexp ctx) {
     sexp_gc_var3(nm, ty, op);
     sexp_gc_preserve3(ctx, nm, ty, op);
 
     // register qobject type
-    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "color", -1),
-                              &free_color);
+    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "color", -1), &free_color);
     sexp_env_cell_define(ctx, sexp_context_env(ctx),
-                         nm = sexp_intern(ctx, COLOR_TAG, COLOR_TAG_SIZE), ty,
-                         NULL);
+                         nm = sexp_intern(ctx, COLOR_TAG, COLOR_TAG_SIZE), ty, NULL);
 
-    op =
-      sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "color?", -1), ty);
-    sexp_env_define(ctx, sexp_context_env(ctx),
-                    nm = sexp_intern(ctx, "color?", -1), op);
+    op = sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "color?", -1), ty);
+    sexp_env_define(ctx, sexp_context_env(ctx), nm = sexp_intern(ctx, "color?", -1), op);
 
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "color", 2,
-                        &func_color);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "color", 2, &func_color);
 
     sexp_gc_release3(ctx);
   }
@@ -1858,9 +1715,7 @@ namespace {
 
   //----------------------------------------------------------------------------
 
-  std::vector<fs::path>
-  prepare_tstyle_search_path(const std::string& prefix_path)
-  {
+  std::vector<fs::path> prepare_tstyle_search_path(const std::string& prefix_path) {
     using namespace std;
 
     auto pfx_paths = utils::split_paths(prefix_path);
@@ -1868,17 +1723,13 @@ namespace {
     tstyle_paths.resize(pfx_paths.size());
 
     transform(begin(pfx_paths), end(pfx_paths), back_inserter(tstyle_paths),
-              [](const fs::path& path)
-              {
-                return path / "tstyle";
-              });
+              [](const fs::path& path) { return path / "tstyle"; });
     return tstyle_paths;
   }
 
   estd::optional<fs::path> search_in_path(const std::string& resource,
                                           const fs::path& parent_path,
-                                          const std::string& prefix_path)
-  {
+                                          const std::string& prefix_path) {
     std::vector<fs::path> paths(prepare_tstyle_search_path(prefix_path));
     paths.insert(paths.begin(), parent_path);
 
@@ -1892,8 +1743,7 @@ namespace {
     return {};
   }
 
-  sexp func_use(sexp ctx, sexp self, sexp_sint_t n, sexp res_arg)
-  {
+  sexp func_use(sexp ctx, sexp self, sexp_sint_t n, sexp res_arg) {
     sexp_gc_var4(result, source, nm, nm2);
     sexp_gc_preserve4(ctx, result, source, nm, nm2);
 
@@ -1901,21 +1751,19 @@ namespace {
 
     auto resource = string_from_symbol_sexp_or_none(ctx, res_arg);
     if (resource) {
-      sexp path = sexp_env_ref(ctx, sexp_context_env(ctx),
-                               nm = sexp_intern(ctx, "%style-parent-path%", -1),
-                               SEXP_VOID);
+      sexp path =
+        sexp_env_ref(ctx, sexp_context_env(ctx),
+                     nm = sexp_intern(ctx, "%style-parent-path%", -1), SEXP_VOID);
       if (sexp_stringp(path)) {
         sexp tstyle_paths =
           sexp_env_ref(ctx, sexp_context_env(ctx),
-                       nm2 = sexp_intern(ctx, "%textbook-prefix-paths%", -1),
-                       SEXP_VOID);
+                       nm2 = sexp_intern(ctx, "%textbook-prefix-paths%", -1), SEXP_VOID);
         auto tstyle_paths_str = sexp_stringp(tstyle_paths)
                                   ? std::string(sexp_string_data(tstyle_paths))
                                   : std::string();
 
-        auto src_path =
-          search_in_path(*resource, std::string(sexp_string_data(path)),
-                         tstyle_paths_str);
+        auto src_path = search_in_path(*resource, std::string(sexp_string_data(path)),
+                                       tstyle_paths_str);
         if (src_path) {
           auto src_str = src_path->string();
           source = sexp_c_string(ctx, src_str.c_str(), src_str.size());
@@ -1926,8 +1774,7 @@ namespace {
         }
       }
       else {
-        result =
-          sexp_user_exception(ctx, self, "%style-parent-path% not set?", path);
+        result = sexp_user_exception(ctx, self, "%style-parent-path% not set?", path);
       }
     }
     else {
@@ -1939,16 +1786,14 @@ namespace {
     return result;
   }
 
-  void init_registry_functions(sexp ctx)
-  {
+  void init_registry_functions(sexp ctx) {
     sexp_define_foreign(ctx, sexp_context_env(ctx), "use", 1, &func_use);
   }
 
 
   //----------------------------------------------------------------------------
 
-  void init_builtins(sexp ctx)
-  {
+  void init_builtins(sexp ctx) {
     init_registry_functions(ctx);
     init_length_spec_functions(ctx);
     init_nodelist_functions(ctx);
@@ -1961,23 +1806,23 @@ namespace {
 
   //----------------------------------------------------------------------------
 
-  class SchemeContext : public ISchemeContext {
+  class SchemeContext : public ISchemeContext
+  {
     sexp _ctx;
 
   public:
-    SchemeContext() : _ctx(nullptr) {}
+    SchemeContext()
+      : _ctx(nullptr) {}
 
 
-    ~SchemeContext()
-    {
+    ~SchemeContext() {
       if (_ctx != nullptr) {
         sexp_destroy_context(_ctx);
       }
     }
 
 
-    void initialize(const std::vector<fs::path>& module_paths) override
-    {
+    void initialize(const std::vector<fs::path>& module_paths) override {
       _ctx = sexp_make_eval_context(NULL, NULL, NULL, 0, 0);
 
       sexp_gc_var1(tmp);
@@ -1988,9 +1833,7 @@ namespace {
       for (const auto& path : module_paths) {
         std::string libpath = path.string();
 
-        sexp_add_module_directory(_ctx,
-                                  tmp =
-                                    sexp_c_string(_ctx, libpath.c_str(), -1),
+        sexp_add_module_directory(_ctx, tmp = sexp_c_string(_ctx, libpath.c_str(), -1),
                                   SEXP_FALSE);
       }
 
@@ -2001,8 +1844,7 @@ namespace {
     }
 
 
-    bool load_module_file(const fs::path& script_file) override
-    {
+    bool load_module_file(const fs::path& script_file) override {
       sexp_gc_var1(res);
       sexp_gc_preserve1(_ctx, res);
 
@@ -2015,10 +1857,8 @@ namespace {
     }
 
 
-    bool load_script(const fs::path& script_file) override
-    {
-      define_variable("%style-parent-path%",
-                      script_file.parent_path().string());
+    bool load_script(const fs::path& script_file) override {
+      define_variable("%style-parent-path%", script_file.parent_path().string());
 
       sexp_gc_var2(obj1, res);
       sexp_gc_preserve2(_ctx, obj1, res);
@@ -2032,9 +1872,7 @@ namespace {
     }
 
 
-    void define_variable(const std::string& name,
-                         const std::string& value) override
-    {
+    void define_variable(const std::string& name, const std::string& value) override {
       sexp_gc_var2(sym, val);
       sexp_gc_preserve2(_ctx, sym, val);
 
@@ -2046,8 +1884,7 @@ namespace {
     }
 
 
-    std::unique_ptr<Sosofo> process_root_node(const Node* root_node) override
-    {
+    std::unique_ptr<Sosofo> process_root_node(const Node* root_node) override {
       std::unique_ptr<Sosofo> result;
 
       sexp_gc_var1(res);
@@ -2055,8 +1892,7 @@ namespace {
 
       s_root_node = root_node;
       res =
-        sexp_eval_string(_ctx, "(process-node-list (children (grove-root)))",
-                         -1, NULL);
+        sexp_eval_string(_ctx, "(process-node-list (children (grove-root)))", -1, NULL);
       // res = sexp_eval_string(_ctx, "(foo (grove-root))", -1, NULL);
 
       check_exception_p(_ctx, res);
@@ -2078,8 +1914,7 @@ namespace {
 } // ns anon
 
 
-std::unique_ptr<ISchemeContext> create_scheme_context()
-{
+std::unique_ptr<ISchemeContext> create_scheme_context() {
   return ::estd::make_unique<SchemeContext>();
 }
 

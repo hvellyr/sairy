@@ -3,15 +3,15 @@
 
 #pragma once
 
-#include "fo.hpp"
 #include "abstract-processor.hpp"
-#include "html-writer.hpp"
+#include "fo.hpp"
 #include "html-types.hpp"
+#include "html-writer.hpp"
 
 #include "program_options/program_options.hpp"
 
-#include "fspp/filesystem.hpp"
 #include "fspp/estd/optional.hpp"
+#include "fspp/filesystem.hpp"
 
 #include <list>
 #include <map>
@@ -31,37 +31,40 @@ class IFoProcessor;
 
 
 namespace detail {
-  enum CapsStyle {
+  enum CapsStyle
+  {
     k_normal_caps,
     k_lower_caps,
     k_upper_caps,
     k_small_caps,
   };
 
+
   using CssAttrMap = std::map<std::string, std::string>;
 
-  struct StyleAttrs {
-    StyleAttrs() : _caps(k_normal_caps) {}
+  struct StyleAttrs
+  {
+    StyleAttrs()
+      : _caps(k_normal_caps) {}
 
     StyleAttrs(CapsStyle caps, const CssAttrMap& map)
-      : _caps(caps), _css_map(map)
-    {
-    }
+      : _caps(caps)
+      , _css_map(map) {}
 
     CapsStyle _caps;
     CssAttrMap _css_map;
   };
 
-  using RefRegistry = std::unordered_map<std::string, std::string>;
-  using PortTuple =
-    std::tuple<std::unique_ptr<html::Writer>, filesystem::path>;
 
-  class HtmlRenderContext {
+  using RefRegistry = std::unordered_map<std::string, std::string>;
+  using PortTuple = std::tuple<std::unique_ptr<html::Writer>, filesystem::path>;
+
+  class HtmlRenderContext
+  {
     std::unique_ptr<html::Writer> _port;
     filesystem::path _path;
     std::list<PortTuple> _ports;
     RefRegistry _ref_registry;
-    // std::list<Sosofo> _foot_notes;
     std::list<StyleAttrs> _styles_stack;
 
   public:
@@ -70,8 +73,7 @@ namespace detail {
     html::Writer& port();
     filesystem::path current_path();
 
-    void push_port(std::unique_ptr<html::Writer> port,
-                   const filesystem::path& path);
+    void push_port(std::unique_ptr<html::Writer> port, const filesystem::path& path);
     void pop_port();
 
     CapsStyle capsstyle();
@@ -84,7 +86,8 @@ namespace detail {
 } // ns detail
 
 
-class HtmlProcessor : public AbstractProcessor<HtmlProcessor> {
+class HtmlProcessor : public AbstractProcessor<HtmlProcessor>
+{
   detail::HtmlRenderContext _ctx;
   html::detail::StyleCtx _style_ctx;
   bool _verbose;
@@ -114,6 +117,5 @@ public:
 
   filesystem::path css_file() const;
 };
-
 
 } // ns eyestep

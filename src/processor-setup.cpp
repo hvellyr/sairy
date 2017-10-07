@@ -1,8 +1,8 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
-#include "estd/memory.hpp"
 #include "processor-setup.hpp"
+#include "estd/memory.hpp"
 #include "processor.hpp"
 #include "utils.hpp"
 
@@ -12,10 +12,10 @@
 
 #include "program_options/program_options.hpp"
 
-#include <map>
-#include <string>
 #include <cassert>
 #include <iostream>
+#include <map>
+#include <string>
 
 
 namespace eyestep {
@@ -30,20 +30,19 @@ namespace {
   ProcessorFactoryMap s_processor_factory_map;
 
   template <typename T>
-  void register_processor_factory()
-  {
+  void register_processor_factory() {
     T processor;
     const auto id = processor.proc_id();
 
     const auto i_find = s_processor_factory_map.find(id);
     assert(i_find == s_processor_factory_map.end());
-    s_processor_factory_map[id] =
-      [](const po::variables_map& args) { return ::estd::make_unique<T>(args); };
+    s_processor_factory_map[id] = [](const po::variables_map& args) {
+      return ::estd::make_unique<T>(args);
+    };
   }
 
 
-  ProcessorFactoryMap& processor_registry()
-  {
+  ProcessorFactoryMap& processor_registry() {
     if (s_processor_factory_map.empty()) {
       register_processor_factory<DebugProcessor>();
       register_processor_factory<HtmlProcessor>();
@@ -55,8 +54,7 @@ namespace {
 } // anon ns
 
 
-po::options_description processor_options()
-{
+po::options_description processor_options() {
   std::vector<std::string> procs;
   std::vector<po::options_description> options;
 
@@ -83,9 +81,7 @@ po::options_description processor_options()
 }
 
 std::unique_ptr<eyestep::IProcessor>
-make_processor_for_file(const std::string& proc_id,
-                        const po::variables_map& args)
-{
+make_processor_for_file(const std::string& proc_id, const po::variables_map& args) {
   const auto& registry = processor_registry();
 
   const auto i_processor_factory = registry.find(proc_id);

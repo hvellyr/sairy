@@ -14,7 +14,8 @@ namespace eyestep {
 
 class SosofoIterator;
 
-class Sosofo {
+class Sosofo
+{
 public:
   /*! Creates an empty sosofo */
   Sosofo();

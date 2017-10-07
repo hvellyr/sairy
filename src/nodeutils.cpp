@@ -2,9 +2,9 @@
 // All rights reserved.
 
 #include "nodeutils.hpp"
-#include "nodes.hpp"
-#include "nodelist.hpp"
 #include "nodeclass.hpp"
+#include "nodelist.hpp"
+#include "nodes.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -15,9 +15,8 @@ namespace eyestep {
 
 //------------------------------------------------------------------------------
 
-TraverseRecursion node_traverse(const Node* root,
-                                const TraverseNodeVisitor& functor, int depth)
-{
+TraverseRecursion node_traverse(const Node* root, const TraverseNodeVisitor& functor,
+                                int depth) {
   TraverseRecursion rec = functor(root, depth);
 
   if (rec == TraverseRecursion::k_recurse) {
@@ -36,8 +35,7 @@ TraverseRecursion node_traverse(const Node* root,
 
 
 namespace {
-  std::ostream& escape(std::ostream& os, const std::string& str)
-  {
+  std::ostream& escape(std::ostream& os, const std::string& str) {
     for (const auto c : str) {
       switch (c) {
       case '\n':
@@ -60,39 +58,37 @@ namespace {
     return os;
   }
 
-  class JsPrinter {
+
+  class JsPrinter
+  {
     std::ostream& _os;
     bool _do_indent;
 
   public:
-    JsPrinter(std::ostream& os, bool do_indent) : _os(os), _do_indent(do_indent)
-    {
-    }
+    JsPrinter(std::ostream& os, bool do_indent)
+      : _os(os)
+      , _do_indent(do_indent) {}
 
-    const JsPrinter& newln() const
-    {
+    const JsPrinter& newln() const {
       if (_do_indent) {
         _os << std::endl;
       }
       return *this;
     }
 
-    const JsPrinter& indent(int depth, int ofs) const
-    {
+    const JsPrinter& indent(int depth, int ofs) const {
       if (_do_indent) {
         _os << std::string(depth * 4 + ofs * 2, ' ');
       }
       return *this;
     }
 
-    const JsPrinter& sep() const
-    {
+    const JsPrinter& sep() const {
       _os << ",";
       return newln();
     }
 
-    const JsPrinter& open_obj() const
-    {
+    const JsPrinter& open_obj() const {
       _os << "{";
       if (_do_indent) {
         _os << " ";
@@ -100,32 +96,27 @@ namespace {
       return *this;
     }
 
-    const JsPrinter& close_obj() const
-    {
+    const JsPrinter& close_obj() const {
       _os << "}";
       return *this;
     }
 
-    const JsPrinter& open_array() const
-    {
+    const JsPrinter& open_array() const {
       _os << "[";
       return newln();
     }
 
-    const JsPrinter& close_array() const
-    {
+    const JsPrinter& close_array() const {
       _os << "]";
       return *this;
     }
 
-    const JsPrinter& empty_array() const
-    {
+    const JsPrinter& empty_array() const {
       _os << "[]";
       return *this;
     }
 
-    const JsPrinter& print_attrnm(const std::string& nm) const
-    {
+    const JsPrinter& print_attrnm(const std::string& nm) const {
       _os << "\"" << nm << "\":";
       if (_do_indent) {
         _os << " ";
@@ -133,35 +124,40 @@ namespace {
       return *this;
     }
 
-    const JsPrinter& print_value(const std::string& val) const
-    {
+    const JsPrinter& print_value(const std::string& val) const {
       _os << "\"";
       escape(_os, val) << "\"";
       return *this;
     }
 
-    const JsPrinter& print_value(int val) const
-    {
+    const JsPrinter& print_value(int val) const {
       _os << val;
       return *this;
     }
   };
 
-  void serialize(const JsPrinter& pp, const Node* nd, int depth)
-  {
-    struct SerializeVisitor {
+
+  void serialize(const JsPrinter& pp, const Node* nd, int depth) {
+    struct SerializeVisitor
+    {
       using return_type = void;
 
       JsPrinter _pp;
       int _depth;
 
-      SerializeVisitor(const JsPrinter& pp, int depth) : _pp(pp), _depth(depth) {}
+      SerializeVisitor(const JsPrinter& pp, int depth)
+        : _pp(pp)
+        , _depth(depth) {}
 
       void operator()(const Undefined&) {}
 
-      void operator()(const int& val) { _pp.print_value(val); }
+      void operator()(const int& val) {
+        _pp.print_value(val);
+      }
 
-      void operator()(const std::string& val) { _pp.print_value(val); }
+      void operator()(const std::string& val) {
+        _pp.print_value(val);
+      }
 
       void operator()(const Node* nd) {
         _pp.newln();
@@ -189,16 +185,14 @@ namespace {
       }
     };
 
-  pp.indent(depth, 0).open_obj().print_attrnm("type").print_value(
-      nd->classname());
+    pp.indent(depth, 0).open_obj().print_attrnm("type").print_value(nd->classname());
 
     if (nd->node_class() == element_class_definition()) {
       pp.sep().indent(depth, 1).print_attrnm("gi").print_value(nd->gi());
     }
 
     for (const auto& prop : nd->properties()) {
-      if (prop.first != CommonProps::k_gi &&
-          prop.first != CommonProps::k_parent &&
+      if (prop.first != CommonProps::k_gi && prop.first != CommonProps::k_parent &&
           prop.first != CommonProps::k_auto_id) {
         pp.sep().indent(depth, 1).print_attrnm(prop.first);
 
@@ -216,9 +210,7 @@ namespace {
 } // ns anon
 
 
-void serialize(std::ostream& os, const Node* nd, bool pretty_printing,
-               int depth)
-{
+void serialize(std::ostream& os, const Node* nd, bool pretty_printing, int depth) {
   auto pp = JsPrinter{os, pretty_printing};
   serialize(pp, nd, depth);
 }
@@ -226,26 +218,26 @@ void serialize(std::ostream& os, const Node* nd, bool pretty_printing,
 
 //------------------------------------------------------------------------------
 
-std::string node_data(const Node* base_nd)
-{
+std::string node_data(const Node* base_nd) {
   std::stringstream ss;
 
-  node_traverse(base_nd, [&ss](const Node* nd, int /*depth*/) {
-    ss << nd->property<std::string>(CommonProps::k_data);
+  node_traverse(base_nd,
+                [&ss](const Node* nd, int /*depth*/) {
+                  ss << nd->property<std::string>(CommonProps::k_data);
 
-    auto key = nd->property<std::string>(CommonProps::k_data_attr);
-    if (auto named_attr = nd->attribute(key)) {
-      ss << node_data(named_attr);
-    }
-    return TraverseRecursion::k_recurse;
-  }, 0);
+                  auto key = nd->property<std::string>(CommonProps::k_data_attr);
+                  if (auto named_attr = nd->attribute(key)) {
+                    ss << node_data(named_attr);
+                  }
+                  return TraverseRecursion::k_recurse;
+                },
+                0);
 
   return ss.str();
 }
 
 
-ConstNodes elements_with_id(const Grove* grove, const std::string& id)
-{
+ConstNodes elements_with_id(const Grove* grove, const std::string& id) {
   ConstNodes nl_result;
 
   for (const auto& nd : grove->nodes()) {
@@ -260,8 +252,7 @@ ConstNodes elements_with_id(const Grove* grove, const std::string& id)
 }
 
 
-Node* desc_element(const Node* nd)
-{
+Node* desc_element(const Node* nd) {
   const Nodes& nodes = nd->property<Nodes>(CommonProps::k_children);
   for (auto& child : nodes) {
     if (child->gi() == CommonProps::k_desc) {

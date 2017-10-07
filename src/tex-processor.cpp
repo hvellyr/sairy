@@ -40,8 +40,8 @@ namespace {
   const std::string k_cm = "cm";
   const std::string k_in = "in";
 
-  std::string unit_name(fo::Unit un)
-  {
+
+  std::string unit_name(fo::Unit un) {
     switch (un) {
     case fo::k_pt:
       return k_pt;
@@ -61,8 +61,7 @@ namespace {
   }
 
 
-  fo::Unit unit_str2unit(const std::string& str)
-  {
+  fo::Unit unit_str2unit(const std::string& str) {
     if (str == k_pt)
       return fo::k_pt;
     else if (str == k_m)
@@ -78,8 +77,7 @@ namespace {
   }
 
 
-  std::string dimen2str(const fo::LengthSpec& ls)
-  {
+  std::string dimen2str(const fo::LengthSpec& ls) {
     double max_inf = std::numeric_limits<double>::infinity();
 
     std::stringstream ss;
@@ -101,9 +99,8 @@ namespace {
   }
 
 
-  std::string crop_paper_size(
-    const std::tuple<fo::LengthSpec, fo::LengthSpec, std::string>& dimen)
-  {
+  std::string
+  crop_paper_size(const std::tuple<fo::LengthSpec, fo::LengthSpec, std::string>& dimen) {
     if (std::get<2>(dimen) == "user") {
       std::stringstream ss;
       ss << "width=" << dimen2str(std::get<0>(dimen))
@@ -115,16 +112,14 @@ namespace {
   }
 
 
-  std::string exact_dimen2str(const fo::LengthSpec& ls)
-  {
+  std::string exact_dimen2str(const fo::LengthSpec& ls) {
     std::stringstream ss;
     ss << ls._value << unit_name(ls._unit);
     return ss.str();
   }
 
 
-  std::string max_dimen2str(const fo::LengthSpec& ls)
-  {
+  std::string max_dimen2str(const fo::LengthSpec& ls) {
     double max_inf = std::numeric_limits<double>::infinity();
 
     std::stringstream ss;
@@ -137,8 +132,7 @@ namespace {
 
 
   void escape_str_to_stream(std::ostream& os, const std::string& str,
-                            tex_detail::TexStyleContext& ctx)
-  {
+                            tex_detail::TexStyleContext& ctx) {
     std::u32string str32 = utils::utf8_to_u32string(str);
 
     for (const auto c : str32) {
@@ -192,17 +186,37 @@ namespace {
         os << "\\textbullet{}";
         break;
 
-      case 0x2013: os << "--"; break;
-      case 0x201c: os << "\\ldqo{}"; break;
-      case 0x201d: os << "\\rdqo{}"; break;
-      case 0x2018: os << "\\lsqo{}"; break;
-      case 0x2019: os << "\\rsqo{}"; break;
-      case 0x2026: os << "\\hellip{}"; break;
+      case 0x2013:
+        os << "--";
+        break;
+      case 0x201c:
+        os << "\\ldqo{}";
+        break;
+      case 0x201d:
+        os << "\\rdqo{}";
+        break;
+      case 0x2018:
+        os << "\\lsqo{}";
+        break;
+      case 0x2019:
+        os << "\\rsqo{}";
+        break;
+      case 0x2026:
+        os << "\\hellip{}";
+        break;
 
-      case 0x21d2: os << "$\\Rightarrow{}$"; break;
-      case 0x21a6: os << "$\\mapsto{}$"; break;
-      case 0x2261: os << "$\\equiv{}$"; break;
-      case 0x22a3: os << "$\\dashv{}$"; break;
+      case 0x21d2:
+        os << "$\\Rightarrow{}$";
+        break;
+      case 0x21a6:
+        os << "$\\mapsto{}$";
+        break;
+      case 0x2261:
+        os << "$\\equiv{}$";
+        break;
+      case 0x22a3:
+        os << "$\\dashv{}$";
+        break;
 
       case '\n':
         switch (ctx._wrapstyle) {
@@ -242,9 +256,8 @@ namespace {
   }
 
 
-  void vspace(TexProcessor* po, const IFormattingObject* fo,
-              const char* property_name, const char* keep_prop_name)
-  {
+  void vspace(TexProcessor* po, const IFormattingObject* fo, const char* property_name,
+              const char* keep_prop_name) {
     auto nobreak = po->property_or_none<bool>(fo, keep_prop_name);
     auto val = po->property_or_none<fo::LengthSpec>(fo, property_name);
 
@@ -263,8 +276,7 @@ namespace {
   }
 
 
-  void enc_fontsize(TexProcessor* po, const IFormattingObject* fo)
-  {
+  void enc_fontsize(TexProcessor* po, const IFormattingObject* fo) {
     auto fs = po->property(fo, "font-size", fo::LengthSpec(fo::kDimen, 10.0, fo::k_pt));
     auto ls = po->property(fo, "line-spacing",
                            fo::LengthSpec(fo::kDimen, fs._value * 1.2, fo::k_pt));
@@ -281,8 +293,7 @@ namespace {
     else if (fontcaps == "small-caps")
       po->style_ctx()._capsstyle = tex_detail::k_small_caps;
 
-    po->stream() << "\\fns{" << dimen2str(fs)
-                 << "}{" << dimen2str(ls) << "}";
+    po->stream() << "\\fns{" << dimen2str(fs) << "}{" << dimen2str(ls) << "}";
 
     if (auto fw = po->property_or_none<std::string>(fo, "font-weight")) {
       if (*fw == "bold")
@@ -311,52 +322,44 @@ namespace {
   }
 
 
-  void enc_paraprops(TexProcessor* po, const IFormattingObject* fo)
-  {
+  void enc_paraprops(TexProcessor* po, const IFormattingObject* fo) {
     double max_inf = std::numeric_limits<double>::infinity();
 
     auto ind = dimen2str(po->property(fo, "first-line-start-indent",
                                       fo::LengthSpec(fo::kInline, 0.0, fo::k_pt)));
-    auto ext = dimen2str(po->property(fo, "last-line-end-indent",
-                                      fo::LengthSpec(fo::kInline, 1.0, fo::k_em, 1.0, max_inf)));
-    auto sind = dimen2str(po->property(fo, "start-indent",
-                                       fo::LengthSpec(fo::kInline, 0.0, fo::k_pt)));
-    auto eind = dimen2str(po->property(fo, "end-indent",
-                                       fo::LengthSpec(fo::kInline, 0.0, fo::k_pt)));
+    auto ext =
+      dimen2str(po->property(fo, "last-line-end-indent",
+                             fo::LengthSpec(fo::kInline, 1.0, fo::k_em, 1.0, max_inf)));
+    auto sind = dimen2str(
+      po->property(fo, "start-indent", fo::LengthSpec(fo::kInline, 0.0, fo::k_pt)));
+    auto eind = dimen2str(
+      po->property(fo, "end-indent", fo::LengthSpec(fo::kInline, 0.0, fo::k_pt)));
 
-    po->stream() << "\\ps{" << ind << "}{" << ext << "}{" << sind << "}{"
-                 << eind << "}";
+    po->stream() << "\\ps{" << ind << "}{" << ext << "}{" << sind << "}{" << eind << "}";
   }
 
 
-  void enc_color(TexProcessor* po, const fo::Color co)
-  {
+  void enc_color(TexProcessor* po, const fo::Color co) {
     switch (co._space) {
     case fo::kRGB:
-      po->stream() << "\\color[rgb]{"
-                   << co._rgb._red << ","
-                   << co._rgb._green << ","
+      po->stream() << "\\color[rgb]{" << co._rgb._red << "," << co._rgb._green << ","
                    << co._rgb._blue << "}";
       break;
     case fo::kCMYK:
-      po->stream() << "\\color[cmyk]{"
-                   << co._cmyk._cyan << ","
-                   << co._cmyk._magenta << ","
-                   << co._cmyk._yellow << ","
-                   << co._cmyk._black << "}";
+      po->stream() << "\\color[cmyk]{" << co._cmyk._cyan << "," << co._cmyk._magenta
+                   << "," << co._cmyk._yellow << "," << co._cmyk._black << "}";
       break;
     case fo::kGray:
-      po->stream() << "\\color[gray]{"
-                   << co._gray << "}";
+      po->stream() << "\\color[gray]{" << co._gray << "}";
       break;
     }
   }
 
 
-  class TexLiteralFoProcessor : public IFoProcessor<TexProcessor> {
+  class TexLiteralFoProcessor : public IFoProcessor<TexProcessor>
+  {
   public:
-    void render(TexProcessor* po, const IFormattingObject* fo) const override
-    {
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
       auto str = static_cast<const fo::Literal*>(fo)->text();
 
@@ -365,12 +368,10 @@ namespace {
         escape_str_to_stream(po->stream(), str, po->style_ctx());
         break;
       case tex_detail::k_lower_caps:
-        escape_str_to_stream(po->stream(), utils::to_lower(str),
-                             po->style_ctx());
+        escape_str_to_stream(po->stream(), utils::to_lower(str), po->style_ctx());
         break;
       case tex_detail::k_upper_caps:
-        escape_str_to_stream(po->stream(), utils::to_upper(str),
-                             po->style_ctx());
+        escape_str_to_stream(po->stream(), utils::to_upper(str), po->style_ctx());
         break;
       case tex_detail::k_small_caps:
         po->stream() << "{\\sc ";
@@ -384,10 +385,10 @@ namespace {
   };
 
 
-  class TexParagraphFoProcessor : public IFoProcessor<TexProcessor> {
+  class TexParagraphFoProcessor : public IFoProcessor<TexProcessor>
+  {
   public:
-    void render(TexProcessor* po, const IFormattingObject* fo) const override
-    {
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
 
       auto lastctx = po->style_ctx();
@@ -405,8 +406,8 @@ namespace {
       if (linesprops == "asis")
         po->style_ctx()._wrapstyle = tex_detail::k_asis_wrap;
 
-      auto wstreatment = po->property(fo, "whitespace-treatment",
-                                      std::string("collapse"));
+      auto wstreatment =
+        po->property(fo, "whitespace-treatment", std::string("collapse"));
       if (wstreatment == "preserve")
         po->style_ctx()._wstreatment = tex_detail::k_preserve_ws;
       else if (wstreatment == "collapse")
@@ -449,22 +450,20 @@ namespace {
   };
 
 
-  class TexParagraphBreakFoProcessor : public IFoProcessor<TexProcessor> {
+  class TexParagraphBreakFoProcessor : public IFoProcessor<TexProcessor>
+  {
   public:
-    void render(TexProcessor* po, const IFormattingObject* fo) const override
-    {
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
-      po->stream() << std::endl
-                   << "\\newline{}"
-                   << std::endl;
+      po->stream() << std::endl << "\\newline{}" << std::endl;
     }
   };
 
 
-  class TexDisplayGroupFoProcessor : public IFoProcessor<TexProcessor> {
+  class TexDisplayGroupFoProcessor : public IFoProcessor<TexProcessor>
+  {
   public:
-    void render(TexProcessor* po, const IFormattingObject* fo) const override
-    {
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
       if (auto break_before = po->property_or_none<std::string>(fo, "break-before?")) {
         if (*break_before == "page")
           po->request_page_break(tex_detail::kBreakPageBefore);
@@ -490,14 +489,12 @@ namespace {
   };
 
 
-  class TexSimplePageSequenceFoProcessor : public IFoProcessor<TexProcessor> {
+  class TexSimplePageSequenceFoProcessor : public IFoProcessor<TexProcessor>
+  {
   public:
-    void render(TexProcessor* po, const IFormattingObject* fo) const override
-    {
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
       if (!po->_first_page) {
-        po->stream() << std::endl
-                     << "\\newpage{}" << std::endl
-                     << std::endl;
+        po->stream() << std::endl << "\\newpage{}" << std::endl << std::endl;
         po->request_page_break(tex_detail::kBreakPageBefore);
       }
       else {
@@ -512,51 +509,53 @@ namespace {
 
       auto pagewidth = po->property(fo, "page-width", po->paper_width());
       auto pageheight = po->property(fo, "page-height", po->paper_height());
-      auto leftmargin = po->property(fo, "left-margin",
-                                     fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
-      auto rightmargin = po->property(fo, "right-margin",
-                                      fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
-      auto topmargin = po->property(fo, "top-margin",
-                                    fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
-      auto bottommargin = po->property(fo, "bottom-margin",
-                                       fo::LengthSpec(fo::kDimen, 30, fo::k_mm));
-      auto headermargin = po->property(fo, "header-margin",
-                                       fo::LengthSpec(fo::kDimen, 10, fo::k_mm));
+      auto leftmargin =
+        po->property(fo, "left-margin", fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
+      auto rightmargin =
+        po->property(fo, "right-margin", fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
+      auto topmargin =
+        po->property(fo, "top-margin", fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
+      auto bottommargin =
+        po->property(fo, "bottom-margin", fo::LengthSpec(fo::kDimen, 30, fo::k_mm));
+      auto headermargin =
+        po->property(fo, "header-margin", fo::LengthSpec(fo::kDimen, 10, fo::k_mm));
       // auto footermargin = po->property(fo, "footer-margin",
       //                                  fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
-      auto startmargin = po->property(fo, "start-margin",
-                                      fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+      auto startmargin =
+        po->property(fo, "start-margin", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
       po->_current_start_margin = startmargin;
-      auto endmargin = po->property(fo, "end-margin",
-                                    fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+      auto endmargin =
+        po->property(fo, "end-margin", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
 
-      po->stream() << "\\setlength\\paperwidth{" << dimen2str(pagewidth)
-                   << "}" << std::endl;
-      po->stream() << "\\setlength\\paperheight{" << dimen2str(pageheight)
-                   << "}" << std::endl;
+      po->stream() << "\\setlength\\paperwidth{" << dimen2str(pagewidth) << "}"
+                   << std::endl;
+      po->stream() << "\\setlength\\paperheight{" << dimen2str(pageheight) << "}"
+                   << std::endl;
 
       po->stream() << "\\setlength\\textwidth{\\paperwidth}" << std::endl;
-      po->stream() << "\\setlength\\oddsidemargin{" << dimen2str(leftmargin)
-                   << "}" << std::endl
-                   << "\\setlength\\evensidemargin{" << dimen2str(leftmargin)
-                   << "}" << std::endl
-                   << "\\addtolength{\\textwidth}{-" << dimen2str(leftmargin)
-                   << "}" << std::endl;
+      po->stream() << "\\setlength\\oddsidemargin{" << dimen2str(leftmargin) << "}"
+                   << std::endl
+                   << "\\setlength\\evensidemargin{" << dimen2str(leftmargin) << "}"
+                   << std::endl
+                   << "\\addtolength{\\textwidth}{-" << dimen2str(leftmargin) << "}"
+                   << std::endl;
 
-      po->stream()
-        << "\\addtolength{\\textwidth}{-" << dimen2str(rightmargin) << "}" << std::endl;
+      po->stream() << "\\addtolength{\\textwidth}{-" << dimen2str(rightmargin) << "}"
+                   << std::endl;
 
-      po->stream()
-        << "\\setlength{\\hoffset}{" << dimen2str(po->paper_width()) << "}" << std::endl
-        << "\\addtolength{\\hoffset}{-" << dimen2str(pagewidth) << "}" << std::endl
-        << "\\divide\\hoffset by 2" << std::endl
-        // to correct tex's auto hoffset of 1in
-        << "\\addtolength{\\hoffset}{-1in}" << std::endl;
+      po->stream() << "\\setlength{\\hoffset}{" << dimen2str(po->paper_width()) << "}"
+                   << std::endl
+                   << "\\addtolength{\\hoffset}{-" << dimen2str(pagewidth) << "}"
+                   << std::endl
+                   << "\\divide\\hoffset by 2" << std::endl
+                   // to correct tex's auto hoffset of 1in
+                   << "\\addtolength{\\hoffset}{-1in}" << std::endl;
 
-      po->stream()
-        << "\\setlength\\textheight{\\paperheight}" << std::endl
-        << "\\addtolength{\\textheight}{-" << dimen2str(topmargin) << "}" << std::endl
-        << "\\addtolength{\\textheight}{-" << dimen2str(bottommargin) << "}" << std::endl;
+      po->stream() << "\\setlength\\textheight{\\paperheight}" << std::endl
+                   << "\\addtolength{\\textheight}{-" << dimen2str(topmargin) << "}"
+                   << std::endl
+                   << "\\addtolength{\\textheight}{-" << dimen2str(bottommargin) << "}"
+                   << std::endl;
 
       // dsssl:topmargin = \voffset + \topmargin + \headheight + \headersep
       // dsssl:headermargin = \voffset + \topmargin + \headheight
@@ -566,33 +565,34 @@ namespace {
       // \topmargin = dsssl:topmargin - \headheigth - \headersep
       // \headheight => ? ;; can't be computed from the dsssl
       // characteristics.  Let's assume 12pt (=1\baselineskip)
-      po->stream()
-        << "\\setlength\\headsep{" << dimen2str(topmargin) << "}" << std::endl
-        << "\\addtolength\\headsep{-" << dimen2str(headermargin) << "}" << std::endl
-        << "\\setlength\\headheight{12pt}" << std::endl
-        << "\\setlength\\topmargin{" << dimen2str(topmargin) << "}" << std::endl
-        << "\\addtolength\\topmargin{-\\headsep}" << std::endl
-        << "\\addtolength\\topmargin{-\\headheight}" << std::endl;
+      po->stream() << "\\setlength\\headsep{" << dimen2str(topmargin) << "}" << std::endl
+                   << "\\addtolength\\headsep{-" << dimen2str(headermargin) << "}"
+                   << std::endl
+                   << "\\setlength\\headheight{12pt}" << std::endl
+                   << "\\setlength\\topmargin{" << dimen2str(topmargin) << "}"
+                   << std::endl
+                   << "\\addtolength\\topmargin{-\\headsep}" << std::endl
+                   << "\\addtolength\\topmargin{-\\headheight}" << std::endl;
 
       // let's center the page on the paper
       // \voffset = dsssl:pageheight / 2
-      po->stream()
-        << "\\setlength\\voffset{" << dimen2str(po->paper_height()) << "}" << std::endl
-        << "\\addtolength{\\voffset}{-" << dimen2str(pageheight) << "}" << std::endl
-        << "\\divide\\voffset by 2" << std::endl
-        // to correct tex's auto voffset of 1in
-        << "\\addtolength{\\voffset}{-1in}" << std::endl;
+      po->stream() << "\\setlength\\voffset{" << dimen2str(po->paper_height()) << "}"
+                   << std::endl
+                   << "\\addtolength{\\voffset}{-" << dimen2str(pageheight) << "}"
+                   << std::endl
+                   << "\\divide\\voffset by 2" << std::endl
+                   // to correct tex's auto voffset of 1in
+                   << "\\addtolength{\\voffset}{-1in}" << std::endl;
 
-      po->stream()
-        << "\\setlength{\\leftskip}{" << dimen2str(startmargin) << "}" << std::endl
-        << "\\setlength{\\rightskip}{" << dimen2str(endmargin) << "}" << std::endl;
+      po->stream() << "\\setlength{\\leftskip}{" << dimen2str(startmargin) << "}"
+                   << std::endl
+                   << "\\setlength{\\rightskip}{" << dimen2str(endmargin) << "}"
+                   << std::endl;
 
-      po->stream()
-        << "\\changelayout%%" << std::endl;
+      po->stream() << "\\changelayout%%" << std::endl;
 
       //--------
-      auto leftheader =
-        po->property_or_none<std::shared_ptr<Sosofo>>(fo, "left-header");
+      auto leftheader = po->property_or_none<std::shared_ptr<Sosofo>>(fo, "left-header");
       auto centerheader =
         po->property_or_none<std::shared_ptr<Sosofo>>(fo, "center-header");
       auto rightheader =
@@ -611,8 +611,7 @@ namespace {
         po->stream() << "}";
       }
 
-      auto leftfooter =
-        po->property_or_none<std::shared_ptr<Sosofo>>(fo, "left-footer");
+      auto leftfooter = po->property_or_none<std::shared_ptr<Sosofo>>(fo, "left-footer");
       auto centerfooter =
         po->property_or_none<std::shared_ptr<Sosofo>>(fo, "center-footer");
       auto rightfooter =
@@ -634,10 +633,10 @@ namespace {
       po->stream() << "\\hsize=\\textwidth" << std::endl;
 
       po->stream() << "\\def\\fnlayout{%%" << std::endl;
-      po->stream() << "\\setlength{\\leftskip}{" << dimen2str(startmargin)
-                   << "}%%" << std::endl;
-      po->stream() << "\\setlength{\\rightskip}{" << dimen2str(endmargin)
-                   << "}}%%" << std::endl;
+      po->stream() << "\\setlength{\\leftskip}{" << dimen2str(startmargin) << "}%%"
+                   << std::endl;
+      po->stream() << "\\setlength{\\rightskip}{" << dimen2str(endmargin) << "}}%%"
+                   << std::endl;
       // an anchor to make vspaces on start pages possible
       po->stream() << "\\hbox{}\\par\\vs{-2\\baselineskip}%%" << std::endl;
 
@@ -647,10 +646,10 @@ namespace {
   };
 
 
-  class TexSequenceFoProcessor : public IFoProcessor<TexProcessor> {
+  class TexSequenceFoProcessor : public IFoProcessor<TexProcessor>
+  {
   public:
-    void render(TexProcessor* po, const IFormattingObject* fo) const override
-    {
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
       po->stream() << "{";
 
@@ -684,14 +683,13 @@ namespace {
   const std::string k_center = "center";
   const std::string k_right = "right";
 
-  class TexLineFieldFoProcessor : public IFoProcessor<TexProcessor> {
+  class TexLineFieldFoProcessor : public IFoProcessor<TexProcessor>
+  {
   public:
-    void render(TexProcessor* po, const IFormattingObject* fo) const override
-    {
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
 
-      auto field_width =
-        po->property_or_none<fo::LengthSpec>(fo, "field-width");
+      auto field_width = po->property_or_none<fo::LengthSpec>(fo, "field-width");
       auto field_align = po->property_or_none<std::string>(fo, "field-align");
 
       if (field_width && field_width->_value > 0) {
@@ -708,8 +706,8 @@ namespace {
               ? "\\hfill"
               : "";
           po->stream() << "\\lf{" << exact_dimen2str(*field_width) << "}{"
-                       << max_dimen2str(*field_width) << "}{" << left_hss
-                       << "}{" << right_hss << "}{";
+                       << max_dimen2str(*field_width) << "}{" << left_hss << "}{"
+                       << right_hss << "}{";
           po->render_sosofo(&fo->port("text"));
 
           po->stream() << "}}";
@@ -734,10 +732,10 @@ namespace {
   };
 
 
-  class TexPageNumberFoProcessor : public IFoProcessor<TexProcessor> {
+  class TexPageNumberFoProcessor : public IFoProcessor<TexProcessor>
+  {
   public:
-    void render(TexProcessor* po, const IFormattingObject* fo) const override
-    {
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
 
       auto refid = po->property(fo, "refid", std::string("#current"));
@@ -749,10 +747,10 @@ namespace {
   };
 
 
-  class TexAnchorFoProcessor : public IFoProcessor<TexProcessor> {
+  class TexAnchorFoProcessor : public IFoProcessor<TexProcessor>
+  {
   public:
-    void render(TexProcessor* po, const IFormattingObject* fo) const override
-    {
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
 
       if (auto id = po->property_or_none<std::string>(fo, "id")) {
@@ -763,24 +761,23 @@ namespace {
   };
 
 
-  class TexSimpleColumnSetSequenceProcessor : public IFoProcessor<TexProcessor> {
+  class TexSimpleColumnSetSequenceProcessor : public IFoProcessor<TexProcessor>
+  {
   public:
-    void render(TexProcessor* po, const IFormattingObject* fo) const override
-    {
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
 
       auto col_num = po->property(fo, "column-number", 1);
 
-      auto gutterwidth = po->property(fo, "gutter-width",
-                                      fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+      auto gutterwidth =
+        po->property(fo, "gutter-width", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
 
       po->stream() << "{\\leftskip0pt\\relax%" << std::endl
                    << " \\setlength{\\columnsep}{" << dimen2str(gutterwidth) << "}%"
                    << std::endl;
       po->stream() << "\\begin{tbmulticols}{" << col_num << "}"
                    << "{" << dimen2str(po->_current_start_margin) << "}"
-                   << "{-" << dimen2str(po->_current_start_margin) << "}"
-                   << std::endl;
+                   << "{-" << dimen2str(po->_current_start_margin) << "}" << std::endl;
       po->render_sosofo(&fo->port("text"));
       po->stream() << "\\end{tbmulticols}}" << std::endl;
     }
@@ -789,19 +786,17 @@ namespace {
 
 
 TexProcessor::TexProcessor()
-  : _verbose(false),
-    _style_ctx{tex_detail::k_normal_caps, tex_detail::k_normal_wrap,
-               tex_detail::k_collapse_ws},
-    _cropmarks(tex_detail::kOff),
-    _paper_dimen(std::make_tuple(fo::LengthSpec(fo::kDimen, 210, fo::k_mm),
+  : _verbose(false)
+  , _style_ctx{tex_detail::k_normal_caps, tex_detail::k_normal_wrap,
+               tex_detail::k_collapse_ws}
+  , _cropmarks(tex_detail::kOff)
+  , _paper_dimen(std::make_tuple(fo::LengthSpec(fo::kDimen, 210, fo::k_mm),
                                  fo::LengthSpec(fo::kDimen, 297, fo::k_mm),
-                                 std::string("a4")))
-{
-}
+                                 std::string("a4"))) {}
 
 
-TexProcessor::TexProcessor(const po::variables_map& args) : TexProcessor()
-{
+TexProcessor::TexProcessor(const po::variables_map& args)
+  : TexProcessor() {
   if (!args.empty()) {
     _verbose = args.count("verbose") != 0;
 
@@ -819,37 +814,30 @@ TexProcessor::TexProcessor(const po::variables_map& args) : TexProcessor()
       auto ps = args["paper-size"].as<std::string>();
 
       if (ps == "a3")
-        _paper_dimen =
-          std::make_tuple(fo::LengthSpec(fo::kDimen, 297, fo::k_mm),
-                          fo::LengthSpec(fo::kDimen, 420, fo::k_mm), ps);
+        _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 297, fo::k_mm),
+                                       fo::LengthSpec(fo::kDimen, 420, fo::k_mm), ps);
       else if (ps == "a4")
-        _paper_dimen =
-          std::make_tuple(fo::LengthSpec(fo::kDimen, 210, fo::k_mm),
-                          fo::LengthSpec(fo::kDimen, 297, fo::k_mm), ps);
+        _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 210, fo::k_mm),
+                                       fo::LengthSpec(fo::kDimen, 297, fo::k_mm), ps);
       else if (ps == "a5")
-        _paper_dimen =
-          std::make_tuple(fo::LengthSpec(fo::kDimen, 148, fo::k_mm),
-                          fo::LengthSpec(fo::kDimen, 210, fo::k_mm), ps);
+        _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 148, fo::k_mm),
+                                       fo::LengthSpec(fo::kDimen, 210, fo::k_mm), ps);
       else if (ps == "letter")
-        _paper_dimen =
-          std::make_tuple(fo::LengthSpec(fo::kDimen, 8.5, fo::k_in),
-                          fo::LengthSpec(fo::kDimen, 11, fo::k_in), ps);
+        _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 8.5, fo::k_in),
+                                       fo::LengthSpec(fo::kDimen, 11, fo::k_in), ps);
       else if (ps == "legal")
-        _paper_dimen =
-          std::make_tuple(fo::LengthSpec(fo::kDimen, 8.5, fo::k_in),
-                          fo::LengthSpec(fo::kDimen, 14, fo::k_in), ps);
+        _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 8.5, fo::k_in),
+                                       fo::LengthSpec(fo::kDimen, 14, fo::k_in), ps);
       else {
         std::smatch user_dimen;
-        std::regex_search(ps, user_dimen, std::regex(std::regex(
-                                            "([[:digit:]]+)([[:alpha:]]+)x"
-                                            "([[:digit:]]+)([[:alpha:]]+)")));
+        std::regex_search(ps, user_dimen,
+                          std::regex(std::regex("([[:digit:]]+)([[:alpha:]]+)x"
+                                                "([[:digit:]]+)([[:alpha:]]+)")));
         if (!user_dimen.empty()) {
           _paper_dimen =
-            std::make_tuple(fo::LengthSpec(fo::kDimen,
-                                           std::stof(user_dimen[1].str()),
+            std::make_tuple(fo::LengthSpec(fo::kDimen, std::stof(user_dimen[1].str()),
                                            unit_str2unit(user_dimen[2].str())),
-                            fo::LengthSpec(fo::kDimen,
-                                           std::stof(user_dimen[3].str()),
+                            fo::LengthSpec(fo::kDimen, std::stof(user_dimen[3].str()),
                                            unit_str2unit(user_dimen[4].str())),
                             std::string("user"));
         }
@@ -859,21 +847,17 @@ TexProcessor::TexProcessor(const po::variables_map& args) : TexProcessor()
 }
 
 
-std::string TexProcessor::proc_id() const
-{
+std::string TexProcessor::proc_id() const {
   return "tex";
 }
 
 
-std::string TexProcessor::default_output_extension() const
-{
+std::string TexProcessor::default_output_extension() const {
   return ".tex";
 }
 
-po::options_description TexProcessor::program_options() const
-{
-  std::string opts_title =
-    std::string("Tex renderer [selector: '") + proc_id() + "']";
+po::options_description TexProcessor::program_options() const {
+  std::string opts_title = std::string("Tex renderer [selector: '") + proc_id() + "']";
   po::options_description desc(opts_title);
 
   // clang-format off
@@ -888,24 +872,21 @@ po::options_description TexProcessor::program_options() const
   return desc;
 }
 
+
 const IFoProcessor<TexProcessor>*
-TexProcessor::lookup_fo_processor(const std::string& fo_classname) const
-{
-  static auto procs =
-    std::map<std::string, std::shared_ptr<IFoProcessor<TexProcessor>>>{
-      {"#literal", std::make_shared<TexLiteralFoProcessor>()},
-      {"#paragraph", std::make_shared<TexParagraphFoProcessor>()},
-      {"#paragraph-break", std::make_shared<TexParagraphBreakFoProcessor>()},
-      {"#display-group", std::make_shared<TexDisplayGroupFoProcessor>()},
-      {"#simple-page-sequence",
-       std::make_shared<TexSimplePageSequenceFoProcessor>()},
-      {"#sequence", std::make_shared<TexSequenceFoProcessor>()},
-      {"#line-field", std::make_shared<TexLineFieldFoProcessor>()},
-      {"#page-number", std::make_shared<TexPageNumberFoProcessor>()},
-      {"#anchor", std::make_shared<TexAnchorFoProcessor>()},
-      {"#simple-column-set-sequence",
-       std::make_shared<TexSimpleColumnSetSequenceProcessor>()}
-    };
+TexProcessor::lookup_fo_processor(const std::string& fo_classname) const {
+  static auto procs = std::map<std::string, std::shared_ptr<IFoProcessor<TexProcessor>>>{
+    {"#literal", std::make_shared<TexLiteralFoProcessor>()},
+    {"#paragraph", std::make_shared<TexParagraphFoProcessor>()},
+    {"#paragraph-break", std::make_shared<TexParagraphBreakFoProcessor>()},
+    {"#display-group", std::make_shared<TexDisplayGroupFoProcessor>()},
+    {"#simple-page-sequence", std::make_shared<TexSimplePageSequenceFoProcessor>()},
+    {"#sequence", std::make_shared<TexSequenceFoProcessor>()},
+    {"#line-field", std::make_shared<TexLineFieldFoProcessor>()},
+    {"#page-number", std::make_shared<TexPageNumberFoProcessor>()},
+    {"#anchor", std::make_shared<TexAnchorFoProcessor>()},
+    {"#simple-column-set-sequence",
+     std::make_shared<TexSimpleColumnSetSequenceProcessor>()}};
 
   auto i_find = procs.find(fo_classname);
 
@@ -913,8 +894,7 @@ TexProcessor::lookup_fo_processor(const std::string& fo_classname) const
 }
 
 
-void TexProcessor::before_rendering()
-{
+void TexProcessor::before_rendering() {
   _file = fs::File(_output_file.string());
 
   std::error_code ec;
@@ -932,7 +912,8 @@ void TexProcessor::before_rendering()
   switch (_cropmarks) {
   case tex_detail::kCamera:
     _file.stream() << "\\newcommand*\\infofont[1]{{\\textsf{\\fontsize{7}{8.5}"
-                      "\\selectfont#1}}}" << std::endl
+                      "\\selectfont#1}}}"
+                   << std::endl
                    << "\\usepackage[cam," << crop_paper_size(_paper_dimen)
                    << ",horigin=0in,vorigin=0in,font=infofont]{crop}" << std::endl;
     break;
@@ -950,25 +931,21 @@ void TexProcessor::before_rendering()
 }
 
 
-void TexProcessor::after_rendering()
-{
+void TexProcessor::after_rendering() {
   stream() << "\\end{document}" << std::endl;
 }
 
 
-std::iostream& TexProcessor::stream()
-{
+std::iostream& TexProcessor::stream() {
   return _file.stream();
 }
 
-tex_detail::TexStyleContext& TexProcessor::style_ctx()
-{
+tex_detail::TexStyleContext& TexProcessor::style_ctx() {
   return _style_ctx;
 }
 
 
-void TexProcessor::finalize_breaks()
-{
+void TexProcessor::finalize_breaks() {
   switch (_break_pending) {
   case tex_detail::kSurpressNextPageBreak:
   case tex_detail::kNoBreak:
@@ -985,8 +962,8 @@ void TexProcessor::finalize_breaks()
   }
 }
 
-void TexProcessor::request_page_break(tex_detail::BreakKind breakKind)
-{
+
+void TexProcessor::request_page_break(tex_detail::BreakKind breakKind) {
   if (breakKind != _break_pending &&
       _break_pending != tex_detail::kSurpressNextPageBreak) {
     _break_pending = breakKind;
@@ -994,14 +971,12 @@ void TexProcessor::request_page_break(tex_detail::BreakKind breakKind)
 }
 
 
-fo::LengthSpec TexProcessor::paper_width() const
-{
+fo::LengthSpec TexProcessor::paper_width() const {
   return std::get<0>(_paper_dimen);
 }
 
 
-fo::LengthSpec TexProcessor::paper_height() const
-{
+fo::LengthSpec TexProcessor::paper_height() const {
   return std::get<1>(_paper_dimen);
 }
 

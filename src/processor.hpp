@@ -17,7 +17,8 @@ namespace eyestep {
 class Sosofo;
 class IFormattingObject;
 
-class IProcessor {
+class IProcessor
+{
 public:
   virtual ~IProcessor() {}
 

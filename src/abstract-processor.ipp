@@ -17,15 +17,13 @@ namespace fs = filesystem;
 
 
 template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::set_output_file(const fs::path& output_file)
-{
+void AbstractProcessor<ProcessorT>::set_output_file(const fs::path& output_file) {
   _output_file = output_file;
 }
 
 
 template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::render_processed_node(const Sosofo* sosofo)
-{
+void AbstractProcessor<ProcessorT>::render_processed_node(const Sosofo* sosofo) {
   before_rendering();
   render_sosofo(sosofo);
   after_rendering();
@@ -33,20 +31,15 @@ void AbstractProcessor<ProcessorT>::render_processed_node(const Sosofo* sosofo)
 
 
 template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::before_rendering()
-{
-}
+void AbstractProcessor<ProcessorT>::before_rendering() {}
 
 
 template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::after_rendering()
-{
-}
+void AbstractProcessor<ProcessorT>::after_rendering() {}
 
 
 template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::render_sosofo(const Sosofo* sosofo)
-{
+void AbstractProcessor<ProcessorT>::render_sosofo(const Sosofo* sosofo) {
   if (sosofo) {
     for (const auto& fo : *sosofo) {
       render_fo(&fo);
@@ -56,12 +49,10 @@ void AbstractProcessor<ProcessorT>::render_sosofo(const Sosofo* sosofo)
 
 
 template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::render_fo(const IFormattingObject* fo)
-{
+void AbstractProcessor<ProcessorT>::render_fo(const IFormattingObject* fo) {
   auto foproc = lookup_fo_processor(fo->classname());
   if (!foproc) {
-    std::cerr << "Flow object '" << fo->classname() << "' unhandled"
-              << std::endl;
+    std::cerr << "Flow object '" << fo->classname() << "' unhandled" << std::endl;
   }
   else {
     _props.push(fo->properties());
@@ -76,8 +67,7 @@ void AbstractProcessor<ProcessorT>::render_fo(const IFormattingObject* fo)
 template <typename ProcessorT>
 fo::PropertySpecOrNone
 AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
-                                        const std::string& key) const
-{
+                                        const std::string& key) const {
   return _props.get(key, fo->default_properties());
 }
 
@@ -86,8 +76,7 @@ template <typename ProcessorT>
 template <typename T>
 estd::optional<T>
 AbstractProcessor<ProcessorT>::property_or_none(const IFormattingObject* fo,
-                                                const std::string& key) const
-{
+                                                const std::string& key) const {
   auto prop = property(fo, key);
   if (prop) {
     if (const T* val = fo::get<const T>(&prop->_value)) {
@@ -98,12 +87,11 @@ AbstractProcessor<ProcessorT>::property_or_none(const IFormattingObject* fo,
   return {};
 }
 
+
 template <typename ProcessorT>
 template <typename T>
 T AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
-                                          const std::string& key,
-                                          T default_value) const
-{
+                                          const std::string& key, T default_value) const {
   auto prop = property(fo, key);
   if (prop) {
     if (const T* val = fo::get<const T>(&prop->_value)) {

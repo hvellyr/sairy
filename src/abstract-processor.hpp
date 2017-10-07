@@ -22,7 +22,8 @@ class IFoProcessor;
 
 
 template <typename ProcessorT>
-class AbstractProcessor : public IProcessor {
+class AbstractProcessor : public IProcessor
+{
 protected:
   filesystem::path _output_file;
   PropertiesStack _props;
@@ -44,8 +45,7 @@ public:
                                   const std::string& key) const override;
 
   template <typename T>
-  T property(const IFormattingObject* fo, const std::string& key,
-             T default_value) const;
+  T property(const IFormattingObject* fo, const std::string& key, T default_value) const;
 
   template <typename T>
   estd::optional<T> property_or_none(const IFormattingObject* fo,

@@ -12,8 +12,7 @@
 namespace eyestep {
 namespace utils {
 
-  std::string join(const std::vector<std::string>& strlist,
-                   const std::string& gap);
+  std::string join(const std::vector<std::string>& strlist, const std::string& gap);
 
   std::vector<std::string> split(const std::string& str, const std::string& seps,
                                  bool trim_token = false);

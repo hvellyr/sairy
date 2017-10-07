@@ -1,12 +1,12 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
+#include "textbook-parser.hpp"
 #include "estd/memory.hpp"
 #include "nodeclass.hpp"
 #include "nodes.hpp"
 #include "nodeutils.hpp"
 #include "textbook-model.hpp"
-#include "textbook-parser.hpp"
 #include "utils.hpp"
 
 #include "fspp/estd/optional.hpp"
@@ -52,22 +52,18 @@ namespace textbook {
   namespace fs = filesystem;
 
   namespace {
-    std::string load_file_into_string(const fs::path& path)
-    {
+    std::string load_file_into_string(const fs::path& path) {
       std::stringstream result;
 
       std::error_code ec;
-      fs::with_stream(path, std::ios::in | std::ios::binary,
-                      ec, [&](std::istream& in)
-                      {
-                        result << in.rdbuf();
-                      });
+      fs::with_stream(path, std::ios::in | std::ios::binary, ec,
+                      [&](std::istream& in) { result << in.rdbuf(); });
 
       return result.str();
     }
 
-    fs::path path_rel_to_cwd(const fs::path& basepath, const fs::path& fpath)
-    {
+
+    fs::path path_rel_to_cwd(const fs::path& basepath, const fs::path& fpath) {
       if (!fpath.string().empty()) {
         if (fpath.is_absolute()) {
           return fpath;
@@ -82,8 +78,7 @@ namespace textbook {
 
     estd::optional<fs::path>
     find_model_spec(const std::string& tag,
-                    const std::vector<fs::path>& catalog_search_path)
-    {
+                    const std::vector<fs::path>& catalog_search_path) {
       for (auto loc : catalog_search_path) {
         auto path = (loc /= tag).replace_extension(".spec");
 
@@ -96,14 +91,12 @@ namespace textbook {
     }
 
 
-    std::vector<std::string> split_attrs(const std::string& str)
-    {
+    std::vector<std::string> split_attrs(const std::string& str) {
       return utils::split(str, ",", true);
     }
 
 
-    std::unique_ptr<DocSpec> make_docspec(const Node* nd)
-    {
+    std::unique_ptr<DocSpec> make_docspec(const Node* nd) {
       auto docspec = ::estd::make_unique<DocSpec>();
 
       for (const auto* tagnd : nd->property<Nodes>(CommonProps::k_children)) {
@@ -114,8 +107,8 @@ namespace textbook {
             auto gi_spec = utils::trim_copy(node_data(attrs[0]));
             auto attr_spec = utils::trim_copy(node_data(attrs[1]));
             auto body_spec = utils::trim_copy(node_data(attrs[2]));
-            auto opt = attrs.size() >= 4 ? utils::trim_copy(node_data(attrs[3]))
-                                         : std::string();
+            auto opt =
+              attrs.size() >= 4 ? utils::trim_copy(node_data(attrs[3])) : std::string();
 
             size_t min_attr = 0;
             size_t max_attr = 0;
@@ -159,14 +152,13 @@ namespace textbook {
             }
 
             bool is_env = body_spec != k_EMPTY_opt;
-            bool is_mixed_content =
-              body_spec.find(k_TEXT_opt) != std::string::npos;
+            bool is_mixed_content = body_spec.find(k_TEXT_opt) != std::string::npos;
             bool starts_p = opt.find(k_P_opt) != std::string::npos;
             bool is_block = opt.find(k_NOP_opt) != std::string::npos;
 
             auto tag_spec =
-              TagSpec(gi_spec, attrspecs, std::make_tuple(min_attr, max_attr),
-                      is_env, is_mixed_content, starts_p, is_block);
+              TagSpec(gi_spec, attrspecs, std::make_tuple(min_attr, max_attr), is_env,
+                      is_mixed_content, starts_p, is_block);
             docspec->add(tag_spec);
           }
         }
@@ -176,8 +168,7 @@ namespace textbook {
     }
 
 
-    std::unique_ptr<DocSpec> model_doc_type_doc_spec()
-    {
+    std::unique_ptr<DocSpec> model_doc_type_doc_spec() {
       auto docspec = ::estd::make_unique<DocSpec>();
 
       docspec->add(
@@ -190,22 +181,21 @@ namespace textbook {
                 false, // is_env
                 false  // is_mixed
                 ));
-      docspec->add(TagSpec(k_textbook_tag,
-                           std::vector<AttrSpec>{
-                             AttrSpec(k_version_tag, k_attr_str, false, false)},
-                           std::make_tuple(1u, 1u),
-                           false, // is_env,
-                           false  // is_mixed
-                           ));
+      docspec->add(
+        TagSpec(k_textbook_tag,
+                std::vector<AttrSpec>{AttrSpec(k_version_tag, k_attr_str, false, false)},
+                std::make_tuple(1u, 1u),
+                false, // is_env,
+                false  // is_mixed
+                ));
 
       return docspec;
     }
 
 
-    std::unique_ptr<DocSpec>
-    read_model(const fs::path& path, const std::vector<fs::path>& catalog_path,
-               bool is_verbose = false)
-    {
+    std::unique_ptr<DocSpec> read_model(const fs::path& path,
+                                        const std::vector<fs::path>& catalog_path,
+                                        bool is_verbose = false) {
       eyestep::Grove grove;
       GroveBuilder gb(grove.make_node(document_class_definition()));
 
@@ -229,8 +219,7 @@ namespace textbook {
           auto textbook_nd = children[0];
           if (textbook_nd) {
             auto attrs = textbook_nd->attributes();
-            if (!attrs.empty() &&
-                utils::trim_copy(node_data(attrs[0])) == "1.0") {
+            if (!attrs.empty() && utils::trim_copy(node_data(attrs[0])) == "1.0") {
               return make_docspec(nd);
             }
           }
@@ -245,12 +234,14 @@ namespace textbook {
 
   //------------------------------------------------------------------------------
 
-  Stream::Stream(estd::optional<std::string> data,
-                 estd::optional<fs::path> path, size_t start_line_no)
-    : _unread_nc(0u), _current_c(' '), _nc(0u), _line_no(start_line_no),
-      _fpath(path ? *path : fs::path("<data>")),
-      _data(data ? *data : (path ? load_file_into_string(*path) : ""))
-  {
+  Stream::Stream(estd::optional<std::string> data, estd::optional<fs::path> path,
+                 size_t start_line_no)
+    : _unread_nc(0u)
+    , _current_c(' ')
+    , _nc(0u)
+    , _line_no(start_line_no)
+    , _fpath(path ? *path : fs::path("<data>"))
+    , _data(data ? *data : (path ? load_file_into_string(*path) : "")) {
     if (_nc < _data.size()) {
       _current_c = _data[_nc];
     }
@@ -259,22 +250,30 @@ namespace textbook {
     }
   }
 
-  char Stream::current_c() const { return _current_c; }
 
-  size_t Stream::line_no() const { return _line_no; }
+  char Stream::current_c() const {
+    return _current_c;
+  }
 
-  fs::path Stream::fpath() const { return _fpath; }
 
-  std::string Stream::srcpos() const
-  {
+  size_t Stream::line_no() const {
+    return _line_no;
+  }
+
+
+  fs::path Stream::fpath() const {
+    return _fpath;
+  }
+
+
+  std::string Stream::srcpos() const {
     std::stringstream ss;
     ss << _fpath << ":" << _line_no;
     return ss.str();
   }
 
 
-  char Stream::read()
-  {
+  char Stream::read() {
     if (_unread_nc > 0) {
       _unread_nc--;
       _current_c = _unread_buffer[_unread_nc];
@@ -295,8 +294,8 @@ namespace textbook {
     return _current_c;
   }
 
-  char Stream::unread(const std::string& buf)
-  {
+
+  char Stream::unread(const std::string& buf) {
     if (!buf.empty()) {
       if (buf.size() > _unread_buffer.size()) {
         _unread_buffer.resize(buf.size());
@@ -320,34 +319,37 @@ namespace textbook {
     return current_c();
   }
 
-  bool Stream::eof() const { return _nc >= _data.size() && _unread_nc == 0; }
+
+  bool Stream::eof() const {
+    return _nc >= _data.size() && _unread_nc == 0;
+  }
 
 
   //------------------------------------------------------------------------------
 
   GroveBuilder::GroveBuilder(Node* rootnd)
-    : _current_node(rootnd), _root_node(rootnd)
-  {
+    : _current_node(rootnd)
+    , _root_node(rootnd) {}
+
+
+  void GroveBuilder::add_node(Node* nd) {
+    _current_node->add_child_node(nd);
   }
 
-  void GroveBuilder::add_node(Node* nd) { _current_node->add_child_node(nd); }
 
-  void GroveBuilder::push_node(const std::string& tag, Node* nd)
-  {
+  void GroveBuilder::push_node(const std::string& tag, Node* nd) {
     add_node(nd);
 
-    _node_stack.push_front(
-      std::tuple<std::string, Node*>{_current_tag, _current_node});
+    _node_stack.push_front(std::tuple<std::string, Node*>{_current_tag, _current_node});
     _current_node = nd;
     _current_tag = tag;
   }
 
-  void GroveBuilder::pop_node(const std::string& tag)
-  {
+
+  void GroveBuilder::pop_node(const std::string& tag) {
     if (_current_tag != tag) {
       std::stringstream ss;
-      ss << "Close tag not open: " << tag << " (current tag: " << _current_tag
-         << ")";
+      ss << "Close tag not open: " << tag << " (current tag: " << _current_tag << ")";
       throw ParseException("", ss.str());
     }
 
@@ -364,92 +366,121 @@ namespace textbook {
     }
   }
 
-  Node* GroveBuilder::root_node() { return _root_node; }
+
+  Node* GroveBuilder::root_node() {
+    return _root_node;
+  }
 
 
   //------------------------------------------------------------------------------
 
 
-  const std::set<char> SYMBOL1 = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
-                                  'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
-                                  'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                                  'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
-                                  'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
-                                  'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-                                  'W', 'X', 'Y', 'Z', '_', '?', '*'};
+  const std::set<char> SYMBOL1 = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+                                  'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                                  'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
+                                  'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+                                  'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '?', '*'};
 
-  const std::set<char> SYMBOLn = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
-                                  'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-                                  's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A',
-                                  'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                                  'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
-                                  'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '?',
-                                  '*', '0', '1', '2', '3', '4', '5', '6', '7',
-                                  '8', '9'};
+  const std::set<char> SYMBOLn = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
+                                  'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                                  'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
+                                  'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+                                  'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '?', '*',
+                                  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
   const std::set<char> WS = {' ', '\t', '\r', '\n'};
 
-  bool is_symbol1(char c) { return SYMBOL1.find(c) != SYMBOL1.end(); }
-
-  bool is_symbol_n(char c) { return SYMBOLn.find(c) != SYMBOLn.end(); }
-
-  bool is_ws(char c) { return WS.find(c) != WS.end(); }
-
-  Parser::Parser(eyestep::Grove& grove, GroveBuilder& grovebuilder,
-                 VariableEnv& vars, Catalog& catalog, DocSpec* docspec,
-                 const std::vector<fs::path>& catalog_path,
-                 bool is_mixed_content, bool is_verbose)
-    : _verbose(is_verbose), _catalog_path(catalog_path), _grove(grove),
-      _grovebuilder(grovebuilder), _vars(vars), _catalog(catalog),
-      _docspec(docspec), _current_p_nd(nullptr),
-      _is_mixed_content(is_mixed_content)
-  {
+  bool is_symbol1(char c) {
+    return SYMBOL1.find(c) != SYMBOL1.end();
   }
 
-  std::string Parser::doctype() const { return _doctype; }
 
-  void Parser::push_stream(std::shared_ptr<Stream> stream)
-  {
+  bool is_symbol_n(char c) {
+    return SYMBOLn.find(c) != SYMBOLn.end();
+  }
+
+
+  bool is_ws(char c) {
+    return WS.find(c) != WS.end();
+  }
+
+
+  Parser::Parser(eyestep::Grove& grove, GroveBuilder& grovebuilder, VariableEnv& vars,
+                 Catalog& catalog, DocSpec* docspec,
+                 const std::vector<fs::path>& catalog_path, bool is_mixed_content,
+                 bool is_verbose)
+    : _verbose(is_verbose)
+    , _catalog_path(catalog_path)
+    , _grove(grove)
+    , _grovebuilder(grovebuilder)
+    , _vars(vars)
+    , _catalog(catalog)
+    , _docspec(docspec)
+    , _current_p_nd(nullptr)
+    , _is_mixed_content(is_mixed_content) {}
+
+
+  std::string Parser::doctype() const {
+    return _doctype;
+  }
+
+
+  void Parser::push_stream(std::shared_ptr<Stream> stream) {
     _stream_stack.push_front(_stream);
     _stream = stream;
   }
 
-  void Parser::pop_stream()
-  {
+
+  void Parser::pop_stream() {
     _stream = _stream_stack.front();
     _stream_stack.pop_front();
   }
 
-  bool Parser::eof() { return _stream->eof() && _stream_stack.empty(); }
 
-  char Parser::nextc()
-  {
+  bool Parser::eof() {
+    return _stream->eof() && _stream_stack.empty();
+  }
+
+
+  char Parser::nextc() {
     while (_stream->eof() && !_stream_stack.empty()) {
       pop_stream();
     }
     return _stream->read();
   }
 
-  char Parser::unread(const std::string& buf) { return _stream->unread(buf); }
 
-  char Parser::currentc() { return _stream->current_c(); }
-
-  size_t Parser::lineno() { return _stream->line_no(); }
-
-  std::string Parser::srcpos() { return _stream->srcpos(); }
+  char Parser::unread(const std::string& buf) {
+    return _stream->unread(buf);
+  }
 
 
-  Node* Parser::parse_file(const fs::path& fpath)
-  {
+  char Parser::currentc() {
+    return _stream->current_c();
+  }
+
+
+  size_t Parser::lineno() {
+    return _stream->line_no();
+  }
+
+
+  std::string Parser::srcpos() {
+    return _stream->srcpos();
+  }
+
+
+  Node* Parser::parse_file(const fs::path& fpath) {
     return parse_stream(std::make_shared<Stream>(estd::optional<std::string>{}, fpath));
   }
 
-  Node* Parser::parse_string(const std::string& buf, size_t start_line_no)
-  {
-    return parse_stream(std::make_shared<Stream>(buf, estd::optional<filesystem::path>{}, start_line_no));
+
+  Node* Parser::parse_string(const std::string& buf, size_t start_line_no) {
+    return parse_stream(
+      std::make_shared<Stream>(buf, estd::optional<filesystem::path>{}, start_line_no));
   }
 
-  Node* Parser::parse_stream(std::shared_ptr<Stream> stream)
-  {
+
+  Node* Parser::parse_stream(std::shared_ptr<Stream> stream) {
     _stream = stream;
 
     while (!eof()) {
@@ -482,8 +513,7 @@ namespace textbook {
   }
 
 
-  void Parser::push_p_nd()
-  {
+  void Parser::push_p_nd() {
     if (_is_mixed_content) {
       if (!_current_p_nd) {
         _current_p_nd = _grove.make_elt_node(k_p_tag);
@@ -493,8 +523,7 @@ namespace textbook {
   }
 
 
-  void Parser::push_text()
-  {
+  void Parser::push_text() {
     if (_is_mixed_content) {
       auto text = _text.str();
       if (!text.empty()) {
@@ -510,8 +539,7 @@ namespace textbook {
   }
 
 
-  void Parser::finish_paragraph()
-  {
+  void Parser::finish_paragraph() {
     push_text();
 
     if (_current_p_nd) {
@@ -520,8 +548,8 @@ namespace textbook {
     }
   }
 
-  std::string Parser::skip_ws()
-  {
+
+  std::string Parser::skip_ws() {
     std::stringstream tmp;
 
     while (!eof() && is_ws(currentc())) {
@@ -533,8 +561,7 @@ namespace textbook {
   }
 
 
-  void Parser::skip_until_eol()
-  {
+  void Parser::skip_until_eol() {
     while (!eof() && currentc() != '\n') {
       nextc();
     }
@@ -544,8 +571,7 @@ namespace textbook {
   }
 
 
-  std::string Parser::parse_symbol()
-  {
+  std::string Parser::parse_symbol() {
     std::stringstream sym;
     while (!eof() && is_symbol_n(currentc())) {
       sym << currentc();
@@ -555,8 +581,7 @@ namespace textbook {
   }
 
 
-  Parser::Args Parser::parse_args()
-  {
+  Parser::Args Parser::parse_args() {
     Args args;
     std::string skipped_ws;
 
@@ -622,8 +647,7 @@ namespace textbook {
 
 
   Parser::AttrsAndId Parser::args2nl(const Args& args, const TagSpec& tagspec,
-                                     size_t lineno_at_start)
-  {
+                                     size_t lineno_at_start) {
     Nodes nl;
     estd::optional<std::string> idstr;
 
@@ -655,8 +679,7 @@ namespace textbook {
           unparent_nodes(grandch);
 
           for (auto* child : grandch) {
-            child->set_property(CommonProps::k_attr_name,
-                                attrspecs[attrc].name());
+            child->set_property(CommonProps::k_attr_name, attrspecs[attrc].name());
             if (attrspecs[attrc].is_data()) {
               child->set_property(CommonProps::k_data_attr, attrspecs[attrc].name());
             }
@@ -665,16 +688,14 @@ namespace textbook {
         }
         else if (children.empty()) {
           auto* txtnd = _grove.make_text_node("");
-          txtnd->set_property(CommonProps::k_attr_name,
-                              attrspecs[attrc].name());
+          txtnd->set_property(CommonProps::k_attr_name, attrspecs[attrc].name());
           nl.push_back(txtnd);
         }
         else {
           unparent_nodes(children);
 
           for (auto* child : children) {
-            child->set_property(CommonProps::k_attr_name,
-                                attrspecs[attrc].name());
+            child->set_property(CommonProps::k_attr_name, attrspecs[attrc].name());
             if (attrspecs[attrc].is_data()) {
               child->set_property(CommonProps::k_data_attr, attrspecs[attrc].name());
             }
@@ -697,8 +718,8 @@ namespace textbook {
     return AttrsAndId{nl, idstr};
   }
 
-  void Parser::parse_at_form()
-  {
+
+  void Parser::parse_at_form() {
     assert(currentc() == '@');
 
     nextc();
@@ -732,26 +753,26 @@ namespace textbook {
     }
   }
 
-  void Parser::parse_at()
-  {
+
+  void Parser::parse_at() {
     _text << '@';
     nextc();
   }
 
-  void Parser::parse_openbrace()
-  {
+
+  void Parser::parse_openbrace() {
     _text << '{';
     nextc();
   }
 
-  void Parser::parse_closebrace()
-  {
+
+  void Parser::parse_closebrace() {
     _text << '}';
     nextc();
   }
 
-  void Parser::parse_varlookup()
-  {
+
+  void Parser::parse_varlookup() {
     nextc();
 
     auto args = parse_args();
@@ -764,8 +785,7 @@ namespace textbook {
   }
 
 
-  void Parser::end_tag(const std::string& endtag)
-  {
+  void Parser::end_tag(const std::string& endtag) {
     finish_paragraph();
     _grovebuilder.pop_node(endtag);
     skip_ws();
@@ -774,8 +794,8 @@ namespace textbook {
     _is_mixed_content_stack.pop_front();
   }
 
-  void Parser::parse_endtag()
-  {
+
+  void Parser::parse_endtag() {
     skip_ws();
 
     if (currentc() == '{') {
@@ -801,8 +821,8 @@ namespace textbook {
     }
   }
 
-  void Parser::parse_let()
-  {
+
+  void Parser::parse_let() {
     auto args = parse_args();
     if (args.size() != 2u) {
       throw ParseException(srcpos(), "Wrong number of args to let expression");
@@ -810,8 +830,8 @@ namespace textbook {
     _vars[args[0]] = args[1];
   }
 
-  fs::path Parser::path_for_include(const fs::path& fpath)
-  {
+
+  fs::path Parser::path_for_include(const fs::path& fpath) {
     if (!fpath.string().empty()) {
       if (fpath.is_absolute()) {
         return fpath;
@@ -824,14 +844,12 @@ namespace textbook {
   }
 
 
-  void Parser::parse_include()
-  {
+  void Parser::parse_include() {
     auto sp = srcpos();
     auto args = parse_args();
 
     if (args.size() != 1u) {
-      throw ParseException(srcpos(),
-                           "Wrong number of args to include expression");
+      throw ParseException(srcpos(), "Wrong number of args to include expression");
     }
 
     try {
@@ -844,15 +862,14 @@ namespace textbook {
       push_stream(stream);
     }
     catch (const ParseException& pe) {
-      std::cerr << srcpos() << ": Error while parsing include file '"
-                << args.front() << "'" << std::endl;
+      std::cerr << srcpos() << ": Error while parsing include file '" << args.front()
+                << "'" << std::endl;
       std::cerr << pe.what() << std::endl;
     }
   }
 
 
-  void Parser::parse_tag_with_params(const std::string& tag)
-  {
+  void Parser::parse_tag_with_params(const std::string& tag) {
     bool is_root_tag = false;
     if (!_docspec) {
       is_root_tag = true;
@@ -922,8 +939,8 @@ namespace textbook {
     }
   }
 
-  void Parser::parse_tag()
-  {
+
+  void Parser::parse_tag() {
     auto tag = parse_symbol();
 
     if (tag == k_end_tag) { // @end abc
@@ -944,8 +961,7 @@ namespace textbook {
   }
 
 
-  void Parser::set_docspec_by_root_tag(const std::string& tag)
-  {
+  void Parser::set_docspec_by_root_tag(const std::string& tag) {
     if (_catalog.find(tag) != _catalog.end()) {
       _docspec = _catalog[tag].get();
       _doctype = tag;
@@ -960,8 +976,9 @@ namespace textbook {
           _doctype = tag;
         }
         else {
-          throw ParseException("", std::string("Can't read document spec: ") +
-                                     path->string());
+          throw ParseException("",
+                               std::string("Can't read document spec: ") +
+                                 path->string());
         }
       }
       else {
@@ -971,8 +988,7 @@ namespace textbook {
   }
 
 
-  void Parser::check_tag_args(const Parser::Args& args, const TagSpec& tagspec)
-  {
+  void Parser::check_tag_args(const Parser::Args& args, const TagSpec& tagspec) {
     if (args.size() > tagspec.max_args()) {
       std::stringstream ss;
       ss << "Too many arguments to tag: " << tagspec.tag_name() << "(max. "

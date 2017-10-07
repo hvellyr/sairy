@@ -1,8 +1,8 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
-#include "estd/memory.hpp"
 #include "scanner-setup.hpp"
+#include "estd/memory.hpp"
 #include "scanner.hpp"
 #include "utils.hpp"
 
@@ -23,11 +23,11 @@ namespace eyestep {
 namespace fs = filesystem;
 namespace po = program_options;
 
+
 namespace {
   using ScannerFactoryFunc =
     std::function<std::unique_ptr<IScanner>(const po::variables_map& args)>;
-  using ScannerClassFactoryMap =
-    std::map<std::string, ScannerFactoryFunc>;
+  using ScannerClassFactoryMap = std::map<std::string, ScannerFactoryFunc>;
 
   using ScannerExtensionMap = std::unordered_map<std::string, std::string>;
 
@@ -35,8 +35,7 @@ namespace {
   ScannerExtensionMap s_scanner_extension_map;
 
   template <typename ScannerClass>
-  void register_scanner_factory()
-  {
+  void register_scanner_factory() {
     ScannerClass scanner;
     const auto id = scanner.scanner_id();
 
@@ -54,8 +53,7 @@ namespace {
   }
 
 
-  ScannerClassFactoryMap& scanner_registry()
-  {
+  ScannerClassFactoryMap& scanner_registry() {
     if (s_scanner_factory_map.empty()) {
       register_scanner_factory<TextbookScanner>();
     }
@@ -65,8 +63,7 @@ namespace {
 } // anon ns
 
 
-po::options_description scanner_options()
-{
+po::options_description scanner_options() {
   std::vector<std::string> parsers;
   std::vector<po::options_description> options;
 
@@ -91,9 +88,9 @@ po::options_description scanner_options()
   return result;
 }
 
-std::unique_ptr<eyestep::IScanner>
-make_scanner_for_file(const fs::path& file, const po::variables_map& args)
-{
+
+std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file,
+                                                         const po::variables_map& args) {
   const auto& registry = scanner_registry();
 
   auto ext = file.extension().string();

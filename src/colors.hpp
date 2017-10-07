@@ -7,11 +7,11 @@
 
 
 namespace eyestep {
-
 namespace fo {
-  struct Color;
-  
-  Color color_by_x11name(const std::string& color_name);
-} // namespace fo
 
+  struct Color;
+
+  Color color_by_x11name(const std::string& color_name);
+
+} // namespace fo
 } // ns eyestep

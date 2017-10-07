@@ -9,12 +9,12 @@ class IFormattingObject;
 
 
 template <typename ProcessorT>
-class IFoProcessor {
+class IFoProcessor
+{
 public:
   virtual ~IFoProcessor() {}
 
-  virtual void render(ProcessorT* processor,
-                      const IFormattingObject* fo) const = 0;
+  virtual void render(ProcessorT* processor, const IFormattingObject* fo) const = 0;
 };
 
 } // ns eyestep

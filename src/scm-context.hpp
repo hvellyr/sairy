@@ -14,7 +14,8 @@ namespace eyestep {
 class Node;
 class Sosofo;
 
-class ISchemeContext {
+class ISchemeContext
+{
 public:
   virtual ~ISchemeContext(){};
 

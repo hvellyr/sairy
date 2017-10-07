@@ -3,14 +3,15 @@
 
 #pragma once
 
-#include "fo.hpp"
 #include "abstract-processor.hpp"
+#include "fo.hpp"
 
 #include "program_options/program_options.hpp"
 
 #include "fspp/filesystem.hpp"
 #include "fspp/utils.hpp"
 
+#include <istream>
 #include <list>
 #include <map>
 #include <memory>
@@ -18,7 +19,6 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
-#include <istream>
 
 
 namespace eyestep {
@@ -29,46 +29,54 @@ template <typename T>
 class IFoProcessor;
 
 namespace tex_detail {
-  enum CapsStyle {
+  enum CapsStyle
+  {
     k_normal_caps,
     k_lower_caps,
     k_upper_caps,
     k_small_caps,
   };
 
-  enum WrapStyle {
+  enum WrapStyle
+  {
     k_normal_wrap,
     k_asis_wrap,
     k_no_wrap,
   };
 
-  enum WsTreatment {
+  enum WsTreatment
+  {
     k_preserve_ws,
     k_collapse_ws,
     k_ignore_ws,
   };
 
-  struct TexStyleContext {
+  struct TexStyleContext
+  {
     CapsStyle _capsstyle;
     WrapStyle _wrapstyle;
     WsTreatment _wstreatment;
   };
 
-  enum BreakKind {
+  enum BreakKind
+  {
     kNoBreak,
     kBreakPageBefore,
     kBreakPageAfter,
     kSurpressNextPageBreak,
   };
 
-  enum CropMarksKind {
+  enum CropMarksKind
+  {
     kOff,
     kCamera,
     kFrame,
   };
-}
+} // namespace tex_detail
 
-class TexProcessor : public AbstractProcessor<TexProcessor> {
+
+class TexProcessor : public AbstractProcessor<TexProcessor>
+{
   bool _verbose;
   filesystem::File _file;
   tex_detail::TexStyleContext _style_ctx;
@@ -105,6 +113,5 @@ public:
   // width, height, cropmarks classifier
   std::tuple<fo::LengthSpec, fo::LengthSpec, std::string> _paper_dimen;
 };
-
 
 } // ns eyestep

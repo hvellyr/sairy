@@ -6,11 +6,11 @@
 #include "fspp/filesystem.hpp"
 #include "fspp/utils.hpp"
 
+#include <functional>
 #include <ostream>
 #include <string>
-#include <vector>
-#include <functional>
 #include <unordered_map>
+#include <vector>
 
 
 namespace eyestep {
@@ -20,21 +20,28 @@ namespace html {
     struct StyleCtx;
   }
 
-  struct Attr {
+
+  struct Attr
+  {
     std::string _key;
     std::string _value;
   };
   using Attrs = std::vector<Attr>;
 
-  struct Doctype {
+
+  struct Doctype
+  {
     std::string _publicid;
     std::string _systemid;
   };
 
+
   extern const Doctype k_XHTML_1_0_TRANSITIONAL_DTD;
   extern const Doctype k_XHTML_1_1_DTD;
 
-  class Writer {
+
+  class Writer
+  {
     filesystem::path _path;
     filesystem::File _file;
     Doctype _doctype;
@@ -63,10 +70,9 @@ namespace html {
     void write_link(const std::string& rel, const Attrs& attrs = {});
 
     void doctype();
-    void header(const std::string& title, const std::string& author,
-                const std::string& desc,
-                const std::function<void(std::ostream&)>& style_proc =
-                  [](std::ostream&) {});
+    void
+    header(const std::string& title, const std::string& author, const std::string& desc,
+           const std::function<void(std::ostream&)>& style_proc = [](std::ostream&) {});
     bool has_header() const;
     void footer();
 
@@ -74,7 +80,8 @@ namespace html {
   };
 
 
-  class CSSWriter {
+  class CSSWriter
+  {
     filesystem::path _path;
     filesystem::File _file;
     std::string _generator;
@@ -91,35 +98,35 @@ namespace html {
   };
 
 
-  class Tag {
+  class Tag
+  {
     Writer* _writer = nullptr;
     std::string _tag;
 
   public:
-    Tag() : _writer(nullptr) {}
+    Tag()
+      : _writer(nullptr) {}
 
     Tag(Writer& writer, const std::string& tag, const Attrs& attrs = {})
-      : _writer(&writer), _tag(tag)
-    {
+      : _writer(&writer)
+      , _tag(tag) {
       _writer->open_tag(tag, attrs);
     }
 
     Tag(Tag&& other)
-      : _writer(std::move(other._writer)), _tag(std::move(other._tag))
-    {
+      : _writer(std::move(other._writer))
+      , _tag(std::move(other._tag)) {
       other._writer = nullptr;
     }
 
-    Tag& operator=(Tag&& other)
-    {
+    Tag& operator=(Tag&& other) {
       _writer = std::move(other._writer);
       _tag = std::move(other._tag);
       other._writer = nullptr;
       return *this;
     }
 
-    ~Tag()
-    {
+    ~Tag() {
       if (_writer) {
         _writer->close_tag(_tag);
       }

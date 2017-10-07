@@ -4,28 +4,24 @@
 #include "propstack.hpp"
 #include "fo.hpp"
 
-#include <string>
 #include <iostream>
+#include <string>
 
 
 namespace eyestep {
 
-void PropertiesStack::push(const fo::PropertySpecs& props)
-{
+void PropertiesStack::push(const fo::PropertySpecs& props) {
   _stack.push_front(props);
 }
 
 
-void PropertiesStack::pop()
-{
+void PropertiesStack::pop() {
   _stack.pop_front();
 }
 
 
-fo::PropertySpecOrNone
-PropertiesStack::get(const std::string& key,
-                     const fo::PropertySpecs& defaults) const
-{
+fo::PropertySpecOrNone PropertiesStack::get(const std::string& key,
+                                            const fo::PropertySpecs& defaults) const {
   auto i_current = _stack.begin();
 
   const fo::PropertySpecs* current = &(*i_current);
@@ -51,8 +47,7 @@ PropertiesStack::get(const std::string& key,
 
 
 fo::PropertySpecs merge_property_specs(const fo::PropertySpecs& one,
-                                       const fo::PropertySpecs& two)
-{
+                                       const fo::PropertySpecs& two) {
   fo::PropertySpecs result(one);
 
   for (const auto& spec : two) {

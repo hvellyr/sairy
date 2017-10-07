@@ -19,12 +19,14 @@ class NodeClass;
 using Nodes = std::vector<Node*>;
 using ConstNodes = std::vector<const Node*>;
 
-struct Undefined {
-};
+struct Undefined
+{};
+
 
 struct PropertyValue
 {
-  enum Kind {
+  enum Kind
+  {
     k_undefined,
     k_int,
     k_string,
@@ -33,7 +35,8 @@ struct PropertyValue
   };
 
   Kind _kind;
-  union {
+  union
+  {
     Undefined _undefined;
     int _int;
     std::string _string;
@@ -46,13 +49,17 @@ struct PropertyValue
   PropertyValue(Undefined)
     : _kind(k_undefined) {}
   PropertyValue(int val)
-    : _kind(k_int), _int(val) {}
+    : _kind(k_int)
+    , _int(val) {}
   PropertyValue(std::string val)
-    : _kind(k_string), _string(std::move(val)) {}
+    : _kind(k_string)
+    , _string(std::move(val)) {}
   PropertyValue(Node* val)
-    : _kind(k_nodeptr), _nodeptr(val) {}
+    : _kind(k_nodeptr)
+    , _nodeptr(val) {}
   PropertyValue(Nodes val)
-    : _kind(k_nodes), _nodes(std::move(val)) {}
+    : _kind(k_nodes)
+    , _nodes(std::move(val)) {}
 
   PropertyValue(const PropertyValue& rhs) {
     *this = rhs;
@@ -78,18 +85,21 @@ struct PropertyValue
     _kind = k_undefined;
   }
 
-  PropertyValue& operator=(const PropertyValue& rhs)
-  {
+  PropertyValue& operator=(const PropertyValue& rhs) {
     if (this != &rhs) {
       clear();
 
       _kind = rhs._kind;
 
       switch (rhs._kind) {
-      case k_undefined: break;
-      case k_int: _int = rhs._int; break;
+      case k_undefined:
+        break;
+      case k_int:
+        _int = rhs._int;
+        break;
       case k_nodeptr:
-        _nodeptr = rhs._nodeptr; break;
+        _nodeptr = rhs._nodeptr;
+        break;
       case k_string:
         new (&_string) std::string(rhs._string);
         break;
@@ -105,62 +115,91 @@ struct PropertyValue
 
 
 template <typename T>
-struct PropertyTrait {
+struct PropertyTrait
+{
   static PropertyValue::Kind value_type();
   static const T* get_const(const PropertyValue* val);
   static T* get(PropertyValue* val);
 };
 
-template <>
-struct PropertyTrait<Undefined> {
-  static PropertyValue::Kind value_type() { return PropertyValue::k_undefined; }
-  static const Undefined* get_const(const PropertyValue* val) { return &val->_undefined; }
-  static Undefined* get(PropertyValue* val) { return &val->_undefined; }
-};
 
 template <>
-struct PropertyTrait<int> {
-  static PropertyValue::Kind value_type() { return PropertyValue::k_int; }
-  static const int* get_const(const PropertyValue* val) { return &val->_int; }
-  static int* get(PropertyValue* val) { return &val->_int; }
+struct PropertyTrait<Undefined>
+{
+  static PropertyValue::Kind value_type() {
+    return PropertyValue::k_undefined;
+  }
+  static const Undefined* get_const(const PropertyValue* val) {
+    return &val->_undefined;
+  }
+  static Undefined* get(PropertyValue* val) {
+    return &val->_undefined;
+  }
 };
 
+
 template <>
-struct PropertyTrait<std::string> {
-  static PropertyValue::Kind value_type() { return PropertyValue::k_string; }
-  static const std::string* get_const(const PropertyValue* val)
-  {
+struct PropertyTrait<int>
+{
+  static PropertyValue::Kind value_type() {
+    return PropertyValue::k_int;
+  }
+  static const int* get_const(const PropertyValue* val) {
+    return &val->_int;
+  }
+  static int* get(PropertyValue* val) {
+    return &val->_int;
+  }
+};
+
+
+template <>
+struct PropertyTrait<std::string>
+{
+  static PropertyValue::Kind value_type() {
+    return PropertyValue::k_string;
+  }
+  static const std::string* get_const(const PropertyValue* val) {
     return &val->_string;
   }
-  static std::string* get(PropertyValue* val)
-  {
+  static std::string* get(PropertyValue* val) {
     return &val->_string;
   }
 };
 
-template <>
-struct PropertyTrait<Node*> {
-  static PropertyValue::Kind value_type() { return PropertyValue::k_nodeptr; }
-  static Node* const*  get_const(const PropertyValue* val) { return &val->_nodeptr; }
-  static Node** get(PropertyValue* val) { return &val->_nodeptr; }
-};
 
 template <>
-struct PropertyTrait<Nodes> {
-  static PropertyValue::Kind value_type() { return PropertyValue::k_nodes; }
-  static const Nodes* get_const(const PropertyValue* val)
-  {
+struct PropertyTrait<Node*>
+{
+  static PropertyValue::Kind value_type() {
+    return PropertyValue::k_nodeptr;
+  }
+  static Node* const* get_const(const PropertyValue* val) {
+    return &val->_nodeptr;
+  }
+  static Node** get(PropertyValue* val) {
+    return &val->_nodeptr;
+  }
+};
+
+
+template <>
+struct PropertyTrait<Nodes>
+{
+  static PropertyValue::Kind value_type() {
+    return PropertyValue::k_nodes;
+  }
+  static const Nodes* get_const(const PropertyValue* val) {
     return &val->_nodes;
   }
-  static Nodes* get(PropertyValue* val)
-  {
+  static Nodes* get(PropertyValue* val) {
     return &val->_nodes;
   }
 };
+
 
 template <typename T>
-const T* get(const PropertyValue* val)
-{
+const T* get(const PropertyValue* val) {
   const auto foo = PropertyTrait<typename std::remove_const<T>::type>::value_type();
   if (val && foo == val->_kind) {
     return PropertyTrait<typename std::remove_const<T>::type>::get_const(val);
@@ -169,18 +208,20 @@ const T* get(const PropertyValue* val)
   return nullptr;
 }
 
+
 template <typename T>
-T* get(PropertyValue* val)
-{
-  return val && PropertyTrait<typename std::remove_const<T>::type>::value_type() == val->_kind
-    ? PropertyTrait<typename std::remove_const<T>::type>::get(val)
-    : nullptr;
+T* get(PropertyValue* val) {
+  return val &&
+             PropertyTrait<typename std::remove_const<T>::type>::value_type() ==
+               val->_kind
+           ? PropertyTrait<typename std::remove_const<T>::type>::get(val)
+           : nullptr;
 }
 
 
-template <typename F, typename... Args, typename R = typename std::remove_reference<F>::type::return_type>
-R apply(F&& f, const PropertyValue& val, Args&&... args)
-{
+template <typename F, typename... Args,
+          typename R = typename std::remove_reference<F>::type::return_type>
+R apply(F&& f, const PropertyValue& val, Args&&... args) {
   switch (val._kind) {
   case PropertyValue::k_undefined:
     return f(val._undefined, std::forward<Args>(args)...);
@@ -203,7 +244,8 @@ using Properties = std::map<std::string, PropertyValue>;
 class Grove;
 
 
-struct CommonProps {
+struct CommonProps
+{
   static const std::string k_attr_name;
   static const std::string k_attrs;
   static const std::string k_children;
@@ -219,7 +261,8 @@ struct CommonProps {
 };
 
 
-class Node {
+class Node
+{
   Properties _properties;
   Grove* _grove;
   const NodeClass* _class;
@@ -241,8 +284,7 @@ public:
   const PropertyValue operator[](const std::string& propname) const;
 
   template <typename T>
-  T property(const std::string& propname) const
-  {
+  T property(const std::string& propname) const {
     const auto i_find = _properties.find(propname);
     if (i_find != _properties.end()) {
       if (const T* value = get<T>(&i_find->second)) {
@@ -287,7 +329,8 @@ std::ostream& operator<<(std::ostream& os, const Nodes&);
 std::ostream& operator<<(std::ostream& os, const PropertyValue&);
 
 
-class Grove {
+class Grove
+{
   std::vector<std::unique_ptr<Node>> _nodes;
 
 public:
@@ -303,8 +346,11 @@ public:
     must be referenced by any other node except for its own children! */
   std::unique_ptr<Node> remove_node(Node* nd);
 
-  const std::vector<std::unique_ptr<Node>>& nodes() const;
+  const std::vector<std::unique_ptr<Node>>& nodes() const {
+    return _nodes;
+  }
 };
+
 
 /*! Reset the parent reference of all @p nodes.  Use with care. */
 void unparent_nodes(Nodes& nodes);

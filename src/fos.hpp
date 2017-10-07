@@ -14,21 +14,28 @@ namespace eyestep {
 class Sosofo;
 
 namespace fo {
-  class Fo : public IFormattingObject {
+  class Fo : public IFormattingObject
+  {
   protected:
     PropertySpecs _props;
     Fo() = default;
-    Fo(const PropertySpecs& props) : _props(props) {}
+    Fo(const PropertySpecs& props)
+      : _props(props) {}
 
   public:
-    bool accepts_fo(const Sosofo& fo) const override { return true; }
-    const PropertySpecs& properties() const override { return _props; }
+    bool accepts_fo(const Sosofo& fo) const override {
+      return true;
+    }
+    const PropertySpecs& properties() const override {
+      return _props;
+    }
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
   };
 
 
-  class Literal : public Fo {
+  class Literal : public Fo
+  {
   public:
     Literal() = default;
     Literal(const PropertySpecs& props);
@@ -41,7 +48,8 @@ namespace fo {
   };
 
 
-  class Paragraph : public Fo {
+  class Paragraph : public Fo
+  {
     const Sosofo _text_port;
 
   public:
@@ -56,7 +64,8 @@ namespace fo {
   };
 
 
-  class ParagraphBreak : public Fo {
+  class ParagraphBreak : public Fo
+  {
   public:
     ParagraphBreak() = default;
 
@@ -65,7 +74,8 @@ namespace fo {
   };
 
 
-  class DisplayGroup : public Fo {
+  class DisplayGroup : public Fo
+  {
     const Sosofo _text_port;
 
   public:
@@ -79,7 +89,8 @@ namespace fo {
   };
 
 
-  class Sequence : public Fo {
+  class Sequence : public Fo
+  {
     const Sosofo _text_port;
 
   public:
@@ -93,7 +104,8 @@ namespace fo {
   };
 
 
-  class LineField : public Fo {
+  class LineField : public Fo
+  {
     const Sosofo _text_port;
 
   public:
@@ -107,7 +119,8 @@ namespace fo {
   };
 
 
-  class Score : public Fo {
+  class Score : public Fo
+  {
     const Sosofo _text_port;
 
   public:
@@ -121,7 +134,8 @@ namespace fo {
   };
 
 
-  class SimplePageSequence : public Fo {
+  class SimplePageSequence : public Fo
+  {
     const Sosofo _text_port;
 
   public:
@@ -135,7 +149,8 @@ namespace fo {
   };
 
 
-  class SimpleColumnSetSequence : public Fo {
+  class SimpleColumnSetSequence : public Fo
+  {
     const Sosofo _text_port;
 
   public:
@@ -149,7 +164,8 @@ namespace fo {
   };
 
 
-  class ScrollSequence : public Fo {
+  class ScrollSequence : public Fo
+  {
     const Sosofo _scroll_port;
 
   public:
@@ -163,7 +179,8 @@ namespace fo {
   };
 
 
-  class PageNumber : public Fo {
+  class PageNumber : public Fo
+  {
   public:
     PageNumber() = default;
     PageNumber(const PropertySpecs& props);
@@ -173,7 +190,8 @@ namespace fo {
   };
 
 
-  class Anchor : public Fo {
+  class Anchor : public Fo
+  {
   public:
     Anchor() = default;
     Anchor(const PropertySpecs& props);
@@ -183,7 +201,8 @@ namespace fo {
   };
 
 
-  class FootNote : public Fo {
+  class FootNote : public Fo
+  {
     const Sosofo _text_port;
 
   public:

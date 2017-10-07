@@ -38,8 +38,7 @@ namespace po = program_options;
 
 namespace {
 
-std::string to_iso_timestring(std::chrono::system_clock::time_point tp)
-{
+std::string to_iso_timestring(std::chrono::system_clock::time_point tp) {
   auto t = std::chrono::system_clock::to_time_t(tp);
 
   char mbstr[128];
@@ -49,8 +48,7 @@ std::string to_iso_timestring(std::chrono::system_clock::time_point tp)
 
 
 eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
-                            const po::variables_map& args)
-{
+                            const po::variables_map& args) {
   eyestep::Grove grove;
   eyestep::Node* root = grove.set_root_node(eyestep::root_class_definition());
 
@@ -82,10 +80,8 @@ eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
 }
 
 
-fs::path deduce_output_file(const std::string& outf,
-                            const std::vector<fs::path>& sources,
-                            const std::string& default_ext)
-{
+fs::path deduce_output_file(const std::string& outf, const std::vector<fs::path>& sources,
+                            const std::string& default_ext) {
   if (!outf.empty()) {
     return outf;
   }
@@ -99,14 +95,12 @@ fs::path deduce_output_file(const std::string& outf,
 }
 
 
-std::vector<std::string> document_root_elements_gi(eyestep::Grove& grove)
-{
+std::vector<std::string> document_root_elements_gi(eyestep::Grove& grove) {
   using namespace eyestep;
 
   std::vector<std::string> gis;
 
-  auto root_children =
-    grove.root_node()->property<Nodes>(CommonProps::k_children);
+  auto root_children = grove.root_node()->property<Nodes>(CommonProps::k_children);
   if (root_children.size() == 1) {
     auto document = root_children[0];
     auto top_elements = document->property<Nodes>(CommonProps::k_children);
@@ -120,8 +114,7 @@ std::vector<std::string> document_root_elements_gi(eyestep::Grove& grove)
 
 
 fs::path deduce_templ_from_document(eyestep::Grove& grove,
-                                    const std::string& prefix_path)
-{
+                                    const std::string& prefix_path) {
   using namespace eyestep;
 
   auto gis = document_root_elements_gi(grove);
@@ -139,8 +132,7 @@ fs::path deduce_templ_from_document(eyestep::Grove& grove,
 }
 
 
-std::string textbook_prefix()
-{
+std::string textbook_prefix() {
   if (auto opt = std::getenv("TEXTBOOK_PREFIX")) {
     return std::string(opt);
   }
@@ -150,8 +142,7 @@ std::string textbook_prefix()
 } // anon namespace
 
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   try {
     // Declare the supported options.
     po::options_description desc("");
@@ -214,8 +205,7 @@ int main(int argc, char** argv)
 
     std::vector<fs::path> sources;
     if (vm.count("input-file")) {
-      for (const auto& input :
-           vm["input-file"].as<std::vector<std::string>>()) {
+      for (const auto& input : vm["input-file"].as<std::vector<std::string>>()) {
         sources.emplace_back(input);
       }
     }
@@ -240,8 +230,7 @@ int main(int argc, char** argv)
       auto processor = eyestep::make_processor_for_file(backend, vm);
       if (processor) {
         processor->set_output_file(
-          deduce_output_file(outf, sources,
-                             processor->default_output_extension()));
+          deduce_output_file(outf, sources, processor->default_output_extension()));
 
         auto engine = eyestep::StyleEngine(prefix_path, backend);
         if (engine.load_style(eff_templ_path)) {

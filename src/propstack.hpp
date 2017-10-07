@@ -5,13 +5,14 @@
 
 #include "fo.hpp"
 
-#include <string>
 #include <list>
+#include <string>
 
 
 namespace eyestep {
 
-class PropertiesStack {
+class PropertiesStack
+{
   std::list<fo::PropertySpecs> _stack;
 
 public:

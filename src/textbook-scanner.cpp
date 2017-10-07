@@ -29,39 +29,34 @@ namespace fs = filesystem;
 
 //----------------------------------------------------------------------------------------
 
-TextbookScanner::TextbookScanner() : _debug(false)
-{
-}
+TextbookScanner::TextbookScanner()
+  : _debug(false) {}
 
-TextbookScanner::TextbookScanner(
-  const program_options::variables_map& args)
-  : _debug(false)
-{
+
+TextbookScanner::TextbookScanner(const program_options::variables_map& args)
+  : _debug(false) {
   if (!args.empty()) {
     _prefix_path = utils::split_paths(args["textbook-prefix"].as<std::string>());
 
     transform(begin(_prefix_path), end(_prefix_path), back_inserter(_catalog_path),
-              [](const fs::path& path)
-              {
-                return path / "spec";
-              });
+              [](const fs::path& path) { return path / "spec"; });
 
     _debug = args.count("debug") != 0;
   }
 }
 
-std::string TextbookScanner::scanner_id() const
-{
+
+std::string TextbookScanner::scanner_id() const {
   return "textbook";
 }
 
-std::unordered_set<std::string> TextbookScanner::supported_extensions() const
-{
+
+std::unordered_set<std::string> TextbookScanner::supported_extensions() const {
   return {".tb", ".textbook"};
 }
 
-program_options::options_description TextbookScanner::program_options() const
-{
+
+program_options::options_description TextbookScanner::program_options() const {
   namespace po = program_options;
 
   std::string opts_title =
@@ -70,8 +65,8 @@ program_options::options_description TextbookScanner::program_options() const
   return desc;
 }
 
-Node* TextbookScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile)
-{
+
+Node* TextbookScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile) {
   Node* doc_node = grove.make_node(document_class_definition());
 
   doc_node->set_property(CommonProps::k_source, srcfile.string());

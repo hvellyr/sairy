@@ -12,8 +12,10 @@
 namespace eyestep {
 namespace fo {
 
-  
   Color color_by_x11name(const std::string& color_name) {
+    using namespace std;
+
+    // clang-format off
     static std::unordered_map<std::string, fo::Color> colors = {
       {"alice-blue",              fo::make_rgb_color(0.941176, 0.972549, 1.000000)},
       {"antique-white",           fo::make_rgb_color(0.980392, 0.921569, 0.843137)},
@@ -675,9 +677,10 @@ namespace fo {
       {"grey99",                  fo::make_rgb_color(0.988235, 0.988235, 0.988235)},
       {"grey100",                 fo::make_rgb_color(1.000000, 1.000000, 1.000000)},
     };
+    // clang-format on
 
     auto it = colors.find(color_name);
-    return it != colors.end() ? it->second : fo::make_rgb_color(0.0, 0.0, 0.0);
+    return it != end(colors) ? it->second : fo::make_rgb_color(0.0, 0.0, 0.0);
   }
 
 } // namespace fo

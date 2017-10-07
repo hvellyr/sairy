@@ -10,15 +10,17 @@
 #include "fspp/filesystem.hpp"
 
 #include <string>
-#include <vector>
 #include <unordered_set>
+#include <vector>
+
 
 namespace eyestep {
 
 class Node;
 class Grove;
 
-class TextbookScanner : public IScanner {
+class TextbookScanner : public IScanner
+{
   bool _debug;
   std::vector<filesystem::path> _prefix_path;
   std::vector<filesystem::path> _catalog_path;

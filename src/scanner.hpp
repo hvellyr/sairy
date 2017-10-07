@@ -8,8 +8,8 @@
 #include "fspp/filesystem.hpp"
 
 #include <string>
-#include <vector>
 #include <unordered_set>
+#include <vector>
 
 
 namespace eyestep {
@@ -17,7 +17,8 @@ namespace eyestep {
 class Node;
 class Grove;
 
-class IScanner {
+class IScanner
+{
 public:
   virtual ~IScanner() {}
 
@@ -26,8 +27,7 @@ public:
 
   virtual program_options::options_description program_options() const = 0;
 
-  virtual Node* scan_file(eyestep::Grove& grove,
-                          const filesystem::path& srcfile) = 0;
+  virtual Node* scan_file(eyestep::Grove& grove, const filesystem::path& srcfile) = 0;
 };
 
 } // ns eyestep

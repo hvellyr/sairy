@@ -18,11 +18,12 @@ template <typename T>
 class IFoProcessor;
 
 
-class DebugProcessor : public AbstractProcessor<DebugProcessor> {
+class DebugProcessor : public AbstractProcessor<DebugProcessor>
+{
   using Super = AbstractProcessor;
 
 public:
-  DebugProcessor();
+  DebugProcessor() = default;
   DebugProcessor(const program_options::variables_map& args);
 
   std::string proc_id() const override;

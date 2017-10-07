@@ -7,20 +7,23 @@ namespace eyestep {
 namespace html {
 
   namespace detail {
-    enum WrapStyle {
+    enum WrapStyle
+    {
       k_normal_wrap,
       k_asis_wrap,
       k_no_wrap,
     };
 
-    enum WsTreatment {
+    enum WsTreatment
+    {
       k_preserve_ws,
       k_collapse_ws,
       k_ignore_ws,
     };
 
 
-    struct StyleCtx {
+    struct StyleCtx
+    {
       WsTreatment _wstreatment;
       WrapStyle _wrapstyle;
     };

@@ -1,9 +1,9 @@
 // Copyright (c) 2015 Gregor Klinke
 // All rights reserved.
 
+#include "style-engine.hpp"
 #include "scm-context.hpp"
 #include "sosofo.hpp"
-#include "style-engine.hpp"
 #include "utils.hpp"
 
 #include <algorithm>
@@ -17,19 +17,14 @@ namespace eyestep {
 namespace fs = filesystem;
 
 namespace {
-  std::unique_ptr<ISchemeContext>
-  setup_scheme_context(const std::string& prefix_path)
-  {
+  std::unique_ptr<ISchemeContext> setup_scheme_context(const std::string& prefix_path) {
     auto ctx = create_scheme_context();
 
     auto pfx_paths = utils::split_paths(prefix_path);
 
     auto lib_paths = std::vector<fs::path>{};
     transform(begin(pfx_paths), end(pfx_paths), back_inserter(lib_paths),
-              [](const fs::path& path)
-              {
-                return path / "lib";
-              });
+              [](const fs::path& path) { return path / "lib"; });
 
     ctx->initialize(lib_paths);
 
@@ -45,17 +40,14 @@ namespace {
 } // ns anon
 
 
-StyleEngine::StyleEngine(const std::string& prefix_path,
-                         const std::string& backend_id)
-  : _backend_id(backend_id)
-{
+StyleEngine::StyleEngine(const std::string& prefix_path, const std::string& backend_id)
+  : _backend_id(backend_id) {
   _ctx = setup_scheme_context(prefix_path);
   _ctx->define_variable("%textbook-prefix-paths%", prefix_path);
 }
 
 
-bool StyleEngine::load_style(const filesystem::path& path)
-{
+bool StyleEngine::load_style(const filesystem::path& path) {
   assert(_ctx);
 
   _ctx->define_variable("%style-path%", path.string());
@@ -70,8 +62,7 @@ bool StyleEngine::load_style(const filesystem::path& path)
 }
 
 
-std::unique_ptr<Sosofo> StyleEngine::process_node(const Node* root)
-{
+std::unique_ptr<Sosofo> StyleEngine::process_node(const Node* root) {
   assert(_ctx);
 
   return _ctx->process_root_node(root);

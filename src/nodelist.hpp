@@ -15,7 +15,8 @@ class NodeList;
 
 
 namespace detail {
-  class INodeListStrategy {
+  class INodeListStrategy
+  {
   public:
     virtual ~INodeListStrategy() {}
 
@@ -26,7 +27,9 @@ namespace detail {
     virtual NodeList rest() const = 0;
   };
 
-  class SiblingsNodeListStrategy : public INodeListStrategy {
+
+  class SiblingsNodeListStrategy : public INodeListStrategy
+  {
   public:
     SiblingsNodeListStrategy(const Node* node, int start, int end);
 
@@ -41,7 +44,9 @@ namespace detail {
     int _end;
   };
 
-  class AncestorsNodeListStrategy : public INodeListStrategy {
+
+  class AncestorsNodeListStrategy : public INodeListStrategy
+  {
   public:
     AncestorsNodeListStrategy(const Node* parent, int count);
 
@@ -55,7 +60,9 @@ namespace detail {
     int _count;
   };
 
-  class DescendantsNodeListStrategy : public INodeListStrategy {
+
+  class DescendantsNodeListStrategy : public INodeListStrategy
+  {
   public:
     DescendantsNodeListStrategy(const Node* node, int start, int end, int count,
                                 std::vector<int> stack);
@@ -73,7 +80,9 @@ namespace detail {
     std::vector<int> _stack;
   };
 
-  class CompositeNodeListStrategy : public INodeListStrategy {
+
+  class CompositeNodeListStrategy : public INodeListStrategy
+  {
   public:
     CompositeNodeListStrategy(std::vector<NodeList> nl, int count);
 
@@ -90,9 +99,11 @@ namespace detail {
 } // detail ns
 
 
-class NodeList {
+class NodeList
+{
 public:
-  enum Kind {
+  enum Kind
+  {
     k_empty,
     k_children,
     k_siblings, // all siblings, incl. node

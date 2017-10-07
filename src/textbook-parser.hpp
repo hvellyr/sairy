@@ -14,8 +14,8 @@
 #include <sstream>
 #include <string>
 #include <tuple>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 
 namespace eyestep {
@@ -28,20 +28,22 @@ namespace textbook {
   class TagSpec;
   class DocSpec;
 
-  class ParseException : public std::exception {
+  class ParseException : public std::exception
+  {
     std::string _msg;
 
   public:
     ParseException(const std::string& srcpos, const std::string& msg)
-      : _msg(srcpos + ": " + msg)
-    {
-    }
+      : _msg(srcpos + ": " + msg) {}
 
-    const char* what() const noexcept override { return _msg.c_str(); }
+    const char* what() const noexcept override {
+      return _msg.c_str();
+    }
   };
 
 
-  class GroveBuilder {
+  class GroveBuilder
+  {
     std::string _current_tag;
     Node* _current_node;
     Node* _root_node;
@@ -57,7 +59,8 @@ namespace textbook {
   };
 
 
-  class Stream {
+  class Stream
+  {
     std::vector<char> _unread_buffer;
     size_t _unread_nc;
     char _current_c;
@@ -67,8 +70,7 @@ namespace textbook {
     std::string _data;
 
   public:
-    Stream(estd::optional<std::string> data,
-           estd::optional<filesystem::path> path,
+    Stream(estd::optional<std::string> data, estd::optional<filesystem::path> path,
            size_t start_line_no = 0);
     char current_c() const;
     size_t line_no() const;
@@ -83,7 +85,8 @@ namespace textbook {
   using VariableEnv = std::map<std::string, std::string>;
   using Catalog = std::unordered_map<std::string, std::unique_ptr<DocSpec>>;
 
-  class Parser {
+  class Parser
+  {
     bool _verbose;
     std::vector<filesystem::path> _catalog_path;
     std::shared_ptr<Stream> _stream;
@@ -100,8 +103,8 @@ namespace textbook {
     std::list<bool> _is_mixed_content_stack;
 
   public:
-    Parser(eyestep::Grove& grove, GroveBuilder& grovebuilder,
-           VariableEnv& _vars, Catalog& catalog, DocSpec* docspec,
+    Parser(eyestep::Grove& grove, GroveBuilder& grovebuilder, VariableEnv& _vars,
+           Catalog& catalog, DocSpec* docspec,
            const std::vector<filesystem::path>& catalog_path,
            bool is_mixed_content = false, bool is_verbose = false);
 
@@ -131,8 +134,7 @@ namespace textbook {
     void skip_until_eol();
     std::string parse_symbol();
     Args parse_args();
-    AttrsAndId args2nl(const Args& args, const TagSpec& tagspec,
-                       size_t lineno_at_start);
+    AttrsAndId args2nl(const Args& args, const TagSpec& tagspec, size_t lineno_at_start);
     void parse_at_form();
     void parse_at();
     void parse_openbrace();

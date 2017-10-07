@@ -10,15 +10,15 @@ AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: Inline
+AllowShortFunctionsOnASingleLine: Empty
 AlwaysBreakAfterDefinitionReturnType: false
 AlwaysBreakTemplateDeclarations: true
 AlwaysBreakBeforeMultilineStrings: true
 BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: true
-BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializersBeforeComma: true
 BinPackParameters: true
-ColumnLimit:     80
+ColumnLimit:     90
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 DerivePointerAlignment: false
 ExperimentalAutoDetectBinPacking: false
@@ -43,7 +43,17 @@ Standard:        Cpp11
 IndentWidth:     2
 TabWidth:        8
 UseTab:          Never
-BreakBeforeBraces: Stroustrup
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterStruct: true
+  AfterEnum: true
+  AfterUnion: true
+  AfterNamespace: false
+  BeforeCatch: true
+  BeforeElse: true
+  AfterFunction: false
+  AfterControlStatement: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
 SpacesInAngles:  false
@@ -57,4 +67,4 @@ CommentPragmas:  '^ IWYU pragma:'
 ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
 SpaceBeforeParens: ControlStatements
 DisableFormat:   false
-
+SortIncludes:    true
