@@ -58,7 +58,7 @@ void AbstractProcessor<ProcessorT>::render_sosofo(const Sosofo* sosofo)
 template <typename ProcessorT>
 void AbstractProcessor<ProcessorT>::render_fo(const IFormattingObject* fo)
 {
-  const IFoProcessor<ProcessorT>* foproc = lookup_fo_processor(fo->classname());
+  auto foproc = lookup_fo_processor(fo->classname());
   if (!foproc) {
     std::cerr << "Flow object '" << fo->classname() << "' unhandled"
               << std::endl;
