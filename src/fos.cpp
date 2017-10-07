@@ -113,8 +113,8 @@ namespace fo {
 
   /*! Return the set of defined properties */
   const PropertySpecs& Literal::default_properties() const {
-    static const PropertySpecs propspecs = {
-      PropertySpec("text", ""), PropertySpec("language", ""),
+    static const auto propspecs = PropertySpecs{
+      {"text", ""}, {"language", ""},
     };
 
     return propspecs;
@@ -128,8 +128,8 @@ namespace fo {
 
 
   std::string Literal::text() const {
-    if (auto spec = _props.lookup_key("text")) {
-      if (const std::string* val = fo::get<const std::string>(&spec->_value)) {
+    if (auto spec = _props.lookup_key(k_text)) {
+      if (const auto* val = fo::get<const std::string>(&spec->_value)) {
         return *val;
       }
     }
@@ -149,46 +149,47 @@ namespace fo {
     return "#paragraph";
   }
 
-  bool Paragraph::accepts_fo(const Sosofo& fo) const {
-    for (int i = 0; i < fo.length(); i++) {
-      if (dynamic_cast<const Paragraph*>(fo[i]) != nullptr)
-        return false;
-    }
-    return true;
+
+  bool Paragraph::accepts_fo(const Sosofo& sosofo) const {
+    using namespace std;
+
+    return none_of(begin(sosofo), end(sosofo), [](const IFormattingObject& fo) {
+      return dynamic_cast<const Paragraph*>(&fo) != nullptr;
+    });
   }
 
 
   const PropertySpecs& Paragraph::default_properties() const {
-    double max_inf = std::numeric_limits<double>::infinity();
+    auto max_inf = std::numeric_limits<double>::infinity();
 
-    static PropertySpecs propspecs = {
+    static const auto propspecs = PropertySpecs{
       // clang-format off
-      PropertySpec("first-line-start-indent", LengthSpec(kInline, 0, k_em)),
-      PropertySpec("last-line-end-indent", LengthSpec(kInline, 1, k_em, 1, max_inf)),
-      PropertySpec("line-spacing", LengthSpec(kDimen, 14, k_pt)),
-      PropertySpec("font-caps", "normal"),
-      PropertySpec("font-name", "serif"),
-      PropertySpec("font-posture", "upright"),
-      PropertySpec("font-size", LengthSpec(kDimen, 10, k_pt)),
-      PropertySpec("font-weight", "medium"),
-      PropertySpec("language", ""),
-      PropertySpec("start-indent", LengthSpec(kInline, 0, k_em)),
-      PropertySpec("end-indent", LengthSpec(kInline, 0, k_em)),
-      PropertySpec("quadding", "justify"),
-      PropertySpec("space-before", LengthSpec(kDisplay, 0, k_pt)),
-      PropertySpec("space-after", LengthSpec(kDisplay, 0, k_pt)),
-      PropertySpec("keep-with-previous?", false),
-      PropertySpec("keep-with-next?", false),
-      PropertySpec("break-after?", false),
-      PropertySpec("break-before?", false),
-      PropertySpec("lines", "wrap"),
-      PropertySpec("whitespace-treatment", "collapse"),
-      PropertySpec("asis-wrap-indent", 10),
-      PropertySpec("numbered-lines?", false),
-      PropertySpec("line-number-side", "start"),
-      PropertySpec("position-point-shift", LengthSpec(kDimen, 0, k_pt)),
-      PropertySpec("color", ""),
-      PropertySpec("background-color", ""),
+      {"first-line-start-indent", LengthSpec(kInline, 0, k_em)},
+      {"last-line-end-indent", LengthSpec(kInline, 1, k_em, 1, max_inf)},
+      {"line-spacing", LengthSpec(kDimen, 14, k_pt)},
+      {"font-caps", "normal"},
+      {"font-name", "serif"},
+      {"font-posture", "upright"},
+      {"font-size", LengthSpec(kDimen, 10, k_pt)},
+      {"font-weight", "medium"},
+      {"language", ""},
+      {"start-indent", LengthSpec(kInline, 0, k_em)},
+      {"end-indent", LengthSpec(kInline, 0, k_em)},
+      {"quadding", "justify"},
+      {"space-before", LengthSpec(kDisplay, 0, k_pt)},
+      {"space-after", LengthSpec(kDisplay, 0, k_pt)},
+      {"keep-with-previous?", false},
+      {"keep-with-next?", false},
+      {"break-after?", false},
+      {"break-before?", false},
+      {"lines", "wrap"},
+      {"whitespace-treatment", "collapse"},
+      {"asis-wrap-indent", 10},
+      {"numbered-lines?", false},
+      {"line-number-side", "start"},
+      {"position-point-shift", LengthSpec(kDimen, 0, k_pt)},
+      {"color", ""},
+      {"background-color", ""},
       // clang-format on
     };
     return propspecs;
@@ -220,7 +221,7 @@ namespace fo {
 
 
   const PropertySpecs& ParagraphBreak::default_properties() const {
-    static PropertySpecs propspecs = {};
+    static const auto propspecs = PropertySpecs{};
     return propspecs;
   }
 
@@ -239,19 +240,19 @@ namespace fo {
 
   const PropertySpecs& DisplayGroup::default_properties() const {
     // clang-format off
-    static PropertySpecs propspecs = {
-      PropertySpec("space-before", LengthSpec(kDisplay, 0, k_pt)),
-      PropertySpec("space-after", LengthSpec(kDisplay, 0, k_pt)),
-      PropertySpec("break-before?", false),
-      PropertySpec("break-after?", false),
-      PropertySpec("font-caps", ""),
-      PropertySpec("font-name", ""),
-      PropertySpec("font-posture", ""),
-      PropertySpec("font-size", ""),
-      PropertySpec("font-weight", ""),
-      PropertySpec("lines", ""),
-      PropertySpec("color", ""),
-      PropertySpec("background-color", ""),
+    static const auto propspecs = PropertySpecs{
+      {"space-before", LengthSpec(kDisplay, 0, k_pt)},
+      {"space-after", LengthSpec(kDisplay, 0, k_pt)},
+      {"break-before?", false},
+      {"break-after?", false},
+      {"font-caps", ""},
+      {"font-name", ""},
+      {"font-posture", ""},
+      {"font-size", ""},
+      {"font-weight", ""},
+      {"lines", ""},
+      {"color", ""},
+      {"background-color", ""},
     };
     // clang-format on
     return propspecs;
@@ -286,8 +287,8 @@ namespace fo {
 
 
   const PropertySpecs& Sequence::default_properties() const {
-    static PropertySpecs propspecs = {
-      PropertySpec("position-point-shift", LengthSpec(kDimen, 0, k_pt)),
+    static const auto propspecs = PropertySpecs{
+      {"position-point-shift", LengthSpec(kDimen, 0, k_pt)},
     };
     return propspecs;
   }
@@ -323,10 +324,11 @@ namespace fo {
 
 
   const PropertySpecs& LineField::default_properties() const {
-    static PropertySpecs propspecs = {
-      PropertySpec("field-width", LengthSpec(kInline, 0, k_pt)),
-      PropertySpec("field-align", "left"), PropertySpec("inhibit-line-breaks?", false),
-      PropertySpec("position-point-shift", LengthSpec(kDimen, 0, k_pt)),
+    static const auto propspecs = PropertySpecs{
+      {"field-width", LengthSpec(kInline, 0, k_pt)},
+      {"field-align", "left"},
+      {"inhibit-line-breaks?", false},
+      {"position-point-shift", LengthSpec(kDimen, 0, k_pt)},
     };
     return propspecs;
   }
@@ -361,10 +363,11 @@ namespace fo {
 
 
   const PropertySpecs& Score::default_properties() const {
-    static PropertySpecs propspecs = {
-      PropertySpec("below?", false), PropertySpec("above?", false),
-      PropertySpec("color", ""),
-      PropertySpec("line-thickness", LengthSpec(kDimen, 0, k_pt)),
+    static const auto propspecs = PropertySpecs{
+      {"below?", false},
+      {"above?", false},
+      {"color", ""},
+      {"line-thickness", LengthSpec(kDimen, 0, k_pt)},
     };
     return propspecs;
   }
@@ -400,30 +403,32 @@ namespace fo {
 
 
   const PropertySpecs& SimplePageSequence::default_properties() const {
-    static PropertySpecs propspecs =
-      {PropertySpec("font-caps", "normal"),
-       PropertySpec("font-name", "serif"),
-       PropertySpec("font-posture", "upright"),
-       PropertySpec("font-size", LengthSpec(kDimen, 10, k_pt)),
-       PropertySpec("font-weight", "medium"),
-       PropertySpec("lines", "wrap"),
-       PropertySpec("whitespace-treatment", "collapse"),
-       PropertySpec("start-margin", LengthSpec(kInline, 0, k_pt)),
-       PropertySpec("end-margin", LengthSpec(kInline, 0, k_pt)),
-       PropertySpec("page-width", LengthSpec(kDimen, 210, k_mm)),
-       PropertySpec("page-height", LengthSpec(kDimen, 297, k_mm)),
-       PropertySpec("left-margin", LengthSpec(kInline, 30, k_mm)),
-       PropertySpec("right-margin", LengthSpec(kDimen, 30, k_mm)),
-       PropertySpec("top-margin", LengthSpec(kDimen, 20, k_mm)),
-       PropertySpec("bottom-margin", LengthSpec(kDimen, 30, k_mm)),
-       PropertySpec("header-margin", LengthSpec(kDimen, 10, k_mm)),
-       PropertySpec("footer-margin", LengthSpec(kDimen, 20, k_mm)),
-       PropertySpec("left-header", std::make_shared<Sosofo>()),
-       PropertySpec("center-header", std::make_shared<Sosofo>()),
-       PropertySpec("right-header", std::make_shared<Sosofo>()),
-       PropertySpec("left-footer", std::make_shared<Sosofo>()),
-       PropertySpec("center-footer", std::make_shared<Sosofo>()),
-       PropertySpec("right-footer", std::make_shared<Sosofo>())};
+    static const auto propspecs = PropertySpecs{
+      {"font-caps", "normal"},
+      {"font-name", "serif"},
+      {"font-posture", "upright"},
+      {"font-size", LengthSpec(kDimen, 10, k_pt)},
+      {"font-weight", "medium"},
+      {"lines", "wrap"},
+      {"whitespace-treatment", "collapse"},
+      {"start-margin", LengthSpec(kInline, 0, k_pt)},
+      {"end-margin", LengthSpec(kInline, 0, k_pt)},
+      {"page-width", LengthSpec(kDimen, 210, k_mm)},
+      {"page-height", LengthSpec(kDimen, 297, k_mm)},
+      {"left-margin", LengthSpec(kInline, 30, k_mm)},
+      {"right-margin", LengthSpec(kDimen, 30, k_mm)},
+      {"top-margin", LengthSpec(kDimen, 20, k_mm)},
+      {"bottom-margin", LengthSpec(kDimen, 30, k_mm)},
+      {"header-margin", LengthSpec(kDimen, 10, k_mm)},
+      {"footer-margin", LengthSpec(kDimen, 20, k_mm)},
+      {"left-header", std::make_shared<Sosofo>()},
+      {"center-header", std::make_shared<Sosofo>()},
+      {"right-header", std::make_shared<Sosofo>()},
+      {"left-footer", std::make_shared<Sosofo>()},
+      {"center-footer", std::make_shared<Sosofo>()},
+      {"right-footer", std::make_shared<Sosofo>()},
+    };
+
     return propspecs;
   }
 
@@ -459,16 +464,16 @@ namespace fo {
 
 
   const PropertySpecs& SimpleColumnSetSequence::default_properties() const {
-    static PropertySpecs propspecs = {
+    static const auto propspecs = PropertySpecs{
       // clang-format off
-      PropertySpec("space-before", LengthSpec(kDisplay, 0, k_pt)),
-      PropertySpec("space-after", LengthSpec(kDisplay, 0, k_pt)),
-      PropertySpec("keep-with-previous?", false),
-      PropertySpec("keep-with-next?", false),
-      PropertySpec("break-after?", false),
-      PropertySpec("break-before?", false),
-      PropertySpec("column-number", 1),
-      PropertySpec("gutter-width", LengthSpec(kDimen, 21, k_pt)),
+      {"space-before", LengthSpec(kDisplay, 0, k_pt)},
+      {"space-after", LengthSpec(kDisplay, 0, k_pt)},
+      {"keep-with-previous?", false},
+      {"keep-with-next?", false},
+      {"break-after?", false},
+      {"break-before?", false},
+      {"column-number", 1},
+      {"gutter-width", LengthSpec(kDimen, 21, k_pt)},
       // clang-format on
     };
 
@@ -506,18 +511,18 @@ namespace fo {
 
 
   const PropertySpecs& ScrollSequence::default_properties() const {
-    static PropertySpecs propspecs = {
-      PropertySpec("font-caps", "normal"),
-      PropertySpec("font-name", "serif"),
-      PropertySpec("font-posture", "upright"),
-      PropertySpec("font-size", LengthSpec(kDimen, 10, k_pt)),
-      PropertySpec("font-weight", "medium"),
-      PropertySpec("title", false),
-      PropertySpec("width", LengthSpec(kDimen, 600, k_px)),
-      PropertySpec("start-margin", LengthSpec(kDimen, 0, k_pt)),
-      PropertySpec("end-margin", LengthSpec(kDimen, 0, k_pt)),
-      PropertySpec("background-color", false),
-      PropertySpec("background-tile", false),
+    static const auto propspecs = PropertySpecs{
+      {"font-caps", "normal"},
+      {"font-name", "serif"},
+      {"font-posture", "upright"},
+      {"font-size", LengthSpec(kDimen, 10, k_pt)},
+      {"font-weight", "medium"},
+      {"title", false},
+      {"width", LengthSpec(kDimen, 600, k_px)},
+      {"start-margin", LengthSpec(kDimen, 0, k_pt)},
+      {"end-margin", LengthSpec(kDimen, 0, k_pt)},
+      {"background-color", false},
+      {"background-tile", false},
     };
 
     return propspecs;
@@ -553,8 +558,8 @@ namespace fo {
 
 
   const PropertySpecs& PageNumber::default_properties() const {
-    static PropertySpecs propspecs = {
-      PropertySpec("refid", "#current"),
+    static const auto propspecs = PropertySpecs{
+      {"refid", "#current"},
     };
     return propspecs;
   }
@@ -572,8 +577,8 @@ namespace fo {
 
 
   const PropertySpecs& Anchor::default_properties() const {
-    static PropertySpecs propspecs = {
-      PropertySpec("id", false),
+    static const auto propspecs = PropertySpecs{
+      {"id", false},
     };
     return propspecs;
   }
@@ -592,8 +597,8 @@ namespace fo {
 
 
   const PropertySpecs& FootNote::default_properties() const {
-    static PropertySpecs propspecs = {
-      PropertySpec("id", false),
+    static const auto propspecs = PropertySpecs{
+      {"id", false},
     };
     return propspecs;
   }
