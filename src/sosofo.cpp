@@ -39,19 +39,14 @@ Sosofo Sosofo::concat(const Sosofo& other) const
   return sosofo;
 }
 
-bool Sosofo::empty() const
-{
-  return _fos.empty();
+
+SosofoIterator Sosofo::begin() const {
+  return SosofoIterator{this, 0};
 }
 
-int Sosofo::length() const
-{
-  return int(_fos.size());
-}
 
-const IFormattingObject* Sosofo::operator[](size_t idx) const
-{
-  return _fos[idx].get();
+SosofoIterator Sosofo::end() const {
+  return SosofoIterator{};
 }
 
 } // ns eyestep

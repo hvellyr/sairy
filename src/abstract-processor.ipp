@@ -48,8 +48,8 @@ template <typename ProcessorT>
 void AbstractProcessor<ProcessorT>::render_sosofo(const Sosofo* sosofo)
 {
   if (sosofo) {
-    for (size_t i = 0; i < sosofo->length(); ++i) {
-      render_fo((*sosofo)[i]);
+    for (const auto& fo : *sosofo) {
+      render_fo(&fo);
     }
   }
 }

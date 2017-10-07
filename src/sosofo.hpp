@@ -5,11 +5,14 @@
 
 #include "fo.hpp"
 
+#include <iterator>
 #include <memory>
 #include <vector>
 
 
 namespace eyestep {
+
+class SosofoIterator;
 
 class Sosofo {
 public:
@@ -24,13 +27,73 @@ public:
   /*! Returns a new sosofo with all FOs from @p other appended */
   Sosofo concat(const Sosofo& other) const;
 
-  bool empty() const;
-  int length() const;
+  bool empty() const {
+    return _fos.empty();
+  }
 
-  const IFormattingObject* operator[](size_t idx) const;
+  int length() const {
+    return int(_fos.size());
+  }
+
+  const IFormattingObject* operator[](size_t idx) const {
+    return _fos[idx].get();
+  }
+
+  SosofoIterator begin() const;
+  SosofoIterator end() const;
 
 private:
   std::vector<std::shared_ptr<IFormattingObject>> _fos;
+};
+
+
+class SosofoIterator {
+  const Sosofo* _sosofo = nullptr;
+  int _idx = 0;
+
+public:
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = const IFormattingObject;
+  using difference_type = std::ptrdiff_t;
+  using pointer = value_type*;
+  using reference = value_type&;
+
+  /*! the end iterator */
+  SosofoIterator() = default;
+  SosofoIterator(const Sosofo* sosofo, int idx) : _sosofo(sosofo), _idx(idx)
+  {
+
+    if (_idx < 0 || _idx >= _sosofo->length()) {
+      *this = {};
+    }
+  }
+
+  SosofoIterator& operator++()
+  {
+    ++_idx;
+    if (_idx >= _sosofo->length()) {
+      *this = {};
+    }
+    return *this;
+  }
+
+  SosofoIterator operator++(int)
+  {
+    SosofoIterator retval = *this;
+    ++(*this);
+    return retval;
+  }
+
+  bool operator==(SosofoIterator other) const
+  {
+    return _sosofo == other._sosofo && _idx == other._idx;
+  }
+
+  bool operator!=(SosofoIterator other) const { return !(*this == other); }
+
+  reference operator*() const { return *(*_sosofo)[_idx]; }
+
+  pointer operator->() const { return (*_sosofo)[_idx]; }
 };
 
 } // ns eyestep
