@@ -624,12 +624,12 @@ namespace fo {
   //----------------------------------------------------------------------------
 
   bool is_property_be_inherited(const std::string& key) {
+    using namespace std;
+
     const auto i_find =
-      std::find_if(s_property_inherited.begin(), s_property_inherited.end(),
-                   [&key](const PropertyInherited& propinh) {
-                     return propinh._key == key;
-                   });
-    return i_find != s_property_inherited.end() ? i_find->_is_inherited : false;
+      find_if(begin(s_property_inherited), end(s_property_inherited),
+              [&key](const PropertyInherited& propinh) { return propinh._key == key; });
+    return i_find != end(s_property_inherited) ? i_find->_is_inherited : false;
   }
 
 
