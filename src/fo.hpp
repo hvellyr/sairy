@@ -391,16 +391,18 @@ namespace fo {
     using storage_type = std::map<std::string, PropertySpec>;
 
     class PropertySpecIterator
-      : public std::iterator<std::random_access_iterator_tag, PropertySpec>
     {
       typename storage_type::const_iterator _i_ptr;
 
     public:
+      using iterator_category = std::random_access_iterator_tag;
+      using value_type = const PropertySpec;
+      using difference_type = std::ptrdiff_t;
+      using pointer = value_type*;
+      using reference = value_type&;
+
       PropertySpecIterator(typename storage_type::const_iterator i_ptr)
         : _i_ptr(i_ptr) {}
-
-      PropertySpecIterator(const PropertySpecIterator&) = default;
-      PropertySpecIterator& operator=(const PropertySpecIterator&) = default;
 
       bool operator==(const PropertySpecIterator& other) const {
         return _i_ptr == other._i_ptr;
@@ -432,11 +434,11 @@ namespace fo {
         return tmp;
       }
 
-      const PropertySpec& operator*() const {
+      reference operator*() const {
         return _i_ptr->second;
       }
 
-      const PropertySpec* operator->() const {
+      pointer operator->() const {
         return &_i_ptr->second;
       }
     };
