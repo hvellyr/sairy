@@ -84,6 +84,10 @@ namespace fo {
   };
 
 
+  const auto k_text = std::string("text");
+  const auto k_scroll = std::string("scroll");
+
+
   //----------------------------------------------------------------------------
 
   static Sosofo k_nil_sosofo;
@@ -198,16 +202,15 @@ namespace fo {
 
   const std::vector<std::string>& Paragraph::ports() const {
     static const auto ports = std::vector<std::string>{
-      "text",
+      k_text,
     };
     return ports;
   }
 
 
   const Sosofo& Paragraph::port(const std::string& portname) const {
-    if (portname == "text") {
+    if (portname == k_text)
       return _text_port;
-    }
 
     return k_nil_sosofo;
   }
@@ -260,15 +263,14 @@ namespace fo {
 
   const std::vector<std::string>& DisplayGroup::ports() const {
     static const auto ports = std::vector<std::string>{
-      "text",
+      k_text,
     };
     return ports;
   }
 
   const Sosofo& DisplayGroup::port(const std::string& portname) const {
-    if (portname == "text") {
+    if (portname == k_text)
       return _text_port;
-    }
 
     return k_nil_sosofo;
   }
@@ -296,16 +298,15 @@ namespace fo {
 
   const std::vector<std::string>& Sequence::ports() const {
     static const auto ports = std::vector<std::string>{
-      "text",
+      k_text,
     };
     return ports;
   }
 
 
   const Sosofo& Sequence::port(const std::string& portname) const {
-    if (portname == "text") {
+    if (portname == k_text)
       return _text_port;
-    }
 
     return k_nil_sosofo;
   }
@@ -336,15 +337,15 @@ namespace fo {
 
   const std::vector<std::string>& LineField::ports() const {
     static const auto ports = std::vector<std::string>{
-      "text",
+      k_text,
     };
     return ports;
   }
 
+
   const Sosofo& LineField::port(const std::string& portname) const {
-    if (portname == "text") {
+    if (portname == k_text)
       return _text_port;
-    }
 
     return k_nil_sosofo;
   }
@@ -375,16 +376,15 @@ namespace fo {
 
   const std::vector<std::string>& Score::ports() const {
     static const auto ports = std::vector<std::string>{
-      "text",
+      k_text,
     };
     return ports;
   }
 
 
   const Sosofo& Score::port(const std::string& portname) const {
-    if (portname == "text") {
+    if (portname == k_text)
       return _text_port;
-    }
 
     return k_nil_sosofo;
   }
@@ -435,16 +435,15 @@ namespace fo {
 
   const std::vector<std::string>& SimplePageSequence::ports() const {
     static const auto ports = std::vector<std::string>{
-      "text",
+      k_text,
     };
     return ports;
   }
 
 
   const Sosofo& SimplePageSequence::port(const std::string& portname) const {
-    if (portname == "text") {
+    if (portname == k_text)
       return _text_port;
-    }
 
     return k_nil_sosofo;
   }
@@ -483,16 +482,15 @@ namespace fo {
 
   const std::vector<std::string>& SimpleColumnSetSequence::ports() const {
     static const auto ports = std::vector<std::string>{
-      "text",
+      k_text,
     };
     return ports;
   }
 
 
   const Sosofo& SimpleColumnSetSequence::port(const std::string& portname) const {
-    if (portname == "text") {
+    if (portname == k_text)
       return _text_port;
-    }
 
     return k_nil_sosofo;
   }
@@ -531,16 +529,15 @@ namespace fo {
 
   const std::vector<std::string>& ScrollSequence::ports() const {
     static const auto ports = std::vector<std::string>{
-      "scroll",
+      k_scroll,
     };
     return ports;
   }
 
 
   const Sosofo& ScrollSequence::port(const std::string& portname) const {
-    if (portname == "scroll") {
+    if (portname == k_scroll)
       return _scroll_port;
-    }
 
     return k_nil_sosofo;
   }
@@ -606,16 +603,15 @@ namespace fo {
 
   const std::vector<std::string>& FootNote::ports() const {
     static const auto ports = std::vector<std::string>{
-      "text",
+      k_text,
     };
     return ports;
   }
 
 
   const Sosofo& FootNote::port(const std::string& portname) const {
-    if (portname == "text") {
+    if (portname == k_text)
       return _text_port;
-    }
 
     return k_nil_sosofo;
   }
