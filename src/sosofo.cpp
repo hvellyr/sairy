@@ -8,7 +8,8 @@
 
 namespace eyestep {
 
-Sosofo::Sosofo() {}
+Sosofo::Sosofo() = default;
+
 
 Sosofo::Sosofo(const Sosofo& one, const Sosofo& two) {
   _fos.insert(_fos.end(), one._fos.begin(), one._fos.end());

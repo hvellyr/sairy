@@ -68,7 +68,7 @@ namespace detail {
     std::list<StyleAttrs> _styles_stack;
 
   public:
-    HtmlRenderContext();
+    HtmlRenderContext() = default;
 
     html::Writer& port();
     filesystem::path current_path();
@@ -98,8 +98,14 @@ public:
   HtmlProcessor();
   HtmlProcessor(const program_options::variables_map& args);
 
-  std::string proc_id() const override;
-  std::string default_output_extension() const override;
+  std::string proc_id() const override {
+    return "html";
+  }
+
+  std::string default_output_extension() const override {
+    return ".html";
+  }
+
   program_options::options_description program_options() const override;
 
   const IFoProcessor<HtmlProcessor>*
@@ -108,14 +114,29 @@ public:
   void before_rendering() override;
   void after_rendering() override;
 
-  detail::HtmlRenderContext& ctx();
-  html::detail::StyleCtx& style_ctx();
-  html::Writer& writer();
-  html::CSSWriter& css_writer();
+  detail::HtmlRenderContext& ctx() {
+    return _ctx;
+  }
 
-  bool is_verbose() const;
+  html::detail::StyleCtx& style_ctx() {
+    return _style_ctx;
+  }
 
-  filesystem::path css_file() const;
+  html::Writer& writer() {
+    return _ctx.port();
+  }
+
+  html::CSSWriter& css_writer() {
+    return _css_port;
+  }
+
+  bool is_verbose() const {
+    return _verbose;
+  }
+
+  filesystem::path css_file() const {
+    return _css_file;
+  }
 };
 
 } // ns eyestep

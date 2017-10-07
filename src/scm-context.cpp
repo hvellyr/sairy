@@ -55,6 +55,9 @@ namespace {
 #define STYLE_TAG "<style>"
 #define STYLE_TAG_SIZE 7
 
+  const auto k_default = std::string("default");
+  const auto k_use = std::string("use");
+
 
   //----------------------------------------------------------------------------
 
@@ -81,7 +84,7 @@ namespace {
 
 
   int length_spec_tag_p(sexp ctx) {
-    int retv = 0;
+    auto retv = 0;
     sexp_gc_var2(ty, nm);
     sexp_gc_preserve2(ctx, ty, nm);
 
@@ -99,7 +102,7 @@ namespace {
 
 
   int color_tag_p(sexp ctx) {
-    int retv = 0;
+    auto retv = 0;
     sexp_gc_var2(ty, nm);
     sexp_gc_preserve2(ctx, ty, nm);
 
@@ -116,7 +119,7 @@ namespace {
 
 
   int nodelist_tag_p(sexp ctx) {
-    int retv = 0;
+    auto retv = 0;
     sexp_gc_var2(ty, nm);
     sexp_gc_preserve2(ctx, ty, nm);
 
@@ -133,7 +136,7 @@ namespace {
 
 
   int sosofo_tag_p(sexp ctx) {
-    int retv = 0;
+    auto retv = 0;
     sexp_gc_var2(ty, nm);
     sexp_gc_preserve2(ctx, ty, nm);
 
@@ -150,7 +153,7 @@ namespace {
 
 
   int style_tag_p(sexp ctx) {
-    int retv = 0;
+    auto retv = 0;
     sexp_gc_var2(ty, nm);
     sexp_gc_preserve2(ctx, ty, nm);
 
@@ -167,7 +170,7 @@ namespace {
 
   const Node* singleton_node_from_list(sexp ctx, sexp arg) {
     if (sexp_check_tag(arg, nodelist_tag_p(ctx))) {
-      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(arg));
+      const auto* nl = (const NodeList*)(sexp_cpointer_value(arg));
       if (nl->length() == 1) {
         return nl->head();
       }
@@ -181,7 +184,7 @@ namespace {
     sexp_gc_var1(str);
     sexp_gc_preserve1(ctx, str);
 
-    estd::optional<std::string> result;
+    auto result = estd::optional<std::string>{};
     if (sexp_isymbolp(obj)) {
       str = sexp_symbol_to_string(ctx, obj);
       result = sexp_string_data(str);
@@ -200,7 +203,7 @@ namespace {
     sexp_gc_var1(str);
     sexp_gc_preserve1(ctx, str);
 
-    estd::optional<std::string> result;
+    auto result = estd::optional<std::string>{};
     if (sexp_keywordp(obj)) {
       str = sexp_keyword_to_string(ctx, obj);
       result = sexp_string_data(str);
@@ -259,7 +262,7 @@ namespace {
 
 
   sexp free_length_spec(sexp ctx, sexp self, sexp_sint_t n, sexp ls_arg) {
-    const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(ls_arg));
+    const auto* ls = (const fo::LengthSpec*)(sexp_cpointer_value(ls_arg));
     delete ls;
 
     sexp_cpointer_value(ls_arg) = nullptr;
@@ -269,7 +272,7 @@ namespace {
 
   sexp func_displace_space_p(sexp ctx, sexp self, sexp_sint_t n, sexp q) {
     if (sexp_check_tag(q, length_spec_tag_p(ctx))) {
-      const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(q));
+      const auto* ls = (const fo::LengthSpec*)(sexp_cpointer_value(q));
       if (ls->_spec_type == fo::kDisplay)
         return sexp_make_boolean(1);
     }
@@ -280,7 +283,7 @@ namespace {
 
   sexp func_inline_space_p(sexp ctx, sexp self, sexp_sint_t n, sexp q) {
     if (sexp_check_tag(q, length_spec_tag_p(ctx))) {
-      const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(q));
+      const auto* ls = (const fo::LengthSpec*)(sexp_cpointer_value(q));
       if (ls->_spec_type == fo::kInline)
         return sexp_make_boolean(1);
     }
@@ -385,9 +388,9 @@ namespace {
       auto norm_factor = is_convertible_to_pt_unit(val_unit) ? pt_ratio : 1.0;
 
       // the number is normalized to 'm' unit; rebase it to 'pt'
-      double val = sexp_quantity_normalize_to_double(ctx, val_arg) / norm_factor;
-      double minv = sexp_quantity_normalize_to_double(ctx, min_arg) / norm_factor;
-      double maxv = val;
+      auto val = sexp_quantity_normalize_to_double(ctx, val_arg) / norm_factor;
+      auto minv = sexp_quantity_normalize_to_double(ctx, min_arg) / norm_factor;
+      auto maxv = val;
 
       if (sexp_quantityp(max_arg)) {
         auto max_unit = to_quantity_unit(ctx, max_arg);
@@ -460,7 +463,7 @@ namespace {
 
     result = SEXP_VOID;
 
-    if (const Node* node = singleton_node_from_list(ctx, node_arg)) {
+    if (const auto* node = singleton_node_from_list(ctx, node_arg)) {
       result =
         sexp_string_to_symbol(ctx, str = sexp_c_string(ctx, node->gi().c_str(), -1));
     }
@@ -480,8 +483,8 @@ namespace {
 
     result = SEXP_NULL;
 
-    if (const Node* node = singleton_node_from_list(ctx, node_arg)) {
-      if (const Node* p = node->parent()) {
+    if (const auto* node = singleton_node_from_list(ctx, node_arg)) {
+      if (const auto* p = node->parent()) {
         result = make_nodelist(ctx, new NodeList(ConstNodes{p}));
       }
     }
@@ -501,7 +504,7 @@ namespace {
 
     result = SEXP_VOID;
 
-    if (const Node* node = singleton_node_from_list(ctx, node_arg)) {
+    if (const auto* node = singleton_node_from_list(ctx, node_arg)) {
       result =
         sexp_string_to_symbol(ctx,
                               str = sexp_c_string(ctx, node->classname().c_str(), -1));
@@ -577,7 +580,7 @@ namespace {
         --i;
 
         if (i > stack_bot) {
-          if (*key == "default") {
+          if (*key == k_default) {
             default_value = stack[i];
           }
           else {
@@ -589,7 +592,7 @@ namespace {
     }
 
     if (result == SEXP_VOID) {
-      if (const Node* node = singleton_node_from_list(ctx, node_arg)) {
+      if (const auto* node = singleton_node_from_list(ctx, node_arg)) {
         auto propname = string_from_symbol_sexp_or_none(ctx, propname_arg);
         if (!propname) {
           result = sexp_user_exception(ctx, self, "not a symbol", propname_arg);
@@ -598,11 +601,11 @@ namespace {
           auto visitor = SexpPropVisitor(ctx, self, propname_arg, default_value);
 
           if (node->has_property(CommonProps::k_id)) {
-            PropertyValue value = (*node)[CommonProps::k_id];
+            auto value = (*node)[CommonProps::k_id];
             result = apply(visitor, value);
           }
           else if (node->has_property(CommonProps::k_auto_id)) {
-            PropertyValue value = (*node)[CommonProps::k_auto_id];
+            auto value = (*node)[CommonProps::k_auto_id];
             result = apply(visitor, value);
           }
           else
@@ -610,7 +613,7 @@ namespace {
         }
         else {
           auto visitor = SexpPropVisitor(ctx, self, propname_arg, default_value);
-          PropertyValue value = (*node)[*propname];
+          auto value = (*node)[*propname];
           result = apply(visitor, value);
         }
       }
@@ -637,7 +640,7 @@ namespace {
 
     result = SEXP_VOID;
 
-    std::string key;
+    auto key = std::string{};
     if (sexp_stringp(string_arg)) {
       key = std::string(sexp_string_data(string_arg));
     }
@@ -647,11 +650,11 @@ namespace {
 
     if (result == SEXP_VOID) {
       if (sexp_check_tag(nnl_arg, nodelist_tag_p(ctx))) {
-        const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nnl_arg));
+        const auto* nl = (const NodeList*)(sexp_cpointer_value(nnl_arg));
 
-        ConstNodes nodes;
+        auto nodes = ConstNodes{};
 
-        NodeList p(nl->clone());
+        auto p = nl->clone();
         while (!p.empty()) {
           auto* nd = p.head();
           if (nd->has_property(CommonProps::k_attr_name)) {
@@ -720,7 +723,7 @@ namespace {
 
 
   sexp free_nodelist(sexp ctx, sexp self, sexp_sint_t n, sexp nl_arg) {
-    const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
+    const auto* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
     delete nl;
 
     sexp_cpointer_value(nl_arg) = nullptr;
@@ -740,7 +743,7 @@ namespace {
     result = SEXP_VOID;
 
     if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
-      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
+      const auto* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
       result = sexp_make_boolean(nl->empty());
     }
     else {
@@ -758,7 +761,7 @@ namespace {
     sexp_gc_preserve1(ctx, result);
 
     if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
-      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
+      const auto* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
       result = sexp_make_fixnum(nl->length());
     }
     else {
@@ -776,8 +779,8 @@ namespace {
     sexp_gc_preserve1(ctx, result);
 
     if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
-      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
-      const Node* node = nl->head();
+      const auto* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
+      const auto* node = nl->head();
       result = make_nodelist(ctx, node ? new NodeList({node}) : new NodeList());
     }
     else {
@@ -795,7 +798,7 @@ namespace {
     sexp_gc_preserve1(ctx, result);
 
     if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
-      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
+      const auto* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
       result = make_nodelist(ctx, new NodeList(nl->rest()));
     }
     else {
@@ -822,12 +825,12 @@ namespace {
     else {
       result = SEXP_FALSE;
 
-      const NodeList* nl0 = (const NodeList*)(sexp_cpointer_value(nl0_arg));
-      const NodeList* nl1 = (const NodeList*)(sexp_cpointer_value(nl1_arg));
+      const auto* nl0 = (const NodeList*)(sexp_cpointer_value(nl0_arg));
+      const auto* nl1 = (const NodeList*)(sexp_cpointer_value(nl1_arg));
 
       if (nl0 != nl1) {
-        NodeList p0 = nl0->clone();
-        NodeList p1 = nl1->clone();
+        auto p0 = nl0->clone();
+        auto p1 = nl1->clone();
         while (!p0.empty() && !p1.empty()) {
           if (p0.head() != p1.head())
             break;
@@ -854,13 +857,13 @@ namespace {
     result = SEXP_VOID;
 
     if (sexp_pairp(args_arg)) {
-      std::vector<NodeList> nodelist;
+      auto nodelist = std::vector<NodeList>{};
 
       for (sexp ls = args_arg; sexp_pairp(ls); ls = sexp_cdr(ls)) {
         sexp ref = sexp_car(ls);
 
         if (sexp_check_tag(ref, nodelist_tag_p(ctx))) {
-          const NodeList* nl = (const NodeList*)(sexp_cpointer_value(ref));
+          const auto* nl = (const NodeList*)(sexp_cpointer_value(ref));
           nodelist.emplace_back(nl->clone());
         }
       }
@@ -882,7 +885,7 @@ namespace {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
-    if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
+    if (const auto* node = singleton_node_from_list(ctx, nl_arg)) {
       result = make_nodelist(ctx, new NodeList(node, kind));
     }
     else {
@@ -931,8 +934,8 @@ namespace {
 
     result = SEXP_FALSE;
 
-    if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
-      const Node* parent = node->parent();
+    if (const auto* node = singleton_node_from_list(ctx, nl_arg)) {
+      const auto* parent = node->parent();
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
         if (!siblings.empty()) {
@@ -958,8 +961,9 @@ namespace {
 
     result = SEXP_FALSE;
 
-    if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
-      const Node* parent = node->parent();
+    if (const auto* node = singleton_node_from_list(ctx, nl_arg)) {
+      const auto* parent = node->parent();
+
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
         auto i_find = find_if(begin(siblings), end(siblings), [&node](const Node* lnd) {
@@ -986,8 +990,9 @@ namespace {
 
     result = SEXP_FALSE;
 
-    if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
-      const Node* parent = node->parent();
+    if (const auto* node = singleton_node_from_list(ctx, nl_arg)) {
+      const auto* parent = node->parent();
+
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
         std::reverse(siblings.begin(), siblings.end());
@@ -1015,8 +1020,9 @@ namespace {
 
     result = SEXP_FALSE;
 
-    if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
-      const Node* parent = node->parent();
+    if (const auto* node = singleton_node_from_list(ctx, nl_arg)) {
+      const auto* parent = node->parent();
+
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
         std::reverse(siblings.begin(), siblings.end());
@@ -1046,12 +1052,12 @@ namespace {
 
     result = SEXP_VOID;
 
-    std::string key;
+    auto key = std::string{};
     if (sexp_stringp(id_arg)) {
       auto id = std::string(sexp_string_data(id_arg));
 
-      if (const Node* node = singleton_node_from_list(ctx, nl_arg)) {
-        ConstNodes nl_result = elements_with_id(node->grove(), id);
+      if (const auto* node = singleton_node_from_list(ctx, nl_arg)) {
+        auto nl_result = elements_with_id(node->grove(), id);
 
         if (!nl_result.empty()) {
           result = make_nodelist(ctx, new NodeList(nl_result));
@@ -1085,10 +1091,10 @@ namespace {
     result = SEXP_VOID;
 
     if (sexp_check_tag(nl_arg, nodelist_tag_p(ctx))) {
-      const NodeList* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
+      const auto* nl = (const NodeList*)(sexp_cpointer_value(nl_arg));
 
       std::stringstream ss;
-      NodeList p = nl->clone();
+      auto p = nl->clone();
       while (!p.empty()) {
         ss << node_data(p.head());
         p = p.rest();
@@ -1189,7 +1195,7 @@ namespace {
 
 
   sexp free_sosofo(sexp ctx, sexp self, sexp_sint_t n, sexp sosofo_arg) {
-    const Sosofo* sosofo = (const Sosofo*)(sexp_cpointer_value(sosofo_arg));
+    const auto* sosofo = (const Sosofo*)(sexp_cpointer_value(sosofo_arg));
     delete sosofo;
 
     sexp_cpointer_value(sosofo_arg) = nullptr;
@@ -1209,12 +1215,12 @@ namespace {
     result = SEXP_VOID;
 
     if (sexp_pairp(sosofo_arg)) {
-      std::vector<Sosofo> sosofos;
+      auto sosofos = std::vector<Sosofo>{};
 
       for (sexp ls = sosofo_arg; sexp_pairp(ls); ls = sexp_cdr(ls)) {
         sexp ref = sexp_car(ls);
         if (sexp_check_tag(ref, sosofo_tag_p(ctx))) {
-          const Sosofo* sosofo = (const Sosofo*)(sexp_cpointer_value(ref));
+          const auto* sosofo = (const Sosofo*)(sexp_cpointer_value(ref));
 
           sosofos.emplace_back(*sosofo);
         }
@@ -1279,8 +1285,7 @@ namespace {
 
 
   sexp free_style(sexp ctx, sexp self, sexp_sint_t n, sexp style_arg) {
-    const fo::PropertySpecs* style =
-      (const fo::PropertySpecs*)(sexp_cpointer_value(style_arg));
+    const auto* style = (const fo::PropertySpecs*)(sexp_cpointer_value(style_arg));
     delete style;
 
     sexp_cpointer_value(style_arg) = nullptr;
@@ -1290,7 +1295,7 @@ namespace {
 
   estd::optional<fo::PropertySpec>
   evaluate_keyword_parameter(sexp ctx, sexp self, const std::string& key, sexp expr) {
-    estd::optional<fo::PropertySpec> result;
+    auto result = estd::optional<fo::PropertySpec>{};
 
     sexp_gc_var1(excep);
     sexp_gc_preserve1(ctx, excep);
@@ -1300,7 +1305,7 @@ namespace {
       result = fo::PropertySpec(key, *sym_value);
     }
     else if (sexp_check_tag(expr, sosofo_tag_p(ctx))) {
-      const Sosofo* sosofo = (const Sosofo*)(sexp_cpointer_value(expr));
+      const auto* sosofo = (const Sosofo*)(sexp_cpointer_value(expr));
       result = fo::PropertySpec(key, std::make_shared<Sosofo>(*sosofo));
     }
     else if (sexp_booleanp(expr)) {
@@ -1319,14 +1324,14 @@ namespace {
       result = fo::PropertySpec(key, fo::LengthSpec(fo::kDimen, val, result_unit));
     }
     else if (sexp_check_tag(expr, length_spec_tag_p(ctx))) {
-      const fo::LengthSpec* ls = (const fo::LengthSpec*)(sexp_cpointer_value(expr));
+      const auto* ls = (const fo::LengthSpec*)(sexp_cpointer_value(expr));
       result = fo::PropertySpec(key, *ls);
     }
     else if (sexp_stringp(expr)) {
       result = fo::PropertySpec(key, std::string(sexp_string_data(expr)));
     }
     else if (sexp_check_tag(expr, color_tag_p(ctx))) {
-      const fo::Color* co = (const fo::Color*)(sexp_cpointer_value(expr));
+      const auto* co = (const fo::Color*)(sexp_cpointer_value(expr));
       result = fo::PropertySpec(key, *co);
     }
     else {
@@ -1348,9 +1353,9 @@ namespace {
     result = SEXP_NULL;
 
     if (sexp_check_tag(principal_port, sosofo_tag_p(ctx))) {
-      const Sosofo* sosofo = (const Sosofo*)(sexp_cpointer_value(principal_port));
+      const auto* sosofo = (const Sosofo*)(sexp_cpointer_value(principal_port));
 
-      std::shared_ptr<IFormattingObject> fo(
+      auto fo = std::shared_ptr<IFormattingObject>(
         fo::create_fo_by_classname(std::string("#") + fo_class, props, *sosofo));
 
       if (!fo) {
@@ -1365,7 +1370,7 @@ namespace {
         result = make_sosofo(ctx, new Sosofo(fo));
     }
     else {
-      std::shared_ptr<IFormattingObject> fo(
+      auto fo = std::shared_ptr<IFormattingObject>(
         fo::create_fo_by_classname(std::string("#") + fo_class, props, Sosofo()));
       result = make_sosofo(ctx, new Sosofo(fo));
     }
@@ -1389,7 +1394,7 @@ namespace {
       result = make_textbook_exception(ctx, self, "not a symbol", fo_class_arg, source);
     }
 
-    fo::PropertySpecs props;
+    auto props = fo::PropertySpecs{};
     if (sexp_pairp(args_arg)) {
       sexp ls = args_arg;
 
@@ -1401,10 +1406,9 @@ namespace {
           if (sexp_pairp(sexp_cdr(ls))) {
             ref = sexp_car(sexp_cdr(ls));
 
-            if (*key == "use") {
+            if (*key == k_use) {
               if (sexp_check_tag(ref, style_tag_p(ctx))) {
-                const fo::PropertySpecs* style =
-                  (const fo::PropertySpecs*)(sexp_cpointer_value(ref));
+                const auto* style = (const fo::PropertySpecs*)(sexp_cpointer_value(ref));
                 props = merge_property_specs(props, *style);
               }
               else {
@@ -1467,7 +1471,7 @@ namespace {
     result = SEXP_NULL;
     obj = SEXP_NULL;
 
-    fo::PropertySpecs props;
+    auto props = fo::PropertySpecs{};
     if (sexp_pairp(args_arg)) {
       sexp ls = args_arg;
 
@@ -1480,8 +1484,7 @@ namespace {
             ref = sexp_car(sexp_cdr(ls));
             if (*key == "use") {
               if (sexp_check_tag(ref, style_tag_p(ctx))) {
-                const fo::PropertySpecs* style =
-                  (const fo::PropertySpecs*)(sexp_cpointer_value(ref));
+                const auto* style = (const fo::PropertySpecs*)(sexp_cpointer_value(ref));
                 props = merge_property_specs(props, *style);
               }
               else {
@@ -1544,7 +1547,7 @@ namespace {
   //----------------------------------------------------------------------------
 
   sexp free_color(sexp ctx, sexp self, sexp_sint_t n, sexp co_arg) {
-    const fo::Color* co = (const fo::Color*)(sexp_cpointer_value(co_arg));
+    const auto* co = (const fo::Color*)(sexp_cpointer_value(co_arg));
     delete co;
 
     sexp_cpointer_value(co_arg) = nullptr;
@@ -1585,9 +1588,9 @@ namespace {
       sexp green = sexp_cadr(args_arg);
       sexp blue = sexp_caddr(args_arg);
 
-      float redv = sexp_flonump(red) ? sexp_flonum_value(red) : 0.0;
-      float greenv = sexp_flonump(green) ? sexp_flonum_value(green) : 0.0;
-      float bluev = sexp_flonump(blue) ? sexp_flonum_value(blue) : 0.0;
+      auto redv = sexp_flonump(red) ? sexp_flonum_value(red) : 0.0;
+      auto greenv = sexp_flonump(green) ? sexp_flonum_value(green) : 0.0;
+      auto bluev = sexp_flonump(blue) ? sexp_flonum_value(blue) : 0.0;
 
       result = make_color(ctx, fo::make_rgb_color(redv, greenv, bluev));
     }
@@ -1612,10 +1615,10 @@ namespace {
       sexp yellow = sexp_caddr(args_arg);
       sexp black = sexp_cadddr(args_arg);
 
-      float cyanv = sexp_flonump(cyan) ? sexp_flonum_value(cyan) : 0.0;
-      float magentav = sexp_flonump(magenta) ? sexp_flonum_value(magenta) : 0.0;
-      float yellowv = sexp_flonump(yellow) ? sexp_flonum_value(yellow) : 0.0;
-      float blackv = sexp_flonump(black) ? sexp_flonum_value(black) : 0.0;
+      auto cyanv = sexp_flonump(cyan) ? sexp_flonum_value(cyan) : 0.0;
+      auto magentav = sexp_flonump(magenta) ? sexp_flonum_value(magenta) : 0.0;
+      auto yellowv = sexp_flonump(yellow) ? sexp_flonum_value(yellow) : 0.0;
+      auto blackv = sexp_flonump(black) ? sexp_flonum_value(black) : 0.0;
 
       result = make_color(ctx, fo::make_cmyk_color(cyanv, magentav, yellowv, blackv));
     }
@@ -1634,9 +1637,9 @@ namespace {
     sexp_gc_preserve1(ctx, result);
 
     if (sexp_numberp(args_arg)) {
-      float val = (sexp_fixnump(args_arg)
-                     ? sexp_unbox_fixnum(args_arg)
-                     : (sexp_flonump(args_arg) ? sexp_flonum_value(args_arg) : 0.0));
+      auto val = (sexp_fixnump(args_arg)
+                    ? sexp_unbox_fixnum(args_arg)
+                    : (sexp_flonump(args_arg) ? sexp_flonum_value(args_arg) : 0.0));
       result = make_color(ctx, fo::make_gray_color(val));
     }
     else
@@ -1730,7 +1733,7 @@ namespace {
   estd::optional<fs::path> search_in_path(const std::string& resource,
                                           const fs::path& parent_path,
                                           const std::string& prefix_path) {
-    std::vector<fs::path> paths(prepare_tstyle_search_path(prefix_path));
+    auto paths = prepare_tstyle_search_path(prefix_path);
     paths.insert(paths.begin(), parent_path);
 
     for (const auto& p : paths) {
@@ -1831,7 +1834,7 @@ namespace {
       init_builtins(_ctx);
 
       for (const auto& path : module_paths) {
-        std::string libpath = path.string();
+        auto libpath = path.string();
 
         sexp_add_module_directory(_ctx, tmp = sexp_c_string(_ctx, libpath.c_str(), -1),
                                   SEXP_FALSE);
@@ -1849,7 +1852,7 @@ namespace {
       sexp_gc_preserve1(_ctx, res);
 
       res = sexp_load_module_file(_ctx, script_file.string().c_str(), nullptr);
-      bool retv = check_exception_p(_ctx, res);
+      auto retv = check_exception_p(_ctx, res);
 
       sexp_gc_release1(_ctx);
 
@@ -1864,7 +1867,7 @@ namespace {
       sexp_gc_preserve2(_ctx, obj1, res);
 
       obj1 = sexp_c_string(_ctx, script_file.string().c_str(), -1);
-      bool retv = check_exception_p(_ctx, res = sexp_load(_ctx, obj1, NULL));
+      auto retv = check_exception_p(_ctx, res = sexp_load(_ctx, obj1, NULL));
 
       sexp_gc_release2(_ctx);
 
@@ -1898,7 +1901,7 @@ namespace {
       check_exception_p(_ctx, res);
 
       if (sexp_check_tag(res, sosofo_tag_p(_ctx))) {
-        const Sosofo* sosofo = (const Sosofo*)(sexp_cpointer_value(res));
+        const auto* sosofo = (const Sosofo*)(sexp_cpointer_value(res));
 
         if (sosofo) {
           result.reset(new Sosofo(*sosofo));

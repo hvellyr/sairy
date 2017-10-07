@@ -101,11 +101,11 @@ namespace html {
   } // anon ns
 
 
-  const Doctype k_XHTML_1_0_TRANSITIONAL_DTD =
-    {"-//W3C//DTD XHTML 1.0 Transitional//EN",
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"};
-  const Doctype k_XHTML_1_1_DTD = {"-//W3C//DTD XHTML 1.1//EN",
-                                   "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"};
+  const auto k_XHTML_1_0_TRANSITIONAL_DTD =
+    Doctype{"-//W3C//DTD XHTML 1.0 Transitional//EN",
+            "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"};
+  const auto k_XHTML_1_1_DTD =
+    Doctype{"-//W3C//DTD XHTML 1.1//EN", "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"};
 
 
   Writer::Writer(const Doctype& doctype, const std::string& generator,
@@ -114,10 +114,6 @@ namespace html {
     , _generator(generator)
     , _ctx(&ctx) {}
 
-
-  bool Writer::is_open() const {
-    return _file.is_valid() && _file.is_open();
-  }
 
   void Writer::open(const fs::path& path) {
     _path = path;
@@ -265,11 +261,6 @@ namespace html {
   }
 
 
-  bool Writer::has_header() const {
-    return _has_header;
-  }
-
-
   void Writer::footer() {
     if (is_open()) {
       close_tag("body");
@@ -322,9 +313,6 @@ namespace html {
                    << "};" << std::endl;
   }
 
-  bool CSSWriter::is_open() const {
-    return _file.is_valid() && _file.is_open();
-  }
 
   void CSSWriter::write_rule(const std::string& selector, const std::string& props) {
     if (is_open()) {

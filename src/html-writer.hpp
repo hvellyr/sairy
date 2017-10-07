@@ -53,7 +53,10 @@ namespace html {
     Writer(const Doctype& doctype, const std::string& generator,
            const detail::StyleCtx& ctx);
 
-    bool is_open() const;
+    bool is_open() const {
+      return _file.is_valid() && _file.is_open();
+    }
+
     void open(const filesystem::path& path);
 
     void write_attrs(const Attrs& attrs);
@@ -73,7 +76,11 @@ namespace html {
     void
     header(const std::string& title, const std::string& author, const std::string& desc,
            const std::function<void(std::ostream&)>& style_proc = [](std::ostream&) {});
-    bool has_header() const;
+
+    bool has_header() const {
+      return _has_header;
+    }
+
     void footer();
 
     void newln();
@@ -91,7 +98,11 @@ namespace html {
     CSSWriter(const std::string& generator);
 
     void open(const filesystem::path& path);
-    bool is_open() const;
+
+    bool is_open() const {
+      return _file.is_valid() && _file.is_open();
+    }
+
     void write_rule(const std::string& selector, const std::string& props);
 
     std::string add_rule(const std::string& tag, const std::string& props);
@@ -104,8 +115,7 @@ namespace html {
     std::string _tag;
 
   public:
-    Tag()
-      : _writer(nullptr) {}
+    Tag() = default;
 
     Tag(Writer& writer, const std::string& tag, const Attrs& attrs = {})
       : _writer(&writer)

@@ -31,12 +31,13 @@ namespace {
 
   using ScannerExtensionMap = std::unordered_map<std::string, std::string>;
 
-  ScannerClassFactoryMap s_scanner_factory_map;
-  ScannerExtensionMap s_scanner_extension_map;
+  auto s_scanner_factory_map = ScannerClassFactoryMap{};
+  auto s_scanner_extension_map = ScannerExtensionMap{};
+
 
   template <typename ScannerClass>
   void register_scanner_factory() {
-    ScannerClass scanner;
+    auto scanner = ScannerClass{};
     const auto id = scanner.scanner_id();
 
     const auto i_find = s_scanner_factory_map.find(id);
@@ -78,8 +79,8 @@ po::options_description scanner_options() {
     }
   }
 
-  std::string title = std::string("PARSERS [") + utils::join(parsers, ", ") + "]";
-  po::options_description result(title);
+  auto title = std::string("PARSERS [") + utils::join(parsers, ", ") + "]";
+  auto result = po::options_description(title);
 
   for (const auto& opt : options) {
     result.add(opt);

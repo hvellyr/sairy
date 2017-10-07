@@ -21,7 +21,7 @@ class Grove;
 
 class TextbookScanner : public IScanner
 {
-  bool _debug;
+  bool _debug = false;
   std::vector<filesystem::path> _prefix_path;
   std::vector<filesystem::path> _catalog_path;
 
@@ -29,8 +29,14 @@ public:
   TextbookScanner();
   TextbookScanner(const program_options::variables_map& /*args*/);
 
-  std::string scanner_id() const override;
-  std::unordered_set<std::string> supported_extensions() const override;
+  std::string scanner_id() const override {
+    return "textbook";
+  }
+
+  std::unordered_set<std::string> supported_extensions() const override {
+    return {".tb", ".textbook"};
+  }
+
   program_options::options_description program_options() const override;
 
   Node* scan_file(eyestep::Grove& grove, const filesystem::path& srcfile) override;

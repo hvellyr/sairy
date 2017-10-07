@@ -24,7 +24,7 @@ fo::PropertySpecOrNone PropertiesStack::get(const std::string& key,
                                             const fo::PropertySpecs& defaults) const {
   auto i_current = _stack.begin();
 
-  const fo::PropertySpecs* current = &(*i_current);
+  const auto* current = &(*i_current);
 
   while (current) {
     if (auto spec = current->lookup_key(key))
@@ -48,7 +48,7 @@ fo::PropertySpecOrNone PropertiesStack::get(const std::string& key,
 
 fo::PropertySpecs merge_property_specs(const fo::PropertySpecs& one,
                                        const fo::PropertySpecs& two) {
-  fo::PropertySpecs result(one);
+  auto result = one;
 
   for (const auto& spec : two) {
     if (!result.lookup_key(spec._name))

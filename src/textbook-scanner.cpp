@@ -29,8 +29,7 @@ namespace fs = filesystem;
 
 //----------------------------------------------------------------------------------------
 
-TextbookScanner::TextbookScanner()
-  : _debug(false) {}
+TextbookScanner::TextbookScanner() = default;
 
 
 TextbookScanner::TextbookScanner(const program_options::variables_map& args)
@@ -46,41 +45,30 @@ TextbookScanner::TextbookScanner(const program_options::variables_map& args)
 }
 
 
-std::string TextbookScanner::scanner_id() const {
-  return "textbook";
-}
-
-
-std::unordered_set<std::string> TextbookScanner::supported_extensions() const {
-  return {".tb", ".textbook"};
-}
-
-
 program_options::options_description TextbookScanner::program_options() const {
   namespace po = program_options;
 
-  std::string opts_title =
-    std::string("Textbook parser [selector: '") + scanner_id() + "']";
-  po::options_description desc(opts_title);
+  auto opts_title = std::string("Textbook parser [selector: '") + scanner_id() + "']";
+  auto desc = po::options_description(opts_title);
   return desc;
 }
 
 
 Node* TextbookScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile) {
-  Node* doc_node = grove.make_node(document_class_definition());
+  auto* doc_node = grove.make_node(document_class_definition());
 
   doc_node->set_property(CommonProps::k_source, srcfile.string());
   doc_node->set_property("app-info", "textbook");
 
-  textbook::GroveBuilder grove_builder(doc_node);
-  textbook::VariableEnv vars;
-  textbook::Catalog catalog;
-  textbook::Parser parser(grove, grove_builder, vars, catalog,
-                          nullptr, // docspec
-                          _catalog_path,
-                          false, // mixed content
-                          false  // verbose
-                          );
+  auto grove_builder = textbook::GroveBuilder(doc_node);
+  auto vars = textbook::VariableEnv{};
+  auto catalog = textbook::Catalog{};
+  auto parser = textbook::Parser(grove, grove_builder, vars, catalog,
+                                 nullptr, // docspec
+                                 _catalog_path,
+                                 false, // mixed content
+                                 false  // verbose
+                                 );
 
   parser.parse_file(srcfile);
 

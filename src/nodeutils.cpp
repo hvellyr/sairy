@@ -17,13 +17,13 @@ namespace eyestep {
 
 TraverseRecursion node_traverse(const Node* root, const TraverseNodeVisitor& functor,
                                 int depth) {
-  TraverseRecursion rec = functor(root, depth);
+  auto rec = functor(root, depth);
 
   if (rec == TraverseRecursion::k_recurse) {
-    const Nodes& nodes = root->property<Nodes>(CommonProps::k_children);
+    const auto& nodes = root->property<Nodes>(CommonProps::k_children);
 
     for (const auto& nd : nodes) {
-      TraverseRecursion rec2 = node_traverse(nd, functor, depth + 1);
+      auto rec2 = node_traverse(nd, functor, depth + 1);
       if (rec2 == TraverseRecursion::k_break) {
         return rec2;
       }
@@ -167,7 +167,7 @@ namespace {
       void operator()(const Nodes& nl) {
         if (!nl.empty()) {
           _pp.open_array();
-          bool first = true;
+          auto first = true;
           for (auto* nd : nl) {
             if (!first) {
               _pp.sep();
@@ -179,9 +179,8 @@ namespace {
           }
           _pp.newln().indent(_depth, -1).close_array();
         }
-        else {
+        else
           _pp.empty_array();
-        }
       }
     };
 
@@ -238,10 +237,10 @@ std::string node_data(const Node* base_nd) {
 
 
 ConstNodes elements_with_id(const Grove* grove, const std::string& id) {
-  ConstNodes nl_result;
+  auto nl_result = ConstNodes{};
 
   for (const auto& nd : grove->nodes()) {
-    if (nd.get() != nullptr) {
+    if (nd.get()) {
       if (effective_id(*nd.get()) == id) {
         nl_result.emplace_back(nd.get());
       }
@@ -253,14 +252,14 @@ ConstNodes elements_with_id(const Grove* grove, const std::string& id) {
 
 
 Node* desc_element(const Node* nd) {
-  const Nodes& nodes = nd->property<Nodes>(CommonProps::k_children);
-  for (auto& child : nodes) {
-    if (child->gi() == CommonProps::k_desc) {
-      return child;
-    }
-  }
+  using namespace std;
 
-  return nullptr;
+  const auto& nodes = nd->property<Nodes>(CommonProps::k_children);
+
+  auto i_desc = find_if(begin(nodes), end(nodes), [&](const Node* child) {
+    return child->gi() == CommonProps::k_desc;
+  });
+  return i_desc != end(nodes) ? *i_desc : nullptr;
 }
 
 } // ns eyestep

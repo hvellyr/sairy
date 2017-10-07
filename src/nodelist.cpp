@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cassert>
 #include <memory>
+#include <numeric>
+#include <utility>
 
 
 namespace eyestep {
@@ -62,68 +64,64 @@ namespace detail {
 
 using detail::NodesNodeListStrategy;
 
+
 //------------------------------------------------------------------------------
 
-NodeList::NodeList() {}
-
-
 NodeList::NodeList(const Node* nd, Kind kind) {
+  using namespace std;
+
   assert(nd);
 
   if (kind == k_children) {
     int end = int(nd->property<Nodes>(CommonProps::k_children).size());
-    if (end > 0) {
+    if (end > 0)
       _strategy = estd::make_unique<SiblingsNodeListStrategy>(nd, 0, end);
-    }
   }
   else if (kind == k_siblings) {
     const auto* parent = nd->parent();
     int end = int(parent->property<Nodes>(CommonProps::k_children).size());
-    if (end > 0) {
+
+    if (end > 0)
       _strategy = estd::make_unique<SiblingsNodeListStrategy>(parent, 0, end);
-    }
   }
   else if (kind == k_preced) {
     const auto* parent = nd->parent();
-    const Nodes& nl = parent->property<Nodes>(CommonProps::k_children);
-    auto i_find =
-      std::find_if(nl.begin(), nl.end(), [&](const Node* n) { return nd == n; });
-    int end = std::distance(nl.begin(), i_find);
-    if (end > 0) {
+    const auto& nl = parent->property<Nodes>(CommonProps::k_children);
+    auto i_find = find_if(begin(nl), end(nl), [&](const Node* n) { return nd == n; });
+    int end = distance(begin(nl), i_find);
+
+    if (end > 0)
       _strategy = estd::make_unique<SiblingsNodeListStrategy>(parent, 0, end);
-    }
   }
   else if (kind == k_follow) {
     const auto* parent = nd->parent();
-    const Nodes& nl = parent->property<Nodes>(CommonProps::k_children);
-    auto i_find =
-      std::find_if(nl.begin(), nl.end(), [&](const Node* n) { return nd == n; });
-    int start = std::distance(nl.begin(), i_find) + 1;
+    const auto& nl = parent->property<Nodes>(CommonProps::k_children);
+    auto i_find = find_if(begin(nl), end(nl), [&](const Node* n) { return nd == n; });
+    int start = distance(begin(nl), i_find) + 1;
     int end = int(nl.size());
 
-    if (start < end) {
+    if (start < end)
       _strategy = estd::make_unique<SiblingsNodeListStrategy>(parent, start, end);
-    }
   }
   else if (kind == k_ancestors) {
     _strategy = estd::make_unique<AncestorsNodeListStrategy>(nd->parent(), -1);
   }
   else if (kind == k_descendants) {
     int end = int(nd->property<Nodes>(CommonProps::k_children).size());
-    if (end > 0) {
-      _strategy = estd::make_unique<DescendantsNodeListStrategy>(nd, 0, end, -1,
-                                                                 std::vector<int>{});
-    }
+
+    if (end > 0)
+      _strategy =
+        estd::make_unique<DescendantsNodeListStrategy>(nd, 0, end, -1, vector<int>{});
   }
 }
 
 
 NodeList::NodeList(const std::vector<NodeList>& nl) {
-  std::vector<NodeList> result;
+  auto result = std::vector<NodeList>{};
+
   for (const auto& n : nl) {
-    if (!n.empty()) {
+    if (!n.empty())
       result.emplace_back(n.clone());
-    }
   }
   _strategy = estd::make_unique<detail::CompositeNodeListStrategy>(std::move(result), -1);
 }
@@ -197,9 +195,9 @@ const Node* SiblingsNodeListStrategy::head() const {
 
 NodeList SiblingsNodeListStrategy::rest() const {
   if (_start + 1 < _end) {
-    return NodeList(estd::make_unique<SiblingsNodeListStrategy>(_node, _start + 1, _end));
+    return {estd::make_unique<SiblingsNodeListStrategy>(_node, _start + 1, _end)};
   }
-  return NodeList();
+  return {};
 }
 
 
@@ -222,7 +220,7 @@ bool AncestorsNodeListStrategy::empty() const {
 
 int AncestorsNodeListStrategy::length() const {
   if (_count < 0) {
-    const Node* p = _node;
+    const auto* p = _node;
     int nc = 0;
     while (p) {
       nc++;
@@ -241,9 +239,9 @@ const Node* AncestorsNodeListStrategy::head() const {
 
 NodeList AncestorsNodeListStrategy::rest() const {
   if (Node* p = _node->parent()) {
-    return NodeList(estd::make_unique<AncestorsNodeListStrategy>(p, _count - 1));
+    return {estd::make_unique<AncestorsNodeListStrategy>(p, _count - 1)};
   }
-  return NodeList();
+  return {};
 }
 
 
@@ -266,18 +264,15 @@ std::unique_ptr<INodeListStrategy> DescendantsNodeListStrategy::clone() const {
 
 
 bool DescendantsNodeListStrategy::empty() const {
-  if (_count < 0) {
-    return length() == 0;
-  }
-  return _count == 0;
+  return _count < 0 ? length() == 0 : _count == 0;
 }
 
 
 int DescendantsNodeListStrategy::length() const {
   if (_count < 0) {
-    int nc = 1;
-    NodeList nl = rest();
-    while (nl._strategy.get() != nullptr) {
+    auto nc = 1;
+    auto nl = rest();
+    while (nl._strategy.get()) {
       nl = nl.rest();
       nc++;
     }
@@ -295,42 +290,42 @@ const Node* DescendantsNodeListStrategy::head() const {
 
 
 NodeList DescendantsNodeListStrategy::rest() const {
-  if (_start < _end) {
-    const Node* newnode = _node->property<Nodes>(CommonProps::k_children)[_start];
+  using namespace std;
 
-    const Nodes& children = newnode->property<Nodes>(CommonProps::k_children);
+  if (_start < _end) {
+    const auto* newnode = _node->property<Nodes>(CommonProps::k_children)[_start];
+
+    const auto& children = newnode->property<Nodes>(CommonProps::k_children);
     if (children.size() > 0) {
-      std::vector<int> stack(_stack);
+      auto stack = vector<int>(_stack);
       stack.emplace_back(_start + 1);
 
-      return NodeList(
+      return {
         estd::make_unique<DescendantsNodeListStrategy>(newnode, 0,
                                                        int(newnode
                                                              ->property<Nodes>(
                                                                CommonProps::k_children)
                                                              .size()),
-                                                       _count - 1, std::move(stack)));
+                                                       _count - 1, move(stack))};
     }
   }
 
   if (_start + 1 < _end) {
-    return NodeList(estd::make_unique<DescendantsNodeListStrategy>(_node, _start + 1,
-                                                                   _end, _count - 1,
-                                                                   _stack));
+    return {estd::make_unique<DescendantsNodeListStrategy>(_node, _start + 1, _end,
+                                                           _count - 1, _stack)};
   }
 
   if (_stack.size() > 0) {
-    Node* p = _node->parent();
-    auto i_last = std::prev(_stack.end());
+    auto* p = _node->parent();
+    auto i_last = prev(_stack.end());
 
     while (p && i_last >= _stack.begin()) {
       auto end = int(p->property<Nodes>(CommonProps::k_children).size());
       auto start = *i_last;
       if (start < end) {
-        std::vector<int> stack(_stack.begin(), i_last);
-        return NodeList(estd::make_unique<DescendantsNodeListStrategy>(p, start, end,
-                                                                       _count - 1,
-                                                                       std::move(stack)));
+        auto stack = vector<int>(_stack.begin(), i_last);
+        return {estd::make_unique<DescendantsNodeListStrategy>(p, start, end, _count - 1,
+                                                               move(stack))};
       }
 
       p = p->parent();
@@ -338,7 +333,7 @@ NodeList DescendantsNodeListStrategy::rest() const {
     }
   }
 
-  return NodeList();
+  return {};
 }
 
 
@@ -350,7 +345,7 @@ CompositeNodeListStrategy::CompositeNodeListStrategy(std::vector<NodeList> nl, i
 
 
 std::unique_ptr<INodeListStrategy> CompositeNodeListStrategy::clone() const {
-  std::vector<NodeList> nl;
+  auto nl = std::vector<NodeList>{};
   for (const auto& n : _nl) {
     nl.emplace_back(n.clone());
   }
@@ -364,11 +359,12 @@ bool CompositeNodeListStrategy::empty() const {
 
 
 int CompositeNodeListStrategy::length() const {
+  using namespace std;
+
   if (_count < 0) {
-    int nc = 0;
-    for (const auto& n : _nl) {
-      nc += n.length();
-    }
+    auto nc = accumulate(begin(_nl), end(_nl), 0, [](const int count, const NodeList& n) {
+      return count + n.length();
+    });
     const_cast<CompositeNodeListStrategy*>(this)->_count = nc;
   }
   return _count;
@@ -381,22 +377,23 @@ const Node* CompositeNodeListStrategy::head() const {
 
 
 NodeList CompositeNodeListStrategy::rest() const {
-  std::vector<NodeList> nl;
+  using namespace std;
+
+  auto nl = vector<NodeList>{};
   auto f = _nl.front().rest();
 
   if (!f.empty()) {
-    nl.emplace_back(std::move(f));
+    nl.emplace_back(move(f));
   }
-  for (size_t i = 1; i < _nl.size(); ++i) {
+  for (auto i = 1u; i < _nl.size(); ++i) {
     nl.emplace_back(_nl[i].clone());
   }
 
   if (!nl.empty()) {
-    return NodeList(
-      estd::make_unique<CompositeNodeListStrategy>(std::move(nl), _count - 1));
+    return {estd::make_unique<CompositeNodeListStrategy>(move(nl), _count - 1)};
   }
 
-  return NodeList();
+  return {};
 }
 
 } // ns eyestep

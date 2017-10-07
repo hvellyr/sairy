@@ -111,16 +111,16 @@ namespace utils {
     auto _from = fs::absolute(from);
     auto _to = fs::absolute(to);
 
-    fs::path ret;
-    fs::path::const_iterator i_from(_from.begin());
-    fs::path::const_iterator i_to(_to.begin());
+    auto ret = fs::path{};
+    auto i_from = _from.begin();
+    auto i_to = _to.begin();
 
     // Find common base
-    for (fs::path::const_iterator to_end(_to.end()), from_end(_from.end());
+    for (auto to_end = _to.end(), from_end = _from.end();
          i_from != from_end && i_to != to_end && *i_from == *i_to; ++i_from, ++i_to) {
     }
     // Navigate backwards in directory to reach previously found base
-    for (fs::path::const_iterator from_end(_from.end()); i_from != from_end; ++i_from) {
+    for (auto from_end = _from.end(); i_from != from_end; ++i_from) {
       if ((*i_from) != ".") {
         ret /= "..";
       }

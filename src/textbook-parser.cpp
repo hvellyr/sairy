@@ -29,24 +29,24 @@
 namespace eyestep {
 namespace textbook {
 
-  const std::string k_attrs_tag = "attrs";
-  const std::string k_c_tag = "c";
-  const std::string k_textbook_tag = "textbook";
-  const std::string k_end_tag = "end";
-  const std::string k_include_tag = "include";
-  const std::string k_let_tag = "let";
-  const std::string k_model_tag = "model";
-  const std::string k_p_tag = "p";
-  const std::string k_tag_tag = "tag";
-  const std::string k_version_tag = "version";
+  const auto k_attrs_tag = std::string("attrs");
+  const auto k_c_tag = std::string("c");
+  const auto k_textbook_tag = std::string("textbook");
+  const auto k_end_tag = std::string("end");
+  const auto k_include_tag = std::string("include");
+  const auto k_let_tag = std::string("let");
+  const auto k_model_tag = std::string("model");
+  const auto k_p_tag = std::string("p");
+  const auto k_tag_tag = std::string("tag");
+  const auto k_version_tag = std::string("version");
 
-  const std::string k_ANY_opt = "ANY";
-  const std::string k_EMPTY_opt = "EMPTY";
-  const std::string k_FREF_opt = "FREF";
-  const std::string k_ID_opt = "ID";
-  const std::string k_NOP_opt = "NOP";
-  const std::string k_P_opt = "P";
-  const std::string k_TEXT_opt = "#TEXT";
+  const auto k_ANY_opt = std::string("ANY");
+  const auto k_EMPTY_opt = std::string("EMPTY");
+  const auto k_FREF_opt = std::string("FREF");
+  const auto k_ID_opt = std::string("ID");
+  const auto k_NOP_opt = std::string("NOP");
+  const auto k_P_opt = std::string("P");
+  const auto k_TEXT_opt = std::string("#TEXT");
 
 
   namespace fs = filesystem;
@@ -73,7 +73,7 @@ namespace textbook {
         return utils::make_relative(fs::current_path(), abspath);
       }
 
-      return fs::path();
+      return {};
     }
 
     estd::optional<fs::path>
@@ -110,16 +110,16 @@ namespace textbook {
             auto opt =
               attrs.size() >= 4 ? utils::trim_copy(node_data(attrs[3])) : std::string();
 
-            size_t min_attr = 0;
-            size_t max_attr = 0;
+            auto min_attr = 0u;
+            auto max_attr = 0u;
 
-            std::vector<AttrSpec> attrspecs;
+            auto attrspecs = std::vector<AttrSpec>{};
             for (const auto& attr : split_attrs(attr_spec)) {
               if (!attr.empty()) {
-                bool is_opt = true;
-                bool is_data = false;
-                std::string nm;
-                AttrType ty;
+                auto is_opt = true;
+                auto is_data = false;
+                auto nm = std::string{};
+                auto ty = AttrType{};
 
                 if (attr.back() == '?') {
                   is_opt = true;
@@ -151,10 +151,10 @@ namespace textbook {
               }
             }
 
-            bool is_env = body_spec != k_EMPTY_opt;
-            bool is_mixed_content = body_spec.find(k_TEXT_opt) != std::string::npos;
-            bool starts_p = opt.find(k_P_opt) != std::string::npos;
-            bool is_block = opt.find(k_NOP_opt) != std::string::npos;
+            auto is_env = body_spec != k_EMPTY_opt;
+            auto is_mixed_content = body_spec.find(k_TEXT_opt) != std::string::npos;
+            auto starts_p = opt.find(k_P_opt) != std::string::npos;
+            auto is_block = opt.find(k_NOP_opt) != std::string::npos;
 
             auto tag_spec =
               TagSpec(gi_spec, attrspecs, std::make_tuple(min_attr, max_attr), is_env,
@@ -171,23 +171,23 @@ namespace textbook {
     std::unique_ptr<DocSpec> model_doc_type_doc_spec() {
       auto docspec = ::estd::make_unique<DocSpec>();
 
-      docspec->add(
-        TagSpec(k_tag_tag,
-                std::vector<AttrSpec>{AttrSpec(k_tag_tag, k_attr_str, false, false),
-                                      AttrSpec(k_attrs_tag, k_attr_str, false, false),
-                                      AttrSpec(k_model_tag, k_attr_str, false, false),
-                                      AttrSpec(k_p_tag, k_attr_str, true, false)},
-                std::make_tuple(3u, 4u),
-                false, // is_env
-                false  // is_mixed
-                ));
-      docspec->add(
-        TagSpec(k_textbook_tag,
-                std::vector<AttrSpec>{AttrSpec(k_version_tag, k_attr_str, false, false)},
-                std::make_tuple(1u, 1u),
-                false, // is_env,
-                false  // is_mixed
-                ));
+      docspec->add(TagSpec(k_tag_tag,
+                           {
+                             AttrSpec(k_tag_tag, k_attr_str, false, false),
+                             AttrSpec(k_attrs_tag, k_attr_str, false, false),
+                             AttrSpec(k_model_tag, k_attr_str, false, false),
+                             AttrSpec(k_p_tag, k_attr_str, true, false),
+                           },
+                           std::make_tuple(3u, 4u),
+                           false, // is_env
+                           false  // is_mixed
+                           ));
+      docspec->add(TagSpec(k_textbook_tag,
+                           {AttrSpec(k_version_tag, k_attr_str, false, false)},
+                           std::make_tuple(1u, 1u),
+                           false, // is_env,
+                           false  // is_mixed
+                           ));
 
       return docspec;
     }
@@ -196,17 +196,17 @@ namespace textbook {
     std::unique_ptr<DocSpec> read_model(const fs::path& path,
                                         const std::vector<fs::path>& catalog_path,
                                         bool is_verbose = false) {
-      eyestep::Grove grove;
-      GroveBuilder gb(grove.make_node(document_class_definition()));
+      auto grove = eyestep::Grove{};
+      auto gb = GroveBuilder(grove.make_node(document_class_definition()));
 
-      Catalog catalog;
+      auto catalog = Catalog{};
       catalog[k_textbook_tag] = model_doc_type_doc_spec();
 
-      VariableEnv vars;
+      auto vars = VariableEnv{};
 
-      Parser p(grove, gb, vars, catalog, nullptr, catalog_path,
-               false, // mixed content
-               is_verbose);
+      auto p = Parser(grove, gb, vars, catalog, nullptr, catalog_path,
+                      false, // mixed content
+                      is_verbose);
 
       auto nd = p.parse_file(path);
       if (is_verbose) {
@@ -374,20 +374,20 @@ namespace textbook {
 
   //------------------------------------------------------------------------------
 
+  const auto SYMBOL1 = std::set<char>{
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+    'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B',
+    'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+    'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '?', '*',
+  };
+  const auto SYMBOLn = std::set<char>{
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
+    'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+    'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y',
+    'Z', '_', '?', '*', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  };
+  const auto WS = std::set<char>{' ', '\t', '\r', '\n'};
 
-  const std::set<char> SYMBOL1 = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-                                  'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-                                  'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
-                                  'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
-                                  'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '?', '*'};
-
-  const std::set<char> SYMBOLn = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-                                  'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-                                  'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
-                                  'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
-                                  'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', '?', '*',
-                                  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-  const std::set<char> WS = {' ', '\t', '\r', '\n'};
 
   bool is_symbol1(char c) {
     return SYMBOL1.find(c) != SYMBOL1.end();
@@ -484,7 +484,7 @@ namespace textbook {
     _stream = stream;
 
     while (!eof()) {
-      char c = currentc();
+      auto c = currentc();
 
       if (c == '@') {
         parse_at_form();
@@ -582,20 +582,20 @@ namespace textbook {
 
 
   Parser::Args Parser::parse_args() {
-    Args args;
-    std::string skipped_ws;
+    auto args = Args{};
+    auto skipped_ws = std::string{};
 
     while (!eof() && currentc() == '{') {
       nextc();
 
       std::stringstream arg;
-      bool done = false;
-      int bracecount = 0;
-      std::list<std::string> brace_srcpos = {srcpos()};
+      auto done = false;
+      auto bracecount = 0;
+      auto brace_srcpos = std::list<std::string>{srcpos()};
 
       while (!done && !eof()) {
         auto sp = srcpos();
-        char c = currentc();
+        auto c = currentc();
         nextc();
 
         switch (c) {
@@ -648,11 +648,11 @@ namespace textbook {
 
   Parser::AttrsAndId Parser::args2nl(const Args& args, const TagSpec& tagspec,
                                      size_t lineno_at_start) {
-    Nodes nl;
-    estd::optional<std::string> idstr;
+    auto nl = Nodes{};
+    auto idstr = estd::optional<std::string>{};
 
     const auto& attrspecs = tagspec.attrspecs();
-    size_t attrc = 0;
+    auto attrc = 0u;
 
     for (const auto& arg : args) {
       // don't reparse argument if ID type
@@ -668,8 +668,8 @@ namespace textbook {
         nl.push_back(textnd);
       }
       else {
-        GroveBuilder gb(_grove.make_elt_node("<root>"));
-        Parser p(_grove, gb, _vars, _catalog, _docspec, _catalog_path, true);
+        auto gb = GroveBuilder(_grove.make_elt_node("<root>"));
+        auto p = Parser(_grove, gb, _vars, _catalog, _docspec, _catalog_path, true);
         auto nd = p.parse_stream(
           std::make_shared<Stream>(arg, _stream->fpath(), lineno_at_start));
 
@@ -724,7 +724,7 @@ namespace textbook {
 
     nextc();
 
-    char c = currentc();
+    auto c = currentc();
 
     switch (c) {
     case '@': // @@
@@ -833,14 +833,13 @@ namespace textbook {
 
   fs::path Parser::path_for_include(const fs::path& fpath) {
     if (!fpath.string().empty()) {
-      if (fpath.is_absolute()) {
+      if (fpath.is_absolute())
         return fpath;
-      }
 
       auto currentfp = _stream->fpath();
       return currentfp.parent_path() /= fpath;
     }
-    return fs::path();
+    return {};
   }
 
 
@@ -870,7 +869,7 @@ namespace textbook {
 
 
   void Parser::parse_tag_with_params(const std::string& tag) {
-    bool is_root_tag = false;
+    auto is_root_tag = false;
     if (!_docspec) {
       is_root_tag = true;
       set_docspec_by_root_tag(tag);

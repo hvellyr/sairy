@@ -85,8 +85,14 @@ public:
   TexProcessor();
   TexProcessor(const program_options::variables_map& args);
 
-  std::string proc_id() const override;
-  std::string default_output_extension() const override;
+  std::string proc_id() const override {
+    return "tex";
+  }
+
+  std::string default_output_extension() const override {
+    return ".tex";
+  }
+
   program_options::options_description program_options() const override;
 
   const IFoProcessor<TexProcessor>*
@@ -100,8 +106,13 @@ public:
   fo::LengthSpec paper_width() const;
   fo::LengthSpec paper_height() const;
 
-  std::iostream& stream();
-  tex_detail::TexStyleContext& style_ctx();
+  std::iostream& stream() {
+    return _file.stream();
+  }
+
+  tex_detail::TexStyleContext& style_ctx() {
+    return _style_ctx;
+  }
 
   void finalize_breaks();
   void request_page_break(tex_detail::BreakKind breakKind);

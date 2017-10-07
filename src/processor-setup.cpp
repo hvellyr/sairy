@@ -61,17 +61,17 @@ po::options_description processor_options() {
   for (const auto& reg : processor_registry()) {
     auto processor = reg.second(po::variables_map{});
     if (processor) {
-      procs.push_back(processor->proc_id());
+      procs.emplace_back(processor->proc_id());
 
       auto opts = processor->program_options();
       if (!opts.empty()) {
-        options.push_back(opts);
+        options.emplace_back(opts);
       }
     }
   }
 
-  std::string title = std::string("RENDERERS [") + utils::join(procs, ", ") + "]";
-  po::options_description result(title);
+  auto title = std::string("RENDERERS [") + utils::join(procs, ", ") + "]";
+  auto result = po::options_description(title);
 
   for (const auto& opt : options) {
     result.add(opt);
@@ -80,16 +80,15 @@ po::options_description processor_options() {
   return result;
 }
 
+
 std::unique_ptr<eyestep::IProcessor>
 make_processor_for_file(const std::string& proc_id, const po::variables_map& args) {
   const auto& registry = processor_registry();
 
   const auto i_processor_factory = registry.find(proc_id);
-  if (i_processor_factory != registry.end()) {
-    return i_processor_factory->second(args);
-  }
-
-  return nullptr;
+  return i_processor_factory != registry.end()
+    ? i_processor_factory->second(args)
+    : nullptr;
 }
 
 } // ns eyestep

@@ -32,13 +32,13 @@ namespace po = program_options;
 //------------------------------------------------------------------------------
 
 namespace {
-  const std::string k_pt = "pt";
-  const std::string k_px = "px";
-  const std::string k_em = "em";
-  const std::string k_m = "m";
-  const std::string k_mm = "mm";
-  const std::string k_cm = "cm";
-  const std::string k_in = "in";
+  const auto k_pt = std::string("pt");
+  const auto k_px = std::string("px");
+  const auto k_em = std::string("em");
+  const auto k_m = std::string("m");
+  const auto k_mm = std::string("mm");
+  const auto k_cm = std::string("cm");
+  const auto k_in = std::string("in");
 
 
   std::string unit_name(fo::Unit un) {
@@ -78,7 +78,7 @@ namespace {
 
 
   std::string dimen2str(const fo::LengthSpec& ls) {
-    double max_inf = std::numeric_limits<double>::infinity();
+    auto max_inf = std::numeric_limits<double>::infinity();
 
     std::stringstream ss;
     ss << ls._value << unit_name(ls._unit);
@@ -120,7 +120,7 @@ namespace {
 
 
   std::string max_dimen2str(const fo::LengthSpec& ls) {
-    double max_inf = std::numeric_limits<double>::infinity();
+    auto max_inf = std::numeric_limits<double>::infinity();
 
     std::stringstream ss;
     if (ls._max == max_inf)
@@ -133,7 +133,7 @@ namespace {
 
   void escape_str_to_stream(std::ostream& os, const std::string& str,
                             tex_detail::TexStyleContext& ctx) {
-    std::u32string str32 = utils::utf8_to_u32string(str);
+    auto str32 = utils::utf8_to_u32string(str);
 
     for (const auto c : str32) {
       switch (c) {
@@ -323,7 +323,7 @@ namespace {
 
 
   void enc_paraprops(TexProcessor* po, const IFormattingObject* fo) {
-    double max_inf = std::numeric_limits<double>::infinity();
+    auto max_inf = std::numeric_limits<double>::infinity();
 
     auto ind = dimen2str(po->property(fo, "first-line-start-indent",
                                       fo::LengthSpec(fo::kInline, 0.0, fo::k_pt)));
@@ -679,9 +679,9 @@ namespace {
   };
 
 
-  const std::string k_left = "left";
-  const std::string k_center = "center";
-  const std::string k_right = "right";
+  const auto k_left = std::string("left");
+  const auto k_center = std::string("center");
+  const auto k_right = std::string("right");
 
   class TexLineFieldFoProcessor : public IFoProcessor<TexProcessor>
   {
@@ -847,18 +847,9 @@ TexProcessor::TexProcessor(const po::variables_map& args)
 }
 
 
-std::string TexProcessor::proc_id() const {
-  return "tex";
-}
-
-
-std::string TexProcessor::default_output_extension() const {
-  return ".tex";
-}
-
 po::options_description TexProcessor::program_options() const {
-  std::string opts_title = std::string("Tex renderer [selector: '") + proc_id() + "']";
-  po::options_description desc(opts_title);
+  auto opts_title = std::string("Tex renderer [selector: '") + proc_id() + "']";
+  auto desc = po::options_description(opts_title);
 
   // clang-format off
   desc.add_options()
@@ -886,7 +877,8 @@ TexProcessor::lookup_fo_processor(const std::string& fo_classname) const {
     {"#page-number", std::make_shared<TexPageNumberFoProcessor>()},
     {"#anchor", std::make_shared<TexAnchorFoProcessor>()},
     {"#simple-column-set-sequence",
-     std::make_shared<TexSimpleColumnSetSequenceProcessor>()}};
+     std::make_shared<TexSimpleColumnSetSequenceProcessor>()},
+  };
 
   auto i_find = procs.find(fo_classname);
 
@@ -933,15 +925,6 @@ void TexProcessor::before_rendering() {
 
 void TexProcessor::after_rendering() {
   stream() << "\\end{document}" << std::endl;
-}
-
-
-std::iostream& TexProcessor::stream() {
-  return _file.stream();
-}
-
-tex_detail::TexStyleContext& TexProcessor::style_ctx() {
-  return _style_ctx;
 }
 
 

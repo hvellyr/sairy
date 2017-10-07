@@ -8,6 +8,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 
@@ -114,95 +115,100 @@ struct PropertyValue
 };
 
 
-template <typename T>
-struct PropertyTrait
-{
-  static PropertyValue::Kind value_type();
-  static const T* get_const(const PropertyValue* val);
-  static T* get(PropertyValue* val);
-};
+namespace detail {
+
+  template <typename T>
+  struct PropertyTrait
+  {
+    static PropertyValue::Kind value_type();
+    static const T* get_const(const PropertyValue* val);
+    static T* get(PropertyValue* val);
+  };
 
 
-template <>
-struct PropertyTrait<Undefined>
-{
-  static PropertyValue::Kind value_type() {
-    return PropertyValue::k_undefined;
-  }
-  static const Undefined* get_const(const PropertyValue* val) {
-    return &val->_undefined;
-  }
-  static Undefined* get(PropertyValue* val) {
-    return &val->_undefined;
-  }
-};
+  template <>
+  struct PropertyTrait<Undefined>
+  {
+    static PropertyValue::Kind value_type() {
+      return PropertyValue::k_undefined;
+    }
+    static const Undefined* get_const(const PropertyValue* val) {
+      return &val->_undefined;
+    }
+    static Undefined* get(PropertyValue* val) {
+      return &val->_undefined;
+    }
+  };
 
 
-template <>
-struct PropertyTrait<int>
-{
-  static PropertyValue::Kind value_type() {
-    return PropertyValue::k_int;
-  }
-  static const int* get_const(const PropertyValue* val) {
-    return &val->_int;
-  }
-  static int* get(PropertyValue* val) {
-    return &val->_int;
-  }
-};
+  template <>
+  struct PropertyTrait<int>
+  {
+    static PropertyValue::Kind value_type() {
+      return PropertyValue::k_int;
+    }
+    static const int* get_const(const PropertyValue* val) {
+      return &val->_int;
+    }
+    static int* get(PropertyValue* val) {
+      return &val->_int;
+    }
+  };
 
 
-template <>
-struct PropertyTrait<std::string>
-{
-  static PropertyValue::Kind value_type() {
-    return PropertyValue::k_string;
-  }
-  static const std::string* get_const(const PropertyValue* val) {
-    return &val->_string;
-  }
-  static std::string* get(PropertyValue* val) {
-    return &val->_string;
-  }
-};
+  template <>
+  struct PropertyTrait<std::string>
+  {
+    static PropertyValue::Kind value_type() {
+      return PropertyValue::k_string;
+    }
+    static const std::string* get_const(const PropertyValue* val) {
+      return &val->_string;
+    }
+    static std::string* get(PropertyValue* val) {
+      return &val->_string;
+    }
+  };
 
 
-template <>
-struct PropertyTrait<Node*>
-{
-  static PropertyValue::Kind value_type() {
-    return PropertyValue::k_nodeptr;
-  }
-  static Node* const* get_const(const PropertyValue* val) {
-    return &val->_nodeptr;
-  }
-  static Node** get(PropertyValue* val) {
-    return &val->_nodeptr;
-  }
-};
+  template <>
+  struct PropertyTrait<Node*>
+  {
+    static PropertyValue::Kind value_type() {
+      return PropertyValue::k_nodeptr;
+    }
+    static Node* const* get_const(const PropertyValue* val) {
+      return &val->_nodeptr;
+    }
+    static Node** get(PropertyValue* val) {
+      return &val->_nodeptr;
+    }
+  };
 
 
-template <>
-struct PropertyTrait<Nodes>
-{
-  static PropertyValue::Kind value_type() {
-    return PropertyValue::k_nodes;
-  }
-  static const Nodes* get_const(const PropertyValue* val) {
-    return &val->_nodes;
-  }
-  static Nodes* get(PropertyValue* val) {
-    return &val->_nodes;
-  }
-};
+  template <>
+  struct PropertyTrait<Nodes>
+  {
+    static PropertyValue::Kind value_type() {
+      return PropertyValue::k_nodes;
+    }
+    static const Nodes* get_const(const PropertyValue* val) {
+      return &val->_nodes;
+    }
+    static Nodes* get(PropertyValue* val) {
+      return &val->_nodes;
+    }
+  };
+
+} // namespace detail
 
 
 template <typename T>
 const T* get(const PropertyValue* val) {
-  const auto foo = PropertyTrait<typename std::remove_const<T>::type>::value_type();
+  const auto foo =
+    detail::PropertyTrait<typename std::remove_const<T>::type>::value_type();
   if (val && foo == val->_kind) {
-    return PropertyTrait<typename std::remove_const<T>::type>::get_const(val);
+    return detail::PropertyTrait<typename std::remove_const<T>::type>::get_const(val);
   }
 
   return nullptr;
@@ -212,9 +218,9 @@ const T* get(const PropertyValue* val) {
 template <typename T>
 T* get(PropertyValue* val) {
   return val &&
-             PropertyTrait<typename std::remove_const<T>::type>::value_type() ==
+             detail::PropertyTrait<typename std::remove_const<T>::type>::value_type() ==
                val->_kind
-           ? PropertyTrait<typename std::remove_const<T>::type>::get(val)
+           ? detail::PropertyTrait<typename std::remove_const<T>::type>::get(val)
            : nullptr;
 }
 
@@ -270,16 +276,20 @@ class Node
 public:
   Node();
   Node(const NodeClass* node_class);
-  Node(const Node& other) = default;
-  Node(Node&& other) = default;
-  Node& operator=(const Node& other) = default;
-  Node& operator=(Node&& other) = default;
 
   const std::string& classname() const;
   const NodeClass* node_class() const;
-  std::string gi() const;
-  Node* parent() const;
-  Grove* grove() const;
+  std::string gi() const {
+    return property<std::string>(CommonProps::k_gi);
+  }
+
+  Node* parent() const {
+    return property<Node*>(CommonProps::k_parent);
+  }
+
+  Grove* grove() const {
+    return _grove;
+  }
 
   const PropertyValue operator[](const std::string& propname) const;
 
@@ -306,7 +316,10 @@ public:
   void add_child_node(Node* child);
   void add_node(const std::string& propname, Node* child);
 
-  Nodes attributes() const;
+  Nodes attributes() const {
+    return property<Nodes>(CommonProps::k_attrs);
+  }
+
   void add_attribute(const std::string& attrname, Node* nd);
   void add_attribute(const std::string& attrname, const std::string& value);
   void add_attribute(const std::string& attrname, int value);
@@ -317,7 +330,9 @@ public:
   bool has_attribute(const std::string& attrname) const;
   const Node* attribute(const std::string& attrname) const;
 
-  const Properties& properties() const;
+  const Properties& properties() const {
+    return _properties;
+  }
 
   friend std::ostream& operator<<(std::ostream& os, const Node& node);
 

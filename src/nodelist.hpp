@@ -113,7 +113,7 @@ public:
     k_descendants,
   };
 
-  NodeList();
+  NodeList() = default;
   NodeList(const Node* nd, Kind kind);
   NodeList(const std::vector<NodeList>& nl);
   NodeList(const Nodes& nodes);

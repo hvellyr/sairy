@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <utility>
 
 
 namespace eyestep {
@@ -75,18 +76,18 @@ std::ostream& operator<<(std::ostream& os, const PropertyValue& prop) {
 
 //------------------------------------------------------------------------------
 
-const std::string CommonProps::k_attr_name = "#attr-name";
-const std::string CommonProps::k_attrs = "attributes";
-const std::string CommonProps::k_children = "children";
-const std::string CommonProps::k_data = "data";
-const std::string CommonProps::k_desc = "desc";
-const std::string CommonProps::k_gi = "gi";
-const std::string CommonProps::k_id = "id";
-const std::string CommonProps::k_auto_id = "auto-id";
-const std::string CommonProps::k_parent = "parent";
-const std::string CommonProps::k_source = "source";
-const std::string CommonProps::k_value = "value";
-const std::string CommonProps::k_data_attr = "data-attr";
+const auto CommonProps::k_attr_name = std::string("#attr-name");
+const auto CommonProps::k_attrs = std::string("attributes");
+const auto CommonProps::k_children = std::string("children");
+const auto CommonProps::k_data = std::string("data");
+const auto CommonProps::k_desc = std::string("desc");
+const auto CommonProps::k_gi = std::string("gi");
+const auto CommonProps::k_id = std::string("id");
+const auto CommonProps::k_auto_id = std::string("auto-id");
+const auto CommonProps::k_parent = std::string("parent");
+const auto CommonProps::k_source = std::string("source");
+const auto CommonProps::k_value = std::string("value");
+const auto CommonProps::k_data_attr = std::string("data-attr");
 
 
 //------------------------------------------------------------------------------
@@ -109,21 +110,6 @@ const std::string& Node::classname() const {
 
 const NodeClass* Node::node_class() const {
   return _class;
-}
-
-
-std::string Node::gi() const {
-  return property<std::string>(CommonProps::k_gi);
-}
-
-
-Node* Node::parent() const {
-  return property<Node*>(CommonProps::k_parent);
-}
-
-
-Grove* Node::grove() const {
-  return _grove;
 }
 
 
@@ -185,21 +171,16 @@ void Node::set_property(const std::string& propname, Node* nd) {
 }
 
 
-Nodes Node::attributes() const {
-  return property<Nodes>(CommonProps::k_attrs);
-}
-
-
 void Node::add_attribute(const std::string& attrname, Node* nd) {
   nd->set_property(CommonProps::k_attr_name, attrname);
 
   if (!has_property(CommonProps::k_attrs)) {
-    Nodes nl;
+    auto nl = Nodes{};
     nl.push_back(nd);
     set_property(CommonProps::k_attrs, nl);
   }
   else {
-    if (Nodes* nds = get<Nodes>(&_properties[CommonProps::k_attrs])) {
+    if (auto* nds = get<Nodes>(&_properties[CommonProps::k_attrs])) {
       nds->push_back(nd);
     }
   }
@@ -234,25 +215,25 @@ void Node::set_attributes(const Nodes& nl) {
 
 
 bool Node::has_attribute(const std::string& attrname) const {
-  for (const auto& attr : attributes()) {
-    if (attr->has_property(CommonProps::k_attr_name) &&
-        attr->property<std::string>(CommonProps::k_attr_name) == attrname) {
-      return true;
-    }
-  }
+  using namespace std;
 
-  return false;
+  const auto attrs = attributes();
+  return any_of(begin(attrs), end(attrs), [&](const Node* attr) {
+    return attr->has_property(CommonProps::k_attr_name) &&
+           attr->property<std::string>(CommonProps::k_attr_name) == attrname;
+  });
 }
 
 
 const Node* Node::attribute(const std::string& attrname) const {
-  for (const auto attrnd : attributes()) {
-    if (attrnd->has_property(CommonProps::k_attr_name) &&
-        attrnd->property<std::string>(CommonProps::k_attr_name) == attrname) {
-      return attrnd;
-    }
-  }
-  return nullptr;
+  using namespace std;
+
+  const auto attrs = attributes();
+  auto i_attr = find_if(begin(attrs), end(attrs), [&](const Node* const attr) {
+    return attr->has_property(CommonProps::k_attr_name) &&
+           attr->property<std::string>(CommonProps::k_attr_name) == attrname;
+  });
+  return i_attr != end(attrs) ? *i_attr : nullptr;
 }
 
 
@@ -270,7 +251,7 @@ void Node::add_node(const std::string& propname, Node* child) {
     _properties[propname] = Nodes{child};
   }
   else {
-    if (Nodes* nl = get<Nodes>(&i_find->second)) {
+    if (auto* nl = get<Nodes>(&i_find->second)) {
       child->_properties[CommonProps::k_parent] = this;
       nl->emplace_back(child);
     }
@@ -278,11 +259,6 @@ void Node::add_node(const std::string& propname, Node* child) {
       assert(false);
     }
   }
-}
-
-
-const Properties& Node::properties() const {
-  return _properties;
 }
 
 
@@ -300,7 +276,7 @@ Node* Grove::make_node(const NodeClass* node_class) {
   nd->_grove = this;
   nd->_class = node_class;
 
-  const NodeClass* p = node_class;
+  const auto* p = node_class;
   while (p) {
     for (const auto& propspec : node_class->_properties_spec) {
       if (propspec._is_required) {
@@ -366,7 +342,7 @@ Node* Grove::root_node() const {
 std::unique_ptr<Node> Grove::remove_node(Node* nd) {
   auto i_find =
     std::find_if(_nodes.begin(), _nodes.end(),
-                 [&nd](const std::unique_ptr<Node>& node) { return node.get() == nd; });
+                 [&](const std::unique_ptr<Node>& node) { return node.get() == nd; });
   if (i_find != _nodes.end()) {
     return std::move(*i_find);
   }

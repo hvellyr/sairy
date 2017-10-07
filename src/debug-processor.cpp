@@ -73,8 +73,7 @@ namespace {
 
       for (const auto& portnm : fo->ports()) {
         std::cout << "DEBUG: PORT -> " << portnm << std::endl;
-        const Sosofo& port = fo->port(portnm);
-        processor->render_sosofo(&port);
+        processor->render_sosofo(&fo->port(portnm));
       }
     }
   };
@@ -83,20 +82,14 @@ namespace {
 
 DebugProcessor::DebugProcessor(const po::variables_map& /*args*/) {}
 
-std::string DebugProcessor::proc_id() const {
-  return "debug";
-}
-
-std::string DebugProcessor::default_output_extension() const {
-  return std::string();
-}
 
 po::options_description DebugProcessor::program_options() const {
-  std::string opts_title = std::string("Debug renderer [selector: '") + proc_id() + "']";
-  po::options_description desc(opts_title);
+  auto opts_title = std::string("Debug renderer [selector: '") + proc_id() + "']";
+  auto desc = po::options_description(opts_title);
 
   return desc;
 }
+
 
 const IFoProcessor<DebugProcessor>*
 DebugProcessor::lookup_fo_processor(const std::string& fo_classname) const {
@@ -114,9 +107,11 @@ DebugProcessor::lookup_fo_processor(const std::string& fo_classname) const {
   return i_find != procs.end() ? i_find->second.get() : nullptr;
 }
 
+
 void DebugProcessor::before_rendering() {
   std::cout << "DEBUG: Processor: " << proc_id() << std::endl;
 }
+
 
 void DebugProcessor::render_sosofo(const Sosofo* sosofo) {
   if (!sosofo) {
@@ -131,6 +126,7 @@ void DebugProcessor::render_sosofo(const Sosofo* sosofo) {
 
   Super::render_sosofo(sosofo);
 }
+
 
 void DebugProcessor::render_fo(const IFormattingObject* fo) {
   std::cout << "  DEBUG: fo: " << fo->classname() << std::endl;

@@ -49,8 +49,8 @@ std::string to_iso_timestring(std::chrono::system_clock::time_point tp) {
 
 eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
                             const po::variables_map& args) {
-  eyestep::Grove grove;
-  eyestep::Node* root = grove.set_root_node(eyestep::root_class_definition());
+  auto grove = eyestep::Grove{};
+  auto* root = grove.set_root_node(eyestep::root_class_definition());
 
   root->set_property("start-time", to_iso_timestring(std::chrono::system_clock::now()));
 
@@ -59,11 +59,10 @@ eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
       std::cout << "Scan " << src << " ...";
       std::cout.flush();
 
-      std::unique_ptr<eyestep::IScanner> scanner =
-        eyestep::make_scanner_for_file(src, args);
+      auto scanner = eyestep::make_scanner_for_file(src, args);
 
       if (scanner) {
-        eyestep::Node* nd = scanner->scan_file(grove, src);
+        auto* nd = scanner->scan_file(grove, src);
         std::cout << " ok" << std::endl;
 
         root->add_child_node(nd);
@@ -91,19 +90,20 @@ fs::path deduce_output_file(const std::string& outf, const std::vector<fs::path>
     return first.replace_extension(default_ext).filename();
   }
 
-  return fs::path();
+  return {};
 }
 
 
 std::vector<std::string> document_root_elements_gi(eyestep::Grove& grove) {
   using namespace eyestep;
 
-  std::vector<std::string> gis;
+  auto gis = std::vector<std::string>{};
 
   auto root_children = grove.root_node()->property<Nodes>(CommonProps::k_children);
   if (root_children.size() == 1) {
     auto document = root_children[0];
     auto top_elements = document->property<Nodes>(CommonProps::k_children);
+
     for (const auto nd : top_elements) {
       gis.emplace_back(nd->gi());
     }
@@ -128,14 +128,13 @@ fs::path deduce_templ_from_document(eyestep::Grove& grove,
     }
   }
 
-  return fs::path();
+  return {};
 }
 
 
 std::string textbook_prefix() {
-  if (auto opt = std::getenv("TEXTBOOK_PREFIX")) {
-    return std::string(opt);
-  }
+  if (auto opt = std::getenv("TEXTBOOK_PREFIX"))
+    return {opt};
 
   return TEXTBOOK_DEFAULT_PREFIX;
 }
@@ -145,7 +144,7 @@ std::string textbook_prefix() {
 int main(int argc, char** argv) {
   try {
     // Declare the supported options.
-    po::options_description desc("");
+    auto desc = po::options_description("");
 
     // clang-format off
     desc.add_options()
@@ -162,14 +161,14 @@ int main(int argc, char** argv) {
                          "input file")
       ;
 
-    po::options_description hidden("Hidden options");
+    auto hidden = po::options_description("Hidden options");
     hidden.add_options()
       ("textbook-prefix",   po::value<std::string>()->default_value(textbook_prefix()), "")
       ;
     // clang-format on
 
-    po::options_description all_options("All");
-    po::options_description visible_options("");
+    auto all_options = po::options_description("All");
+    auto visible_options = po::options_description("");
 
     all_options.add(desc).add(hidden);
     visible_options.add(desc);
@@ -180,10 +179,10 @@ int main(int argc, char** argv) {
     all_options.add(eyestep::processor_options());
     visible_options.add(eyestep::processor_options());
 
-    po::positional_options_description pos_options;
+    auto pos_options = po::positional_options_description{};
     pos_options.add("input-file", -1);
 
-    po::variables_map vm;
+    auto vm = po::variables_map{};
     po::store(po::parse_command_line(argc, argv, all_options, pos_options), vm);
     po::notify(vm);
 
@@ -192,10 +191,10 @@ int main(int argc, char** argv) {
       exit(1);
     }
 
-    std::string outf = vm["output"].as<std::string>();
+    auto outf = vm["output"].as<std::string>();
     auto templ_path = fs::path(vm["template"].as<std::string>());
     auto prefix_path = vm["textbook-prefix"].as<std::string>();
-    std::string backend = vm["backend"].as<std::string>();
+    auto backend = vm["backend"].as<std::string>();
 
     if (vm.count("verbose")) {
       std::cout << "outf        : " << outf << std::endl;
@@ -203,14 +202,14 @@ int main(int argc, char** argv) {
       std::cout << "templ_path  : " << templ_path << std::endl;
     }
 
-    std::vector<fs::path> sources;
+    auto sources = std::vector<fs::path>{};
     if (vm.count("input-file")) {
       for (const auto& input : vm["input-file"].as<std::vector<std::string>>()) {
         sources.emplace_back(input);
       }
     }
 
-    eyestep::Grove grove = scan_sources(sources, vm);
+    auto grove = scan_sources(sources, vm);
     if (vm.count("debug")) {
       eyestep::serialize(std::cout, grove.root_node());
     }

@@ -26,8 +26,14 @@ public:
   DebugProcessor() = default;
   DebugProcessor(const program_options::variables_map& args);
 
-  std::string proc_id() const override;
-  std::string default_output_extension() const override;
+  std::string proc_id() const override {
+    return "debug";
+  }
+
+  std::string default_output_extension() const override {
+    return {};
+  }
+
   program_options::options_description program_options() const override;
 
   const IFoProcessor<DebugProcessor>*
