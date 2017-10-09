@@ -91,7 +91,7 @@ namespace textbook {
     std::vector<filesystem::path> _catalog_path;
     std::shared_ptr<Stream> _stream;
     std::list<std::shared_ptr<Stream>> _stream_stack;
-    std::stringstream _text;
+    std::unique_ptr<std::stringstream> _text;
     eyestep::Grove& _grove;
     GroveBuilder& _grovebuilder;
     VariableEnv& _vars;

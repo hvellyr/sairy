@@ -76,18 +76,18 @@ std::ostream& operator<<(std::ostream& os, const PropertyValue& prop) {
 
 //------------------------------------------------------------------------------
 
-const auto CommonProps::k_attr_name = std::string("#attr-name");
-const auto CommonProps::k_attrs = std::string("attributes");
-const auto CommonProps::k_children = std::string("children");
-const auto CommonProps::k_data = std::string("data");
-const auto CommonProps::k_desc = std::string("desc");
-const auto CommonProps::k_gi = std::string("gi");
-const auto CommonProps::k_id = std::string("id");
-const auto CommonProps::k_auto_id = std::string("auto-id");
-const auto CommonProps::k_parent = std::string("parent");
-const auto CommonProps::k_source = std::string("source");
-const auto CommonProps::k_value = std::string("value");
-const auto CommonProps::k_data_attr = std::string("data-attr");
+const std::string CommonProps::k_attr_name = "#attr-name";
+const std::string CommonProps::k_attrs = "attributes";
+const std::string CommonProps::k_children = "children";
+const std::string CommonProps::k_data = "data";
+const std::string CommonProps::k_desc = "desc";
+const std::string CommonProps::k_gi = "gi";
+const std::string CommonProps::k_id = "id";
+const std::string CommonProps::k_auto_id = "auto-id";
+const std::string CommonProps::k_parent = "parent";
+const std::string CommonProps::k_source = "source";
+const std::string CommonProps::k_value = "value";
+const std::string CommonProps::k_data_attr = "data-attr";
 
 
 //------------------------------------------------------------------------------

@@ -101,11 +101,11 @@ namespace html {
   } // anon ns
 
 
-  const auto k_XHTML_1_0_TRANSITIONAL_DTD =
-    Doctype{"-//W3C//DTD XHTML 1.0 Transitional//EN",
-            "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"};
-  const auto k_XHTML_1_1_DTD =
-    Doctype{"-//W3C//DTD XHTML 1.1//EN", "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"};
+  const Doctype k_XHTML_1_0_TRANSITIONAL_DTD =
+    {"-//W3C//DTD XHTML 1.0 Transitional//EN",
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"};
+  const Doctype k_XHTML_1_1_DTD = {"-//W3C//DTD XHTML 1.1//EN",
+                                   "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"};
 
 
   Writer::Writer(const Doctype& doctype, const std::string& generator,

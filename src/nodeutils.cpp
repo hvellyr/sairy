@@ -6,6 +6,7 @@
 #include "nodelist.hpp"
 #include "nodes.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <string>

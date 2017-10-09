@@ -410,6 +410,7 @@ namespace textbook {
                  bool is_verbose)
     : _verbose(is_verbose)
     , _catalog_path(catalog_path)
+    , _text(::estd::make_unique<std::stringstream>())
     , _grove(grove)
     , _grovebuilder(grovebuilder)
     , _vars(vars)
@@ -490,19 +491,19 @@ namespace textbook {
         parse_at_form();
       }
       else if (c == '\n') {
-        auto text = _text.str();
+        auto text = _text->str();
 
         if (!text.empty() && text.back() == '\n') {
           finish_paragraph();
           skip_ws();
         }
         else {
-          _text << c;
+          *_text << c;
           nextc();
         }
       }
       else {
-        _text << c;
+        *_text << c;
         nextc();
       }
     }
@@ -525,16 +526,16 @@ namespace textbook {
 
   void Parser::push_text() {
     if (_is_mixed_content) {
-      auto text = _text.str();
+      auto text = _text->str();
       if (!text.empty()) {
         push_p_nd();
         _grovebuilder.add_node(_grove.make_text_node(text));
 
-        _text.str(std::string());
+        _text->str(std::string());
       }
     }
     else {
-      _text.str(std::string());
+      _text->str(std::string());
     }
   }
 
@@ -755,19 +756,19 @@ namespace textbook {
 
 
   void Parser::parse_at() {
-    _text << '@';
+    *_text << '@';
     nextc();
   }
 
 
   void Parser::parse_openbrace() {
-    _text << '{';
+    *_text << '{';
     nextc();
   }
 
 
   void Parser::parse_closebrace() {
-    _text << '}';
+    *_text << '}';
     nextc();
   }
 
