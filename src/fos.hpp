@@ -31,6 +31,7 @@ namespace fo {
     }
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
+    void set_port(const std::string& portnm, const Sosofo& sosofo) override;
   };
 
 

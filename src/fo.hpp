@@ -522,6 +522,8 @@ public:
 
   /*! Return a port by @p portName */
   virtual const Sosofo& port(const std::string& portname) const = 0;
+
+  virtual void set_port(const std::string& portnm, const Sosofo& sosofo) = 0;
 };
 
 
