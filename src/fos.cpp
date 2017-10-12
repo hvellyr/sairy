@@ -103,6 +103,9 @@ namespace fo {
   }
 
 
+  void Fo::set_port(const std::string&, const Sosofo&) {}
+
+
   //----------------------------------------------------------------------------
 
   Literal::Literal(const PropertySpecs& props)
