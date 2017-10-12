@@ -32,6 +32,8 @@ namespace eyestep {
 namespace fs = filesystem;
 namespace po = program_options;
 
+const auto k_text = std::string("text");
+
 const auto k_TEXTBOOK_GENERATOR =
   std::string{"Textbook HTML Processor vr. "} + TEXTBOOK_VERSION;
 
@@ -527,7 +529,7 @@ namespace {
         else if (wstreatment == "ignore")
           processor->style_ctx()._wstreatment = html::detail::k_ignore_ws;
 
-        processor->render_sosofo(&fo->port("text"));
+        processor->render_sosofo(&fo->port(k_text));
 
         processor->style_ctx()._wstreatment = old_wstreatment;
       }
@@ -566,7 +568,7 @@ namespace {
         auto style_scope = StyleScope{ctx, d_attrs};
 
         ctx.port().newln();
-        processor->render_sosofo(&fo->port("text"));
+        processor->render_sosofo(&fo->port(k_text));
       }
 
       ctx.port().newln();
@@ -648,7 +650,7 @@ namespace {
                        processor->property_or_none<std::string>(fo, "font-posture"),
                        "italic")};
 
-        processor->render_sosofo(&fo->port("text"));
+        processor->render_sosofo(&fo->port(k_text));
       }
     }
   };
@@ -694,7 +696,7 @@ namespace {
                        processor->property_or_none<std::string>(fo, "font-posture"),
                        "italic")};
 
-        processor->render_sosofo(&fo->port("text"));
+        processor->render_sosofo(&fo->port(k_text));
       }
     }
   };
@@ -741,7 +743,7 @@ namespace {
       auto with_tag = html::Tag{ctx.port(), "div", tag_style_attrs(po, "div", attrs)};
       auto style_scope = StyleScope{ctx, attrs};
 
-      po->render_sosofo(&fo->port("text"));
+      po->render_sosofo(&fo->port(k_text));
     }
   };
 } // ns anon
