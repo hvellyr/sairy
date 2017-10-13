@@ -528,9 +528,7 @@ namespace fo {
 
 
   const std::vector<std::string>& ScrollSequence::ports() const {
-    static const auto ports = std::vector<std::string>{
-      k_scroll,
-    };
+    static const auto ports = std::vector<std::string>{k_scroll};
     return ports;
   }
 
