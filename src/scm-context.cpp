@@ -1339,7 +1339,7 @@ namespace {
       check_exception_p(ctx, excep);
     }
 
-    sexp_gc_release2(ctx);
+    sexp_gc_release1(ctx);
 
     return result;
   }
