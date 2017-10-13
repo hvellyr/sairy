@@ -629,7 +629,7 @@ namespace {
   {
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
-      detail::StyleAttrs attrs;
+      auto attrs = detail::StyleAttrs{};
       set_font_characteristics(attrs, processor, fo);
 
       {
@@ -662,7 +662,7 @@ namespace {
   {
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
-      detail::StyleAttrs attrs;
+      auto attrs = detail::StyleAttrs{};
       set_font_characteristics(attrs, processor, fo);
 
       auto field_width = processor->property_or_none<fo::LengthSpec>(fo, "field-width");
@@ -732,7 +732,7 @@ namespace {
   {
   public:
     void render(HtmlProcessor* po, const IFormattingObject* fo) const override {
-      detail::StyleAttrs attrs;
+      auto attrs = detail::StyleAttrs{};
       auto col_num = po->property(fo, "column-number", 1);
       set_attr(attrs, "column-count", col_num);
 
