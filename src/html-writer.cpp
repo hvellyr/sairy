@@ -311,6 +311,7 @@ namespace html {
                    << "  padding-top: 0px;" << std::endl
                    << "  padding-bottom: 0px;" << std::endl
                    << "};" << std::endl;
+                   << "}" << std::endl;
   }
 
 
