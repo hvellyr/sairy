@@ -113,19 +113,39 @@ std::vector<std::string> document_root_elements_gi(eyestep::Grove& grove) {
 }
 
 
+fs::path look_for_tstyle_file(const std::string& prefix_path,
+                              const std::string& style_file) {
+  using namespace eyestep;
+
+  for (const auto& path : utils::split_paths(prefix_path)) {
+    auto p = path / "tstyle" / style_file;
+
+    std::error_code ec;
+    if (fs::is_regular_file(p, ec))
+      return p;
+  }
+
+  return {};
+}
+
+
 fs::path deduce_templ_from_document(eyestep::Grove& grove,
-                                    const std::string& prefix_path) {
+                                    const std::string& prefix_path,
+                                    const std::string& backend) {
   using namespace eyestep;
 
   auto gis = document_root_elements_gi(grove);
   if (!gis.empty()) {
     auto style_file = fs::path(gis[0]).replace_extension(".tstyle");
 
-    for (const auto& path : utils::split_paths(prefix_path)) {
-      auto p = path / "tstyle" / style_file;
-      if (fs::exists(p))
-        return p;
+    auto p = look_for_tstyle_file(prefix_path,
+                                  fs::path(gis[0] + "-" + backend).replace_extension(".tstyle"));
+    if (p.empty()) {
+      p = look_for_tstyle_file(prefix_path,
+                               fs::path(gis[0]).replace_extension(".tstyle"));
     }
+
+    return p;
   }
 
   return {};
@@ -216,7 +236,7 @@ int main(int argc, char** argv) {
 
     if (!templ_path.empty()) {
       auto eff_templ_path = templ_path == "auto"
-                              ? deduce_templ_from_document(grove, prefix_path)
+                              ? deduce_templ_from_document(grove, prefix_path, backend)
                               : templ_path;
       if (eff_templ_path.empty()) {
         std::cerr << "No stylesheet found" << std::endl;
