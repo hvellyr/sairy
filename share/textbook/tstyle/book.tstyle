@@ -26,48 +26,65 @@
       right-margin: 10mm ;; 20mm
       ))
 
+
 ;; ------------------------------------------------------------------------------
 
 (element book
-  (let* ((titlepage (select-elements (children (current-node)) 'titlepage))
+  (cond
+   ((html-backend?) (book-html (current-node)))
+   ((tex-backend?) (book-tex (current-node)))))
+
+
+(define (book-html node)
+  (let* ((titlepage (select-elements (children node) 'titlepage))
          (titlepage-titles (select-elements (children titlepage) 'title))
          (title-first (if (> (node-list-length titlepage-titles) 0)
                           (attribute "value" (node-list-first titlepage-titles))
                           (node-list)))
          )
+
+     (case %style%
+       ((modern classic) (sosofo-append
+                          ;; title, copyright
+                          (format-book-front-matter node)
+                          (make scroll-sequence
+                            font-size: 10pt
+                            line-spacing: 12pt
+                            start-margin: 45mm
+                            end-margin: 0mm
+                            width: 600px
+                            (process-node-list (children node)))))
+       )))
+
+
+(define (book-tex node)
+  (let* ((titlepage (select-elements (children node) 'titlepage))
+         (titlepage-titles (select-elements (children titlepage) 'title))
+         (title-first (if (> (node-list-length titlepage-titles) 0)
+                          (attribute "value" (node-list-first titlepage-titles))
+                          (node-list)))
+         )
+
     (sosofo-append
-     ;; title, copyright
-     (format-book-front-matter (current-node))
+     (format-book-front-matter node)
 
-     (if (html-backend?)
-         ;;; html
-         (make scroll-sequence
-           font-size: 10pt
-           line-spacing: 12pt
-           start-margin: 45mm
-           end-margin: 0mm
-           width: 600px
-           (process-children))
+     (make simple-page-sequence
+       use: page-style
 
-         ;;; else
-         (make simple-page-sequence
-           use: page-style
+       font-size: 10pt
+       line-spacing: 12pt
 
-           font-size: 10pt
-           line-spacing: 12pt
+       start-margin: 45mm
+       end-margin: 0mm
 
-           start-margin: 45mm
-           end-margin: 0mm
+       right-header: (make line-field
+                       font-size: 9pt
+                       (make page-number (empty-sosofo)))
+       left-header: (make line-field
+                      font-size: 9pt
+                      (process-node-list title-first))
 
-           right-header: (make line-field
-                           font-size: 9pt
-                           (make page-number (empty-sosofo)))
-           left-header: (make line-field
-                          font-size: 9pt
-                          (process-node-list title-first))
-
-           (process-children))
-         ))
+       (process-node-list (children node))))
     ))
 
 

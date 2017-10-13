@@ -1,0 +1,7 @@
+;;; Copyright (c) 2015 Gregor Klinke
+;;; All rights reserved.
+
+(define %style% 'modern)
+(define %title-style% 'modern)
+
+(use 'book)

@@ -13,8 +13,6 @@
 (element (book info author)
   (process-node-list (attribute "name" (current-node))))
 
-(define %title-style% 'modern)
-
 (define (format-book-front-matter nd)
   (sosofo-append
    (case %title-style%
