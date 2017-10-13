@@ -310,7 +310,9 @@ namespace html {
                    << "  padding-right: 0px;" << std::endl
                    << "  padding-top: 0px;" << std::endl
                    << "  padding-bottom: 0px;" << std::endl
-                   << "};" << std::endl;
+                   << "}" << std::endl
+                   << "body {" << std::endl
+                   << "  margin: 0px;" << std::endl
                    << "}" << std::endl;
   }
 
