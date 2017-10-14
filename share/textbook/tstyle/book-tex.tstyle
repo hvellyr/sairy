@@ -5,3 +5,4 @@
 (define %title-style% 'modern)
 
 (use 'book)
+(use 'book-tex-main)

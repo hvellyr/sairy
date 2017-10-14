@@ -1,0 +1,116 @@
+;;; Copyright (c) 2017 Gregor Klinke
+;;; All rights reserved.
+
+
+(element grammar
+  (make display-group
+    first-line-start-indent:: 0pt
+    start-indent: 0pt
+    (process-children)))
+
+(element (grammar p)
+  (make paragraph
+    first-line-start-indent: 0pt
+    start-indent: 0pt
+    font-posture: 'italic
+    (process-children)))
+
+(element (grammar productions)
+  (make display-group
+    space-before: 3pt
+    space-after: 7pt
+    font-size: 8pt
+    line-spacing: 11pt
+    font-name: "monospace"
+    quadding: 'left
+    ;;start-indent: -25mm
+    (process-children)))
+
+(element (productions p)
+  (process-children))
+
+(element (productions p rule)
+  (make paragraph
+    first-line-start-indent: -75pt
+    start-indent: 0pt
+    (sosofo-append
+     (make line-field
+       field-width: 60pt
+       field-align: 'left
+       (process-node-list (attribute "metaid" (current-node))))
+     (make line-field
+       field-width: 15pt
+       field-align: 'left
+       (literal "="))
+     (process-node-list (attribute "deflist" (current-node)))
+     ;; Literal(' ;')
+     )))
+
+(define (format-syntax-opt op sosofo)
+  (sosofo-append
+   (cond
+     ((equal? op "?") (literal "[ "))
+     ((equal? op "*") (literal "{ "))
+     ((equal? op "1") (literal "( "))
+     (else (empty-sosofo)))
+   sosofo
+   (case op
+     ((equal? op "?") (literal " ]"))
+     ((equal? op "*") (literal " }"))
+     ((equal? op "1") (literal " )"))
+     (else (empty-sosofo)))
+   ))
+
+(define %brackets-for-non-terminals% #f)
+
+(define (grammar-op? snl)
+  (if (eqv? (class snl) 'element)
+      (case (gi snl)
+        ((choice seq nt term synext) #t)
+        (else #f))
+      #f))
+
+(element choice
+  (let ((elts (node-list-filter (lambda (snl) (grammar-op? snl))
+                                (attribute "elements" (current-node)))))
+    (format-syntax-opt (data (attribute "op" (current-node)))
+                       (process-node-list-join elts (literal " | ")))))
+
+(element seq
+  (let ((elts (node-list-filter (lambda (snl) (grammar-op? snl))
+                                (attribute "elements" (current-node)))))
+    (format-syntax-opt (data (attribute "op" (current-node)))
+                       (process-node-list-join elts (literal " ")))))
+
+(element nt
+  (format-syntax-opt (data (attribute "op" (current-node)))
+                     (if %brackets-for-non-terminals%
+                         (sosofo-append
+                          (literal "〈")
+                          (process-node-list (attribute "text" (current-node)))
+                          (literal "〉"))
+                         (process-node-list (attribute "text" (current-node))))))
+
+(element term
+  (let* ((termdata (data (attribute "text" (current-node))))
+         (lquote (if (string-contains? termdata #\x27) "‘" "“"))
+         (rquote (if (string-contains? termdata #\x27) "’" "”")) )
+    (format-syntax-opt (data (attribute "op?" (current-node)))
+                       (make line-field
+                         font-name: "monospace"
+                         font-weight: 'bold
+                         (sosofo-append
+                          (literal lquote)
+                          (process-node-list (attribute "text" (current-node)))
+                          (literal rquote))))))
+
+(element synext
+  (format-syntax-opt (data (attribute "op?" (current-node)))
+                     (make line-field
+                       font-name: "monospace"
+                       font-weight: 'medium
+                       font-posture: 'italic
+                       (sosofo-append
+                        (literal "? ")
+                        (process-node-list (attribute "text" (current-node)))
+                        (literal " ?")))))

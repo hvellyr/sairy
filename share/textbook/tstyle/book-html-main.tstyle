@@ -1,0 +1,70 @@
+;;; Copyright (c) 2017 Gregor Klinke
+;;; All rights reserved.
+
+(mode no-content
+  (element showtoc
+    (empty-sosofo))
+  (element content
+    (empty-sosofo))
+  )
+
+
+(define (book-html node)
+  (let* ((titlepage (select-elements (children node) 'titlepage))
+         (titlepage-titles (select-elements (children titlepage) 'title))
+         (title-first (if (> (node-list-length titlepage-titles) 0)
+                          (attribute "value" (node-list-first titlepage-titles))
+                          (node-list)))
+         )
+
+     (case %style%
+       ((modern classic) (sosofo-append
+                          ;; title, copyright
+                          (format-book-front-matter node)
+                          (make scroll-sequence
+                            font-size: 10pt
+                            line-spacing: 12pt
+                            start-margin: 45mm
+                            end-margin: 0mm
+                            width: 600px
+                            (process-node-list (children node)))))
+       ((multicol) (make screen-set
+                     screen-set-model: (make-screen-set-model
+                                        (region
+                                         zone: 'top
+                                         port: 'top
+                                         fixed?: #t
+                                         y-origin: 0px
+                                         height: 60px
+                                         background-color: (color 'rgb '(0.3254 0.4078 0.4705)))
+                                        (region
+                                         port: 'navigation
+                                         zone: 'left
+                                         fixed?: #t
+                                         width: 250px
+                                         y-origin: 60px
+                                         background-color: (color 'rgb '(0.9372 0.9215 0.9137))
+                                         span-screen-height?: #t
+                                         start-margin: 10px
+                                         )
+                                        (region
+                                         port: 'main
+                                         zone: 'main
+                                         width: 550px
+                                         font-size: 10pt
+                                         start-margin: 45mm
+                                         end-margin: 0mm)
+                                        )
+                     (make paragraph
+                       label: 'top
+                       (literal "TITLE"))
+
+                     (make display-group
+                       label: 'navigation
+                       (let ((toc (select-elements (children node) 'content)))
+                         (process-node-list toc)))
+
+                     (with-mode no-content
+                       (process-node-list (children node)))
+                     ))
+       )))

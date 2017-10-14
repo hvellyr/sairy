@@ -1,0 +1,45 @@
+;;; Copyright (c) 2017 Gregor Klinke
+;;; All rights reserved.
+
+(define page-style
+  (style
+      page-width: 165mm ;; 210mm
+      page-height: 240mm ;; 297mm
+      top-margin: 20mm ;; 20mm
+      bottom-margin: 30mm ;; 30mm
+      header-margin: 12mm ;; 10mm
+      footer-margin: 20mm ;; 10mm
+      left-margin: 10mm ;; 20mm
+      right-margin: 10mm ;; 20mm
+      ))
+
+
+(define (book-tex node)
+  (let* ((titlepage (select-elements (children node) 'titlepage))
+         (titlepage-titles (select-elements (children titlepage) 'title))
+         (title-first (if (> (node-list-length titlepage-titles) 0)
+                          (attribute "value" (node-list-first titlepage-titles))
+                          (node-list)))
+         )
+
+    (sosofo-append
+     (format-book-front-matter node)
+
+     (make simple-page-sequence
+       use: page-style
+
+       font-size: 10pt
+       line-spacing: 12pt
+
+       start-margin: 45mm
+       end-margin: 0mm
+
+       right-header: (make line-field
+                       font-size: 9pt
+                       (make page-number (empty-sosofo)))
+       left-header: (make line-field
+                      font-size: 9pt
+                      (process-node-list title-first))
+
+       (process-node-list (children node))))
+    ))
