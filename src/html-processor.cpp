@@ -627,6 +627,273 @@ namespace {
   };
 
 
+  struct ScreenZoneSpec
+  {
+    std::string _portnm;
+    bool _is_fixed = false;
+    estd::optional<fo::LengthSpec> _height;
+    estd::optional<fo::LengthSpec> _width;
+    estd::optional<fo::LengthSpec> _x_origin;
+    estd::optional<fo::LengthSpec> _y_origin;
+    estd::optional<fo::Color> _bg_color;
+  };
+
+
+  ScreenZoneSpec translate_screen_set_region(const std::string& default_portnm,
+                                             const fo::ScreenSetRegion& region) {
+    auto result = ScreenZoneSpec{};
+    result._portnm = default_portnm;
+
+    result._portnm = region._props.lookup_value_or("port", default_portnm);
+    result._is_fixed = region._props.lookup_value_or("fixed?", false);
+    result._height = region._props.lookup_value<fo::LengthSpec>("height");
+    result._width = region._props.lookup_value<fo::LengthSpec>("width");
+    result._bg_color = region._props.lookup_value<fo::Color>("background-color");
+    result._x_origin = region._props.lookup_value<fo::LengthSpec>("x-origin");
+    result._y_origin = region._props.lookup_value<fo::LengthSpec>("y-origin");
+
+    return result;
+  }
+
+
+  class HtmlScreenSetFoProcessor : public IFoProcessor<HtmlProcessor>
+  {
+    enum ZoneType
+    {
+      k_top,
+      k_left,
+      k_main,
+      k_right,
+      k_bottom,
+    };
+
+  public:
+    void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
+      auto title = processor->property(fo, "title", std::string());
+      auto author = processor->property(fo, "metadata.author", std::string());
+      auto desc = processor->property(fo, "metadata.desc", std::string());
+      auto width = processor->property_or_none<fo::LengthSpec>(fo, "width");
+
+      auto& ctx = processor->ctx();
+
+      if (!ctx.port().has_header()) {
+        ctx.port().header(title, author, desc, [&](std::ostream&) {
+          ctx.port().write_link("stylesheet",
+                                {{"media", "screen"},
+                                 {"type", "text/css"},
+                                 {"href", processor->css_file().string()}});
+        });
+      }
+
+      std::map<std::string, std::vector<ScreenZoneSpec>> zones;
+      zones["top"] = {};
+      zones["left"] = {};
+      zones["main"] = {};
+      zones["right"] = {};
+      zones["bottom"] = {};
+
+      if (auto compound_value =
+            processor->property_or_none<
+              std::shared_ptr<fo::ICompoundValue>>(fo, "screen-set-model")) {
+        if (auto screen_set_model =
+              std::dynamic_pointer_cast<fo::ScreenSetModel>(*compound_value)) {
+          for (const auto& region : screen_set_model->_regions) {
+            auto i_zone = zones.find(region._zone);
+            if (i_zone != zones.end()) {
+              i_zone->second.emplace_back(translate_screen_set_region("top", region));
+            }
+          }
+        }
+      }
+
+      auto attrs = detail::StyleAttrs{};
+
+      render_top_bottom_zones(processor, fo, zones["top"], k_top);
+      render_fixed_side_zones(processor, fo, zones["left"], k_left);
+      render_fixed_side_zones(processor, fo, zones["right"], k_right);
+
+      {
+        auto cont_attrs = detail::StyleAttrs{};
+        set_attr(cont_attrs, "left", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+        set_attr(cont_attrs, "width", "100%");
+        if (!zones["main"].empty() && zones["main"].front()._y_origin) {
+          set_attr(cont_attrs, "margin",
+                   length_spec2css(*zones["main"].front()._y_origin) + " auto");
+        }
+        else if (!zones["top"].empty() && zones["top"].front()._height) {
+          set_attr(cont_attrs, "margin",
+                   length_spec2css(*zones["top"].front()._height) + " auto");
+        }
+        set_attr(cont_attrs, "padding", "0px");
+
+        auto with_tag =
+          html::Tag{ctx.port(), "div", tag_style_attrs(processor, "div", cont_attrs)};
+        auto style_scope = StyleScope{ctx, cont_attrs};
+
+        render_floating_side_zones(processor, fo, zones["left"], k_left);
+
+        for (const auto& zone : zones["main"]) {
+          auto attrs = detail::StyleAttrs();
+          set_attr(attrs, "display", "inline-block");
+          set_attr(attrs, "vertical-align", "top");
+
+          if (zone._width)
+            set_attr(attrs, "width", *zone._width);
+
+          if (zone._x_origin)
+            set_attr(attrs, "left", *zone._x_origin);
+          if (zone._y_origin)
+            set_attr(attrs, "top", *zone._y_origin);
+          else
+            set_attr(attrs, "top", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+
+          if (zone._bg_color)
+            set_attr(attrs, "background-color", enc_color(*zone._bg_color));
+
+          render_port(processor, fo, zone._portnm, attrs);
+        }
+
+        render_floating_side_zones(processor, fo, zones["right"], k_right);
+      }
+
+      render_top_bottom_zones(processor, fo, zones["bottom"], k_bottom);
+
+      ctx.port().newln();
+    }
+
+  private:
+    std::string zone_type_to_css_distance(ZoneType zone_type) const {
+      switch (zone_type) {
+      case k_left:
+        return "left";
+      case k_right:
+        return "right";
+      case k_top:
+        return "top";
+      case k_bottom:
+        return "bottom";
+      default:
+        return "";
+      }
+    }
+
+    void render_top_bottom_zones(HtmlProcessor* processor, const IFormattingObject* fo,
+                                 const std::vector<ScreenZoneSpec>& zones,
+                                 ZoneType zone_type) const {
+      for (const auto& zone : zones) {
+        auto attrs = detail::StyleAttrs{};
+
+        set_attr(attrs, "display", "block");
+
+        if (zone._width)
+          set_attr(attrs, "width", *zone._width);
+        else
+          set_attr(attrs, "width", "100%");
+        if (zone._height)
+          set_attr(attrs, "height", *zone._height);
+
+        if (zone._bg_color)
+          set_attr(attrs, "background-color", enc_color(*zone._bg_color));
+
+        if (zone._y_origin)
+          set_attr(attrs, zone_type_to_css_distance(zone_type), *zone._y_origin);
+        else
+          set_attr(attrs, zone_type_to_css_distance(zone_type),
+                   fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+
+        if (zone._x_origin)
+          set_attr(attrs, "left", *zone._x_origin);
+        else
+          set_attr(attrs, "left", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+
+        if (zone._is_fixed) {
+          // set_attr(attrs, "position", "sticky");
+          set_attr(attrs, "position", "fixed");
+        }
+
+        render_port(processor, fo, zone._portnm, attrs);
+      }
+    }
+
+    void render_fixed_side_zones(HtmlProcessor* processor, const IFormattingObject* fo,
+                                 const std::vector<ScreenZoneSpec>& zones,
+                                 ZoneType zone_type) const {
+      for (const auto& zone : zones) {
+        if (zone._is_fixed) {
+          auto attrs = detail::StyleAttrs{};
+
+          set_attr(attrs, "display", "block");
+          set_attr(attrs, "position", "fixed");
+
+          if (zone._width)
+            set_attr(attrs, "width", *zone._width);
+          if (zone._height)
+            set_attr(attrs, "height", *zone._height);
+
+          if (zone._y_origin)
+            set_attr(attrs, "top", *zone._y_origin);
+
+          if (zone._bg_color)
+            set_attr(attrs, "background-color", enc_color(*zone._bg_color));
+
+          if (zone._x_origin)
+            set_attr(attrs, zone_type_to_css_distance(zone_type), *zone._x_origin);
+          else
+            set_attr(attrs, zone_type_to_css_distance(zone_type),
+                     fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+
+          render_port(processor, fo, zone._portnm, attrs);
+        }
+      }
+    }
+
+    void render_floating_side_zones(HtmlProcessor* processor, const IFormattingObject* fo,
+                                    const std::vector<ScreenZoneSpec>& zones,
+                                    ZoneType zone_type) const {
+      for (const auto& zone : zones) {
+        auto attrs = detail::StyleAttrs{};
+        set_attr(attrs, "float", zone_type_to_css_distance(zone_type));
+
+        if (zone._width)
+          set_attr(attrs, "width", *zone._width);
+        if (zone._height)
+          set_attr(attrs, "height", *zone._height);
+
+        if (!zone._is_fixed) {
+          if (zone._bg_color)
+            set_attr(attrs, "background-color", enc_color(*zone._bg_color));
+          render_port(processor, fo, zone._portnm, attrs);
+        }
+        else {
+          auto& ctx = processor->ctx();
+          auto with_tag =
+            html::Tag{ctx.port(), "div", tag_style_attrs(processor, "div", attrs)};
+          ctx.port().write_text(" ");
+        }
+      }
+    }
+
+    void render_port(HtmlProcessor* processor, const IFormattingObject* fo,
+                     const std::string& portnm, const detail::StyleAttrs& attrs) const {
+      auto& ctx = processor->ctx();
+
+      const auto area_sosofo = fo->port(portnm);
+      if (!area_sosofo.empty()) {
+        {
+          auto d_attrs = intersect_css_attrs(ctx, attrs);
+          auto with_tag =
+            html::Tag{ctx.port(), "div", tag_style_attrs(processor, "div", d_attrs)};
+          auto style_scope = StyleScope{ctx, d_attrs};
+
+          ctx.port().newln();
+          processor->render_sosofo(&area_sosofo);
+        }
+        ctx.port().newln();
+      }
+    }
+  };
+
+
   class HtmlSequenceFoProcessor : public IFoProcessor<HtmlProcessor>
   {
   public:
@@ -777,6 +1044,7 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const {
     {"#paragraph-break", std::make_shared<HtmlParagraphBreakFoProcessor>()},
     {"#display-group", std::make_shared<HtmlDisplayGroupFoProcessor>()},
     {"#scroll-sequence", std::make_shared<HtmlScrollSequenceFoProcessor>()},
+    {"#screen-set", std::make_shared<HtmlScreenSetFoProcessor>()},
     {"#sequence", std::make_shared<HtmlSequenceFoProcessor>()},
     {"#line-field", std::make_shared<HtmlLineFieldFoProcessor>()},
     {"#anchor", std::make_shared<HtmlAnchorFoProcessor>()},
