@@ -35,6 +35,13 @@
    ((tex-backend?) (book-tex (current-node)))))
 
 
+(mode no-content
+  (element showtoc
+    (empty-sosofo))
+  (element content
+    (empty-sosofo))
+  )
+
 (define (book-html node)
   (let* ((titlepage (select-elements (children node) 'titlepage))
          (titlepage-titles (select-elements (children titlepage) 'title))
@@ -54,6 +61,51 @@
                             end-margin: 0mm
                             width: 600px
                             (process-node-list (children node)))))
+       ((multicol) (make screen-set
+                     screen-set-model: (make-screen-set-model
+                                        ;; (region
+                                        ;;  zone: 'top
+                                        ;;  port: 'top
+                                        ;;  fixed?: #t
+                                        ;;  y-origin: 0px
+                                        ;;  ;;height: 100px
+                                        ;;  background-color: (color 'x11 'light-green))
+                                        (region
+                                         port: 'navigation
+                                         zone: 'left
+                                         fixed?: #t
+                                         width: 200px)
+                                        (region
+                                         port: 'main
+                                         zone: 'main
+                                         width: 600px
+                                         font-size: 10pt
+                                         line-spacing: 12pt
+                                         start-margin: 45mm
+                                         end-margin: 0mm)
+                                        ;; (region
+                                        ;;  port: 'footer
+                                        ;;  zone: 'bottom
+                                        ;;  fixed?: #t
+                                        ;;  background-color: (color 'x11 'beige))
+                                        )
+                     ;; (make paragraph
+                     ;;   label: 'top
+                     ;;   (literal "TOP"))
+
+                     (make display-group
+                       label: 'navigation
+                       (let ((toc (select-elements (children node) 'content)))
+                         (process-node-list toc)))
+
+                     ;; (make paragraph
+                     ;;   label: 'footer
+                     ;;   (literal "BOTTOM"))
+                     (with-mode no-content
+                       (sosofo-append
+                        (literal "FOO")
+                        (process-node-list (children node))))
+                     ))
        )))
 
 
