@@ -125,6 +125,8 @@ namespace fo {
 
   std::ostream& operator<<(std::ostream& os, const Color& co);
 
+  class ICompoundValue;
+
 
   struct ValueType
   {
@@ -135,7 +137,8 @@ namespace fo {
       k_int,
       k_string,
       k_sosofo,
-      k_color
+      k_color,
+      k_compound,
     };
 
     Kind _kind = k_bool;
@@ -147,28 +150,39 @@ namespace fo {
       std::string _string;
       std::shared_ptr<Sosofo> _sosofo;
       Color _color;
+      std::shared_ptr<ICompoundValue> _compound;
     };
 
     ValueType()
       : ValueType(false) {}
+
     ValueType(bool val)
       : _kind(k_bool)
       , _bool(val) {}
+
     ValueType(int val)
       : _kind(k_int)
       , _int(val) {}
+
     ValueType(LengthSpec val)
       : _kind(k_length)
       , _length(std::move(val)) {}
+
     ValueType(std::string val)
       : _kind(k_string)
       , _string(std::move(val)) {}
+
     ValueType(std::shared_ptr<Sosofo> val)
       : _kind(k_sosofo)
       , _sosofo(std::move(val)) {}
+
     ValueType(Color val)
       : _kind(k_color)
       , _color(std::move(val)) {}
+
+    ValueType(std::shared_ptr<ICompoundValue> proprec)
+      : _kind(k_compound)
+      , _compound(std::move(proprec)) {}
 
     ValueType(const ValueType& rhs) {
       *this = rhs;
@@ -194,6 +208,9 @@ namespace fo {
         break;
       case k_sosofo:
         _sosofo.~shared_ptr<Sosofo>();
+        break;
+      case k_compound:
+        _compound.~shared_ptr<ICompoundValue>();
         break;
       }
       _bool = false;
@@ -225,11 +242,22 @@ namespace fo {
         case k_color:
           new (&_color) Color(rhs._color);
           break;
+        case k_compound:
+          new (&_compound) std::shared_ptr<ICompoundValue>(rhs._compound);
+          break;
         }
       }
 
       return *this;
     }
+  };
+
+
+  class ICompoundValue
+  {
+  public:
+    virtual ~ICompoundValue() = default;
+    virtual const char* type_id() const = 0;
   };
 
 
@@ -313,6 +341,18 @@ namespace fo {
   };
 
 
+  template <>
+  struct ValueTrait<std::shared_ptr<ICompoundValue>>
+  {
+    static ValueType::Kind value_type() {
+      return ValueType::k_compound;
+    }
+    static const std::shared_ptr<ICompoundValue>* get(const ValueType* val) {
+      return &val->_compound;
+    }
+  };
+
+
   template <typename T>
   const T* get(const ValueType* val) {
     return val && ValueTrait<typename std::remove_cv<T>::type>::value_type() == val->_kind
@@ -336,6 +376,8 @@ namespace fo {
       return f(val._sosofo);
     case ValueType::k_color:
       return f(val._color);
+    case ValueType::k_compound:
+      return f(val._compound);
     }
 
     return R();
@@ -366,6 +408,10 @@ namespace fo {
       , _value(std::move(val)) {}
 
     PropertySpec(std::string name, Color val)
+      : _name(std::move(name))
+      , _value(std::move(val)) {}
+
+    PropertySpec(std::string name, std::shared_ptr<ICompoundValue> val)
       : _name(std::move(name))
       , _value(std::move(val)) {}
 
