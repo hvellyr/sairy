@@ -180,7 +180,7 @@ namespace {
 
 
   std::string enc_color(const fo::Color co) {
-    auto rco = [&]() -> std::tuple<int, int, int> {
+    const auto rco = [&]() -> std::tuple<int, int, int> {
       switch (co._space) {
       case fo::kRGB:
         return std::make_tuple(floor(co._rgb._red * 255), floor(co._rgb._green * 255),
@@ -193,8 +193,8 @@ namespace {
     }();
 
     std::stringstream ss;
-    ss << "#" << std::hex << std::get<0>(rco) << std::get<1>(rco) << std::get<2>(rco);
-
+    ss << "rgb(" << std::get<0>(rco) << ", " << std::get<1>(rco) << ", "
+       << std::get<2>(rco) << ")";
     return ss.str();
   }
 
