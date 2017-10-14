@@ -17,6 +17,8 @@
           inline-space
           literal
           make
+          make-screen-set-model
+          region
           match-element?
           mode
           named-node-list-names
