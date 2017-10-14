@@ -46,3 +46,14 @@
   (%make-length-spec 'display q (if (not min) q min)
                      (if (not max) q max)
                      cond prio))
+
+
+(define-syntax region
+  (syntax-rules ()
+    ((region args ...) (list args ...))))
+
+(define-syntax make-screen-set-model
+  (syntax-rules ()
+    ((make-screen-set-model regions ...) (%make-screen-set-model
+                                          (list regions ...)
+                                          (make-source (%in-current-definition%))))))
