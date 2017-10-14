@@ -472,6 +472,25 @@ namespace fo {
                                     : PropertySpecOrNone();
     }
 
+    template<typename T>
+    estd::optional<T> lookup_value(const std::string& key) const {
+      if (auto prop = lookup_key(key)) {
+        if (auto* val = fo::get<T>(&prop->_value)) {
+          return *val;
+        }
+      }
+
+      return {};
+    }
+
+    template<typename T>
+    T lookup_value_or(const std::string& key, const T& def) const {
+      if (auto val = lookup_value<T>(key)) {
+        return *val;
+      }
+      return def;
+    }
+
     const_iterator begin() const {
       return PropertySpecIterator(_specs.begin());
     }
