@@ -31,6 +31,7 @@ namespace fo {
     }
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
+    void set_port(const std::string& portnm, const Sosofo& sosofo) override;
   };
 
 
@@ -215,6 +216,49 @@ namespace fo {
     const Sosofo& port(const std::string& portname) const override;
   };
 
+
+  class ScreenSetRegion
+  {
+  public:
+    std::string _zone;
+    PropertySpecs _props;
+
+    ScreenSetRegion(const std::string& zone,
+                    const PropertySpecs& props)
+      : _zone(zone)
+      , _props(props) {}
+  };
+
+
+  class ScreenSetModel : public ICompoundValue
+  {
+  public:
+    ScreenSetModel() = default;
+    ScreenSetModel(const std::vector<ScreenSetRegion>& regions)
+      : _regions(regions) {}
+
+    const char* type_id() const { return "screen-set-model"; }
+
+    std::vector<ScreenSetRegion> _regions;
+  };
+
+
+  class ScreenSet : public Fo
+  {
+    std::vector<std::string> _port_names;
+    std::map<std::string, Sosofo> _ports;
+
+  public:
+    ScreenSet() = default;
+    ScreenSet(const PropertySpecs& props, const Sosofo& sosofo);
+
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
+    const std::vector<std::string>& ports() const override;
+
+    const Sosofo& port(const std::string& portname) const override;
+    void set_port(const std::string& portnm, const Sosofo& sosofo) override;
+  };
 
 } // ns fo
 } // ns eyestep

@@ -26,48 +26,113 @@
       right-margin: 10mm ;; 20mm
       ))
 
+
 ;; ------------------------------------------------------------------------------
 
 (element book
-  (let* ((titlepage (select-elements (children (current-node)) 'titlepage))
+  (cond
+   ((html-backend?) (book-html (current-node)))
+   ((tex-backend?) (book-tex (current-node)))))
+
+
+(mode no-content
+  (element showtoc
+    (empty-sosofo))
+  (element content
+    (empty-sosofo))
+  )
+
+(define (book-html node)
+  (let* ((titlepage (select-elements (children node) 'titlepage))
          (titlepage-titles (select-elements (children titlepage) 'title))
          (title-first (if (> (node-list-length titlepage-titles) 0)
                           (attribute "value" (node-list-first titlepage-titles))
                           (node-list)))
          )
-    (sosofo-append
-     ;; title, copyright
-     (format-book-front-matter (current-node))
 
-     (if (html-backend?)
-         ;;; html
-         (make scroll-sequence
-           font-size: 10pt
-           line-spacing: 12pt
-           start-margin: 45mm
-           end-margin: 0mm
-           width: 600px
-           (process-children))
+     (case %style%
+       ((modern classic) (sosofo-append
+                          ;; title, copyright
+                          (format-book-front-matter node)
+                          (make scroll-sequence
+                            font-size: 10pt
+                            line-spacing: 12pt
+                            start-margin: 45mm
+                            end-margin: 0mm
+                            width: 600px
+                            (process-node-list (children node)))))
+       ((multicol) (make screen-set
+                     screen-set-model: (make-screen-set-model
+                                        ;; (region
+                                        ;;  zone: 'top
+                                        ;;  port: 'top
+                                        ;;  fixed?: #t
+                                        ;;  y-origin: 0px
+                                        ;;  ;;height: 100px
+                                        ;;  background-color: (color 'x11 'light-green))
+                                        (region
+                                         port: 'navigation
+                                         zone: 'left
+                                         fixed?: #t
+                                         width: 200px)
+                                        (region
+                                         port: 'main
+                                         zone: 'main
+                                         width: 600px
+                                         font-size: 10pt
+                                         line-spacing: 12pt
+                                         start-margin: 45mm
+                                         end-margin: 0mm)
+                                        ;; (region
+                                        ;;  port: 'footer
+                                        ;;  zone: 'bottom
+                                        ;;  fixed?: #t
+                                        ;;  background-color: (color 'x11 'beige))
+                                        )
+                     ;; (make paragraph
+                     ;;   label: 'top
+                     ;;   (literal "TOP"))
 
-         ;;; else
-         (make simple-page-sequence
-           use: page-style
+                     (make display-group
+                       label: 'navigation
+                       (let ((toc (select-elements (children node) 'content)))
+                         (process-node-list toc)))
 
-           font-size: 10pt
-           line-spacing: 12pt
+                     ;; (make paragraph
+                     ;;   label: 'footer
+                     ;;   (literal "BOTTOM"))
+                     (with-mode no-content
+                       (sosofo-append
+                        (literal "FOO")
+                        (process-node-list (children node))))
+                     ))
+       )))
 
-           start-margin: 45mm
-           end-margin: 0mm
 
-           right-header: (make line-field
-                           font-size: 9pt
-                           (make page-number (empty-sosofo)))
-           left-header: (make line-field
-                          font-size: 9pt
-                          (process-node-list title-first))
+(define (book-tex node)
+  (let* ((titlepage (select-elements (children node) 'titlepage))
+         (titlepage-titles (select-elements (children titlepage) 'title))
+         (title-first (if (> (node-list-length titlepage-titles) 0)
+                          (attribute "value" (node-list-first titlepage-titles))
+                          (node-list)))
+         )
+    (make simple-page-sequence
+      use: page-style
 
-           (process-children))
-         ))
+      font-size: 10pt
+      line-spacing: 12pt
+
+      start-margin: 45mm
+      end-margin: 0mm
+
+      right-header: (make line-field
+                      font-size: 9pt
+                      (make page-number (empty-sosofo)))
+      left-header: (make line-field
+                     font-size: 9pt
+                     (process-node-list title-first))
+
+      (process-node-list (children node)))
     ))
 
 

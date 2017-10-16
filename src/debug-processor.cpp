@@ -46,6 +46,10 @@ namespace {
         void operator()(const std::shared_ptr<Sosofo>& val) {
           std::cout << "<sosofo>";
         }
+
+        void operator()(const std::shared_ptr<fo::ICompoundValue>& val) {
+          std::cout << "<compound:" << val->type_id() << ">";
+        }
       };
 
       for (const auto& spec : fo->properties()) {

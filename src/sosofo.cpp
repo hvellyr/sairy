@@ -28,6 +28,11 @@ Sosofo::Sosofo(std::shared_ptr<IFormattingObject> fo)
   : _fos({fo}) {}
 
 
+Sosofo::Sosofo(const std::string& label, std::shared_ptr<IFormattingObject> fo)
+  : _label(label)
+  , _fos({fo}) {}
+
+
 Sosofo Sosofo::concat(const Sosofo& other) const {
   Sosofo sosofo;
   sosofo._fos.insert(sosofo._fos.end(), _fos.begin(), _fos.end());

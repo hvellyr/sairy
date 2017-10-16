@@ -2,3 +2,8 @@
 ;;; All rights reserved.
 
 (define %html.page-width% 600px)
+
+(define %style% 'multicol)
+(define %title-style% 'modern)
+
+(use 'book)
