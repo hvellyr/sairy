@@ -85,18 +85,22 @@ set_target_properties(textbook
   PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE "${textbook_app}")
 
 
-if(POLICY CMP0026)
-cmake_policy(PUSH)
-cmake_policy(SET CMP0026 OLD)
-endif()
+file(READ "${PROJECT_SOURCE_DIR}/bin/textbook.in" textbook_shell_exec_wrapper)
+string(REPLACE "@textbook_executable_path@"
+       "$<TARGET_FILE:textbook>" textbook_shell_exec_wrapper
+       ${textbook_shell_exec_wrapper})
+string(REPLACE "@project_source_dir@"
+       ${PROJECT_SOURCE_DIR} textbook_shell_exec_wrapper
+       ${textbook_shell_exec_wrapper})
+file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/textbook
+  CONTENT ${textbook_shell_exec_wrapper})
 
-get_property(textbook_executable_path TARGET textbook PROPERTY LOCATION)
-configure_file("${PROJECT_SOURCE_DIR}/bin/textbook.in" "${PROJECT_SOURCE_DIR}/bin/textbook"
-               @ONLY)
-
-if(POLICY CMP0026)
-cmake_policy(POP)
-endif()
+file(WRITE "${CMAKE_BINARY_DIR}/copy_textbook_sh.cmake"
+           "file(COPY ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/textbook
+                 DESTINATION ${PROJECT_SOURCE_DIR}/bin
+                 FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_WRITE GROUP_READ WORLD_READ)")
+add_custom_command(TARGET textbook POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -P "${CMAKE_BINARY_DIR}/copy_textbook_sh.cmake")
 
 
 install(TARGETS textbook
