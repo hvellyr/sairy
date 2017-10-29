@@ -99,7 +99,12 @@ DebugProcessor::lookup_fo_processor(const std::string& fo_classname) const {
       {"#paragraph", std::make_shared<DebugFoProcessor>()},
       {"#paragraph-break", std::make_shared<DebugFoProcessor>()},
       {"#display-group", std::make_shared<DebugFoProcessor>()},
+      {"#sequence", std::make_shared<DebugFoProcessor>()},
+      {"#line-field", std::make_shared<DebugFoProcessor>()},
+      {"#anchor", std::make_shared<DebugFoProcessor>()},
+      {"#page-number", std::make_shared<DebugFoProcessor>()},
       {"#simple-page-sequence", std::make_shared<DebugFoProcessor>()},
+      {"#screen-set", std::make_shared<DebugFoProcessor>()},
     };
 
   auto i_find = procs.find(fo_classname);
