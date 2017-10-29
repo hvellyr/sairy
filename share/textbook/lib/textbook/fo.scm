@@ -57,3 +57,25 @@
     ((make-screen-set-model regions ...) (%make-screen-set-model
                                           (list regions ...)
                                           (make-source (%in-current-definition%))))))
+
+
+(define (symbol-to-char name)
+  (case name
+    ((nbsp non-breaking-space) #\x00a0)
+    ((bullet) #\x2022)
+    ((triangle right-point-triangle) #\x2023)
+    ((drop-shadowed-white-square) #\x274f)
+    ((check-mark) #\x2713)
+    ((shadowed-white-circle) #\x274d)
+    ((ballot-box) #\x2610)
+    ((ballot-box-with-check) #\x2611)
+    ((ballot-box-with-x) #\x2612)
+    ((black-right-pointing-index) #\x261b)
+    ((white-right-pointing-index) #\x261e)
+    ((white-circle) #\x26ac)
+    ((space) #\space)
+    (else #\space)))
+
+(define-syntax make-char
+  (syntax-rules ()
+    ((make-char name) (literal (string (symbol-to-char name))))))
