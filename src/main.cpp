@@ -129,8 +129,7 @@ fs::path look_for_tstyle_file(const std::string& prefix_path,
 }
 
 
-fs::path deduce_templ_from_document(eyestep::Grove& grove,
-                                    const std::string& prefix_path,
+fs::path deduce_templ_from_document(eyestep::Grove& grove, const std::string& prefix_path,
                                     const std::string& backend) {
   using namespace eyestep;
 
@@ -138,11 +137,12 @@ fs::path deduce_templ_from_document(eyestep::Grove& grove,
   if (!gis.empty()) {
     auto style_file = fs::path(gis[0]).replace_extension(".tstyle");
 
-    auto p = look_for_tstyle_file(prefix_path,
-                                  fs::path(gis[0] + "-" + backend).replace_extension(".tstyle"));
+    auto p =
+      look_for_tstyle_file(prefix_path,
+                           fs::path(gis[0] + "-" + backend).replace_extension(".tstyle"));
     if (p.empty()) {
-      p = look_for_tstyle_file(prefix_path,
-                               fs::path(gis[0]).replace_extension(".tstyle"));
+      p =
+        look_for_tstyle_file(prefix_path, fs::path(gis[0]).replace_extension(".tstyle"));
     }
 
     return p;
@@ -179,6 +179,10 @@ int main(int argc, char** argv) {
                          "use template")
       ("input-file",     po::value<std::vector<std::string>>(),
                          "input file")
+      ("define,D",       po::value<std::vector<std::string>>(), "Set the variable or call toplevel "
+                         "setting <arg>.  If <arg> has the form KEY=VALUE the top-level variable "
+                         "%KEY% is set to VALUE.  If it has the form NAME then the top-level "
+                         "function (enable-name) will be called.")
       ;
 
     auto hidden = po::options_description("Hidden options");
@@ -253,6 +257,9 @@ int main(int argc, char** argv) {
 
         auto engine = eyestep::StyleEngine(prefix_path, backend);
         if (engine.load_style(eff_templ_path)) {
+          if (vm.count("define")) {
+            engine.define_variables(vm["define"].as<std::vector<std::string>>());
+          }
           auto sosofo = engine.process_node(grove.root_node());
 
           processor->render_processed_node(sosofo.get());

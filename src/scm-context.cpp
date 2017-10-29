@@ -2158,6 +2158,23 @@ namespace {
     }
 
 
+    bool set_variable(const std::string& name, const estd::optional<std::string>& value) override {
+      sexp_gc_var1(res);
+      sexp_gc_preserve1(_ctx, res);
+
+      auto cmd = value
+        ? std::string("(set! %") + name + "%" + " " + *value + ")"
+        : std::string("(enable-") + name + ")";
+
+      res = sexp_eval_string(_ctx, cmd.c_str(), -1, NULL);
+      auto retv = check_exception_p(_ctx, res);
+
+      sexp_gc_release1(_ctx);
+
+      return retv;
+    }
+
+
     std::unique_ptr<Sosofo> process_root_node(const Node* root_node) override {
       std::unique_ptr<Sosofo> result;
 

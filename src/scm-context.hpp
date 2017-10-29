@@ -4,6 +4,7 @@
 #pragma once
 
 #include "fspp/filesystem.hpp"
+#include "fspp/estd/optional.hpp"
 
 #include <memory>
 #include <vector>
@@ -24,6 +25,8 @@ public:
   virtual bool load_script(const filesystem::path& script_file) = 0;
 
   virtual void define_variable(const std::string& name, const std::string& value) = 0;
+  virtual bool set_variable(const std::string& name,
+                            const estd::optional<std::string>& value) = 0;
 
   virtual std::unique_ptr<Sosofo> process_root_node(const Node* root_node) = 0;
 };
