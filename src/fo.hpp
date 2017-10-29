@@ -459,7 +459,11 @@ namespace fo {
     PropertySpecs& operator=(PropertySpecs&&) = default;
 
     void set(const fo::PropertySpec& spec) {
-      _specs.insert(std::make_pair(spec._name, spec));
+      auto i_spec = _specs.find(spec._name);
+      if (i_spec != _specs.end())
+        i_spec->second = spec;
+      else
+        _specs.insert(std::make_pair(spec._name, spec));
     }
 
     PropertySpecOrNone lookup_key(const std::string& key) const {
