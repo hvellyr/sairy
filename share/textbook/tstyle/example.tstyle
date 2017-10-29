@@ -25,9 +25,9 @@
       space-before: 0pt
       space-after:  0pt
       start-indent: (example-start-indent (parent (current-node)))
-      font-name:    "monospace"
-      font-size:    (if (html-backend?) 8pt 9pt)
-      line-spacing: 11pt
+      font-name:    %monospace-font-name%
+      font-size:    (font-size 2)
+      line-spacing: (line-spacing 2)
       lines:        'asis
       whitespace-treatment: 'preserve
       (process-children)))
@@ -35,20 +35,17 @@
 
 (element example
   (make display-group
-    space-before: 7pt
-    space-after:  7pt
-    background-color: (if (html-backend?)
-                          (color 'x11 'gray85)
-                          "")
-    color: (if (html-backend?)
-               (color 'x11 'black)
-               "")
-    (with-mode verbatim-mode
-      (process-children))))
+    space-before: (display-space 7pt conditional?: #t)
+    space-after:  (display-space 7pt conditional?: #t)
+    background-color: %example-background-color%
+    color: %example-text-color%
+    (sosofo-append
+     (with-mode verbatim-mode
+       (process-children)))))
 
 (element verbatim
   (make display-group
-    space-before: 7pt
-    space-after:  7pt
+    space-before: (display-space 7pt conditional?: #t)
+    space-after:  (display-space 7pt conditional?: #t)
     (with-mode verbatim-mode
       (process-children))))

@@ -17,11 +17,11 @@
 
 (element (grammar productions)
   (make display-group
-    space-before: 3pt
-    space-after: 7pt
-    font-size: 8pt
-    line-spacing: 11pt
-    font-name: "monospace"
+    space-before: (display-space 3pt conditional?: #t)
+    space-after: (display-space 7pt conditional?: #t)
+    font-size: (font-size 2)
+    line-spacing: (line-spacing 2)
+    font-name: %monospace-font-name%
     quadding: 'left
     ;;start-indent: -25mm
     (process-children)))
@@ -97,7 +97,7 @@
          (rquote (if (string-contains? termdata #\x27) "’" "”")) )
     (format-syntax-opt (data (attribute "op?" (current-node)))
                        (make line-field
-                         font-name: "monospace"
+                         font-name: %monospace-font-name%
                          font-weight: 'bold
                          (sosofo-append
                           (literal lquote)
@@ -107,7 +107,7 @@
 (element synext
   (format-syntax-opt (data (attribute "op?" (current-node)))
                      (make line-field
-                       font-name: "monospace"
+                       font-name: %monospace-font-name%
                        font-weight: 'medium
                        font-posture: 'italic
                        (sosofo-append

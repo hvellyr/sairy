@@ -28,17 +28,18 @@
      (make simple-page-sequence
        use: page-style
 
-       font-size: 10pt
-       line-spacing: 12pt
+       font-family: %body-font-name%
+       font-size: (font-size 3)
+       line-spacing: (line-spacing 3)
 
        start-margin: 45mm
        end-margin: 0mm
 
        right-header: (make line-field
-                       font-size: 9pt
+                       font-size: (font-size 2)
                        (make page-number (empty-sosofo)))
        left-header: (make line-field
-                      font-size: 9pt
+                      font-size: (font-size 2)
                       (process-node-list title-first))
 
        (process-node-list (children node))))

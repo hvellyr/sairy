@@ -5,12 +5,13 @@
   (let* ((title-num-sosofo (literal (section-title-number nd)))
          (title-sosofo (section-title-sosofo title nd)))
     (make paragraph
-      space-before: 7pt
+      space-before: (display-space 7pt conditional?: #t)
       space-after: 3pt
       quadding: 'left
       first-line-start-indent: -45mm
       start-indent: 0pt
-      font-size: 12pt
+      font-size: (font-size 4)
+      line-spacing: (line-spacing 4)
       font-weight: 'bold
       end-indent: 15pt
       last-line-end-indent: -15pt
@@ -39,7 +40,8 @@
       quadding: 'left
       first-line-start-indent: 0mm
       start-indent: 0pt
-      font-size: 10pt
+      font-size: (font-size 3)
+      line-spacing: (line-spacing 3)
       end-indent: 15pt
       last-line-end-indent: -15pt
 

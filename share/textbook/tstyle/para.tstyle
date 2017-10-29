@@ -48,9 +48,7 @@
         (make paragraph
           first-line-start-indent: 0pt
           quadding: "justify"
-          space-before: (if (html-backend?)
-                            (display-space 7pt conditional?: #t)
-                            0pt)
+          space-before: %gap-between-paragraphs%
           (process-node-list-left-trim-idx-ws (children (current-node))))
         )))
 
@@ -60,8 +58,8 @@
 
 (element definitions
   (make display-group
-    space-before: 7pt
-    space-after: 7pt
+    space-before: (display-space 7pt conditional?: #t)
+    space-after: (display-space 7pt conditional?: #t)
     (process-children-trim)))
 
 (element (definitions p item)
@@ -106,8 +104,8 @@
 
 (element itemize
   (make display-group
-    space-before: 7pt
-    space-after: 7pt
+    space-before: (display-space 7pt conditional?: #t)
+    space-after: (display-space 7pt conditional?: #t)
     (process-children-trim)))
 
 (element (itemize p item)
@@ -149,8 +147,8 @@
 
 (element enumerate
   (make display-group
-    space-before: 7pt
-    space-after: 7pt
+    space-before: (display-space 7pt conditional?: #t)
+    space-after: (display-space 7pt conditional?: #t)
     (process-children-trim)))
 
 (element (enumerate p item)

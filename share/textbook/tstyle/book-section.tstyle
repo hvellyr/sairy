@@ -1,21 +1,27 @@
 ;;; Copyright (c) 2017 Gregor Klinke
 ;;; All rights reserved.
 
+(define (-spc-bef lvl)
+  (display-space (line-spacing lvl) conditional?: #t))
+
+(define (-spc-aft val)
+  (display-space val conditional?: #t))
+
 (define (section-layout gi)
   (case gi
    ;;               #font-size line-spacing weight posture before after number-style
-   ((part)          (vector 16pt 19.5pt 'bold  'upright 16pt 8pt "I"))
-   ((chapter)       (vector 14pt 16.5pt 'bold  'upright 14pt 7pt "1"))
-   ((section)       (vector 12pt 14pt   'bold  'upright 14pt 7pt "1"))
-   ((subsection)    (vector 10pt 12pt   'bold  'upright 14pt 7pt "1"))
-   ((subsubsection) (vector 10pt 12pt   'bold  'italic  14pt 7pt "1"))
-   ((appendix)      (vector 14pt 16.5pt 'bold  'upright 14pt 7pt "A"))
-   ((index)         (vector 14pt 16.5pt 'bold  'upright 14pt 7pt #f))
-   ((preface)       (vector 14pt 16.5pt 'bold  'upright 14pt 7pt #f))
-   ((introduction)  (vector 14pt 16.5pt 'bold  'upright 14pt 7pt #f))
-   ((content)       (vector 14pt 16.5pt 'bold  'upright 14pt 7pt #f))
-   ((synopsis)      (vector 14pt 16.5pt 'bold  'upright 14pt 7pt #f))
-   ((seealso)       (vector 14pt 16.5pt 'bold  'upright 14pt 7pt #f))
+   ((part)          (vector (font-size 6) (line-spacing 6) 'bold  'upright (-spc-bef 6) (-spc-aft 8pt) "I"))
+   ((chapter)       (vector (font-size 5) (line-spacing 5) 'bold  'upright (-spc-bef 5) (-spc-aft 7pt) "1"))
+   ((section)       (vector (font-size 4) (line-spacing 4) 'bold  'upright (-spc-bef 4) (-spc-aft 7pt) "1"))
+   ((subsection)    (vector (font-size 3) (line-spacing 3) 'bold  'upright (-spc-bef 3) (-spc-aft 7pt) "1"))
+   ((subsubsection) (vector (font-size 3) (line-spacing 3) 'bold  'italic  (-spc-bef 3) (-spc-aft 7pt) "1"))
+   ((appendix)      (vector (font-size 4) (line-spacing 4) 'bold  'upright (-spc-bef 4) (-spc-aft 7pt) "A"))
+   ((index)         (vector (font-size 4) (line-spacing 4) 'bold  'upright (-spc-bef 4) (-spc-aft 7pt) #f))
+   ((preface)       (vector (font-size 4) (line-spacing 4) 'bold  'upright (-spc-bef 4) (-spc-aft 7pt) #f))
+   ((introduction)  (vector (font-size 4) (line-spacing 4) 'bold  'upright (-spc-bef 4) (-spc-aft 7pt) #f))
+   ((content)       (vector (font-size 4) (line-spacing 4) 'bold  'upright (-spc-bef 4) (-spc-aft 7pt) #f))
+   ((synopsis)      (vector (font-size 4) (line-spacing 4) 'bold  'upright (-spc-bef 4) (-spc-aft 7pt) #f))
+   ((seealso)       (vector (font-size 4) (line-spacing 4) 'bold  'upright (-spc-bef 4) (-spc-aft 7pt) #f))
    ))
 
 (define (div-number nd num-format)

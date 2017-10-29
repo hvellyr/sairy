@@ -29,10 +29,10 @@
       space-before: 0pt
       space-after:  0pt
       start-indent: (example-start-indent (parent (current-node)))
-      font-name:    "monospace"
-      font-size:    9pt
+      font-name:    %monospace-font-name%
+      font-size:    (font-size 2)
+      line-spacing: (line-spacing 2)
       font-weight:  'bold
-      line-spacing: 11pt
       lines:        'asis
       whitespace-treatment: 'preserve
       (process-children)))
@@ -41,7 +41,7 @@
 (define (make-def-sosofo nd head-sosofo kind)
   (sosofo-append
    (make paragraph
-     space-before: 7pt
+     space-before: (display-space 7pt conditional?: #t)
      first-line-start-indent: -45mm
      start-indent: 0mm
      keep-with-next?: #t
@@ -56,7 +56,7 @@
         (empty-sosofo))
       (with-mode decl-mode
         (make line-field
-          font-name: "monospace"
+          font-name: %monospace-font-name%
           font-weight: 'bold
           (process-node-list head-sosofo)) )))
    (make display-group
@@ -69,8 +69,8 @@
 
 (element decl
   (make display-group
-    space-before: 7pt
-    space-after:  7pt
+    space-before: (display-space 7pt conditional?: #t)
+    space-after:  (display-space 7pt conditional?: #t)
     (with-mode decl-mode
       (process-children))))
 

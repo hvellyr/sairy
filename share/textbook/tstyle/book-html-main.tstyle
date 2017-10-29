@@ -22,38 +22,42 @@
                           ;; title, copyright
                           (format-book-front-matter node)
                           (make scroll-sequence
-                            font-size: 10pt
-                            line-spacing: 12pt
+                            font-size: (font-size 3)
+                            line-spacing: (line-spacing 3)
                             start-margin: 45mm
                             end-margin: 0mm
                             width: 600px
                             (process-node-list (children node)))))
        ((multicol) (make screen-set
+                     html.add-css-link: (string-append "https://fonts.googleapis.com/css?family="
+                                                       "Inconsolata:300,300i,400,400i,700,700i|"
+                                                       "Lato:300,300i,400,400i,700,700i")
+                     font-name: %body-font-name%
+                     font-weight: 'light
+                     font-size: (font-size 3)
+                     line-spacing: (line-spacing 3)
                      screen-set-model: (make-screen-set-model
-                                        (region
-                                         zone: 'top
-                                         port: 'top
-                                         fixed?: #t
-                                         y-origin: 0px
-                                         height: 60px
-                                         background-color: (color 'rgb '(0.3254 0.4078 0.4705)))
-                                        (region
-                                         port: 'navigation
-                                         zone: 'left
-                                         fixed?: #t
-                                         width: 250px
-                                         y-origin: 60px
-                                         background-color: (color 'rgb '(0.9372 0.9215 0.9137))
-                                         span-screen-height?: #t
-                                         start-margin: 10px
-                                         )
-                                        (region
-                                         port: 'main
-                                         zone: 'main
-                                         width: 550px
-                                         font-size: 10pt
-                                         start-margin: 45mm
-                                         end-margin: 0mm)
+                                        (region zone: 'top
+                                                port: 'top
+                                                fixed?: #t
+                                                y-origin: 0px
+                                                height: 60px
+                                                background-color: (color 'rgb '(0.3254 0.4078 0.4705)))
+                                        (region port: 'navigation
+                                                zone: 'left
+                                                fixed?: #t
+                                                width: 250px
+                                                y-origin: 60px
+                                                background-color: (color 'rgb '(0.9372 0.9215 0.9137))
+                                                span-screen-height?: #t
+                                                start-margin: 10px
+                                                )
+                                        (region port: 'main
+                                                zone: 'main
+                                                width: 700px
+                                                font-size: (font-size 3)
+                                                start-margin: 45mm
+                                                end-margin: 0mm)
                                         )
                      (make paragraph
                        label: 'top

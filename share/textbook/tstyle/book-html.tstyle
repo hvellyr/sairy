@@ -6,17 +6,41 @@
 (define %style% 'multicol)
 (define %title-style% 'modern)
 
+(define %monospace-font-name% "monospace")
+(define %body-font-name% "roman")
+(define %font-sizes%    #(7pt   8pt   9pt    10pt 12pt 14pt   16pt   20pt))
+(define %line-spacings% #(8.5pt 9.5pt 10.5pt 12pt 14pt 16.5pt 19.5pt 24pt))
+
+(define %example-background-color% (color 'x11 'gray85))
+(define %example-text-color% (color 'x11 'black))
+
+(define %gap-between-paragraphs% (display-space 7pt conditional?: #t))
+
+
 (define (enable-modern-style)
   (set! %style% 'modern)
-  (set! %title-style% 'modern))
+  (set! %title-style% 'modern)
+  (set! %monospace-font-name% "monospace")
+  (set! %body-font-name% "roman")
+  )
 
 (define (enable-classic-style)
   (set! %style% 'classic)
-  (set! %title-style% 'classic))
+  (set! %title-style% 'classic)
+  (set! %monospace-font-name% "monospace")
+  (set! %body-font-name% "roman")
+  )
 
 (define (enable-website)
   (set! %style% 'multicol)
-  (set! %title-style% 'multicol))
+  (set! %title-style% 'multicol)
+  (set! %monospace-font-name% "Inconsolata")
+  (set! %body-font-name% "Lato")
+  (set! %font-sizes%    #(9pt  10pt   11pt   12pt 14pt   16pt   18pt 20pt))
+  (set! %line-spacings% #(12pt 13.3pt 14.5pt 16pt 18.5pt 21.3pt 24pt 26.5pt))
+  (set! %example-background-color% (color 'rgb '(0.3254 0.4078 0.4705)))
+  (set! %example-text-color% (color 'rgb '(0.9372 0.9215 0.9137)))
+  )
 
 
 (use 'book)

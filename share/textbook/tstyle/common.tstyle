@@ -7,6 +7,19 @@
 (define (tex-backend?)
   (string=? %backend% "tex"))
 
+(define (font-size level)
+  (let ((vs (vector-length %font-sizes%)))
+    (if (> level vs)
+        (vector-ref %font-sizes% (- vs 1))
+        (vector-ref %font-sizes% level))))
+
+(define (line-spacing level)
+  (let ((vs (vector-length %line-spacings%)))
+    (if (> level vs)
+        (vector-ref %line-spacings% (- vs 1))
+        (vector-ref %line-spacings% level))))
+
+
 ;; @doc format list in 'upright font-posture.  If @prm{seq} is a sosofo it is
 ;; taken asis, otherwise it is processed.
 (define (format-r seq)
@@ -39,7 +52,7 @@
 (define (format-monospace seq)
   (make sequence
     font-posture: 'upright
-    font-name: "monospace"
+    font-name: %monospace-font-name%
     (if (sosofo? seq)
         seq
         (process-node-list seq))))
