@@ -489,6 +489,19 @@ namespace {
   };
 
 
+  class TexBoxFoProcessor : public IFoProcessor<TexProcessor>
+  {
+  public:
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
+      // Simple passthru for now
+      auto& text_port = fo->port("text");
+      if (text_port.length() > 0) {
+        po->render_sosofo(&text_port);
+      }
+    }
+  };
+
+
   class TexSimplePageSequenceFoProcessor : public IFoProcessor<TexProcessor>
   {
   public:
@@ -871,6 +884,7 @@ TexProcessor::lookup_fo_processor(const std::string& fo_classname) const {
     {"#paragraph", std::make_shared<TexParagraphFoProcessor>()},
     {"#paragraph-break", std::make_shared<TexParagraphBreakFoProcessor>()},
     {"#display-group", std::make_shared<TexDisplayGroupFoProcessor>()},
+    {"#box", std::make_shared<TexBoxFoProcessor>()},
     {"#simple-page-sequence", std::make_shared<TexSimplePageSequenceFoProcessor>()},
     {"#sequence", std::make_shared<TexSequenceFoProcessor>()},
     {"#line-field", std::make_shared<TexLineFieldFoProcessor>()},

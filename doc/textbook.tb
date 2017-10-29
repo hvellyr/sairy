@@ -507,6 +507,37 @@ Defined characteristics:
 tbd.
 @end def
 
+@def{Display Object}{box}
+
+This flow object has a single port and can be rendered either as a display or as
+an inline flow object, depending on the @var{display?} characteristic.
+Processor's should render this flow object as a box around its content, either
+with a border (@var{box-type} is @val{border}) or with a filled background color
+(@var{box-type} is @val{background}).
+
+Defined characteristics:
+
+@definitions
+@item{@var{box-type}} is a symbol specifying whether the box is rendered with
+  border or background.  Possible values are @code{border}, @code{background}, and
+  @code{both}.  The default is @code{border}.
+@item{@var{display?}} when @val{#t} indicates whether this box is a display
+  object; default is @val{#f}
+@item{@var{box-corner-rounded?:}} when @val{#t} the box is rendered with rounded
+  corners.  The radius of the corners is specified with the
+  @var{box-corner-radius} characteristic.  Default is @val{#f}.
+@item{@var{box-corner-radius:}} Default is @val{3pt}.
+@item{@var{background-color:}} the color used for rendering the background unset.
+@item{@var{color:}} the color used for rendering a border.  By default unset.
+@item{@var{line-thickness:}} specifies the thickness of the border line.  Default
+  is @val{1pt}.
+@item{@var{space-before:}} Default is @val{0pt}.
+@item{@var{space-after:}} Default is @val{0pt}.
+@item{@var{break-before?:}} Default is @val{#f}.
+@item{@var{break-after?:}} Default is @val{#f}.
+@end definitions
+@end def
+
 @end subsection
 
 

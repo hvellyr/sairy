@@ -26,8 +26,12 @@ namespace fo {
 
 
   const auto s_property_inherited = std::vector<PropertyInherited>{
+    {"box-type", true},                // Keyw: border, background, both
+    {"display?", false},               // Bool
+    {"box-corner-rounded?", false},    // Bool
+    {"box-corner-radius", false},      // LengthSpec
     {"above?", true},                  // Bool
-    {"background-color", true},        // Color
+    {"background-color", false},       // Color
     {"background-tile", false},        // String: path to ext. graphics
     {"below?", true},                  // Bool
     {"break-after?", false},           // Bool
@@ -277,6 +281,52 @@ namespace fo {
   }
 
   const Sosofo& DisplayGroup::port(const std::string& portname) const {
+    if (portname == k_text)
+      return _text_port;
+
+    return k_nil_sosofo;
+  }
+
+
+  //----------------------------------------------------------------------------
+
+  Box::Box(const PropertySpecs& props, const Sosofo& sosofo)
+    : Fo(props)
+    , _text_port(sosofo) {}
+
+
+  std::string Box::classname() const {
+    return "#box";
+  }
+
+
+  const PropertySpecs& Box::default_properties() const {
+    // clang-format off
+    static const auto propspecs = PropertySpecs{
+      {"box-type", "border"},
+      {"display?", true},
+      {"box-corner-rounded?", false},
+      {"box-corner-radius", LengthSpec(kDisplay, 3, k_pt)},
+      {"background-color", ""},
+      {"color", ""},
+      {"space-before", LengthSpec(kDisplay, 0, k_pt)},
+      {"space-after", LengthSpec(kDisplay, 0, k_pt)},
+      {"break-before?", false},
+      {"break-after?", false},
+      {"line-thickness", LengthSpec(kDisplay, 1, k_pt)},
+    };
+    // clang-format on
+    return propspecs;
+  }
+
+  const std::vector<std::string>& Box::ports() const {
+    static const auto ports = std::vector<std::string>{
+      k_text,
+    };
+    return ports;
+  }
+
+  const Sosofo& Box::port(const std::string& portname) const {
     if (portname == k_text)
       return _text_port;
 
@@ -686,6 +736,7 @@ namespace fo {
 
       register_fo_class_factory<Paragraph>();
       register_fo_class_factory<DisplayGroup>();
+      register_fo_class_factory<Box>();
       register_fo_class_factory<Sequence>();
       register_fo_class_factory<LineField>();
       register_fo_class_factory<Score>();

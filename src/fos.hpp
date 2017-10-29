@@ -90,6 +90,21 @@ namespace fo {
   };
 
 
+  class Box : public Fo
+  {
+    const Sosofo _text_port;
+
+  public:
+    Box() = default;
+    Box(const PropertySpecs& props, const Sosofo& sosofo);
+
+    std::string classname() const override;
+    const PropertySpecs& default_properties() const override;
+    const std::vector<std::string>& ports() const override;
+    const Sosofo& port(const std::string& portname) const override;
+  };
+
+
   class Sequence : public Fo
   {
     const Sosofo _text_port;

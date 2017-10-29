@@ -108,6 +108,7 @@ DebugProcessor::lookup_fo_processor(const std::string& fo_classname) const {
       {"#anchor", std::make_shared<DebugFoProcessor>()},
       {"#page-number", std::make_shared<DebugFoProcessor>()},
       {"#simple-page-sequence", std::make_shared<DebugFoProcessor>()},
+      {"#box", std::make_shared<DebugFoProcessor>()},
       {"#screen-set", std::make_shared<DebugFoProcessor>()},
     };
 

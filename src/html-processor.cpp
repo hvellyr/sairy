@@ -674,6 +674,65 @@ namespace {
   };
 
 
+  class HtmlBoxFoProcessor : public IFoProcessor<HtmlProcessor>
+  {
+  public:
+    void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
+      auto attrs = detail::StyleAttrs{};
+
+      // set_attr(attrs, extract_font_characteristics(processor, fo));
+      // set_attr(attrs, extract_space_characteristics(processor, fo));
+
+      const auto is_display = processor->property(fo, "display?", false);
+      const auto boxtype = processor->property(fo, "box-type", std::string("border"));
+      const auto has_border = boxtype == "border" || boxtype == "both";
+      const auto has_background = boxtype == "background" || boxtype == "both";
+
+      if (has_border) {
+        if (auto color = processor->property_or_none<fo::Color>(fo, "color"))
+          set_attr(attrs, "border-color", enc_color(*color));
+        else
+          set_attr(attrs, "border-color", "black");
+
+        if (auto thickness = processor->property_or_none<fo::LengthSpec>(fo, "line-thickness"))
+          set_attr(attrs, "border", length_spec2css(*thickness) + " solid");
+        else
+          set_attr(attrs, "border", "1pt solid");
+      }
+
+      if (has_background) {
+        if (auto bgcolor = processor->property_or_none<fo::Color>(fo, "background-color"))
+          set_attr(attrs, "background-color", enc_color(*bgcolor));
+      }
+
+      if (processor->property(fo, "box-corner-rounded?", false)) {
+        if (auto radius = processor->property_or_none<fo::LengthSpec>(fo, "box-corner-radius"))
+          set_attr(attrs, "border-radius", radius);
+        else
+          set_attr(attrs, "border-radius", "3pt");
+      }
+
+      auto& ctx = processor->ctx();
+
+      {
+        const auto tag = is_display ? "div" : "span";
+
+        auto d_attrs = intersect_css_attrs(ctx, attrs);
+        auto with_tag =
+          html::Tag{ctx.port(), tag, tag_style_attrs(processor, tag, d_attrs)};
+        auto style_scope = StyleScope{ctx, d_attrs};
+
+        if (is_display)
+          ctx.port().newln();
+        processor->render_sosofo(&fo->port(k_text));
+      }
+
+      if (is_display)
+        ctx.port().newln();
+    }
+  };
+
+
   class HtmlScrollSequenceFoProcessor : public IFoProcessor<HtmlProcessor>
   {
   public:
@@ -1217,6 +1276,7 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const {
     {"#paragraph", std::make_shared<HtmlParagraphFoProcessor>()},
     {"#paragraph-break", std::make_shared<HtmlParagraphBreakFoProcessor>()},
     {"#display-group", std::make_shared<HtmlDisplayGroupFoProcessor>()},
+    {"#box", std::make_shared<HtmlBoxFoProcessor>()},
     {"#scroll-sequence", std::make_shared<HtmlScrollSequenceFoProcessor>()},
     {"#screen-set", std::make_shared<HtmlScreenSetFoProcessor>()},
     {"#sequence", std::make_shared<HtmlSequenceFoProcessor>()},
