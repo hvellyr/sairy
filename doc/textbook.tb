@@ -324,8 +324,19 @@ Returns an empty sosofo.
 @end deffn
 
 @deffn{(literal @prm{string})}
-Returns a formattin object of type @class{literal} with the string value
+Returns a formatting object of type @class{literal} with the string value
 @prm{string}.
+@end deffn
+
+@deffn{(make-char @prm{name})}
+Returns a formatting object of type @class{literal} with a single character
+created from @prm{name}.  This function can be used to generate special
+characters which are hard to introduce via unicode input.  Only a limited
+set of characters are available as names.
+
+@example
+(make-char 'non-breaking-space)  @equiv (literal (string #\xa0))
+@end example
 @end deffn
 
 @end subsection
@@ -351,8 +362,8 @@ Returns an object of type color from the color space specified by
 @prm{color-space}.  The arguments depend on the space used.
 
 @example
-(color 'rgb 0.5 0.4 0.4)
-(color 'cmyk 0.2 0.0 0.9 1.0)
+(color 'rgb '(0.5 0.4 0.4))
+(color 'cmyk '(0.2 0.0 0.9 1.0))
 (color 'x11 'turquoise)
 @end example
 @end deffn
@@ -381,11 +392,57 @@ tbd.
 @end subsection
 
 
+@subsection{Page and top formatting objects}
+@def{Display Object}{simple-page-sequence}
+tbd.
+@end def
+
+
+@def{Display Object}{scroll-sequence}
+tbd.
+
+Defined characteristics:
+
+@definitions
+@item{@var{title:}} specifies the title of the entire scroll sequence; the backend
+  processor might use it for the displaying app's header.
+@item{@var{metadata.author:}} set's the author metadata field of the resulting
+  output.  Depends on the backend processor.
+@item{@var{metadata.desc:}} set's the description metadata field of the
+  resulting output.  Depends on the backend processor.
+@end definitions
+@end def
+
+
+@def{Display Object}{screen-set}
+tbd.
+
+Defined characteristics:
+
+@definitions
+@item{@var{title:}} specifies the title of the entire screen set; the backend
+  processor might use it for the displaying app's header.
+@item{@var{metadata.author:}} set's the author metadata field of the resulting
+  output.  Depends on the backend processor.
+@item{@var{metadata.desc:}} set's the description metadata field of the
+  resulting output.  Depends on the backend processor.
+@item{@var{screen-set-model:}} specifies the model to use for this screen-set.
+  The value must be of type screen-set-model.
+@end definitions
+@end def
+
+
+@def{Display Object}{simple-column-set-sequence}
+tbd.
+@end def
+@end subsection
+
+
 @subsection{Display formatting objects}
 @def{Display Object}{paragraph}
 The @class{paragraph} class represents a display formatting object with one
 principial port (@val{“text”}).  It takes any number of inline formatting
-objects are organizes them into line by line flow.  Typical geometrical layout
+objects and organizes them into a line by line flow.  Typical geometrical layout
 are left and right margins, space before and after and font and size
 specifications.  The first and last line of a paragraph can be specially layed
 out using the @var{first-line-start-indent} and @var{last-line-end-indent}
@@ -402,43 +459,96 @@ Defined characteristics:
   default value is the inline-space equivalent to @code{(inline-space 1em min: 1em
   max: 'inf)}.
 @item{@var{line-spacing:}} is a length-spec specifing the spacing between
-lines.  The default value is @val{12pt}.
+  lines.  The default value is @val{12pt}.
 @item{@var{font-caps:}} is a symbol specifying the capitialization of the text.
   Possible values are @code{normal}, @code{lower}, @code{caps},
   @code{small-caps}.  If @val{#f} the default (inherited) value is used.
 @item{@var{font-name:}} a string specifying the name of the font family to use.
   If @val{#f} use the default (inherited) font.  The three abstract font family
   names @code{"serif"}, @code{"sans-serif"} and @code{"monospace"} are always available
-  and are mapped to approriate system fonts.  The default value is @code{"serif"}.
-@item{@var{font-posture:}} Default is @code{“upright”},
+  and are mapped to appropriate system fonts.  The default value is @code{"serif"}.
+@item{@var{font-posture:}} is a symbol specifying the slantedness of the font.  Default
+  is @code{upright}.  Possible values depend on the backend processor, but typically
+  these are: @code{upright}, @code{italic}, @code{oblique}.
 @item{@var{font-size:}} is a length-spec giving the size of the font.  The
   default value is @val{10pt}.
-@item{@var{font-weight:}} @c "medium"),
+@item{@var{font-weight:}} is the weight of the font specified as symbol.  Supported values
+  depend on the font and the backend processor, but typical values are: @code{medium},
+  @code{bold}, @code{semibold}.  Default is @code{medium}.
 @item{@var{language:}} @c ""),
-@item{@var{start-indent:}} @c LengthSpec(kInline, 0, k_em)),
-@item{@var{end-indent:}} @c LengthSpec(kInline, 0, k_em)),
-@item{@var{quadding:}} @c "justify"),
+@item{@var{start-indent:}} is a length-spec specifying the left indent of the text.
+  Default is @val{0em}.
+@item{@var{end-indent:}} is a length-spec specifying the right indent of the text.
+  Default is @val{0em}.
+@item{@var{quadding:}} is a symbol specifying the text layout in line.  If @code{left} the
+  text is left aligned with (ragged-right aligned), if @code{right} it is right
+  aligned (ragged-left), if @code{center} the text lines are centered, and if
+  @code{justify} the text lines are justified.  Default is @code{justify}.
 @item{@var{space-before:}} @c LengthSpec(kDisplay, 0, k_pt)),
 @item{@var{space-after:}} @c LengthSpec(kDisplay, 0, k_pt)),
 @item{@var{keep-with-previous?:}} @c false),
 @item{@var{keep-with-next?:}} @c false),
 @item{@var{break-after?:}} @c false),
 @item{@var{break-before?:}} @c false),
-@item{@var{lines:}} @c "wrap"),
-@item{@var{whitespace-treatment:}} @c "collapse"),
+@item{@var{lines:}} Default is @code{wrap}.
+@item{@var{whitespace-treatment:}} Default is @code{collapse}.
 @item{@var{asis-wrap-indent:}} @c 10),
 @item{@var{numbered-lines?:}} @c false),
 @item{@var{line-number-side:}} @c "start"),
 @item{@var{position-point-shift:}} @c LengthSpec(kDimen, 0, k_pt)),
-@item{@var{color:}} @c ""),
-@item{@var{background-color:}} @c ""),
+@item{@var{color:}} Specifies the foreground color of the text to use.
+@item{@var{background-color:}} Specifies the background color of the text to use.
 @end definitions
 
 @end def
 
+
+@def{Display Object}{display-group}
+tbd.
+@end def
+
 @end subsection
 
+
 @subsection{Inline formatting objects}
+@def{Display Object}{sequence}
+tbd.
+@end def
+
+
+@def{Display Object}{line-field}
+tbd.
+@end def
+
+
+@def{Display Object}{score}
+tbd.
+@end def
+
+
+@def{Display Object}{literal}
+tbd.
+@end def
+
+@def{Display Object}{page-number}
+tbd.
+@end def
+
+
+@def{Display Object}{anchor}
+tbd.
+@end def
+
+
+@def{Display Object}{pagebreak}
+tbd.
+@end def
+
+
+@def{Display Object}{footnote}
+tbd.
+@end def
+
 @end subsection
 
 @end section
