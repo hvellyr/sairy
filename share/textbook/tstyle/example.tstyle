@@ -17,19 +17,33 @@
                 (if (> ml maxlen) ml maxlen))) )))
 
 (define (example-start-indent nd)
-  (if (> (get-line-length nd) 60) -25mm 0pt))
+  (if (> (get-line-length nd) 60) -25mm %example-box-indent%))
 
-(mode verbatim-mode
+;; (define verbatim-style
+;;   (style
+;;       space-before: 0pt
+;;       space-after:  0pt
+;;       font-name:    %monospace-font-name%
+;;       font-size:    (font-size 2)
+;;       line-spacing: (line-spacing 2)
+;;       lines:        'asis
+;;       whitespace-treatment: 'preserve
+;;       ))
+
+
+(mode example-mode
   (element p
     (make paragraph
+      ;;use: verbatim-style
+      start-indent: (example-start-indent (parent (current-node)))
       space-before: 0pt
       space-after:  0pt
-      start-indent: (example-start-indent (parent (current-node)))
       font-name:    %monospace-font-name%
       font-size:    (font-size 2)
       line-spacing: (line-spacing 2)
       lines:        'asis
       whitespace-treatment: 'preserve
+      color: %example-text-color%
       (process-children)))
   )
 
@@ -37,11 +51,39 @@
   (make display-group
     space-before: (display-space 7pt conditional?: #t)
     space-after:  (display-space 7pt conditional?: #t)
-    background-color: %example-background-color%
-    color: %example-text-color%
-    (sosofo-append
-     (with-mode verbatim-mode
-       (process-children)))))
+
+    (if %show-boxed-examples%
+        (make box
+          display?: #t
+          box-type: 'background
+          background-color: %example-background-color%
+          box-corner-rounded?: #t
+          box-corner-radius: 3pt
+
+          (make display-group
+            space-before: (display-space 7pt conditional?: #f)
+            space-after:  (display-space 7pt conditional?: #f)
+            (with-mode example-mode
+              (process-children))))
+        (with-mode example-mode
+          (process-children))
+        )))
+
+
+(mode verbatim-mode
+  (element p
+    (make paragraph
+      ;;use: verbatim-style
+      start-indent: (example-start-indent (parent (current-node)))
+      space-before: 0pt
+      space-after:  0pt
+      font-name:    %monospace-font-name%
+      font-size:    (font-size 2)
+      line-spacing: (line-spacing 2)
+      lines:        'asis
+      whitespace-treatment: 'preserve
+      (process-children)))
+  )
 
 (element verbatim
   (make display-group

@@ -11,6 +11,8 @@
 
 (define %example-background-color% #f)
 (define %example-text-color% #f)
+(define %show-boxed-examples% #f)
+(define %example-box-indent% 0pt)
 
 (define %gap-between-paragraphs% 0pt)
 
