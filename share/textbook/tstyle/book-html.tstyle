@@ -6,4 +6,17 @@
 (define %style% 'modern)
 (define %title-style% 'modern)
 
+(define (enable-modern-style)
+  (set! %style% 'modern)
+  (set! %title-style% 'modern))
+
+(define (enable-classic-style)
+  (set! %style% 'classic)
+  (set! %title-style% 'classic))
+
+(define (enable-website)
+  (set! %style% 'multicol)
+  (set! %title-style% 'multicol))
+
+
 (use 'book)
