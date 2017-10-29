@@ -91,7 +91,7 @@
   \setlength\parfillskip{#2}%
   }
 % vertical space
-\newcommand{\vsc}[1]{\vspace{#1}}
+\newcommand{\vsc}[1]{\addvspace{#1}}
 \newcommand{\vs}[1]{\vspace*{#1}}
 \newcommand{\ldqo}{``}
 \newcommand{\rdqo}{''}
