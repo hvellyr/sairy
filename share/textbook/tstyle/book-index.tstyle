@@ -73,9 +73,9 @@
 
 (define (font-index-name-by-type type)
   (cond
-    ((equal? type "cp") "roman")
-    ((equal? type "fn") "monospace")
-    (else "roman")
+    ((equal? type "cp") %body-font-name%)
+    ((equal? type "fn") %monospace-font-name%)
+    (else %body-font-name%)
     ))
 
 (define (idx-entry-ids entries)
@@ -98,8 +98,8 @@
 (define (process-index-entry entry)
   (make paragraph
     quadding: 'left
-    font-size: 9pt
-    line-spacing: 10.5pt
+    font-size: (font-size 2)
+    line-spacing: (line-spacing 2)
     font-name: (font-index-name-by-type (cadr entry))
     end-indent: 15pt
     last-line-end-indent: -15pt
@@ -119,10 +119,11 @@
       (empty-sosofo)
       (let ((category-letter (string-upcase-ascii (vector-ref cat 0))))
         (make display-group
-          space-before: 7pt
+          space-before: (display-space 7pt conditional?: #t)
           (sosofo-append
            (make paragraph
-             font-size: 11pt
+             font-size: (font-size 3)
+             line-spacing: (line-spacing 3)
              quadding: 'left
              space-after: 4pt
              keep-with-next: #t

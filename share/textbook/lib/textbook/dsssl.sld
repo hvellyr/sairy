@@ -15,8 +15,10 @@
           format-number
           id
           inline-space
-          literal
+          literal make-char
           make
+          make-screen-set-model
+          region
           match-element?
           mode
           named-node-list-names

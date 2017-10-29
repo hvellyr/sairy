@@ -7,6 +7,7 @@
 
 #include <iterator>
 #include <memory>
+#include <string>
 #include <vector>
 
 
@@ -24,9 +25,18 @@ public:
 
   /*! Creates a sosofo with exactly one formatting object */
   Sosofo(std::shared_ptr<IFormattingObject> fo);
+  Sosofo(const std::string& label, std::shared_ptr<IFormattingObject> fo);
 
   /*! Returns a new sosofo with all FOs from @p other appended */
   Sosofo concat(const Sosofo& other) const;
+
+  void set_label(const std::string& lbl) {
+    _label = lbl;
+  }
+
+  const std::string& label() const {
+    return _label;
+  }
 
   bool empty() const {
     return _fos.empty();
@@ -44,6 +54,7 @@ public:
   SosofoIterator end() const;
 
 private:
+  std::string _label;
   std::vector<std::shared_ptr<IFormattingObject>> _fos;
 };
 

@@ -26,8 +26,12 @@ namespace fo {
 
 
   const auto s_property_inherited = std::vector<PropertyInherited>{
+    {"box-type", true},                // Keyw: border, background, both
+    {"display?", false},               // Bool
+    {"box-corner-rounded?", false},    // Bool
+    {"box-corner-radius", false},      // LengthSpec
     {"above?", true},                  // Bool
-    {"background-color", true},        // Color
+    {"background-color", false},       // Color
     {"background-tile", false},        // String: path to ext. graphics
     {"below?", true},                  // Bool
     {"break-after?", false},           // Bool
@@ -84,8 +88,13 @@ namespace fo {
   };
 
 
-  const auto k_text = std::string("text");
+  const auto k_bottom = std::string("bottom");
+  const auto k_left = std::string("left");
+  const auto k_main = std::string("main");
+  const auto k_right = std::string("right");
   const auto k_scroll = std::string("scroll");
+  const auto k_text = std::string("text");
+  const auto k_top = std::string("top");
 
 
   //----------------------------------------------------------------------------
@@ -101,6 +110,9 @@ namespace fo {
   const Sosofo& Fo::port(const std::string&) const {
     return k_nil_sosofo;
   }
+
+
+  void Fo::set_port(const std::string&, const Sosofo&) {}
 
 
   //----------------------------------------------------------------------------
@@ -269,6 +281,52 @@ namespace fo {
   }
 
   const Sosofo& DisplayGroup::port(const std::string& portname) const {
+    if (portname == k_text)
+      return _text_port;
+
+    return k_nil_sosofo;
+  }
+
+
+  //----------------------------------------------------------------------------
+
+  Box::Box(const PropertySpecs& props, const Sosofo& sosofo)
+    : Fo(props)
+    , _text_port(sosofo) {}
+
+
+  std::string Box::classname() const {
+    return "#box";
+  }
+
+
+  const PropertySpecs& Box::default_properties() const {
+    // clang-format off
+    static const auto propspecs = PropertySpecs{
+      {"box-type", "border"},
+      {"display?", true},
+      {"box-corner-rounded?", false},
+      {"box-corner-radius", LengthSpec(kDisplay, 3, k_pt)},
+      {"background-color", ""},
+      {"color", ""},
+      {"space-before", LengthSpec(kDisplay, 0, k_pt)},
+      {"space-after", LengthSpec(kDisplay, 0, k_pt)},
+      {"break-before?", false},
+      {"break-after?", false},
+      {"line-thickness", LengthSpec(kDisplay, 1, k_pt)},
+    };
+    // clang-format on
+    return propspecs;
+  }
+
+  const std::vector<std::string>& Box::ports() const {
+    static const auto ports = std::vector<std::string>{
+      k_text,
+    };
+    return ports;
+  }
+
+  const Sosofo& Box::port(const std::string& portname) const {
     if (portname == k_text)
       return _text_port;
 
@@ -528,9 +586,7 @@ namespace fo {
 
 
   const std::vector<std::string>& ScrollSequence::ports() const {
-    static const auto ports = std::vector<std::string>{
-      k_scroll,
-    };
+    static const auto ports = std::vector<std::string>{k_scroll};
     return ports;
   }
 
@@ -680,12 +736,14 @@ namespace fo {
 
       register_fo_class_factory<Paragraph>();
       register_fo_class_factory<DisplayGroup>();
+      register_fo_class_factory<Box>();
       register_fo_class_factory<Sequence>();
       register_fo_class_factory<LineField>();
       register_fo_class_factory<Score>();
       register_fo_class_factory<SimplePageSequence>();
       register_fo_class_factory<SimpleColumnSetSequence>();
       register_fo_class_factory<ScrollSequence>();
+      register_fo_class_factory<ScreenSet>();
       register_fo_class_factory<FootNote>();
 
       register_fo_class_factory_props<PageNumber>();
@@ -756,6 +814,71 @@ namespace fo {
 
     os << ">";
     return os;
+  }
+
+
+  //----------------------------------------------------------------------------
+
+  ScreenSet::ScreenSet(const PropertySpecs& props, const Sosofo& sosofo)
+    : Fo(props)
+    , _port_names({k_main})
+    , _ports({{k_main, sosofo}}) {
+    if (auto compval =
+          props.lookup_value<std::shared_ptr<fo::ICompoundValue>>("screen-set-model")) {
+      if (auto screen_set_model =
+            std::dynamic_pointer_cast<fo::ScreenSetModel>(*compval)) {
+        for (const auto& region : screen_set_model->_regions) {
+          auto portnm = region._props.lookup_value_or("port", region._zone);
+
+          if (portnm != k_main) {
+            _ports[portnm] = Sosofo{};
+            _port_names.emplace_back(portnm);
+          }
+        }
+      }
+    }
+  }
+
+
+  std::string ScreenSet::classname() const {
+    return "#screen-set";
+  }
+
+
+  const PropertySpecs& ScreenSet::default_properties() const {
+    static const auto propspecs = PropertySpecs{{"title", false},
+                                                {"screen-set-model", false},
+                                                {"html.add-css-link", false}};
+
+    return propspecs;
+  }
+
+
+  const std::vector<std::string>& ScreenSet::ports() const {
+    return _port_names;
+  }
+
+
+  const Sosofo& ScreenSet::port(const std::string& portnm) const {
+    using namespace std;
+
+    auto i_port = _ports.find(portnm);
+    if (i_port != end(_ports))
+      return i_port->second;
+
+    return k_nil_sosofo;
+  }
+
+
+  void ScreenSet::set_port(const std::string& portnm, const Sosofo& sosofo) {
+    using namespace std;
+
+    if (portnm != k_main) {
+      auto i_portnm = find(begin(_port_names), end(_port_names), portnm);
+      if (i_portnm != end(_port_names)) {
+        _ports[portnm] = sosofo;
+      }
+    }
   }
 
 } // ns fo

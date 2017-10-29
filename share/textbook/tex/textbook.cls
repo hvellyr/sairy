@@ -91,7 +91,7 @@
   \setlength\parfillskip{#2}%
   }
 % vertical space
-\newcommand{\vsc}[1]{\vspace{#1}}
+\newcommand{\vsc}[1]{\addvspace{#1}}
 \newcommand{\vs}[1]{\vspace*{#1}}
 \newcommand{\ldqo}{``}
 \newcommand{\rdqo}{''}
@@ -112,7 +112,7 @@
 %
 \def\pageno{\thepage}
 %
-\newcommand{\lf}[5]{\setbox1=\hbox{#5}\ifdim\wd1>#1\box1\\\else\hbox to #1{#3#5#4}\fi}
+\newcommand{\lf}[5]{\setbox1=\hbox{#5}\ifdim\wd1>#1\box1\else\hbox to #1{#3#5#4}\fi}%
 %
 \newcommand{\quadleft}{\addtolength{\rightskip}{0pt plus 9999fil}}
 \newcommand{\quadright}{\addtolength{\leftskip}{0pt plus 9999fil}}

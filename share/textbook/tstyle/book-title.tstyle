@@ -13,8 +13,6 @@
 (element (book info author)
   (process-node-list (attribute "name" (current-node))))
 
-(define %title-style% 'modern)
-
 (define (format-book-front-matter nd)
   (sosofo-append
    (case %title-style%
@@ -328,8 +326,8 @@
         ;;; html
         (make scroll-sequence
           width: 600px
-          font-size: 10pt
-          line-spacing: 12pt
+          font-size: (font-size 3)
+          line-spacing: (line-spacing 3)
           start-margin: 25mm
           end-margin: 0pt
           body-sosofo)
@@ -337,8 +335,8 @@
         (make simple-page-sequence
           use: page-style
 
-          font-size: 10pt
-          line-spacing: 12pt
+          font-size: (font-size 3)
+          line-spacing: (line-spacing 3)
 
           start-margin: 25mm
           end-margin: 0pt

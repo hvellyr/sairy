@@ -32,6 +32,8 @@ namespace eyestep {
 namespace fs = filesystem;
 namespace po = program_options;
 
+const auto k_text = std::string("text");
+
 const auto k_TEXTBOOK_GENERATOR =
   std::string{"Textbook HTML Processor vr. "} + TEXTBOOK_VERSION;
 
@@ -180,7 +182,7 @@ namespace {
 
 
   std::string enc_color(const fo::Color co) {
-    auto rco = [&]() -> std::tuple<int, int, int> {
+    const auto rco = [&]() -> std::tuple<int, int, int> {
       switch (co._space) {
       case fo::kRGB:
         return std::make_tuple(floor(co._rgb._red * 255), floor(co._rgb._green * 255),
@@ -193,8 +195,8 @@ namespace {
     }();
 
     std::stringstream ss;
-    ss << "#" << std::hex << std::get<0>(rco) << std::get<1>(rco) << std::get<2>(rco);
-
+    ss << "rgb(" << std::get<0>(rco) << ", " << std::get<1>(rco) << ", "
+       << std::get<2>(rco) << ")";
     return ss.str();
   }
 
@@ -308,6 +310,7 @@ namespace {
     return {};
   }
 
+
   html::Tag optional_inline_block_tag(HtmlProcessor* processor,
                                       const detail::StyleAttrs& attrs) {
     auto extAttrs = detail::StyleAttrs(attrs);
@@ -323,49 +326,146 @@ namespace {
   }
 
 
-  void set_font_characteristics(detail::StyleAttrs& attrs, HtmlProcessor* processor,
-                                const IFormattingObject* fo) {
-    auto fontsize = processor->property_or_none<fo::LengthSpec>(fo, "font-size");
-    auto fontcaps = processor->property_or_none<std::string>(fo, "font-caps");
-    auto posptshift =
+  struct FontCharacteristics
+  {
+    estd::optional<std::string> _fontname;
+    estd::optional<fo::LengthSpec> _fontsize;
+    estd::optional<std::string> _fontcaps;
+    estd::optional<fo::LengthSpec> _posptshift;
+    estd::optional<std::string> _posture;
+    estd::optional<std::string> _weight;
+    estd::optional<fo::LengthSpec> _linespacing;
+  };
+
+
+  FontCharacteristics extract_font_characteristics(HtmlProcessor* processor,
+                                                   const IFormattingObject* fo) {
+    auto result = FontCharacteristics{};
+
+    result._fontsize = processor->property_or_none<fo::LengthSpec>(fo, "font-size");
+    result._fontcaps = processor->property_or_none<std::string>(fo, "font-caps");
+    result._posptshift =
       processor->property_or_none<fo::LengthSpec>(fo, "position-point-shift");
 
-    if (auto fn = processor->property_or_none<std::string>(fo, "font-name")) {
-      if (*fn == "monospace")
+    result._fontname = processor->property_or_none<std::string>(fo, "font-name");
+    result._posture = processor->property_or_none<std::string>(fo, "font-posture");
+    result._weight = processor->property_or_none<std::string>(fo, "font-weight");
+
+    result._linespacing = processor->property_or_none<fo::LengthSpec>(fo, "line-spacing");
+
+    return result;
+  }
+
+  void set_attr(detail::StyleAttrs& attrs, const FontCharacteristics& fontchar) {
+    if (fontchar._fontname) {
+      if (*fontchar._fontname == "monospace")
         set_attr(attrs, "font-family", "monospace");
-      else if (*fn == "sans-serif")
+      else if (*fontchar._fontname == "sans-serif")
         set_attr(attrs, "font-family", "sans-serif");
-      else if (*fn == "roman")
+      else if (*fontchar._fontname == "roman")
         set_attr(attrs, "font-family", "serif");
+      else
+        set_attr(attrs, "font-family", std::string("'") + *fontchar._fontname + "'");
     }
 
-    set_attr(attrs, "font-size", fontsize);
-    set_capsstyle(attrs, fontcaps);
-    if (posptshift && posptshift->_value != 0) {
-      set_attr(attrs, "position", "relative");
-      set_attr(attrs, "top", posptshift);
+    if (fontchar._weight) {
+      if (*fontchar._weight == "thin")
+        set_attr(attrs, "font-weight", 100);
+      else if (*fontchar._weight == "light")
+        set_attr(attrs, "font-weight", 300);
+      else if (*fontchar._weight == "medium")
+        set_attr(attrs, "font-weight", 400);
+      else if (*fontchar._weight == "semibold")
+        set_attr(attrs, "font-weight", 500);
+      else if (*fontchar._weight == "bold")
+        set_attr(attrs, "font-weight", 700);
+      else if (*fontchar._weight == "black")
+        set_attr(attrs, "font-weight", 900);
     }
+
+    if (fontchar._posture) {
+      set_attr(attrs, "font-style", *fontchar._posture);
+    }
+
+    set_attr(attrs, "font-size", fontchar._fontsize);
+    set_capsstyle(attrs, fontchar._fontcaps);
+    if (fontchar._posptshift && fontchar._posptshift->_value != 0) {
+      set_attr(attrs, "position", "relative");
+      set_attr(attrs, "top", fontchar._posptshift);
+    }
+
+    if (fontchar._linespacing && fontchar._linespacing->_value != 0)
+      set_attr(attrs, "line-height", fontchar._linespacing);
   }
 
 
-  void set_space_characteristics(detail::StyleAttrs& attrs, HtmlProcessor* processor,
-                                 const IFormattingObject* fo) {
-    auto startindent = processor->property_or_none<fo::LengthSpec>(fo, "start-indent");
-    auto endindent = processor->property_or_none<fo::LengthSpec>(fo, "end-indent");
-    auto firstline_startindent =
-      processor->property_or_none<fo::LengthSpec>(fo, "first-line-start-indent");
-    auto spacebefore = processor->property_or_none<fo::LengthSpec>(fo, "space-before");
-    auto spaceafter = processor->property_or_none<fo::LengthSpec>(fo, "space-after");
+  struct SpaceCharacteristics
+  {
+    estd::optional<fo::LengthSpec> _startindent;
+    estd::optional<fo::LengthSpec> _endindent;
+    estd::optional<fo::LengthSpec> _firstline_startindent;
+    estd::optional<fo::LengthSpec> _spacebefore;
+    estd::optional<fo::LengthSpec> _spaceafter;
+  };
 
-    if (startindent && startindent->_value != 0)
-      set_attr(attrs, "padding-left", startindent);
-    if (endindent && endindent->_value != 0)
-      set_attr(attrs, "margin-right", endindent);
-    if (spacebefore && spacebefore->_value != 0)
-      set_attr(attrs, "margin-top", spacebefore);
-    if (spaceafter && spaceafter->_value != 0)
-      set_attr(attrs, "margin-bottom", spaceafter);
-    set_attr(attrs, "text-indent", firstline_startindent);
+
+  SpaceCharacteristics extract_space_characteristics(HtmlProcessor* processor,
+                                                     const IFormattingObject* fo) {
+    auto result = SpaceCharacteristics{};
+
+    result._startindent = processor->property_or_none<fo::LengthSpec>(fo, "start-indent");
+    result._endindent = processor->property_or_none<fo::LengthSpec>(fo, "end-indent");
+    result._firstline_startindent =
+      processor->property_or_none<fo::LengthSpec>(fo, "first-line-start-indent");
+    result._spacebefore = processor->property_or_none<fo::LengthSpec>(fo, "space-before");
+    result._spaceafter = processor->property_or_none<fo::LengthSpec>(fo, "space-after");
+
+    return result;
+  }
+
+
+  void set_attr(detail::StyleAttrs& attrs, const SpaceCharacteristics& spacechar) {
+    if (spacechar._startindent && spacechar._startindent->_value != 0)
+      set_attr(attrs, "padding-left", spacechar._startindent);
+    if (spacechar._endindent && spacechar._endindent->_value != 0)
+      set_attr(attrs, "padding-right", spacechar._endindent);
+    if (spacechar._spacebefore && spacechar._spacebefore->_value != 0) {
+      if (spacechar._spacebefore->_conditionalp)
+        set_attr(attrs, "margin-top", spacechar._spacebefore);
+      else
+        set_attr(attrs, "padding-top", spacechar._spacebefore);
+    }
+    if (spacechar._spaceafter && spacechar._spaceafter->_value != 0) {
+      if (spacechar._spaceafter->_conditionalp)
+        set_attr(attrs, "margin-bottom", spacechar._spaceafter);
+      else
+        set_attr(attrs, "padding-bottom", spacechar._spaceafter);
+    }
+    set_attr(attrs, "text-indent", spacechar._firstline_startindent);
+  }
+
+
+  struct MarginCharacteristics
+  {
+    estd::optional<fo::LengthSpec> _startmargin;
+    estd::optional<fo::LengthSpec> _endmargin;
+  };
+
+
+  MarginCharacteristics extract_margin_characteristics(HtmlProcessor* processor,
+                                                       const IFormattingObject* fo) {
+    auto result = MarginCharacteristics{};
+
+    result._startmargin = processor->property_or_none<fo::LengthSpec>(fo, "start-margin");
+    result._endmargin = processor->property_or_none<fo::LengthSpec>(fo, "end-margin");
+
+    return result;
+  }
+
+
+  void set_attr(detail::StyleAttrs& attrs, const MarginCharacteristics& marginchar) {
+    set_attr(attrs, "margin-left", marginchar._startmargin);
+    set_attr(attrs, "margin-right", marginchar._endmargin);
   }
 
 
@@ -472,8 +572,8 @@ namespace {
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
       auto attrs = detail::StyleAttrs{};
 
-      set_font_characteristics(attrs, processor, fo);
-      set_space_characteristics(attrs, processor, fo);
+      set_attr(attrs, extract_font_characteristics(processor, fo));
+      set_attr(attrs, extract_space_characteristics(processor, fo));
 
       auto quadding = processor->property(fo, "quadding", std::string("left"));
       if (quadding == "left")
@@ -527,7 +627,7 @@ namespace {
         else if (wstreatment == "ignore")
           processor->style_ctx()._wstreatment = html::detail::k_ignore_ws;
 
-        processor->render_sosofo(&fo->port("text"));
+        processor->render_sosofo(&fo->port(k_text));
 
         processor->style_ctx()._wstreatment = old_wstreatment;
       }
@@ -554,8 +654,8 @@ namespace {
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
       auto attrs = detail::StyleAttrs{};
 
-      set_font_characteristics(attrs, processor, fo);
-      set_space_characteristics(attrs, processor, fo);
+      set_attr(attrs, extract_font_characteristics(processor, fo));
+      set_attr(attrs, extract_space_characteristics(processor, fo));
 
       auto& ctx = processor->ctx();
 
@@ -566,10 +666,69 @@ namespace {
         auto style_scope = StyleScope{ctx, d_attrs};
 
         ctx.port().newln();
-        processor->render_sosofo(&fo->port("text"));
+        processor->render_sosofo(&fo->port(k_text));
       }
 
       ctx.port().newln();
+    }
+  };
+
+
+  class HtmlBoxFoProcessor : public IFoProcessor<HtmlProcessor>
+  {
+  public:
+    void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
+      auto attrs = detail::StyleAttrs{};
+
+      // set_attr(attrs, extract_font_characteristics(processor, fo));
+      // set_attr(attrs, extract_space_characteristics(processor, fo));
+
+      const auto is_display = processor->property(fo, "display?", false);
+      const auto boxtype = processor->property(fo, "box-type", std::string("border"));
+      const auto has_border = boxtype == "border" || boxtype == "both";
+      const auto has_background = boxtype == "background" || boxtype == "both";
+
+      if (has_border) {
+        if (auto color = processor->property_or_none<fo::Color>(fo, "color"))
+          set_attr(attrs, "border-color", enc_color(*color));
+        else
+          set_attr(attrs, "border-color", "black");
+
+        if (auto thickness = processor->property_or_none<fo::LengthSpec>(fo, "line-thickness"))
+          set_attr(attrs, "border", length_spec2css(*thickness) + " solid");
+        else
+          set_attr(attrs, "border", "1pt solid");
+      }
+
+      if (has_background) {
+        if (auto bgcolor = processor->property_or_none<fo::Color>(fo, "background-color"))
+          set_attr(attrs, "background-color", enc_color(*bgcolor));
+      }
+
+      if (processor->property(fo, "box-corner-rounded?", false)) {
+        if (auto radius = processor->property_or_none<fo::LengthSpec>(fo, "box-corner-radius"))
+          set_attr(attrs, "border-radius", radius);
+        else
+          set_attr(attrs, "border-radius", "3pt");
+      }
+
+      auto& ctx = processor->ctx();
+
+      {
+        const auto tag = is_display ? "div" : "span";
+
+        auto d_attrs = intersect_css_attrs(ctx, attrs);
+        auto with_tag =
+          html::Tag{ctx.port(), tag, tag_style_attrs(processor, tag, d_attrs)};
+        auto style_scope = StyleScope{ctx, d_attrs};
+
+        if (is_display)
+          ctx.port().newln();
+        processor->render_sosofo(&fo->port(k_text));
+      }
+
+      if (is_display)
+        ctx.port().newln();
     }
   };
 
@@ -605,10 +764,7 @@ namespace {
       if (bgcolor)
         set_attr(attrs, "background-color", enc_color(*bgcolor));
 
-      auto start_margin = processor->property_or_none<fo::LengthSpec>(fo, "start-margin");
-      set_attr(attrs, "margin-left", start_margin);
-      auto end_margin = processor->property_or_none<fo::LengthSpec>(fo, "end-margin");
-      set_attr(attrs, "margin-right", end_margin);
+      set_attr(attrs, extract_margin_characteristics(processor, fo));
 
       {
         auto with_tag =
@@ -625,12 +781,353 @@ namespace {
   };
 
 
+  struct ScreenZoneSpec
+  {
+    std::string _portnm;
+    bool _is_fixed = false;
+    bool _full_height = false;
+    estd::optional<fo::LengthSpec> _height;
+    estd::optional<fo::LengthSpec> _width;
+    estd::optional<fo::LengthSpec> _x_origin;
+    estd::optional<fo::LengthSpec> _y_origin;
+    estd::optional<fo::Color> _bg_color;
+    FontCharacteristics _font_characteristics;
+    MarginCharacteristics _margin_characteristics;
+  };
+
+
+  FontCharacteristics extract_font_characteristics(const fo::PropertySpecs& propspecs) {
+    auto result = FontCharacteristics{};
+
+    result._fontsize = propspecs.lookup_value<fo::LengthSpec>("font-size");
+    result._fontcaps = propspecs.lookup_value<std::string>("font-caps");
+    result._posptshift = propspecs.lookup_value<fo::LengthSpec>("position-point-shift");
+
+    result._fontname = propspecs.lookup_value<std::string>("font-name");
+
+    result._posture = propspecs.lookup_value<std::string>("font-posture");
+    result._weight = propspecs.lookup_value<std::string>("font-weight");
+
+    result._linespacing = propspecs.lookup_value<fo::LengthSpec>("line-spacing");
+
+    return result;
+  }
+
+
+  MarginCharacteristics
+  extract_margin_characteristics(const fo::PropertySpecs& propspecs) {
+    auto result = MarginCharacteristics{};
+
+    result._startmargin = propspecs.lookup_value<fo::LengthSpec>("start-margin");
+    result._endmargin = propspecs.lookup_value<fo::LengthSpec>("end-margin");
+
+    return result;
+  }
+
+
+  ScreenZoneSpec translate_screen_set_region(const std::string& default_portnm,
+                                             const fo::ScreenSetRegion& region) {
+    auto result = ScreenZoneSpec{};
+    result._portnm = default_portnm;
+
+    result._portnm = region._props.lookup_value_or("port", default_portnm);
+    result._is_fixed = region._props.lookup_value_or("fixed?", false);
+    result._height = region._props.lookup_value<fo::LengthSpec>("height");
+    result._width = region._props.lookup_value<fo::LengthSpec>("width");
+    result._bg_color = region._props.lookup_value<fo::Color>("background-color");
+    result._x_origin = region._props.lookup_value<fo::LengthSpec>("x-origin");
+    result._y_origin = region._props.lookup_value<fo::LengthSpec>("y-origin");
+    result._full_height =
+      region._props.lookup_value_or<bool>("span-screen-height?", false);
+    result._font_characteristics = extract_font_characteristics(region._props);
+    result._margin_characteristics = extract_margin_characteristics(region._props);
+
+    return result;
+  }
+
+
+  class HtmlScreenSetFoProcessor : public IFoProcessor<HtmlProcessor>
+  {
+    enum ZoneType
+    {
+      k_top,
+      k_left,
+      k_main,
+      k_right,
+      k_bottom,
+    };
+
+  public:
+    void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
+      auto title = processor->property(fo, "title", std::string());
+      auto author = processor->property(fo, "metadata.author", std::string());
+      auto desc = processor->property(fo, "metadata.desc", std::string());
+      auto links = processor->property_or_none<std::string>(fo, "html.add-css-link");
+      auto& ctx = processor->ctx();
+
+      if (!ctx.port().has_header()) {
+        ctx.port().header(title, author, desc, [&](std::ostream&) {
+          ctx.port().write_link("stylesheet",
+                                {{"media", "screen"},
+                                 {"type", "text/css"},
+                                 {"href", processor->css_file().string()}});
+          if (links) {
+            ctx.port().write_link("stylesheet",
+                                  {{"media", "screen"},
+                                   {"type", "text/css"},
+                                   {"href", *links}});
+          }
+        });
+      }
+
+      std::map<std::string, std::vector<ScreenZoneSpec>> zones;
+      zones["top"] = {};
+      zones["left"] = {};
+      zones["main"] = {};
+      zones["right"] = {};
+      zones["bottom"] = {};
+
+      if (auto compound_value =
+            processor->property_or_none<
+              std::shared_ptr<fo::ICompoundValue>>(fo, "screen-set-model")) {
+        if (auto screen_set_model =
+              std::dynamic_pointer_cast<fo::ScreenSetModel>(*compound_value)) {
+          for (const auto& region : screen_set_model->_regions) {
+            auto i_zone = zones.find(region._zone);
+            if (i_zone != zones.end()) {
+              i_zone->second.emplace_back(
+                translate_screen_set_region(region._zone, region));
+            }
+          }
+        }
+      }
+
+      auto fo_attrs = detail::StyleAttrs{};
+
+      set_attr(fo_attrs, extract_font_characteristics(processor, fo));
+
+      render_top_bottom_zones(processor, fo, zones["top"], k_top, fo_attrs);
+      render_fixed_side_zones(processor, fo, zones["left"], k_left, fo_attrs);
+      render_fixed_side_zones(processor, fo, zones["right"], k_right, fo_attrs);
+
+      {
+        auto cont_attrs = detail::StyleAttrs{};
+        set_attr(cont_attrs, "left", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+        set_attr(cont_attrs, "width", "100%");
+        if (!zones["main"].empty() && zones["main"].front()._y_origin) {
+          set_attr(cont_attrs, "margin",
+                   length_spec2css(*zones["main"].front()._y_origin) + " auto");
+        }
+        else if (!zones["top"].empty() && zones["top"].front()._height) {
+          set_attr(cont_attrs, "margin",
+                   length_spec2css(*zones["top"].front()._height) + " auto");
+        }
+        set_attr(cont_attrs, "padding", "0px");
+
+        auto with_tag =
+          html::Tag{ctx.port(), "div", tag_style_attrs(processor, "div", cont_attrs)};
+        auto style_scope = StyleScope{ctx, cont_attrs};
+
+        render_floating_side_zones(processor, fo, zones["left"], k_left, fo_attrs);
+
+        for (const auto& zone : zones["main"]) {
+          auto attrs = fo_attrs;
+
+          set_attr(attrs, "display", "inline-block");
+          set_attr(attrs, "vertical-align", "top");
+
+          if (zone._width)
+            set_attr(attrs, "width", *zone._width);
+
+          if (zone._x_origin)
+            set_attr(attrs, "left", *zone._x_origin);
+          if (zone._y_origin)
+            set_attr(attrs, "top", *zone._y_origin);
+          else
+            set_attr(attrs, "top", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+
+          if (zone._bg_color)
+            set_attr(attrs, "background-color", enc_color(*zone._bg_color));
+
+          render_port(processor, fo, zone._portnm, zone, attrs);
+        }
+
+        render_floating_side_zones(processor, fo, zones["right"], k_right, fo_attrs);
+      }
+
+      render_top_bottom_zones(processor, fo, zones["bottom"], k_bottom, fo_attrs);
+
+      ctx.port().newln();
+    }
+
+  private:
+    std::string zone_type_to_css_distance(ZoneType zone_type) const {
+      switch (zone_type) {
+      case k_left:
+        return "left";
+      case k_right:
+        return "right";
+      case k_top:
+        return "top";
+      case k_bottom:
+        return "bottom";
+      default:
+        return "";
+      }
+    }
+
+    void render_top_bottom_zones(HtmlProcessor* processor, const IFormattingObject* fo,
+                                 const std::vector<ScreenZoneSpec>& zones,
+                                 ZoneType zone_type,
+                                 const detail::StyleAttrs& xattrs) const {
+      for (const auto& zone : zones) {
+        auto attrs = xattrs;
+
+        set_attr(attrs, "display", "block");
+
+        if (zone._width)
+          set_attr(attrs, "width", *zone._width);
+        else
+          set_attr(attrs, "width", "100%");
+        if (zone._height)
+          set_attr(attrs, "height", *zone._height);
+
+        if (zone._bg_color)
+          set_attr(attrs, "background-color", enc_color(*zone._bg_color));
+
+        if (zone._y_origin)
+          set_attr(attrs, zone_type_to_css_distance(zone_type), *zone._y_origin);
+        else
+          set_attr(attrs, zone_type_to_css_distance(zone_type),
+                   fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+
+        if (zone._x_origin)
+          set_attr(attrs, "left", *zone._x_origin);
+        else
+          set_attr(attrs, "left", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+
+        if (zone._is_fixed) {
+          // set_attr(attrs, "position", "sticky");
+          set_attr(attrs, "position", "fixed");
+        }
+
+        render_port(processor, fo, zone._portnm, zone, attrs);
+      }
+    }
+
+    void render_fixed_side_zones(HtmlProcessor* processor, const IFormattingObject* fo,
+                                 const std::vector<ScreenZoneSpec>& zones,
+                                 ZoneType zone_type,
+                                 const detail::StyleAttrs& xattrs) const {
+      for (const auto& zone : zones) {
+        if (zone._is_fixed) {
+          auto attrs = xattrs;
+
+          set_attr(attrs, "display", "block");
+          set_attr(attrs, "position", "fixed");
+
+          if (zone._width)
+            set_attr(attrs, "width", *zone._width);
+          if (zone._full_height) {
+            if (zone._y_origin)
+              set_attr(attrs, "height",
+                       std::string("calc(100% - ") + length_spec2css(*zone._y_origin) +
+                         ")");
+            else
+              set_attr(attrs, "height", "100%");
+          }
+          else if (zone._height)
+            set_attr(attrs, "height", *zone._height);
+
+          if (zone._y_origin)
+            set_attr(attrs, "top", *zone._y_origin);
+
+          if (zone._bg_color)
+            set_attr(attrs, "background-color", enc_color(*zone._bg_color));
+
+          if (zone._x_origin)
+            set_attr(attrs, zone_type_to_css_distance(zone_type), *zone._x_origin);
+          else
+            set_attr(attrs, zone_type_to_css_distance(zone_type),
+                     fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+
+          render_port(processor, fo, zone._portnm, zone, attrs);
+        }
+      }
+    }
+
+    void render_floating_side_zones(HtmlProcessor* processor, const IFormattingObject* fo,
+                                    const std::vector<ScreenZoneSpec>& zones,
+                                    ZoneType zone_type,
+                                    const detail::StyleAttrs& xattrs) const {
+      for (const auto& zone : zones) {
+        auto attrs = xattrs;
+        set_attr(attrs, "float", zone_type_to_css_distance(zone_type));
+
+        if (zone._width)
+          set_attr(attrs, "width", *zone._width);
+        if (zone._full_height) {
+          if (zone._y_origin)
+            set_attr(attrs, "height",
+                     std::string("calc(100% - ") + length_spec2css(*zone._y_origin) +
+                       ")");
+          else
+            set_attr(attrs, "height", "100%");
+        }
+        else if (zone._height)
+          set_attr(attrs, "height", *zone._height);
+
+        if (!zone._is_fixed) {
+          if (zone._bg_color)
+            set_attr(attrs, "background-color", enc_color(*zone._bg_color));
+          render_port(processor, fo, zone._portnm, zone, attrs);
+        }
+        else {
+          auto& ctx = processor->ctx();
+          auto with_tag =
+            html::Tag{ctx.port(), "div", tag_style_attrs(processor, "div", attrs)};
+          ctx.port().write_text("&nbsp;");
+        }
+      }
+    }
+
+    void render_port(HtmlProcessor* processor, const IFormattingObject* fo,
+                     const std::string& portnm, const ScreenZoneSpec& zone,
+                     const detail::StyleAttrs& attrs) const {
+      auto& ctx = processor->ctx();
+
+      const auto area_sosofo = fo->port(portnm);
+      if (!area_sosofo.empty()) {
+        {
+          auto with_tag =
+            html::Tag{ctx.port(), "div", tag_style_attrs(processor, "div", attrs)};
+
+          {
+            auto attrs2 = detail::StyleAttrs{};
+            set_attr(attrs2, zone._font_characteristics);
+            set_attr(attrs2, zone._margin_characteristics);
+
+            auto dg_attrs = intersect_css_attrs(ctx, attrs2);
+            auto with_tag =
+              html::Tag{ctx.port(), "div", tag_style_attrs(processor, "div", dg_attrs)};
+            auto style_scope = StyleScope{ctx, dg_attrs};
+
+            ctx.port().newln();
+            processor->render_sosofo(&area_sosofo);
+          }
+        }
+        ctx.port().newln();
+      }
+    }
+  };
+
+
   class HtmlSequenceFoProcessor : public IFoProcessor<HtmlProcessor>
   {
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
-      detail::StyleAttrs attrs;
-      set_font_characteristics(attrs, processor, fo);
+      auto attrs = detail::StyleAttrs{};
+      set_attr(attrs, extract_font_characteristics(processor, fo));
 
       {
         auto& ctx = processor->ctx();
@@ -648,7 +1145,7 @@ namespace {
                        processor->property_or_none<std::string>(fo, "font-posture"),
                        "italic")};
 
-        processor->render_sosofo(&fo->port("text"));
+        processor->render_sosofo(&fo->port(k_text));
       }
     }
   };
@@ -662,14 +1159,19 @@ namespace {
   {
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
-      detail::StyleAttrs attrs;
-      set_font_characteristics(attrs, processor, fo);
+      auto attrs = detail::StyleAttrs{};
+      set_attr(attrs, extract_font_characteristics(processor, fo));
 
       auto field_width = processor->property_or_none<fo::LengthSpec>(fo, "field-width");
       auto field_align = processor->property_or_none<std::string>(fo, "field-align");
 
       if (field_width && field_width->_value > 0) {
-        set_attr(attrs, "width", field_width);
+        const auto max_inf = std::numeric_limits<double>::infinity();
+
+        if (field_width->_max == max_inf)
+          set_attr(attrs, "min-width", field_width);
+        else
+          set_attr(attrs, "width", field_width);
       }
       if (field_align) {
         if (*field_align == k_left || *field_align == k_center ||
@@ -694,7 +1196,7 @@ namespace {
                        processor->property_or_none<std::string>(fo, "font-posture"),
                        "italic")};
 
-        processor->render_sosofo(&fo->port("text"));
+        processor->render_sosofo(&fo->port(k_text));
       }
     }
   };
@@ -732,7 +1234,7 @@ namespace {
   {
   public:
     void render(HtmlProcessor* po, const IFormattingObject* fo) const override {
-      detail::StyleAttrs attrs;
+      auto attrs = detail::StyleAttrs{};
       auto col_num = po->property(fo, "column-number", 1);
       set_attr(attrs, "column-count", col_num);
 
@@ -741,7 +1243,7 @@ namespace {
       auto with_tag = html::Tag{ctx.port(), "div", tag_style_attrs(po, "div", attrs)};
       auto style_scope = StyleScope{ctx, attrs};
 
-      po->render_sosofo(&fo->port("text"));
+      po->render_sosofo(&fo->port(k_text));
     }
   };
 } // ns anon
@@ -774,7 +1276,9 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const {
     {"#paragraph", std::make_shared<HtmlParagraphFoProcessor>()},
     {"#paragraph-break", std::make_shared<HtmlParagraphBreakFoProcessor>()},
     {"#display-group", std::make_shared<HtmlDisplayGroupFoProcessor>()},
+    {"#box", std::make_shared<HtmlBoxFoProcessor>()},
     {"#scroll-sequence", std::make_shared<HtmlScrollSequenceFoProcessor>()},
+    {"#screen-set", std::make_shared<HtmlScreenSetFoProcessor>()},
     {"#sequence", std::make_shared<HtmlSequenceFoProcessor>()},
     {"#line-field", std::make_shared<HtmlLineFieldFoProcessor>()},
     {"#anchor", std::make_shared<HtmlAnchorFoProcessor>()},

@@ -2,6 +2,6 @@
 ;; All rights reserved.
 
 (define-library (textbook type-of)
-  (import (chibi) (srfi 88))
+  (import (chibi))
   (export type-of)
   (include "type-of.scm"))

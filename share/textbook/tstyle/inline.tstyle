@@ -6,6 +6,9 @@
 (element r
   (format-r (attribute "text" (current-node))))
 
+(element b
+  (format-bold (attribute "text" (current-node))))
+
 (element opt
   (format-bold (attribute "text" (current-node))))
 

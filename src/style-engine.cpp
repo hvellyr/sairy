@@ -68,4 +68,21 @@ std::unique_ptr<Sosofo> StyleEngine::process_node(const Node* root) {
   return _ctx->process_root_node(root);
 }
 
+
+void StyleEngine::define_variables(const std::vector<std::string>& defs) {
+  assert(_ctx);
+
+  for (const auto& def : defs) {
+    const auto parts = utils::split(def, "=");
+
+    auto value = parts.size() == 2
+      ? parts[1]
+      : estd::optional<std::string>{};
+
+    if (!_ctx->set_variable(parts[0], value)) {
+      std::cerr << "Failed to set variable " << parts[0] << std::endl;
+    }
+  }
+}
+
 } // ns eyestep

@@ -48,9 +48,7 @@
         (make paragraph
           first-line-start-indent: 0pt
           quadding: "justify"
-          space-before: (if (html-backend?)
-                            (display-space 7pt conditional?: #t)
-                            0pt)
+          space-before: %gap-between-paragraphs%
           (process-node-list-left-trim-idx-ws (children (current-node))))
         )))
 
@@ -60,15 +58,17 @@
 
 (element definitions
   (make display-group
-    space-before: 7pt
-    space-after: 7pt
+    space-before: (display-space 7pt conditional?: #t)
+    space-after: (display-space 7pt conditional?: #t)
     (process-children-trim)))
 
 (element (definitions p item)
   (make line-field
-    field-width: 70pt
+    field-width: (inline-space 70pt max: 'inf)
     field-align: 'left
-    (process-node-list-trim (attribute "text" (current-node)))))
+    (sosofo-append
+     (process-node-list-trim (attribute "text" (current-node)))
+     (make-char 'non-breaking-space))))
 
 (element (definitions p)
   (let ((item (node-list-first (children (current-node)))))
@@ -78,21 +78,25 @@
              (make paragraph
                first-line-start-indent: 0pt
                start-indent: 0pt
+               quadding: 'justify
                (process-node-list (node-list-first (children (current-node)))))
              (make paragraph
                first-line-start-indent: 0pt
                start-indent: 70pt
+               quadding: 'justify
                (process-node-list-trim (node-list-rest (children (current-node)))))
              )
             (make paragraph
               first-line-start-indent: -70pt
               start-indent: 70pt
+               quadding: 'justify
               (sosofo-append
                (process-node-list (node-list-first (children (current-node))))
                (process-node-list-trim (node-list-rest (children (current-node)))))))
         (make paragraph
           first-line-start-indent: 0pt
           start-indent: 70pt
+          quadding: 'justify
           (process-children-trim)
           ) ))
   )
@@ -100,8 +104,8 @@
 
 (element itemize
   (make display-group
-    space-before: 7pt
-    space-after: 7pt
+    space-before: (display-space 7pt conditional?: #t)
+    space-after: (display-space 7pt conditional?: #t)
     (process-children-trim)))
 
 (element (itemize p item)
@@ -110,7 +114,7 @@
     field-align: 'left
     (let ((txt (attribute "text" (current-node))))
       (if (node-list-empty? txt)
-          (literal "•")
+          (make-char 'bullet)
           (process-node-list-trim txt) )) ))
 
 (element (itemize p)
@@ -143,8 +147,8 @@
 
 (element enumerate
   (make display-group
-    space-before: 7pt
-    space-after: 7pt
+    space-before: (display-space 7pt conditional?: #t)
+    space-after: (display-space 7pt conditional?: #t)
     (process-children-trim)))
 
 (element (enumerate p item)

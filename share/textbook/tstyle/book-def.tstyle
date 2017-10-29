@@ -1,0 +1,80 @@
+;;; Copyright (c) 2017 Gregor Klinke
+;;; All rights reserved.
+
+(mode decl-mode
+  (element prm
+    (make sequence
+      font-posture: 'oblique
+      font-weight: 'medium
+      (process-node-list (attribute "text" (current-node)))))
+
+  (element var
+    (make sequence
+      font-posture: 'oblique
+      font-weight: 'medium
+      (process-node-list (attribute "text" (current-node)))))
+
+  (element ?
+    (sosofo-append
+     (make sequence
+       font-weight: 'medium
+       (literal "["))
+     (process-node-list (attribute "optionalexpr" (current-node)))
+     (make sequence
+       font-weight: 'medium
+       (literal "]"))))
+
+  (element p
+    (make paragraph
+      space-before: 0pt
+      space-after:  0pt
+      start-indent: (example-start-indent (parent (current-node)))
+      font-name:    %monospace-font-name%
+      font-size:    (font-size 2)
+      line-spacing: (line-spacing 2)
+      font-weight:  'bold
+      lines:        'asis
+      whitespace-treatment: 'preserve
+      (process-children)))
+  )
+
+(define (make-def-sosofo nd head-sosofo kind)
+  (sosofo-append
+   (make paragraph
+     space-before: (display-space 7pt conditional?: #t)
+     first-line-start-indent: -45mm
+     start-indent: 0mm
+     keep-with-next?: #t
+     (sosofo-append
+      (make line-field
+        field-width: 41mm
+        field-align: 'right
+        font-posture: 'italic
+        (if (sosofo? kind) kind (process-node-list kind)))
+      (make line-field
+        field-width: 4mm
+        (empty-sosofo))
+      (with-mode decl-mode
+        (make line-field
+          font-name: %monospace-font-name%
+          font-weight: 'bold
+          (process-node-list head-sosofo)) )))
+   (make display-group
+     space-after: 7pt
+     (process-node-list (children nd)))))
+
+(element deffn
+  (make-def-sosofo (current-node) (attribute "declln" (current-node))
+                   (literal "Function")))
+
+(element decl
+  (make display-group
+    space-before: (display-space 7pt conditional?: #t)
+    space-after:  (display-space 7pt conditional?: #t)
+    (with-mode decl-mode
+      (process-children))))
+
+(element def
+  (make-def-sosofo (current-node)
+                   (attribute "declsum" (current-node))
+                   (attribute "kind" (current-node))))
