@@ -40,15 +40,13 @@ namespace {
     auto scanner = ScannerClass{};
     const auto id = scanner.scanner_id();
 
-    const auto i_find = s_scanner_factory_map.find(id);
-    assert(i_find == s_scanner_factory_map.end());
+    assert(s_scanner_factory_map.find(id) == s_scanner_factory_map.end());
     s_scanner_factory_map[id] = [](const po::variables_map& args) {
       return ::estd::make_unique<ScannerClass>(args);
     };
 
     for (const auto& ext : scanner.supported_extensions()) {
-      const auto i_find = s_scanner_extension_map.find(ext);
-      assert(i_find == s_scanner_extension_map.end());
+      assert(s_scanner_extension_map.find(ext) == s_scanner_extension_map.end());
       s_scanner_extension_map[ext] = id;
     }
   }

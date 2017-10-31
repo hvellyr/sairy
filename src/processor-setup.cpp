@@ -34,8 +34,7 @@ namespace {
     T processor;
     const auto id = processor.proc_id();
 
-    const auto i_find = s_processor_factory_map.find(id);
-    assert(i_find == s_processor_factory_map.end());
+    assert(s_processor_factory_map.find(id) == s_processor_factory_map.end());
     s_processor_factory_map[id] = [](const po::variables_map& args) {
       return ::estd::make_unique<T>(args);
     };
