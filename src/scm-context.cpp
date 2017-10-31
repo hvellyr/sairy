@@ -249,9 +249,8 @@ namespace {
 
   sexp make_textbook_exception(sexp ctx, sexp self, const char* ms, sexp ir,
                                sexp source) {
-    sexp res;
-    sexp_gc_var3(sym, str, irr);
-    sexp_gc_preserve3(ctx, sym, str, irr);
+    sexp_gc_var4(sym, str, irr, res);
+    sexp_gc_preserve4(ctx, sym, str, irr, res);
     res = sexp_make_exception(ctx, sym = sexp_intern(ctx, "read", -1), // kind
                               str = sexp_c_string(ctx, ms, -1),        // msg
                               ((sexp_pairp(ir) || sexp_nullp(ir))
@@ -259,7 +258,7 @@ namespace {
                                  : (irr = sexp_list1(ctx, ir))), // irritants
                               self,                              // procedure
                               source);                           // source
-    sexp_gc_release3(ctx);
+    sexp_gc_release4(ctx);
     return res;
   }
 
@@ -1201,8 +1200,8 @@ namespace {
   //----------------------------------------------------------------------------
 
   sexp make_screen_set_model(sexp ctx, const fo::ScreenSetModel* obj) {
-    sexp_gc_var4(ty, tmp, result, nm);
-    sexp_gc_preserve4(ctx, ty, tmp, result, nm);
+    sexp_gc_var3(ty, result, nm);
+    sexp_gc_preserve3(ctx, ty, result, nm);
 
     ty =
       sexp_env_ref(ctx, sexp_context_env(ctx),
@@ -1219,7 +1218,7 @@ namespace {
       result = SEXP_VOID;
     }
 
-    sexp_gc_release4(ctx);
+    sexp_gc_release3(ctx);
 
     return result;
   }
@@ -1374,8 +1373,8 @@ namespace {
   //----------------------------------------------------------------------------
 
   sexp make_sosofo(sexp ctx, const Sosofo* obj) {
-    sexp_gc_var4(ty, tmp, result, nm);
-    sexp_gc_preserve4(ctx, ty, tmp, result, nm);
+    sexp_gc_var3(ty, result, nm);
+    sexp_gc_preserve3(ctx, ty, result, nm);
 
     ty = sexp_env_ref(ctx, sexp_context_env(ctx),
                       nm = sexp_intern(ctx, SOSOFO_TAG, SOSOFO_TAG_SIZE), SEXP_VOID);
@@ -1390,7 +1389,7 @@ namespace {
       result = SEXP_VOID;
     }
 
-    sexp_gc_release4(ctx);
+    sexp_gc_release3(ctx);
 
     return result;
   }
