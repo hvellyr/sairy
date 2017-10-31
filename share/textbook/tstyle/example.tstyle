@@ -19,23 +19,8 @@
 (define (example-start-indent nd)
   (if (> (get-line-length nd) 60) -25mm %example-box-indent%))
 
-;; (define verbatim-style
-;;   (style
-;;       space-before: 0pt
-;;       space-after:  0pt
-;;       font-name:    %monospace-font-name%
-;;       font-size:    (font-size 2)
-;;       line-spacing: (line-spacing 2)
-;;       lines:        'asis
-;;       whitespace-treatment: 'preserve
-;;       ))
-
-
-(mode example-mode
-  (element p
-    (make paragraph
-      ;;use: verbatim-style
-      start-indent: (example-start-indent (parent (current-node)))
+(define verbatim-style
+  (style
       space-before: 0pt
       space-after:  0pt
       font-name:    %monospace-font-name%
@@ -43,6 +28,14 @@
       line-spacing: (line-spacing 2)
       lines:        'asis
       whitespace-treatment: 'preserve
+      ))
+
+
+(mode example-mode
+  (element p
+    (make paragraph
+      use: verbatim-style
+      start-indent: (example-start-indent (parent (current-node)))
       color: %example-text-color%
       (process-children)))
   )
@@ -73,15 +66,8 @@
 (mode verbatim-mode
   (element p
     (make paragraph
-      ;;use: verbatim-style
+      use: verbatim-style
       start-indent: (example-start-indent (parent (current-node)))
-      space-before: 0pt
-      space-after:  0pt
-      font-name:    %monospace-font-name%
-      font-size:    (font-size 2)
-      line-spacing: (line-spacing 2)
-      lines:        'asis
-      whitespace-treatment: 'preserve
       (process-children)))
   )
 
