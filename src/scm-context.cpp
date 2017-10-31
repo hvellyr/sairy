@@ -41,7 +41,6 @@ namespace {
     return s_root_node;
   }
 
-
 #define NODELIST_TAG "<node-list>"
 #define NODELIST_TAG_SIZE 11
 
@@ -54,8 +53,7 @@ namespace {
 #define COLOR_TAG "<color>"
 #define COLOR_TAG_SIZE 7
 
-#define STYLE_TAG "<style>"
-#define STYLE_TAG_SIZE 7
+#define STYLE_TYPE_NAME "<style>"
 
 #define SCREEN_SET_MODEL_TAG "<screen-set-model>"
 #define SCREEN_SET_MODEL_TAG_SIZE 18
@@ -163,22 +161,6 @@ namespace {
   }
 
 
-  int style_tag_p(sexp ctx) {
-    auto retv = 0;
-    sexp_gc_var2(ty, nm);
-    sexp_gc_preserve2(ctx, ty, nm);
-
-    ty = sexp_env_ref(ctx, sexp_context_env(ctx),
-                      nm = sexp_intern(ctx, STYLE_TAG, STYLE_TAG_SIZE), SEXP_VOID);
-    if (sexp_typep(ty))
-      retv = sexp_type_tag(ty);
-
-    sexp_gc_release2(ctx);
-
-    return retv;
-  }
-
-
   int screen_set_model_tag_p(sexp ctx) {
     auto retv = 0;
     sexp_gc_var2(ty, nm);
@@ -249,9 +231,8 @@ namespace {
 
   sexp make_textbook_exception(sexp ctx, sexp self, const char* ms, sexp ir,
                                sexp source) {
-    sexp res;
-    sexp_gc_var3(sym, str, irr);
-    sexp_gc_preserve3(ctx, sym, str, irr);
+    sexp_gc_var4(sym, str, irr, res);
+    sexp_gc_preserve4(ctx, sym, str, irr, res);
     res = sexp_make_exception(ctx, sym = sexp_intern(ctx, "read", -1), // kind
                               str = sexp_c_string(ctx, ms, -1),        // msg
                               ((sexp_pairp(ir) || sexp_nullp(ir))
@@ -259,7 +240,7 @@ namespace {
                                  : (irr = sexp_list1(ctx, ir))), // irritants
                               self,                              // procedure
                               source);                           // source
-    sexp_gc_release3(ctx);
+    sexp_gc_release4(ctx);
     return res;
   }
 
@@ -1201,8 +1182,8 @@ namespace {
   //----------------------------------------------------------------------------
 
   sexp make_screen_set_model(sexp ctx, const fo::ScreenSetModel* obj) {
-    sexp_gc_var4(ty, tmp, result, nm);
-    sexp_gc_preserve4(ctx, ty, tmp, result, nm);
+    sexp_gc_var3(ty, result, nm);
+    sexp_gc_preserve3(ctx, ty, result, nm);
 
     ty =
       sexp_env_ref(ctx, sexp_context_env(ctx),
@@ -1219,7 +1200,7 @@ namespace {
       result = SEXP_VOID;
     }
 
-    sexp_gc_release4(ctx);
+    sexp_gc_release3(ctx);
 
     return result;
   }
@@ -1250,43 +1231,44 @@ namespace {
       sexp ls = region_spec;
 
       for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
-        sexp ref = sexp_car(ls);
-        auto key = string_from_keyword_or_none(ctx, ref);
+        sexp expr = sexp_car(ls);
+        auto key = string_from_keyword_or_none(ctx, expr);
 
         if (key) {
           if (sexp_pairp(sexp_cdr(ls))) {
-            ref = sexp_car(sexp_cdr(ls));
+            expr = sexp_car(sexp_cdr(ls));
+
 
             if (*key == k_zone) {
               if (!zone.empty()) {
-                excep = make_textbook_exception(ctx, self, "zone: already defined", ref,
+                excep = make_textbook_exception(ctx, self, "zone: already defined", expr,
                                                 source);
                 break;
               }
 
-              if (auto zonep = string_from_symbol_sexp_or_none(ctx, ref)) {
+              if (auto zonep = string_from_symbol_sexp_or_none(ctx, expr)) {
                 zone = *zonep;
               }
               else {
                 excep =
-                  make_textbook_exception(ctx, self, "zone: not a symbol", ref, source);
+                  make_textbook_exception(ctx, self, "zone: not a symbol", expr, source);
                 break;
               }
             }
             else {
-              auto prop = evaluate_keyword_parameter(ctx, self, *key, ref);
+              auto prop = evaluate_keyword_parameter(ctx, self, *key, expr);
               if (prop)
                 props.set(*prop);
             }
           }
           else {
-            excep = make_textbook_exception(ctx, self, "value missing for keyword", ref,
+            excep = make_textbook_exception(ctx, self, "value missing for keyword", expr,
                                             source);
             break;
           }
         }
         else {
-          excep = make_textbook_exception(ctx, self, "keyword expected", ref, source);
+          excep = make_textbook_exception(ctx, self, "keyword expected", expr, source);
           break;
         }
 
@@ -1309,19 +1291,22 @@ namespace {
 
   sexp func_make_screen_set_model(sexp ctx, sexp self, sexp_sint_t n, sexp args_arg,
                                   sexp source) {
-    sexp_gc_var2(result, content);
-    sexp_gc_preserve2(ctx, result, content);
+    sexp_gc_var3(result, content, ls);
+    sexp_gc_preserve3(ctx, result, content, ls);
 
     result = SEXP_NULL;
     content = SEXP_NULL;
 
     std::vector<fo::ScreenSetRegion> regions;
 
-    if (sexp_pairp(args_arg)) {
-      sexp ls = args_arg;
-
+    ls = sexp_apply(ctx, args_arg, SEXP_NULL);
+    if (sexp_exceptionp(ls)) {
+      result = ls;
+    }
+    else if (sexp_pairp(ls)) {
       for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
         sexp region_spec = sexp_car(ls);
+
         if (sexp_pairp(region_spec)) {
           if (auto region =
                 evaluate_screen_set_region_spec(ctx, self, region_spec, source))
@@ -1340,7 +1325,7 @@ namespace {
     if (result == SEXP_NULL)
       result = make_screen_set_model(ctx, new fo::ScreenSetModel(regions));
 
-    sexp_gc_release2(ctx);
+    sexp_gc_release3(ctx);
 
     return result;
   }
@@ -1374,8 +1359,8 @@ namespace {
   //----------------------------------------------------------------------------
 
   sexp make_sosofo(sexp ctx, const Sosofo* obj) {
-    sexp_gc_var4(ty, tmp, result, nm);
-    sexp_gc_preserve4(ctx, ty, tmp, result, nm);
+    sexp_gc_var3(ty, result, nm);
+    sexp_gc_preserve3(ctx, ty, result, nm);
 
     ty = sexp_env_ref(ctx, sexp_context_env(ctx),
                       nm = sexp_intern(ctx, SOSOFO_TAG, SOSOFO_TAG_SIZE), SEXP_VOID);
@@ -1390,7 +1375,7 @@ namespace {
       result = SEXP_VOID;
     }
 
-    sexp_gc_release4(ctx);
+    sexp_gc_release3(ctx);
 
     return result;
   }
@@ -1462,38 +1447,6 @@ namespace {
 
 
   //----------------------------------------------------------------------------
-
-  sexp make_style(sexp ctx, const fo::PropertySpecs* obj) {
-    sexp_gc_var3(ty, result, nm);
-    sexp_gc_preserve3(ctx, ty, result, nm);
-
-    ty = sexp_env_ref(ctx, sexp_context_env(ctx),
-                      nm = sexp_intern(ctx, STYLE_TAG, STYLE_TAG_SIZE), SEXP_VOID);
-
-    if (sexp_typep(ty)) {
-      result = sexp_alloc_type(ctx, cpointer, sexp_type_tag(ty));
-      sexp_cpointer_freep(result) = 0;
-      sexp_cpointer_length(result) = 0;
-      sexp_cpointer_value(result) = (void*)obj;
-    }
-    else {
-      result = SEXP_VOID;
-    }
-
-    sexp_gc_release3(ctx);
-
-    return result;
-  }
-
-
-  sexp free_style(sexp ctx, sexp self, sexp_sint_t n, sexp style_arg) {
-    const auto* style = (const fo::PropertySpecs*)(sexp_cpointer_value(style_arg));
-    delete style;
-
-    sexp_cpointer_value(style_arg) = nullptr;
-    return SEXP_VOID;
-  }
-
 
   estd::optional<fo::PropertySpec>
   evaluate_keyword_parameter(sexp ctx, sexp self, const std::string& key, sexp expr) {
@@ -1628,10 +1581,97 @@ namespace {
   }
 
 
+  bool is_style_sexp(sexp ctx, sexp self, sexp st) {
+    return sexp_pointerp(st) &&
+           strcmp(sexp_string_data(sexp_object_type_name(ctx, st)), STYLE_TYPE_NAME) == 0;
+  }
+
+
+  sexp style_props(sexp st) {
+    return sexp_slot_ref(st, 0);
+  }
+
+
+  std::tuple<sexp /*result*/, sexp /*ls*/> evaluate_properties(sexp ctx, sexp self,
+                                                               sexp source, sexp ls,
+                                                               fo::PropertySpecs& props,
+                                                               std::string& label) {
+    sexp_gc_var4(result, nm, ty, styleprops);
+    sexp_gc_preserve4(ctx, result, nm, ty, styleprops);
+
+    result = SEXP_NULL;
+
+    for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
+      sexp expr = sexp_car(ls);
+      auto key = string_from_keyword_or_none(ctx, expr);
+
+      if (key) {
+        if (sexp_pairp(sexp_cdr(ls))) {
+          expr = sexp_car(sexp_cdr(ls));
+
+          if (*key == k_use) {
+            if (is_style_sexp(ctx, self, expr)) {
+              styleprops = sexp_apply(ctx, style_props(expr), SEXP_NULL);
+              if (sexp_exceptionp(styleprops)) {
+                result = styleprops;
+                break;
+              }
+
+              sexp dummy;
+              std::tie(result, dummy) =
+                evaluate_properties(ctx, self, source, styleprops, props, label);
+              if (result != SEXP_NULL)
+                break;
+            }
+            else {
+              result = make_textbook_exception(ctx, self, "use: requires style argument",
+                                               expr, source);
+              break;
+            }
+          }
+          else if (*key == k_label) {
+            if (!label.empty()) {
+              result = make_textbook_exception(ctx, self, "label: already defined", expr,
+                                               source);
+              break;
+            }
+
+            if (auto labelp = string_from_symbol_sexp_or_none(ctx, expr)) {
+              label = *labelp;
+            }
+            else {
+              result =
+                make_textbook_exception(ctx, self, "label: not a symbol", expr, source);
+              break;
+            }
+          }
+          else {
+            if (auto prop = evaluate_keyword_parameter(ctx, self, *key, expr))
+              props.set(*prop);
+          }
+        }
+        else {
+          result =
+            make_textbook_exception(ctx, self, "value missing for keyword", expr, source);
+          break;
+        }
+      }
+      else
+        break;
+
+      ls = sexp_cdr(ls);
+    }
+
+    sexp_gc_release4(ctx);
+
+    return std::make_tuple(result, ls);
+  }
+
+
   sexp func_make_fo(sexp ctx, sexp self, sexp_sint_t n, sexp fo_class_arg, sexp args_arg,
                     sexp source) {
-    sexp_gc_var2(result, content);
-    sexp_gc_preserve2(ctx, result, content);
+    sexp_gc_var3(result, content, ls);
+    sexp_gc_preserve3(ctx, result, content, ls);
 
     result = SEXP_NULL;
     content = SEXP_NULL;
@@ -1645,79 +1685,32 @@ namespace {
     auto ports = Ports{};
 
     auto props = fo::PropertySpecs{};
-    if (sexp_pairp(args_arg)) {
-      sexp ls = args_arg;
 
-      for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
-        sexp ref = sexp_car(ls);
-        auto key = string_from_keyword_or_none(ctx, ref);
+    ls = sexp_apply(ctx, args_arg, SEXP_NULL);
+    if (sexp_exceptionp(ls)) {
+      result = ls;
+    }
+    else if (sexp_pairp(ls)) {
+      std::tie(result, ls) = evaluate_properties(ctx, self, source, ls, props, label);
 
-        if (key) {
-          if (sexp_pairp(sexp_cdr(ls))) {
-            ref = sexp_car(sexp_cdr(ls));
+      if (result == SEXP_NULL) {
+        for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
+          auto expr = sexp_car(ls);
 
-            if (*key == k_use) {
-              if (sexp_check_tag(ref, style_tag_p(ctx))) {
-                const auto* style = (const fo::PropertySpecs*)(sexp_cpointer_value(ref));
-                props = merge_property_specs(props, *style);
-              }
-              else {
-                result =
-                  make_textbook_exception(ctx, self, "use: requires style argument", ref,
-                                          source);
-                break;
-              }
-            }
-            else if (*key == k_label) {
-              if (!label.empty()) {
-                result = make_textbook_exception(ctx, self, "label: already defined", ref,
-                                                 source);
-                break;
-              }
+          auto key = string_from_keyword_or_none(ctx, expr);
 
-              if (auto labelp = string_from_symbol_sexp_or_none(ctx, ref)) {
-                label = *labelp;
-              }
-              else {
-                result =
-                  make_textbook_exception(ctx, self, "label: not a symbol", ref, source);
-                break;
-              }
-            }
-            else {
-              auto prop = evaluate_keyword_parameter(ctx, self, *key, ref);
-              if (prop)
-                props.set(*prop);
-            }
-          }
-          else {
-            result = make_textbook_exception(ctx, self, "value missing for keyword", ref,
-                                             source);
+          if (key) {
+            result = make_textbook_exception(ctx, self, "unexpeced keyword in make body",
+                                             expr, source);
             break;
           }
+
+          if (auto lbl = label_from_sosofo_sexp_or_none(ctx, expr)) {
+            ports[*lbl].emplace_back(expr);
+          }
+          else
+            content = expr;
         }
-        else
-          break;
-
-        ls = sexp_cdr(ls);
-      }
-
-      // TODO
-      for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
-        sexp ref = sexp_car(ls);
-        auto key = string_from_keyword_or_none(ctx, ref);
-
-        if (key) {
-          result = make_textbook_exception(ctx, self, "unexpeced keyword in make body",
-                                           ref, source);
-          break;
-        }
-
-        if (auto lbl = label_from_sosofo_sexp_or_none(ctx, ref)) {
-          ports[*lbl].emplace_back(ref);
-        }
-        else
-          content = ref;
       }
     }
     else
@@ -1728,89 +1721,14 @@ namespace {
         make_fo(ctx, self, *fo_class, label, fo_class_arg, props, content, ports, source);
     }
 
-    sexp_gc_release2(ctx);
-
-    return result;
-  }
-
-
-  sexp func_make_style(sexp ctx, sexp self, sexp_sint_t n, sexp args_arg) {
-    sexp_gc_var2(result, obj);
-    sexp_gc_preserve2(ctx, result, obj);
-
-    result = SEXP_NULL;
-    obj = SEXP_NULL;
-
-    auto props = fo::PropertySpecs{};
-    if (sexp_pairp(args_arg)) {
-      sexp ls = args_arg;
-
-      for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
-        sexp ref = sexp_car(ls);
-        auto key = string_from_keyword_or_none(ctx, ref);
-
-        if (key) {
-          if (sexp_pairp(sexp_cdr(ls))) {
-            ref = sexp_car(sexp_cdr(ls));
-            if (*key == "use") {
-              if (sexp_check_tag(ref, style_tag_p(ctx))) {
-                const auto* style = (const fo::PropertySpecs*)(sexp_cpointer_value(ref));
-                props = merge_property_specs(props, *style);
-              }
-              else {
-                result =
-                  sexp_user_exception(ctx, self, "use: requires style argument", ref);
-                break;
-              }
-            }
-            else {
-              auto prop = evaluate_keyword_parameter(ctx, self, *key, ref);
-              if (prop) {
-                props.set(*prop);
-              }
-            }
-          }
-          else {
-            result = sexp_user_exception(ctx, self, "value missing for keyword", ref);
-            break;
-          }
-        }
-        else {
-          result = sexp_user_exception(ctx, self, "unexpeced keyword in style list", ref);
-          break;
-        }
-
-        ls = sexp_cdr(ls);
-      }
-    }
-    else {
-      result = sexp_user_exception(ctx, self, "not a list", args_arg);
-    }
-
-    if (result == SEXP_NULL) {
-      result = make_style(ctx, new fo::PropertySpecs(props));
-    }
-
-    sexp_gc_release2(ctx);
+    sexp_gc_release3(ctx);
 
     return result;
   }
 
 
   void init_make_functions(sexp ctx) {
-    sexp_gc_var3(nm, ty, op);
-    sexp_gc_preserve3(ctx, nm, ty, op);
-
-    // register qobject type
-    ty = sexp_register_c_type(ctx, nm = sexp_c_string(ctx, "style", -1), &free_style);
-
-    sexp_env_cell_define(ctx, sexp_context_env(ctx),
-                         nm = sexp_intern(ctx, STYLE_TAG, STYLE_TAG_SIZE), ty, NULL);
-    op = sexp_make_type_predicate(ctx, nm = sexp_c_string(ctx, "style?", -1), ty);
-    sexp_env_define(ctx, sexp_context_env(ctx), nm = sexp_intern(ctx, "style?", -1), op);
-
     sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-fo", 3, &func_make_fo);
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "make-style", 1, &func_make_style);
   }
 
 
@@ -2158,13 +2076,13 @@ namespace {
     }
 
 
-    bool set_variable(const std::string& name, const estd::optional<std::string>& value) override {
+    bool set_variable(const std::string& name,
+                      const estd::optional<std::string>& value) override {
       sexp_gc_var1(res);
       sexp_gc_preserve1(_ctx, res);
 
-      auto cmd = value
-        ? std::string("(set! %") + name + "%" + " " + *value + ")"
-        : std::string("(enable-") + name + ")";
+      auto cmd = value ? std::string("(set! %") + name + "%" + " " + *value + ")"
+                       : std::string("(enable-") + name + ")";
 
       res = sexp_eval_string(_ctx, cmd.c_str(), -1, NULL);
       auto retv = check_exception_p(_ctx, res);

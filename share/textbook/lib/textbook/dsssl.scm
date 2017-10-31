@@ -156,8 +156,7 @@
                                  mnd)))
                      ))) )
     (if (and (list? spec) (procedure? (cadr spec)))
-        (parameterize ((%in-current-definition%
-                        (selector->string (car spec))))
+        (parameterize ((%in-current-definition% (selector->string (car spec))))
                       ((cadr spec)))
         #f) ))
 
