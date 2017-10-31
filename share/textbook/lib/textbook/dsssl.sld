@@ -52,7 +52,7 @@
           root
           select-elements
           sosofo-append
-          style
+          style style?
           text
           with-mode
           )
