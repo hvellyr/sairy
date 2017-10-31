@@ -1249,43 +1249,44 @@ namespace {
       sexp ls = region_spec;
 
       for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
-        sexp ref = sexp_car(ls);
-        auto key = string_from_keyword_or_none(ctx, ref);
+        sexp expr = sexp_car(ls);
+        auto key = string_from_keyword_or_none(ctx, expr);
 
         if (key) {
           if (sexp_pairp(sexp_cdr(ls))) {
-            ref = sexp_car(sexp_cdr(ls));
+            expr = sexp_car(sexp_cdr(ls));
+
 
             if (*key == k_zone) {
               if (!zone.empty()) {
-                excep = make_textbook_exception(ctx, self, "zone: already defined", ref,
+                excep = make_textbook_exception(ctx, self, "zone: already defined", expr,
                                                 source);
                 break;
               }
 
-              if (auto zonep = string_from_symbol_sexp_or_none(ctx, ref)) {
+              if (auto zonep = string_from_symbol_sexp_or_none(ctx, expr)) {
                 zone = *zonep;
               }
               else {
                 excep =
-                  make_textbook_exception(ctx, self, "zone: not a symbol", ref, source);
+                  make_textbook_exception(ctx, self, "zone: not a symbol", expr, source);
                 break;
               }
             }
             else {
-              auto prop = evaluate_keyword_parameter(ctx, self, *key, ref);
+              auto prop = evaluate_keyword_parameter(ctx, self, *key, expr);
               if (prop)
                 props.set(*prop);
             }
           }
           else {
-            excep = make_textbook_exception(ctx, self, "value missing for keyword", ref,
+            excep = make_textbook_exception(ctx, self, "value missing for keyword", expr,
                                             source);
             break;
           }
         }
         else {
-          excep = make_textbook_exception(ctx, self, "keyword expected", ref, source);
+          excep = make_textbook_exception(ctx, self, "keyword expected", expr, source);
           break;
         }
 
