@@ -12,10 +12,8 @@
 
 #include "program_options/program_options.hpp"
 
-#include <cassert>
-#include <iostream>
-#include <map>
 #include <string>
+#include <unordered_map>
 
 
 namespace eyestep {
@@ -25,28 +23,22 @@ namespace po = program_options;
 namespace {
   using ProcessorFactoryFunc =
     std::function<std::unique_ptr<IProcessor>(const po::variables_map& args)>;
-  using ProcessorFactoryMap = std::map<std::string, ProcessorFactoryFunc>;
-
-  ProcessorFactoryMap s_processor_factory_map;
+  using ProcessorFactoryMap = std::unordered_map<std::string, ProcessorFactoryFunc>;
 
   template <typename T>
-  void register_processor_factory() {
-    T processor;
-    const auto id = processor.proc_id();
-
-    assert(s_processor_factory_map.find(id) == s_processor_factory_map.end());
-    s_processor_factory_map[id] = [](const po::variables_map& args) {
+  std::pair<std::string, ProcessorFactoryFunc> make_processor_factory() {
+    const auto proc = T{};
+    return std::make_pair(proc.proc_id(), [](const po::variables_map& args) {
       return ::estd::make_unique<T>(args);
-    };
+    });
   }
 
-
   ProcessorFactoryMap& processor_registry() {
-    if (s_processor_factory_map.empty()) {
-      register_processor_factory<DebugProcessor>();
-      register_processor_factory<HtmlProcessor>();
-      register_processor_factory<TexProcessor>();
-    }
+    static auto s_processor_factory_map = ProcessorFactoryMap{
+      make_processor_factory<DebugProcessor>(),
+      make_processor_factory<HtmlProcessor>(),
+      make_processor_factory<TexProcessor>(),
+    };
 
     return s_processor_factory_map;
   }
@@ -63,9 +55,8 @@ po::options_description processor_options() {
       procs.emplace_back(processor->proc_id());
 
       auto opts = processor->program_options();
-      if (!opts.empty()) {
+      if (!opts.empty())
         options.emplace_back(opts);
-      }
     }
   }
 
