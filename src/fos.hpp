@@ -26,6 +26,7 @@ namespace fo {
     bool accepts_fo(const Sosofo& fo) const override {
       return true;
     }
+    const PropertySpecs& default_properties() const override;
     const PropertySpecs& properties() const override {
       return _props;
     }
@@ -39,9 +40,12 @@ namespace fo {
   {
   public:
     Literal() = default;
-    Literal(const PropertySpecs& props);
+    Literal(const PropertySpecs& props)
+      : Fo(props) {}
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#literal";
+    }
     const PropertySpecs& default_properties() const override;
     const Sosofo& port(const std::string& portname) const override;
 
@@ -55,10 +59,14 @@ namespace fo {
 
   public:
     Paragraph() = default;
-    Paragraph(const PropertySpecs& props, const Sosofo& sosofo);
+    Paragraph(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props)
+      , _text_port(sosofo) {}
 
     bool accepts_fo(const Sosofo& fo) const override;
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#paragraph";
+    }
     const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
@@ -70,8 +78,9 @@ namespace fo {
   public:
     ParagraphBreak() = default;
 
-    std::string classname() const override;
-    const PropertySpecs& default_properties() const override;
+    std::string classname() const override {
+      return "#paragraph-break";
+    }
   };
 
 
@@ -81,9 +90,13 @@ namespace fo {
 
   public:
     DisplayGroup() = default;
-    DisplayGroup(const PropertySpecs& props, const Sosofo& sosofo);
+    DisplayGroup(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props)
+      , _text_port(sosofo) {}
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#display-group";
+    }
     const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
@@ -96,9 +109,13 @@ namespace fo {
 
   public:
     Box() = default;
-    Box(const PropertySpecs& props, const Sosofo& sosofo);
+    Box(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props)
+      , _text_port(sosofo) {}
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#box";
+    }
     const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
@@ -111,9 +128,13 @@ namespace fo {
 
   public:
     Sequence() = default;
-    Sequence(const PropertySpecs& props, const Sosofo& sosofo);
+    Sequence(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props)
+      , _text_port(sosofo) {}
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#sequence";
+    }
     const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
@@ -126,9 +147,13 @@ namespace fo {
 
   public:
     LineField() = default;
-    LineField(const PropertySpecs& props, const Sosofo& sosofo);
+    LineField(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props)
+      , _text_port(sosofo) {}
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#line-field";
+    }
     const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
@@ -141,9 +166,13 @@ namespace fo {
 
   public:
     Score() = default;
-    Score(const PropertySpecs& props, const Sosofo& sosofo);
+    Score(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props)
+      , _text_port(sosofo) {}
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#score";
+    }
     const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
@@ -156,9 +185,13 @@ namespace fo {
 
   public:
     SimplePageSequence() = default;
-    SimplePageSequence(const PropertySpecs& props, const Sosofo& sosofo);
+    SimplePageSequence(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props)
+      , _text_port(sosofo) {}
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#simple-page-sequence";
+    }
     const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
@@ -171,9 +204,13 @@ namespace fo {
 
   public:
     SimpleColumnSetSequence() = default;
-    SimpleColumnSetSequence(const PropertySpecs& props, const Sosofo& sosofo);
+    SimpleColumnSetSequence(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props)
+      , _text_port(sosofo) {}
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#simple-column-set-sequence";
+    }
     const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
@@ -186,9 +223,13 @@ namespace fo {
 
   public:
     ScrollSequence() = default;
-    ScrollSequence(const PropertySpecs& props, const Sosofo& sosofo);
+    ScrollSequence(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props)
+      , _scroll_port(sosofo) {}
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#scroll-sequence";
+    }
     const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
@@ -199,9 +240,12 @@ namespace fo {
   {
   public:
     PageNumber() = default;
-    PageNumber(const PropertySpecs& props);
+    PageNumber(const PropertySpecs& props)
+      : Fo(props) {}
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#page-number";
+    }
     const PropertySpecs& default_properties() const override;
   };
 
@@ -210,9 +254,12 @@ namespace fo {
   {
   public:
     Anchor() = default;
-    Anchor(const PropertySpecs& props);
+    Anchor(const PropertySpecs& props)
+      : Fo(props) {}
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#anchor";
+    }
     const PropertySpecs& default_properties() const override;
   };
 
@@ -223,9 +270,13 @@ namespace fo {
 
   public:
     FootNote() = default;
-    FootNote(const PropertySpecs& props, const Sosofo& sosofo);
+    FootNote(const PropertySpecs& props, const Sosofo& sosofo)
+      : Fo(props)
+      , _text_port(sosofo) {}
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#foot-note";
+    }
     const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
     const Sosofo& port(const std::string& portname) const override;
@@ -238,8 +289,7 @@ namespace fo {
     std::string _zone;
     PropertySpecs _props;
 
-    ScreenSetRegion(const std::string& zone,
-                    const PropertySpecs& props)
+    ScreenSetRegion(const std::string& zone, const PropertySpecs& props)
       : _zone(zone)
       , _props(props) {}
   };
@@ -252,7 +302,9 @@ namespace fo {
     ScreenSetModel(const std::vector<ScreenSetRegion>& regions)
       : _regions(regions) {}
 
-    const char* type_id() const { return "screen-set-model"; }
+    const char* type_id() const {
+      return "screen-set-model";
+    }
 
     std::vector<ScreenSetRegion> _regions;
   };
@@ -267,7 +319,9 @@ namespace fo {
     ScreenSet() = default;
     ScreenSet(const PropertySpecs& props, const Sosofo& sosofo);
 
-    std::string classname() const override;
+    std::string classname() const override {
+      return "#screen-set";
+    }
     const PropertySpecs& default_properties() const override;
     const std::vector<std::string>& ports() const override;
 

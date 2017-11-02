@@ -101,6 +101,13 @@ namespace fo {
 
   static Sosofo k_nil_sosofo;
 
+
+  const PropertySpecs& Fo::default_properties() const {
+    static const auto propspecs = PropertySpecs{};
+    return propspecs;
+  }
+
+
   const std::vector<std::string>& Fo::ports() const {
     static const auto ports = std::vector<std::string>{};
     return ports;
@@ -116,16 +123,6 @@ namespace fo {
 
 
   //----------------------------------------------------------------------------
-
-  Literal::Literal(const PropertySpecs& props)
-    : Fo(props) {}
-
-
-  /*! Returns the class name for this FOs @p class. */
-  std::string Literal::classname() const {
-    return "#literal";
-  }
-
 
   /*! Return the set of defined properties */
   const PropertySpecs& Literal::default_properties() const {
@@ -155,16 +152,6 @@ namespace fo {
 
 
   //----------------------------------------------------------------------------
-
-  Paragraph::Paragraph(const PropertySpecs& props, const Sosofo& text_port)
-    : Fo(props)
-    , _text_port(text_port) {}
-
-
-  std::string Paragraph::classname() const {
-    return "#paragraph";
-  }
-
 
   bool Paragraph::accepts_fo(const Sosofo& sosofo) const {
     using namespace std;
@@ -230,29 +217,6 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
-  std::string ParagraphBreak::classname() const {
-    return "#paragraph-break";
-  }
-
-
-  const PropertySpecs& ParagraphBreak::default_properties() const {
-    static const auto propspecs = PropertySpecs{};
-    return propspecs;
-  }
-
-
-  //----------------------------------------------------------------------------
-
-  DisplayGroup::DisplayGroup(const PropertySpecs& props, const Sosofo& sosofo)
-    : Fo(props)
-    , _text_port(sosofo) {}
-
-
-  std::string DisplayGroup::classname() const {
-    return "#display-group";
-  }
-
-
   const PropertySpecs& DisplayGroup::default_properties() const {
     // clang-format off
     static const auto propspecs = PropertySpecs{
@@ -290,16 +254,6 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
-  Box::Box(const PropertySpecs& props, const Sosofo& sosofo)
-    : Fo(props)
-    , _text_port(sosofo) {}
-
-
-  std::string Box::classname() const {
-    return "#box";
-  }
-
-
   const PropertySpecs& Box::default_properties() const {
     // clang-format off
     static const auto propspecs = PropertySpecs{
@@ -336,16 +290,6 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
-  Sequence::Sequence(const PropertySpecs& props, const Sosofo& sosofo)
-    : Fo(props)
-    , _text_port(sosofo) {}
-
-
-  std::string Sequence::classname() const {
-    return "#sequence";
-  }
-
-
   const PropertySpecs& Sequence::default_properties() const {
     static const auto propspecs = PropertySpecs{
       {"position-point-shift", LengthSpec(kDimen, 0, k_pt)},
@@ -371,16 +315,6 @@ namespace fo {
 
 
   //----------------------------------------------------------------------------
-
-  LineField::LineField(const PropertySpecs& props, const Sosofo& sosofo)
-    : Fo(props)
-    , _text_port(sosofo) {}
-
-
-  std::string LineField::classname() const {
-    return "#line-field";
-  }
-
 
   const PropertySpecs& LineField::default_properties() const {
     static const auto propspecs = PropertySpecs{
@@ -411,16 +345,6 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
-  Score::Score(const PropertySpecs& props, const Sosofo& sosofo)
-    : Fo(props)
-    , _text_port(sosofo) {}
-
-
-  std::string Score::classname() const {
-    return "#score";
-  }
-
-
   const PropertySpecs& Score::default_properties() const {
     static const auto propspecs = PropertySpecs{
       {"below?", false},
@@ -449,16 +373,6 @@ namespace fo {
 
 
   //----------------------------------------------------------------------------
-
-  SimplePageSequence::SimplePageSequence(const PropertySpecs& props, const Sosofo& sosofo)
-    : Fo(props)
-    , _text_port(sosofo) {}
-
-
-  std::string SimplePageSequence::classname() const {
-    return "#simple-page-sequence";
-  }
-
 
   const PropertySpecs& SimplePageSequence::default_properties() const {
     static const auto propspecs = PropertySpecs{
@@ -509,17 +423,6 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
-  SimpleColumnSetSequence::SimpleColumnSetSequence(const PropertySpecs& props,
-                                                   const Sosofo& text_port)
-    : Fo(props)
-    , _text_port(text_port) {}
-
-
-  std::string SimpleColumnSetSequence::classname() const {
-    return "#simple-column-set-sequence";
-  }
-
-
   const PropertySpecs& SimpleColumnSetSequence::default_properties() const {
     static const auto propspecs = PropertySpecs{
       // clang-format off
@@ -556,16 +459,6 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
-  ScrollSequence::ScrollSequence(const PropertySpecs& props, const Sosofo& sosofo)
-    : Fo(props)
-    , _scroll_port(sosofo) {}
-
-
-  std::string ScrollSequence::classname() const {
-    return "#scroll-sequence";
-  }
-
-
   const PropertySpecs& ScrollSequence::default_properties() const {
     static const auto propspecs = PropertySpecs{
       {"font-caps", "normal"},
@@ -601,15 +494,6 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
-  PageNumber::PageNumber(const PropertySpecs& props)
-    : Fo(props) {}
-
-
-  std::string PageNumber::classname() const {
-    return "#page-number";
-  }
-
-
   const PropertySpecs& PageNumber::default_properties() const {
     static const auto propspecs = PropertySpecs{
       {"refid", "#current"},
@@ -620,15 +504,6 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
-  Anchor::Anchor(const PropertySpecs& props)
-    : Fo(props) {}
-
-
-  std::string Anchor::classname() const {
-    return "#anchor";
-  }
-
-
   const PropertySpecs& Anchor::default_properties() const {
     static const auto propspecs = PropertySpecs{
       {"id", false},
@@ -638,16 +513,6 @@ namespace fo {
 
 
   //----------------------------------------------------------------------------
-
-  FootNote::FootNote(const PropertySpecs& props, const Sosofo& sosofo)
-    : Fo(props)
-    , _text_port(sosofo) {}
-
-
-  std::string FootNote::classname() const {
-    return "#foot-note";
-  }
-
 
   const PropertySpecs& FootNote::default_properties() const {
     static const auto propspecs = PropertySpecs{
@@ -693,11 +558,6 @@ namespace fo {
         }
       }
     }
-  }
-
-
-  std::string ScreenSet::classname() const {
-    return "#screen-set";
   }
 
 
