@@ -14,7 +14,6 @@ class IProcessor;
 program_options::options_description processor_options();
 
 std::unique_ptr<eyestep::IProcessor>
-make_processor_for_file(const std::string& proc_id,
-                        const program_options::variables_map& args);
+make_processor(const std::string& proc_id, const program_options::variables_map& args);
 
 } // ns eyestep

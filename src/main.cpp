@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
       if (vm.count("verbose"))
         std::cout << "use template  : " << eff_templ_path << std::endl;
 
-      auto processor = eyestep::make_processor_for_file(backend, vm);
+      auto processor = eyestep::make_processor(backend, vm);
       if (processor) {
         processor->set_output_file(
           deduce_output_file(outf, sources, processor->default_output_extension()));

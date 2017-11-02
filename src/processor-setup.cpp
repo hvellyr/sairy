@@ -80,14 +80,13 @@ po::options_description processor_options() {
 }
 
 
-std::unique_ptr<eyestep::IProcessor>
-make_processor_for_file(const std::string& proc_id, const po::variables_map& args) {
+std::unique_ptr<eyestep::IProcessor> make_processor(const std::string& proc_id,
+                                                    const po::variables_map& args) {
   const auto& registry = processor_registry();
 
   const auto i_processor_factory = registry.find(proc_id);
-  return i_processor_factory != registry.end()
-    ? i_processor_factory->second(args)
-    : nullptr;
+  return i_processor_factory != registry.end() ? i_processor_factory->second(args)
+                                               : nullptr;
 }
 
 } // ns eyestep
