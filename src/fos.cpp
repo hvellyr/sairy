@@ -755,65 +755,70 @@ namespace fo {
   using FoClassFactoryFunc =
     std::function<std::unique_ptr<IFormattingObject>(const PropertySpecs& props,
                                                      const Sosofo& sosofo)>;
-
+  using FoClassFactoryPair = std::pair<std::string, FoClassFactoryFunc>;
   using FoClassFactoryMap = std::unordered_map<std::string, FoClassFactoryFunc>;
 
-  FoClassFactoryMap s_fo_class_factory_map;
 
+  template <typename FoClass, int N>
+  struct FoClassFactory
+  { static FoClassFactoryFunc make_factory_func(); };
 
-  template <typename FoClass, typename FactoryFunc>
-  void register_fo_class_factory(FactoryFunc factory_func) {
-    FoClass fo_class;
-    const auto classname = fo_class.classname();
-
-    const auto i_find = s_fo_class_factory_map.find(classname);
-    if (i_find == s_fo_class_factory_map.end()) {
-      s_fo_class_factory_map[classname] = factory_func;
+  template <typename FoClass>
+  struct FoClassFactory<FoClass, 0>
+  {
+    static FoClassFactoryFunc make_factory_func() {
+      return [](const PropertySpecs&, const Sosofo&) {
+        return ::estd::make_unique<FoClass>();
+      };
     }
-  }
-
-
-  template <typename FoClass>
-  void register_fo_class_factory() {
-    register_fo_class_factory<FoClass>([](const PropertySpecs& p, const Sosofo& s) {
-      return ::estd::make_unique<FoClass>(p, s);
-    });
-  }
-
+  };
 
   template <typename FoClass>
-  void register_fo_class_factory_props() {
-    register_fo_class_factory<FoClass>([](const PropertySpecs& p, const Sosofo&) {
-      return ::estd::make_unique<FoClass>(p);
-    });
-  }
+  struct FoClassFactory<FoClass, 1>
+  {
+    static FoClassFactoryFunc make_factory_func() {
+      return [](const PropertySpecs& p, const Sosofo&) {
+        return ::estd::make_unique<FoClass>(p);
+      };
+    }
+  };
 
+  template <typename FoClass>
+  struct FoClassFactory<FoClass, 2>
+  {
+    static FoClassFactoryFunc make_factory_func() {
+      return [](const PropertySpecs& p, const Sosofo& s) {
+        return ::estd::make_unique<FoClass>(p, s);
+      };
+    }
+  };
+
+  template <typename FoClass, int NumParam>
+  FoClassFactoryPair make_fo_class_factory() {
+    return std::make_pair(FoClass().classname(),
+                          FoClassFactory<FoClass, NumParam>::make_factory_func());
+  }
 
   std::unique_ptr<IFormattingObject> create_fo_by_classname(const std::string& classname,
                                                             const PropertySpecs& props,
                                                             const Sosofo& sosofo) {
-    if (s_fo_class_factory_map.empty()) {
-      register_fo_class_factory_props<Literal>();
-
-      register_fo_class_factory<ParagraphBreak>([](const PropertySpecs&, const Sosofo&) {
-        return ::estd::make_unique<ParagraphBreak>();
-      });
-
-      register_fo_class_factory<Paragraph>();
-      register_fo_class_factory<DisplayGroup>();
-      register_fo_class_factory<Box>();
-      register_fo_class_factory<Sequence>();
-      register_fo_class_factory<LineField>();
-      register_fo_class_factory<Score>();
-      register_fo_class_factory<SimplePageSequence>();
-      register_fo_class_factory<SimpleColumnSetSequence>();
-      register_fo_class_factory<ScrollSequence>();
-      register_fo_class_factory<ScreenSet>();
-      register_fo_class_factory<FootNote>();
-
-      register_fo_class_factory_props<PageNumber>();
-      register_fo_class_factory_props<Anchor>();
-    }
+    static auto s_fo_class_factory_map = FoClassFactoryMap{
+      make_fo_class_factory<Anchor, 1>(),
+      make_fo_class_factory<Box, 2>(),
+      make_fo_class_factory<DisplayGroup, 2>(),
+      make_fo_class_factory<FootNote, 2>(),
+      make_fo_class_factory<LineField, 2>(),
+      make_fo_class_factory<Literal, 1>(),
+      make_fo_class_factory<PageNumber, 1>(),
+      make_fo_class_factory<Paragraph, 2>(),
+      make_fo_class_factory<ParagraphBreak, 0>(),
+      make_fo_class_factory<Score, 2>(),
+      make_fo_class_factory<ScreenSet, 2>(),
+      make_fo_class_factory<ScrollSequence, 2>(),
+      make_fo_class_factory<Sequence, 2>(),
+      make_fo_class_factory<SimpleColumnSetSequence, 2>(),
+      make_fo_class_factory<SimplePageSequence, 2>(),
+    };
 
     const auto i_find = s_fo_class_factory_map.find(classname);
     if (i_find != s_fo_class_factory_map.end()) {
