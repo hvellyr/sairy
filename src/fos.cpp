@@ -675,6 +675,71 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
+  ScreenSet::ScreenSet(const PropertySpecs& props, const Sosofo& sosofo)
+    : Fo(props)
+    , _port_names({k_main})
+    , _ports({{k_main, sosofo}}) {
+    if (auto compval =
+          props.lookup_value<std::shared_ptr<fo::ICompoundValue>>("screen-set-model")) {
+      if (auto screen_set_model =
+            std::dynamic_pointer_cast<fo::ScreenSetModel>(*compval)) {
+        for (const auto& region : screen_set_model->_regions) {
+          auto portnm = region._props.lookup_value_or("port", region._zone);
+
+          if (portnm != k_main) {
+            _ports[portnm] = Sosofo{};
+            _port_names.emplace_back(portnm);
+          }
+        }
+      }
+    }
+  }
+
+
+  std::string ScreenSet::classname() const {
+    return "#screen-set";
+  }
+
+
+  const PropertySpecs& ScreenSet::default_properties() const {
+    static const auto propspecs = PropertySpecs{{"title", false},
+                                                {"screen-set-model", false},
+                                                {"html.add-css-link", false}};
+
+    return propspecs;
+  }
+
+
+  const std::vector<std::string>& ScreenSet::ports() const {
+    return _port_names;
+  }
+
+
+  const Sosofo& ScreenSet::port(const std::string& portnm) const {
+    using namespace std;
+
+    auto i_port = _ports.find(portnm);
+    if (i_port != end(_ports))
+      return i_port->second;
+
+    return k_nil_sosofo;
+  }
+
+
+  void ScreenSet::set_port(const std::string& portnm, const Sosofo& sosofo) {
+    using namespace std;
+
+    if (portnm != k_main) {
+      auto i_portnm = find(begin(_port_names), end(_port_names), portnm);
+      if (i_portnm != end(_port_names)) {
+        _ports[portnm] = sosofo;
+      }
+    }
+  }
+
+
+  //----------------------------------------------------------------------------
+
   bool is_property_be_inherited(const std::string& key) {
     using namespace std;
 
@@ -816,70 +881,6 @@ namespace fo {
     return os;
   }
 
-
-  //----------------------------------------------------------------------------
-
-  ScreenSet::ScreenSet(const PropertySpecs& props, const Sosofo& sosofo)
-    : Fo(props)
-    , _port_names({k_main})
-    , _ports({{k_main, sosofo}}) {
-    if (auto compval =
-          props.lookup_value<std::shared_ptr<fo::ICompoundValue>>("screen-set-model")) {
-      if (auto screen_set_model =
-            std::dynamic_pointer_cast<fo::ScreenSetModel>(*compval)) {
-        for (const auto& region : screen_set_model->_regions) {
-          auto portnm = region._props.lookup_value_or("port", region._zone);
-
-          if (portnm != k_main) {
-            _ports[portnm] = Sosofo{};
-            _port_names.emplace_back(portnm);
-          }
-        }
-      }
-    }
-  }
-
-
-  std::string ScreenSet::classname() const {
-    return "#screen-set";
-  }
-
-
-  const PropertySpecs& ScreenSet::default_properties() const {
-    static const auto propspecs = PropertySpecs{{"title", false},
-                                                {"screen-set-model", false},
-                                                {"html.add-css-link", false}};
-
-    return propspecs;
-  }
-
-
-  const std::vector<std::string>& ScreenSet::ports() const {
-    return _port_names;
-  }
-
-
-  const Sosofo& ScreenSet::port(const std::string& portnm) const {
-    using namespace std;
-
-    auto i_port = _ports.find(portnm);
-    if (i_port != end(_ports))
-      return i_port->second;
-
-    return k_nil_sosofo;
-  }
-
-
-  void ScreenSet::set_port(const std::string& portnm, const Sosofo& sosofo) {
-    using namespace std;
-
-    if (portnm != k_main) {
-      auto i_portnm = find(begin(_port_names), end(_port_names), portnm);
-      if (i_portnm != end(_port_names)) {
-        _ports[portnm] = sosofo;
-      }
-    }
-  }
 
 } // ns fo
 } // ns eyestep
