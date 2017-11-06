@@ -40,6 +40,8 @@
 
 (define (make-def-sosofo nd head-sosofo kind)
   (sosofo-append
+   (make anchor
+     id: (id nd))
    (make paragraph
      space-before: (display-space 7pt conditional?: #t)
      first-line-start-indent: -45mm
