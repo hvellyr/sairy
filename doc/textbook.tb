@@ -62,6 +62,39 @@
 
 @section{Expression language}
 
+@subsection{Addresses}{id.address}
+
+Producing cross references in textbook is done with the @class{link} (see
+@ref{id.link}) formatting object and the @class{address} type of the expression
+language.
+
+The @class{address} type represents the address of the destination.  It supports
+local references (to nodes inside of the current document) and external
+addresses (as URIs).
+
+@deffn{(address? @prm{obj})}
+Indicates whether @prm{obj} is of type @class{address}.
+@end{deffn}
+
+@deffn{(address-local? @prm{adr})}
+Indicates whether @prm{adr} is a local address.
+@end{deffn}
+
+@deffn{(external-address URL)}
+Returns an address object representing the resource referred to by @prm{url}.
+@end{deffn}
+
+@deffn{(current-node-address)}
+Returns an address object representing the current node.
+@end{deffn}
+
+@deffn{(node-list-address @prm{nl})}
+Returns a list of an address objects refering each to the nodes in @prm{nl}.
+@end{deffn}
+
+@end subsection
+
+
 @subsection{Node list access and manipulation}
 
 @deffn{(node-list @prm{nl1} @prm{nl2} ... @prm{nln})}
@@ -204,6 +237,7 @@ property return #f.
 @end{deffn}
 
 @end subsection
+
 
 @subsection{Processing nodes}
 
@@ -507,6 +541,7 @@ Defined characteristics:
 tbd.
 @end def
 
+
 @def{Display Object}{box}
 
 This flow object has a single port and can be rendered either as a display or as
@@ -563,6 +598,21 @@ tbd.
 
 @def{Display Object}{page-number}
 tbd.
+@end def
+
+
+@def{Display Object}{Link}{id.link}
+
+A link flow object represents a link to either an internal or external resource.  In
+interactive context it can be interactively traversed, e.g. by clicking on its rendered
+areas.  It has a single port, which can take both inlined and displayed flow objects.  If
+nested the innermost links is effective.
+
+@definitions
+@item{@var{destination:}} is either @val{#f} or an object of type @code{address}
+(see @ref{id.address}) or a list of one or more objects of type address.  This
+characteristic is required and not inherited.
+@end definitions
 @end def
 
 
