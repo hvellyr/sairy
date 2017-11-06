@@ -60,6 +60,7 @@
            refid: (id nd)))
        ))))
 
+
 (mode content-mode
   (element section
     (content-section #f (current-node)))
@@ -81,6 +82,7 @@
      ))
   )
 
+
 (element showtoc
   (make display-group
     (with-mode content-mode
@@ -92,3 +94,93 @@
                           (select-elements (descendants (grove-root)) 'index)
                           )
                          ))))
+
+
+;;------------------------------------------------------------------------------
+
+(define (content-chapter-html-navigation title nd)
+  (let* ((title-num-sosofo (literal (section-title-number nd)))
+         (title-sosofo (section-title-sosofo title nd)))
+    (make link
+      destination: (node-list-address nd)
+      (make paragraph
+        space-before: (display-space 7pt conditional?: #t)
+        space-after: 3pt
+        quadding: 'left
+        first-line-start-indent: -45mm
+        start-indent: 0pt
+        font-size: (font-size 4)
+        line-spacing: (line-spacing 4)
+        font-weight: 'bold
+        end-indent: 15pt
+        last-line-end-indent: -15pt
+
+        (sosofo-append
+         (make line-field
+           field-width: 41mm
+           field-align: 'right
+           title-num-sosofo)
+         (make line-field
+           field-width: 4mm
+           (empty-sosofo))
+         title-sosofo)))
+    ))
+
+
+(define (content-section-html-navigation title nd)
+  (let* ((title-num-sosofo (literal (section-title-number nd)))
+         (title-sosofo (section-title-sosofo title nd)))
+    (make link
+      destination: (node-list-address nd)
+
+      (make paragraph
+        quadding: 'left
+        first-line-start-indent: 0mm
+        start-indent: 0pt
+        font-size: (font-size 3)
+        line-spacing: (line-spacing 3)
+        end-indent: 15pt
+        last-line-end-indent: -15pt
+
+        (sosofo-append
+         (make line-field
+           field-width: 24pt
+           field-align: 'left
+           (sosofo-append
+            title-num-sosofo
+            (literal " ")))
+         title-sosofo)))
+    ))
+
+
+(mode html-website-content-mode
+  (element section
+    (content-section-html-navigation #f (current-node)))
+  (element chapter
+    (sosofo-append
+     (content-chapter-html-navigation "Chapter" (current-node))
+     (process-node-list (select-elements (children (current-node)) 'section))
+     ))
+  (element introduction
+    (content-chapter-html-navigation "Introduction" (current-node)))
+  (element index
+    (content-chapter-html-navigation "Index" (current-node)))
+  (element preface
+    (content-chapter-html-navigation "Preface" (current-node)))
+  (element appendix
+    (sosofo-append
+     (content-chapter-html-navigation "Appendix" (current-node))
+     (process-node-list (select-elements (children (current-node)) 'section))
+     ))
+
+  (element showtoc
+    (make display-group
+      (process-node-list (node-list
+                          (select-elements (descendants (grove-root)) 'introduction)
+                          (select-elements (descendants (grove-root)) 'preface)
+                          (select-elements (descendants (grove-root)) 'chapter)
+                          (select-elements (descendants (grove-root)) 'appendix)
+                          (select-elements (descendants (grove-root)) 'index)
+                          )
+                         )))
+  )
