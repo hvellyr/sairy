@@ -1218,6 +1218,24 @@ namespace {
   };
 
 
+  class HtmlLinkFoProcessor : public IFoProcessor<HtmlProcessor>
+  {
+  public:
+    void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
+      if (auto adr = processor->property_or_none<fo::Address>(fo, "destination")) {
+        const auto href = adr->_local
+          ? std::string("#") + adr->_destination
+          : adr->_destination;
+
+        auto with_tag =
+          html::Tag{processor->ctx().port(), "a", {{"href", href}}};
+
+        processor->render_sosofo(&fo->port(k_text));
+      }
+    }
+  };
+
+
   class HtmlAnchorFoProcessor : public IFoProcessor<HtmlProcessor>
   {
   public:
@@ -1283,6 +1301,7 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const {
     {"#line-field", std::make_shared<HtmlLineFieldFoProcessor>()},
     {"#anchor", std::make_shared<HtmlAnchorFoProcessor>()},
     {"#page-number", std::make_shared<HtmlPageNumberFoProcessor>()},
+    {"#link", std::make_shared<HtmlLinkFoProcessor>()},
     {"#simple-column-set-sequence",
      std::make_shared<HtmlSimpleColumnSetSequenceProcessor>()},
   };
