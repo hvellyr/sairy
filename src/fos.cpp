@@ -752,6 +752,13 @@ namespace fo {
   }
 
 
+  std::ostream& operator<<(std::ostream& os, const Address& a)
+  {
+    os << "<address:" << (a._local ? "local:" : "") << a._destination << ">";
+    return os;
+  }
+
+
   std::ostream& operator<<(std::ostream& os, const Color& co) {
     os << "<color:";
 
