@@ -96,6 +96,13 @@
                          ))))
 
 
+(element content
+  (make display-group
+    break-before?: 'page
+    break-after?: 'page
+    (format-section "Contents" (current-node))))
+
+
 ;;------------------------------------------------------------------------------
 
 (define (content-chapter-html-navigation title nd)
@@ -183,4 +190,7 @@
                           (select-elements (descendants (grove-root)) 'index)
                           )
                          )))
+
+  (element content
+    (process-children))
   )

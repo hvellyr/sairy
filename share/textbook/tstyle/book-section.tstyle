@@ -144,12 +144,6 @@
     break-before?: (if %chapters-on-separate-pages% 'page #f)
     (format-section "Appendix" (current-node))))
 
-(element content
-  (make display-group
-    break-before?: 'page
-    break-after?: 'page
-    (format-section "Contents" (current-node))))
-
 (element index
   (make display-group
     break-before?: 'page
