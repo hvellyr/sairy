@@ -1029,10 +1029,12 @@ namespace {
           if (zone._width)
             set_attr(attrs, "width", *zone._width);
           if (zone._full_height) {
-            if (zone._y_origin)
+            if (zone._y_origin) {
               set_attr(attrs, "height",
                        std::string("calc(100% - ") + length_spec2css(*zone._y_origin) +
                          ")");
+              set_attr(attrs, "overflow-y", "auto");
+            }
             else
               set_attr(attrs, "height", "100%");
           }
