@@ -93,6 +93,7 @@ class HtmlProcessor : public AbstractProcessor<HtmlProcessor>
   bool _verbose;
   html::CSSWriter _css_port;
   filesystem::path _css_file;
+  estd::optional<fo::LengthSpec> _top_zone_offset;
 
 public:
   HtmlProcessor();
@@ -136,6 +137,14 @@ public:
 
   filesystem::path css_file() const {
     return _css_file;
+  }
+
+  void set_top_zone_offset(const fo::LengthSpec& offset) {
+    _top_zone_offset = offset;
+  }
+
+  estd::optional<fo::LengthSpec> top_zone_offset() const {
+    return _top_zone_offset;
   }
 };
 

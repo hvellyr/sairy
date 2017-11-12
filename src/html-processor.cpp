@@ -921,6 +921,10 @@ namespace {
         else if (!zones["top"].empty() && zones["top"].front()._height) {
           set_attr(cont_attrs, "margin",
                    length_spec2css(*zones["top"].front()._height) + " auto");
+
+          auto top_offset = *zones["top"].front()._height;
+          top_offset._value *= -1;
+          processor->set_top_zone_offset(top_offset);
         }
         set_attr(cont_attrs, "padding", "0px");
 
@@ -1243,8 +1247,21 @@ namespace {
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
       if (auto id = processor->property_or_none<std::string>(fo, "id")) {
-        if (!id->empty())
-          processor->ctx().port().empty_tag("a", {{"id", *id}});
+        if (!id->empty()) {
+          auto sattrs = detail::StyleAttrs{};
+          if (processor->top_zone_offset()) {
+            set_attr(sattrs, "display", "block");
+            set_attr(sattrs, "position", "relative");
+            set_attr(sattrs, "top", length_spec2css(*processor->top_zone_offset()));
+            set_attr(sattrs, "visibility", "hidden");
+          }
+
+          auto attrs = tag_style_attrs(processor, "a", sattrs);
+          attrs.emplace_back(html::Attr{"id", *id});
+
+          auto& ctx = processor->ctx();
+          auto with_tag = html::Tag{ctx.port(), "a", attrs};
+        }
       }
     }
   };
