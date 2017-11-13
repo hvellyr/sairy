@@ -61,7 +61,18 @@
                                         )
                      (make paragraph
                        label: 'top
-                       (literal "TITLE"))
+                       space-before: 14pt
+                       font-size: 16pt
+                       font-weight: 'medium
+                       font-caps: 'caps
+                       color: (color 'rgb '(1.0 1.0 1.0))
+                       (make link
+                         destination: (node-list-address node)
+                         (sosofo-append
+                          (make line-field
+                            field-width: 12pt
+                            (empty-sosofo))
+                          (process-node-list (document-title-multicol node)))))
 
                      (make display-group
                        label: 'navigation
@@ -69,7 +80,11 @@
                          (let ((toc (select-elements (children node) 'content)))
                            (process-node-list toc))))
 
-                     (with-mode no-content
-                       (process-node-list (children node)))
+                     (sosofo-append
+                      (make anchor
+                        id: (id node))
+                      (format-book-title-multicol node)
+                      (with-mode no-content
+                        (process-node-list (children node))))
                      ))
        )))

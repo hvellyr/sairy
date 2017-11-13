@@ -346,3 +346,77 @@
 
           body-sosofo))
     ))
+
+
+
+;;------------------------------------------------------------------------------
+
+(define (format-book-title-multicol nd)
+  (let* ((info (select-elements (children nd) 'info))
+         (titlepage (select-elements (children nd) 'titlepage))
+
+         (authors (select-elements (children info) 'author))
+
+         (titlepage-titles (select-elements (children titlepage) 'title))
+         (titlepage-subtitles (select-elements (children titlepage) 'subtitle))
+
+         (authors-sosofo (if (> (node-list-length authors) 0)
+                             (make paragraph
+                               first-line-start-indent: 0pt
+                               start-indent: 0pt
+                               quadding: 'left
+                               font-size: 12pt
+                               line-spacing: 14.4pt
+                               font-posture: 'italic
+                               (sosofo-append
+                                (literal "by ")
+                                (process-node-list-join authors (literal ", "))))
+                             (node-list)))
+         (title-sosofo (node-list-reduce
+                        titlepage-titles
+                        (lambda (sosofo snl)
+                          (sosofo-append sosofo
+                                         (make paragraph
+                                           first-line-start-indent: 0pt
+                                           last-line-end-indent: 0pt
+                                           start-indent: 0pt
+                                           quadding: 'left
+                                           font-size:  36pt
+                                           line-spacing: 43.2pt
+                                           font-posture: 'upright
+                                           font-weight: 'bold
+                                           (process-node-list-trim (attribute "value" snl)))))
+                        (empty-sosofo)))
+         (subtitle-sosofo (node-list-reduce
+                           titlepage-subtitles
+                           (lambda (sosofo snl)
+                             (sosofo-append sosofo
+                                            (make paragraph
+                                              first-line-start-indent: 0pt
+                                              start-indent: 0pt
+                                              quadding: 'left
+                                              font-size:  24pt
+                                              line-spacing: 28pt
+                                              (process-node-list (attribute "value" snl)))))
+                           (empty-sosofo)))
+         )
+    (sosofo-append
+     (make display-group
+       space-before: 20pt
+       title-sosofo)
+     (make display-group
+       space-before: 10pt
+       subtitle-sosofo)
+     (make display-group
+       space-after: 30pt
+       space-before: 20pt
+       authors-sosofo)
+     )))
+
+
+(define (document-title-multicol nd)
+  (let* ((titlepage (select-elements (children nd) 'titlepage))
+         (titlepage-titles (select-elements (children titlepage) 'title)))
+    (if (> (node-list-length titlepage-titles) 0)
+        (attribute "value" (node-list-first titlepage-titles))
+        (node-list))))
