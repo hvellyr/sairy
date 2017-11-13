@@ -65,8 +65,9 @@
 
                      (make display-group
                        label: 'navigation
-                       (let ((toc (select-elements (children node) 'content)))
-                         (process-node-list toc)))
+                       (with-mode html-website-content-mode
+                         (let ((toc (select-elements (children node) 'content)))
+                           (process-node-list toc))))
 
                      (with-mode no-content
                        (process-node-list (children node)))

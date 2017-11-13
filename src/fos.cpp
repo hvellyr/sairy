@@ -38,6 +38,7 @@ namespace fo {
     {"break-before?", false},          // Bool
     {"class", false},                  // String
     {"color", true},                   // Color
+    {"destination", false},            // Address
     {"end-indent", true},              // LengthSpec
     {"end-margin", false},             // LengthSpec
     {"field-width", false},            // LengthSpec
@@ -504,6 +505,30 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
+  const PropertySpecs& Link::default_properties() const {
+    static const auto propspecs = PropertySpecs{
+      {"destination", false},
+    };
+    return propspecs;
+  }
+
+
+  const std::vector<std::string>& Link::ports() const {
+    static const auto ports = std::vector<std::string>{k_text};
+    return ports;
+  }
+
+
+  const Sosofo& Link::port(const std::string& portname) const {
+    if (portname == k_text)
+      return _text_port;
+
+    return k_nil_sosofo;
+  }
+
+
+  //----------------------------------------------------------------------------
+
   const PropertySpecs& Anchor::default_properties() const {
     static const auto propspecs = PropertySpecs{
       {"id", false},
@@ -668,6 +693,7 @@ namespace fo {
       make_fo_class_factory<DisplayGroup, 2>(),
       make_fo_class_factory<FootNote, 2>(),
       make_fo_class_factory<LineField, 2>(),
+      make_fo_class_factory<Link, 2>(),
       make_fo_class_factory<Literal, 1>(),
       make_fo_class_factory<PageNumber, 1>(),
       make_fo_class_factory<Paragraph, 2>(),
@@ -722,6 +748,13 @@ namespace fo {
 
     os << ">";
 
+    return os;
+  }
+
+
+  std::ostream& operator<<(std::ostream& os, const Address& a)
+  {
+    os << "<address:" << (a._local ? "local:" : "") << a._destination << ">";
     return os;
   }
 

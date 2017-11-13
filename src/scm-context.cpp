@@ -53,10 +53,11 @@ namespace {
 #define COLOR_TAG "<color>"
 #define COLOR_TAG_SIZE 7
 
-#define STYLE_TYPE_NAME "<style>"
-
 #define SCREEN_SET_MODEL_TAG "<screen-set-model>"
 #define SCREEN_SET_MODEL_TAG_SIZE 18
+
+#define STYLE_TYPE_NAME "<style>"
+#define ADDRESS_TYPE_NAME "<address>"
 
   const auto k_default = std::string("default");
   const auto k_use = std::string("use");
@@ -1448,6 +1449,33 @@ namespace {
 
   //----------------------------------------------------------------------------
 
+  bool is_style_sexp(sexp ctx, sexp self, sexp st) {
+    return sexp_pointerp(st) &&
+           strcmp(sexp_string_data(sexp_object_type_name(ctx, st)), STYLE_TYPE_NAME) == 0;
+  }
+
+
+  sexp style_props(sexp st) {
+    return sexp_slot_ref(st, 0);
+  }
+
+
+  bool is_address_sexp(sexp ctx, sexp self, sexp adr) {
+    return sexp_pointerp(adr) &&
+           strcmp(sexp_string_data(sexp_object_type_name(ctx, adr)), ADDRESS_TYPE_NAME) == 0;
+  }
+
+
+  sexp address_local(sexp adr) {
+    return sexp_slot_ref(adr, 0);
+  }
+
+
+  sexp address_destination(sexp adr) {
+    return sexp_slot_ref(adr, 1);
+  }
+
+
   estd::optional<fo::PropertySpec>
   evaluate_keyword_parameter(sexp ctx, sexp self, const std::string& key, sexp expr) {
     auto result = estd::optional<fo::PropertySpec>{};
@@ -1494,6 +1522,20 @@ namespace {
     else if (sexp_check_tag(expr, color_tag_p(ctx))) {
       const auto* co = (const fo::Color*)(sexp_cpointer_value(expr));
       result = fo::PropertySpec(key, *co);
+    }
+    else if (is_address_sexp(ctx, self, expr)) {
+      auto adrloc = address_local(expr);
+      auto adrdest = address_destination(expr);
+
+      if (sexp_stringp(adrdest) &&
+          sexp_booleanp(adrloc)) {
+        result = fo::PropertySpec(key, fo::Address(bool(sexp_unbox_boolean(adrloc)),
+                                                   std::string(sexp_string_data(adrdest))));
+      }
+      else {
+        excep = sexp_user_exception(ctx, self, "Bad address members: ", expr);
+        check_exception_p(ctx, excep);
+      }
     }
     else {
       excep = sexp_user_exception(ctx, self, "Bad property type: ", expr);
@@ -1578,17 +1620,6 @@ namespace {
     }
 
     return result;
-  }
-
-
-  bool is_style_sexp(sexp ctx, sexp self, sexp st) {
-    return sexp_pointerp(st) &&
-           strcmp(sexp_string_data(sexp_object_type_name(ctx, st)), STYLE_TYPE_NAME) == 0;
-  }
-
-
-  sexp style_props(sexp st) {
-    return sexp_slot_ref(st, 0);
   }
 
 

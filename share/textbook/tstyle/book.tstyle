@@ -55,15 +55,61 @@
 ;; #-----------------------------------------------------------------------------
 ;; # references
 
-(define (render-ref-to-node idref nd)
-  (case (gi nd)
-    ((section) (make sequence
-                 html.ref: idref
-                 (sosofo-append
-                  (literal "Section “")
-                  (process-node-list (attribute "title" nd))
-                  (literal "”"))))
-    (else (empty-sosofo))))
+(define (destination-title nd)
+  (let* ((title (attribute "title" nd))
+         (declsum (attribute "declsum" nd)))
+    (if (not (node-list-empty? title))
+        title
+        (if (not (node-list-empty? declsum))
+            declsum
+            (empty-node-list)))))
+
+(define (render-ref-to-node-tex nd)
+  (make link
+    destination: (node-list-address nd)
+    (case (gi nd)
+      ((chapter) (make sequence
+                   (sosofo-append
+                    (literal "Chapter “")
+                    (process-node-list (destination-title nd))
+                    (literal "”"))))
+      ((appendix) (make sequence
+                   (sosofo-append
+                    (literal "Appendix “")
+                    (process-node-list (destination-title nd))
+                    (literal "”"))))
+      ((introduction) (make sequence
+                   (sosofo-append
+                    (literal "Introduction “")
+                    (process-node-list (destination-title nd))
+                    (literal "”"))))
+      ((section subsection) (make sequence
+                              (sosofo-append
+                               (literal "Section “")
+                               (process-node-list (destination-title nd))
+                               (literal "”"))))
+      (else (empty-sosofo)))
+    )
+  )
+
+
+(define (render-ref-to-node-html nd)
+  (make link
+    destination: (node-list-address nd)
+    (make sequence
+      (sosofo-append
+       (literal "“")
+       (process-node-list (destination-title nd))
+       (literal "”")))
+    ))
+
+
+(define (render-ref-to-node nd)
+  (cond
+   ((html-backend?) (render-ref-to-node-html nd))
+   ((tex-backend?) (render-ref-to-node-tex nd))
+   ))
+
 
 (element ref
   (let* ((idref (data (attribute "ref" (current-node))))
@@ -73,7 +119,7 @@
     (node-list-reduce nl
                       (lambda (sosofo snl)
                         (sosofo-append sosofo
-                                       (render-ref-to-node idref snl)))
+                                       (render-ref-to-node snl)))
                       (empty-sosofo))
     ))
 

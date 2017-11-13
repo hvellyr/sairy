@@ -48,6 +48,9 @@
 (element keyw
   (format-monospace (attribute "text" (current-node))))
 
+(element class
+  (format-monospace (attribute "text" (current-node))))
+
 (element prm
   (format-em (attribute "text" (current-node))))
 

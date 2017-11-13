@@ -88,3 +88,28 @@
 (define-syntax make-char
   (syntax-rules ()
     ((make-char name) (literal (string (symbol-to-char name))))))
+
+
+(define-record-type <address>
+  (%make-address local destination)
+  address?
+  (local address-local? address-local-set!)
+  (destination address-destination address-destination-set!))
+
+;; @doc Returns an address object representing the resource referred to by
+;; @prm{url}.
+(define (external-address url)
+  (%make-address #f url))
+
+
+;; @doc Returns an address object representing the current node.
+(define (current-node-address)
+  (%make-address #t (id (current-node))))
+
+;; @doc Returns a list of an address objects refering each to the nodes in
+;; @prm{nl}.
+(define  (node-list-address nl)
+  (node-list-reduce nl
+                    (lambda (result snl)
+                      (append result (%make-address #t (id snl))))
+                    '()))

@@ -68,6 +68,21 @@ namespace fo {
   std::ostream& operator<<(std::ostream& os, const LengthSpec& ls);
 
 
+  struct Address
+  {
+    Address() = default;
+    Address(bool local, const std::string& dest)
+      : _local(local)
+      , _destination(dest) {}
+
+    bool _local = false;
+    std::string _destination;
+  };
+
+
+  std::ostream& operator<<(std::ostream& os, const Address& a);
+
+
   enum ColorSpace
   {
     kGray,
@@ -139,6 +154,7 @@ namespace fo {
       k_sosofo,
       k_color,
       k_compound,
+      k_address,
     };
 
     Kind _kind = k_bool;
@@ -151,6 +167,7 @@ namespace fo {
       std::shared_ptr<Sosofo> _sosofo;
       Color _color;
       std::shared_ptr<ICompoundValue> _compound;
+      Address _address;
     };
 
     ValueType()
@@ -184,6 +201,10 @@ namespace fo {
       : _kind(k_compound)
       , _compound(std::move(proprec)) {}
 
+    ValueType(Address adr)
+      : _kind(k_address)
+      , _address(std::move(adr)) {}
+
     ValueType(const ValueType& rhs) {
       *this = rhs;
     }
@@ -211,6 +232,9 @@ namespace fo {
         break;
       case k_compound:
         _compound.~shared_ptr<ICompoundValue>();
+        break;
+      case k_address:
+        _address.~Address();
         break;
       }
       _bool = false;
@@ -244,6 +268,9 @@ namespace fo {
           break;
         case k_compound:
           new (&_compound) std::shared_ptr<ICompoundValue>(rhs._compound);
+          break;
+        case k_address:
+          new (&_address) Address(rhs._address);
           break;
         }
       }
@@ -353,6 +380,18 @@ namespace fo {
   };
 
 
+  template <>
+  struct ValueTrait<Address>
+  {
+    static ValueType::Kind value_type() {
+      return ValueType::k_address;
+    }
+    static const Address* get(const ValueType* val) {
+      return &val->_address;
+    }
+  };
+
+
   template <typename T>
   const T* get(const ValueType* val) {
     return val && ValueTrait<typename std::remove_cv<T>::type>::value_type() == val->_kind
@@ -378,6 +417,8 @@ namespace fo {
       return f(val._color);
     case ValueType::k_compound:
       return f(val._compound);
+    case ValueType::k_address:
+      return f(val._address);
     }
 
     return R();
@@ -412,6 +453,10 @@ namespace fo {
       , _value(std::move(val)) {}
 
     PropertySpec(std::string name, std::shared_ptr<ICompoundValue> val)
+      : _name(std::move(name))
+      , _value(std::move(val)) {}
+
+    PropertySpec(std::string name, Address val)
       : _name(std::move(name))
       , _value(std::move(val)) {}
 
@@ -518,7 +563,7 @@ namespace fo {
                                     : PropertySpecOrNone();
     }
 
-    template<typename T>
+    template <typename T>
     estd::optional<T> lookup_value(const std::string& key) const {
       if (auto prop = lookup_key(key)) {
         if (auto* val = fo::get<T>(&prop->_value)) {
@@ -529,7 +574,7 @@ namespace fo {
       return {};
     }
 
-    template<typename T>
+    template <typename T>
     T lookup_value_or(const std::string& key, const T& def) const {
       if (auto val = lookup_value<T>(key)) {
         return *val;
@@ -550,7 +595,7 @@ namespace fo {
 
   bool is_property_be_inherited(const std::string& key);
 
-} // ns fo
+} // namespace fo
 
 
 class IFormattingObject
@@ -583,4 +628,4 @@ namespace fo {
                                                             const Sosofo& sosofo);
 }
 
-} // ns eyestep
+} // namespace eyestep

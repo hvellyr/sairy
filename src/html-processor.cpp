@@ -921,6 +921,10 @@ namespace {
         else if (!zones["top"].empty() && zones["top"].front()._height) {
           set_attr(cont_attrs, "margin",
                    length_spec2css(*zones["top"].front()._height) + " auto");
+
+          auto top_offset = *zones["top"].front()._height;
+          top_offset._value *= -1;
+          processor->set_top_zone_offset(top_offset);
         }
         set_attr(cont_attrs, "padding", "0px");
 
@@ -1029,10 +1033,12 @@ namespace {
           if (zone._width)
             set_attr(attrs, "width", *zone._width);
           if (zone._full_height) {
-            if (zone._y_origin)
+            if (zone._y_origin) {
               set_attr(attrs, "height",
                        std::string("calc(100% - ") + length_spec2css(*zone._y_origin) +
                          ")");
+              set_attr(attrs, "overflow-y", "auto");
+            }
             else
               set_attr(attrs, "height", "100%");
           }
@@ -1218,13 +1224,44 @@ namespace {
   };
 
 
+  class HtmlLinkFoProcessor : public IFoProcessor<HtmlProcessor>
+  {
+  public:
+    void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
+      if (auto adr = processor->property_or_none<fo::Address>(fo, "destination")) {
+        const auto href = adr->_local
+          ? std::string("#") + adr->_destination
+          : adr->_destination;
+
+        auto with_tag =
+          html::Tag{processor->ctx().port(), "a", {{"href", href}}};
+
+        processor->render_sosofo(&fo->port(k_text));
+      }
+    }
+  };
+
+
   class HtmlAnchorFoProcessor : public IFoProcessor<HtmlProcessor>
   {
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
       if (auto id = processor->property_or_none<std::string>(fo, "id")) {
-        if (!id->empty())
-          processor->ctx().port().empty_tag("a", {{"id", *id}});
+        if (!id->empty()) {
+          auto sattrs = detail::StyleAttrs{};
+          if (processor->top_zone_offset()) {
+            set_attr(sattrs, "display", "block");
+            set_attr(sattrs, "position", "relative");
+            set_attr(sattrs, "top", length_spec2css(*processor->top_zone_offset()));
+            set_attr(sattrs, "visibility", "hidden");
+          }
+
+          auto attrs = tag_style_attrs(processor, "a", sattrs);
+          attrs.emplace_back(html::Attr{"id", *id});
+
+          auto& ctx = processor->ctx();
+          auto with_tag = html::Tag{ctx.port(), "a", attrs};
+        }
       }
     }
   };
@@ -1283,6 +1320,7 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const {
     {"#line-field", std::make_shared<HtmlLineFieldFoProcessor>()},
     {"#anchor", std::make_shared<HtmlAnchorFoProcessor>()},
     {"#page-number", std::make_shared<HtmlPageNumberFoProcessor>()},
+    {"#link", std::make_shared<HtmlLinkFoProcessor>()},
     {"#simple-column-set-sequence",
      std::make_shared<HtmlSimpleColumnSetSequenceProcessor>()},
   };

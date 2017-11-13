@@ -55,6 +55,11 @@
           style style?
           text
           with-mode
+          external-address
+          current-node-address
+          node-list-address
+          address?
+          address-local?
           )
   (include "nodelist.scm")
   (include "fo.scm")

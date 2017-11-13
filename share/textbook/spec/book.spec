@@ -82,7 +82,9 @@
 @c Definitions:
 
 @c define function
-@tag{deffn}      {%declln}                    {#TEXT | ANY}
+@c declln = used as headline
+@c declsum = used as the title of references
+@tag{deffn}      {%declln, %declsum?, ID?}    {#TEXT | ANY}
 @c kind = function, special, class, type, etc.
 @c declsum = declaration summary, used as headline
 @tag{def}        {%kind, %declsum, ID?}       {#TEXT | ANY}
