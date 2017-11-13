@@ -95,6 +95,8 @@
 
 (define (render-ref-to-node-html nd)
   (make link
+    score-type: 'none
+    color: %html.link-color%
     destination: (node-list-address nd)
     (make sequence
       (sosofo-append

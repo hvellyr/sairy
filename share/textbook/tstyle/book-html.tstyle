@@ -19,6 +19,9 @@
 (define %gap-between-paragraphs% (display-space 7pt conditional?: #t))
 
 (define %html.section-numbers% #t)
+(define %html.link-color% (color 'rgb '(0.1333 0.3686 0.0267)))
+(define %html.link-color-active% (color 'rgb '(0.1333 0.3686 0.0267)))
+(define %html.link-color-visited% (color 'rgb '(0.1333 0.3686 0.0267)))
 
 
 (define (enable-modern-style)
