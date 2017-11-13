@@ -26,65 +26,66 @@ namespace fo {
 
 
   const auto s_property_inherited = std::vector<PropertyInherited>{
-    {"box-type", true},                // Keyw: border, background, both
-    {"display?", false},               // Bool
-    {"box-corner-rounded?", false},    // Bool
-    {"box-corner-radius", false},      // LengthSpec
     {"above?", true},                  // Bool
+    {"asis-wrap-indent", true},        // LengthSpec
     {"background-color", false},       // Color
     {"background-tile", false},        // String: path to ext. graphics
     {"below?", true},                  // Bool
+    {"bottom-margin", false},          // LengthSpec
+    {"box-corner-radius", false},      // LengthSpec
+    {"box-corner-rounded?", false},    // Bool
+    {"box-type", true},                // Keyw: border, background, both
     {"break-after?", false},           // Bool
     {"break-before?", false},          // Bool
+    {"center-footer", false},          // Sosofo
+    {"center-header", false},          // Sosofo
     {"class", false},                  // String
-    {"color", true},                   // Color
+    {"color", false},                  // Color
+    {"column-number", false},          // Int
     {"destination", false},            // Address
+    {"display?", false},               // Bool
     {"end-indent", true},              // LengthSpec
     {"end-margin", false},             // LengthSpec
-    {"field-width", false},            // LengthSpec
     {"field-align", false},            // Keyw: left, right, center
+    {"field-width", false},            // LengthSpec
     {"first-line-start-indent", true}, // LengthSpec
-    {"column-number", false},          // Int
-    {"gutter-width", false},           // LengthSpec
-    {"last-line-end-indent", true},    // LengthSpec
+    {"font-caps", true},               // Keyw: normal, caps, smallcaps,
     {"font-name", true},               // String
     {"font-posture", true},            // Keyw: upright, italic, oblique
     {"font-size", true},               // LengthSpec
     {"font-weight", true},             // Keyw: medium, bold, semibold,
-    {"font-caps", true},               // Keyw: normal, caps, smallcaps,
+    {"footer-margin", false},          // LengthSpec
+    {"gutter-width", false},           // LengthSpec
+    {"header-margin", false},          // LengthSpec
     {"inhibit-line-breaks?", false},   // Bool
+    {"keep-with-next?", false},        // Bool
+    {"keep-with-previous?", false},    // Bool
     {"language", true},                // String
+    {"last-line-end-indent", true},    // LengthSpec
+    {"left-footer", false},            // Sosofo
+    {"left-header", false},            // Sosofo
+    {"left-margin", false},            // LengthSpec
+    {"line-number-side", true},        // Keyw: start, end, inside, outside
     {"line-spacing", true},            // LengthSpec
     {"line-thickness", true},          // LengthSpec
+    {"lines", true},                   // Keyw: wrap, asis, asis-wrap, none
+    {"numbered-lines?", true},         // Bool
+    {"page-height", false},            // LengthSpec
+    {"page-width", false},             // LengthSpec
+    {"position-point-shift", false},   // LengthSpec
     {"quadding", true},                // Keyw: left, right, center, justify
+    {"right-footer", false},           // Sosofo
+    {"right-header", false},           // Sosofo
+    {"right-margin", false},           // LengthSpec
+    {"score-type", false},             // Symbol: none, above, through, below
     {"space-after", false},            // LengthSpec
     {"space-before", false},           // LengthSpec
     {"start-indent", false},           // LengthSpec
     {"start-margin", false},           // LengthSpec
-    {"title", false},                  // Sosofo
-    {"keep-with-previous?", false},    // Bool
-    {"keep-with-next?", false},        // Bool
-    {"lines", true},                   // Keyw: wrap, asis, asis-wrap, none
-    {"numbered-lines?", true},         // Bool
-    {"line-number-side", true},        // Keyw: start, end, inside, outside
-    {"asis-wrap-indent", true},        // LengthSpec
-    {"whitespace-treatment", true},    // Keyw: preserve, collapse, ignore
-    {"page-width", false},             // LengthSpec
-    {"page-height", false},            // LengthSpec
-    {"left-margin", false},            // LengthSpec
-    {"right-margin", false},           // LengthSpec
-    {"top-margin", false},             // LengthSpec
-    {"bottom-margin", false},          // LengthSpec
-    {"header-margin", false},          // LengthSpec
-    {"footer-margin", false},          // LengthSpec
-    {"left-header", false},            // Sosofo
-    {"center-header", false},          // Sosofo
-    {"right-header", false},           // Sosofo
-    {"left-footer", false},            // Sosofo
-    {"center-footer", false},          // Sosofo
-    {"right-footer", false},           // Sosofo
-    {"position-point-shift", false},   // LengthSpec
     {"text", false},                   // String
+    {"title", false},                  // Sosofo
+    {"top-margin", false},             // LengthSpec
+    {"whitespace-treatment", true},    // Keyw: preserve, collapse, ignore
     {"width", false},                  // LengthSpec
   };
 
@@ -508,6 +509,9 @@ namespace fo {
   const PropertySpecs& Link::default_properties() const {
     static const auto propspecs = PropertySpecs{
       {"destination", false},
+      {"color", ""},
+      {"score-type", "none"},
+      {"line-thickness", LengthSpec(kDimen, 1, k_pt)},
     };
     return propspecs;
   }

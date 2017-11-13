@@ -311,6 +311,10 @@ namespace html {
                    << "  padding-top: 0px;" << std::endl
                    << "  padding-bottom: 0px;" << std::endl
                    << "}" << std::endl
+                   << "a {" << std::endl
+                   << "  text-decoration: none;" << std::endl
+                   << "  color: black;" << std::endl
+                   << "}" << std::endl
                    << "body {" << std::endl
                    << "  margin: 0px;" << std::endl
                    << "}" << std::endl;
