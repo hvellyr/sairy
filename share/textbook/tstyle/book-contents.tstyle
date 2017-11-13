@@ -106,7 +106,9 @@
 ;;------------------------------------------------------------------------------
 
 (define (content-chapter-html-navigation title nd)
-  (let* ((title-num-sosofo (literal (section-title-number nd)))
+  (let* ((title-num-sosofo (if %html.section-numbers%
+                               (literal (section-title-number nd))
+                               (empty-sosofo)))
          (title-sosofo (section-title-sosofo title nd)))
     (make link
       destination: (node-list-address nd)
@@ -114,55 +116,69 @@
         space-before: (display-space 7pt conditional?: #t)
         space-after: 3pt
         quadding: 'left
-        first-line-start-indent: -45mm
+        first-line-start-indent: 0mm
         start-indent: 0pt
         font-size: (font-size 4)
-        line-spacing: (line-spacing 4)
+        line-spacing: (line-spacing 5)
         font-weight: 'bold
         end-indent: 15pt
         last-line-end-indent: -15pt
 
         (sosofo-append
-         (make line-field
-           field-width: 41mm
-           field-align: 'right
-           title-num-sosofo)
-         (make line-field
-           field-width: 4mm
-           (empty-sosofo))
+         (if %html.section-numbers%
+             (make line-field
+               field-width: 24pt
+               field-align: 'left
+               (sosofo-append
+                title-num-sosofo
+                (literal " ")))
+             (empty-sosofo))
          title-sosofo)))
     ))
 
 
-(define (content-section-html-navigation title nd)
-  (let* ((title-num-sosofo (literal (section-title-number nd)))
+(define (content-section-html-navigation title nd lvl)
+  (let* ((title-num-sosofo (if %html.section-numbers%
+                               (literal (section-title-number nd))
+                               (empty-sosofo)))
+         (number-tokens (section-title-number-tokens nd))
          (title-sosofo (section-title-sosofo title nd)))
     (make link
       destination: (node-list-address nd)
 
       (make paragraph
         quadding: 'left
-        first-line-start-indent: 0mm
-        start-indent: 0pt
-        font-size: (font-size 3)
-        line-spacing: (line-spacing 3)
+        first-line-start-indent: (if %html.section-numbers%
+                                     0pt
+                                     -10pt)
+        start-indent: (if %html.section-numbers%
+                          0pt
+                          (+ (* (length number-tokens) 5pt) 10pt))
+        font-size: (font-size lvl)
+        line-spacing: (+ (line-spacing lvl) 5pt)
         end-indent: 15pt
         last-line-end-indent: -15pt
 
         (sosofo-append
-         (make line-field
-           field-width: 24pt
-           field-align: 'left
-           (sosofo-append
-            title-num-sosofo
-            (literal " ")))
+         (if %html.section-numbers%
+             (make line-field
+               field-width: 24pt
+               field-align: 'left
+               (sosofo-append
+                title-num-sosofo
+                (literal " ")))
+             (empty-sosofo))
          title-sosofo)))
     ))
 
 
 (mode html-website-content-mode
   (element section
-    (content-section-html-navigation #f (current-node)))
+    (sosofo-append
+     (content-section-html-navigation #f (current-node) 3)
+     (process-node-list (select-elements (children (current-node)) 'subsection))))
+  (element subsection
+    (content-section-html-navigation #f (current-node) 2))
   (element chapter
     (sosofo-append
      (content-chapter-html-navigation "Chapter" (current-node))

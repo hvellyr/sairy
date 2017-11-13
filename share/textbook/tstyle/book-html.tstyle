@@ -18,6 +18,8 @@
 
 (define %gap-between-paragraphs% (display-space 7pt conditional?: #t))
 
+(define %html.section-numbers% #t)
+
 
 (define (enable-modern-style)
   (set! %style% 'modern)
@@ -42,6 +44,7 @@
   (set! %line-spacings% #(12pt 13.3pt 14.5pt 16pt 18.5pt 21.3pt 24pt 26.5pt))
   (set! %example-background-color% (color 'rgb '(0.3254 0.4078 0.4705)))
   (set! %example-text-color% (color 'rgb '(0.9372 0.9215 0.9137)))
+  (set! %html.section-numbers% #f)
   )
 
 
