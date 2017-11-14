@@ -349,10 +349,9 @@ namespace fo {
 
   const PropertySpecs& Score::default_properties() const {
     static const auto propspecs = PropertySpecs{
-      {"below?", false},
-      {"above?", false},
+      {"score-type", "none"},
       {"color", ""},
-      {"line-thickness", LengthSpec(kDimen, 0, k_pt)},
+      {"line-thickness", LengthSpec(kDimen, 1, k_pt)},
     };
     return propspecs;
   }
