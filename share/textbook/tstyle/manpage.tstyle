@@ -78,51 +78,55 @@
 (element (manpage info)
   (empty-sosofo))
 
-(element manpage
-  (let* ((info (select-elements (children (current-node)) 'info))
+
+(define (format-manpage node)
+  (let* ((info (select-elements (children node) 'info))
          (authors (select-elements (children info) 'author))
-         (author-first (if (> (node-list-length authors) 0)
-                           (node-list-first authors)
-                           (node-list)))
-         (manpage-title (node-property 'data (attribute "name" (current-node))
-                                       default: ""))
-         (manpage-desc (node-property 'data (attribute "desc" (current-node))
-                                      default: ""))
-         (author-as-string (node-property 'data (attribute "name" author-first)
-                                          default: "N.N."))
          )
-
-    (make simple-page-sequence
-      font-size: 10pt
-      line-spacing: 14pt
-      metadata.author: author-as-string
-      metadata.desc: manpage-desc
-      metadata.title: manpage-title
-      html.width: 600pt
-
-      (sosofo-append
-       (make display-group
-         mandoc.name: (data (attribute "name" (current-node)))
-         mandoc.description: (data (attribute "desc" (current-node)))
-         mandoc.section: (data (attribute "section" (current-node)))
-         mandoc.author: (data author-first)
-
-         (sosofo-append
+    (sosofo-append
+     (make display-group
+       (sosofo-append
+        (make paragraph
+          font-weight: 'bold
+          break-after?: #f
+          space-before: 0pt
+          space-after: 7pt
+          keep-with-next?: #t
+          first-line-start-indent: 0pt
+          quadding: "left"
+          (sosofo-append
+           (process-node-list (attribute "name" node))
+           (literal "(")
+           (process-node-list (attribute "section" node))
+           (literal ")")))
+        (make paragraph
+          font-caps: 'small-caps
+          font-size: 14pt
+          line-spacing: 17pt
+          font-weight: 'bold
+          break-after?: #f
+          space-before: 20pt
+          space-after: 7pt
+          keep-with-next?: #t
+          first-line-start-indent: 0pt
+          quadding: "left"
+          (literal "Name"))
+        (make display-group
+          start-indent: 20pt
           (make paragraph
-            font-weight: 'bold
-            break-after?: #f
-            space-before: 0pt
-            space-after: 7pt
-            keep-with-next?: #t
             first-line-start-indent: 0pt
             quadding: "left"
             (sosofo-append
-             (process-node-list (attribute "name" (current-node)))
-             (literal "(")
-             (process-node-list (attribute "section" (current-node)))
-             (literal ")")))
+             (process-node-list (attribute "name" node))
+             (literal " - ")
+             (process-node-list (attribute "desc" node)))))
+        ))
+
+     (process-node-list (children node))
+
+     (if (not (node-list-empty? authors))
+         (sosofo-append
           (make paragraph
-            mandoc.section: "name"
             font-caps: 'small-caps
             font-size: 14pt
             line-spacing: 17pt
@@ -133,40 +137,53 @@
             keep-with-next?: #t
             first-line-start-indent: 0pt
             quadding: "left"
-            (literal "Name"))
+            (literal "Authors"))
           (make display-group
             start-indent: 20pt
-            (make paragraph
-              first-line-start-indent: 0pt
-              quadding: "left"
-              (sosofo-append
-               (process-node-list (attribute "name" (current-node)))
-               (literal " - ")
-               (process-node-list (attribute "desc" (current-node))))))
-          ))
+            (process-node-list authors)))
+         (empty-sosofo))
+     )
+    ))
 
-       (process-children)
 
-       (if (not (node-list-empty? authors))
-           (sosofo-append
-            (make paragraph
-              mandoc.section: "authors"
-              font-caps: 'small-caps
-              font-size: 14pt
-              line-spacing: 17pt
-              font-weight: 'bold
-              break-after?: #f
-              space-before: 20pt
-              space-after: 7pt
-              keep-with-next?: #t
-              first-line-start-indent: 0pt
-              quadding: "left"
-              (literal "Authors"))
-            (make display-group
-              start-indent: 20pt
-              (process-node-list authors)))
-           (empty-sosofo))
-       )) ))
+(element manpage
+  (let* ((info (select-elements (children (current-node)) 'info))
+         (authors (select-elements (children info) 'author))
+         (author-first (if (> (node-list-length authors) 0)
+                           (node-list-first authors)
+                           (node-list)))
+         (manpage-title (node-property 'data
+                                       (attribute "name" (current-node))
+                                       default: ""))
+         (manpage-desc (node-property 'data
+                                      (attribute "desc" (current-node))
+                                      default: ""))
+         (author-as-string (node-property 'data
+                                          (attribute "name" author-first)
+                                          default: "N.N."))
+         )
+    (cond
+     ((html-backend?) (make scroll-sequence
+                        title: manpage-title
+                        metadata.author: author-as-string
+                        metadata.desc: manpage-desc
+
+                        font-size: (font-size 3)
+                        line-spacing: (line-spacing 3)
+                        start-margin: 0pt
+                        end-margin: 0pt
+                        width: 600px
+                        (format-manpage (current-node))))
+
+     ((tex-backend?) (make simple-page-sequence
+                       metadata.author: author-as-string
+                       metadata.desc: manpage-desc
+                       metadata.title: manpage-title
+                       font-size: 10pt
+                       line-spacing: 14pt
+                       (format-manpage (current-node))))
+     )
+    ))
 
 
 ;; #-----------------------------------------------------------------------------

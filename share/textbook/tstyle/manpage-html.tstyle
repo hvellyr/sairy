@@ -1,0 +1,24 @@
+;;; Copyright (c) 2015 Gregor Klinke
+;;; All rights reserved.
+
+(define %html.page-width% 600px)
+
+(define %style% 'multicol)
+(define %title-style% 'modern)
+
+(define %monospace-font-name% "monospace")
+(define %body-font-name% "roman")
+(define %font-sizes%    #(7pt   8pt   9pt    10pt 12pt 14pt   16pt   20pt))
+(define %line-spacings% #(8.5pt 9.5pt 10.5pt 12pt 14pt 16.5pt 19.5pt 24pt))
+
+(define %example-background-color% (color 'x11 'gray85))
+(define %example-text-color% (color 'x11 'black))
+(define %show-boxed-examples% #t)
+(define %example-box-indent% 7pt)
+
+(define %gap-between-paragraphs% (display-space 7pt conditional?: #t))
+
+(define %html.section-numbers% #t)
+
+
+(use 'manpage)
