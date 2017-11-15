@@ -760,6 +760,19 @@ namespace {
   };
 
 
+  class TexLinkFoProcessor : public IFoProcessor<TexProcessor>
+  {
+  public:
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
+      // Simple passthru for now
+      auto& text_port = fo->port("text");
+      if (text_port.length() > 0) {
+        po->render_sosofo(&text_port);
+      }
+    }
+  };
+
+
   class TexAnchorFoProcessor : public IFoProcessor<TexProcessor>
   {
   public:
@@ -890,6 +903,7 @@ TexProcessor::lookup_fo_processor(const std::string& fo_classname) const {
     {"#line-field", std::make_shared<TexLineFieldFoProcessor>()},
     {"#page-number", std::make_shared<TexPageNumberFoProcessor>()},
     {"#anchor", std::make_shared<TexAnchorFoProcessor>()},
+    {"#link", std::make_shared<TexLinkFoProcessor>()},
     {"#simple-column-set-sequence",
      std::make_shared<TexSimpleColumnSetSequenceProcessor>()},
   };
