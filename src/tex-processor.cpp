@@ -189,6 +189,9 @@ namespace {
       case 0x2013:
         os << "--";
         break;
+      case 0x2014:
+        os << "---";
+        break;
       case 0x201c:
         os << "\\ldqo{}";
         break;
@@ -203,6 +206,9 @@ namespace {
         break;
       case 0x2026:
         os << "\\hellip{}";
+        break;
+      case 0x202f:
+        os << "\\thsp{}";
         break;
 
       case 0x21d2:
