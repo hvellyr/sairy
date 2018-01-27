@@ -64,6 +64,13 @@
             declsum
             (empty-node-list)))))
 
+(define (render-page-ref nd)
+  (sosofo-append
+   (literal "p.") (make-char 'narrow-non-breaking-space)
+   (make page-number
+     refid: (id nd))
+   ))
+
 (define (render-ref-to-node-tex nd)
   (make link
     destination: (node-list-address nd)
@@ -72,23 +79,37 @@
                    (sosofo-append
                     (literal "Chapter “")
                     (process-node-list (destination-title nd))
-                    (literal "”"))))
+                    (literal "”, ")
+                    (render-page-ref nd)
+                    )))
       ((appendix) (make sequence
                    (sosofo-append
                     (literal "Appendix “")
                     (process-node-list (destination-title nd))
-                    (literal "”"))))
+                    (literal "”, ")
+                    (render-page-ref nd)
+                    )))
       ((introduction) (make sequence
                    (sosofo-append
                     (literal "Introduction “")
                     (process-node-list (destination-title nd))
-                    (literal "”"))))
+                    (literal "”, ")
+                    (render-page-ref nd)
+                    )))
       ((section subsection) (make sequence
                               (sosofo-append
                                (literal "Section “")
                                (process-node-list (destination-title nd))
-                               (literal "”"))))
-      (else (empty-sosofo)))
+                               (literal "”, ")
+                               (render-page-ref nd)
+                               )))
+      (else (make sequence
+              (sosofo-append
+               (literal " “")
+               (process-node-list (destination-title nd))
+               (literal "”, ")
+               (render-page-ref nd)
+               ))))
     )
   )
 
