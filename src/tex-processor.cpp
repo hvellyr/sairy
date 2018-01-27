@@ -432,6 +432,7 @@ namespace {
       else if (quadding == "center")
         po->stream() << "\\quadcenter{}";
 
+      po->push_delayed_anchors();
       po->render_sosofo(&fo->port("text"));
 
       if (wstreatment == "preserve") {
@@ -482,6 +483,7 @@ namespace {
         po->render_sosofo(&text_port);
       }
       else {
+        po->push_delayed_anchors();
         po->finalize_breaks();
       }
 
@@ -786,8 +788,10 @@ namespace {
       po->finalize_breaks();
 
       if (auto id = po->property_or_none<std::string>(fo, "id")) {
-        if (!id->empty())
-          po->stream() << "\\label{" << *id << "}";
+        if (!id->empty()) {
+          po->_delayed_anchors.emplace_back(
+            std::string("\\label{") + *id + "}");
+        }
       }
     }
   };
@@ -995,6 +999,15 @@ fo::LengthSpec TexProcessor::paper_width() const {
 
 fo::LengthSpec TexProcessor::paper_height() const {
   return std::get<1>(_paper_dimen);
+}
+
+
+void TexProcessor::push_delayed_anchors()
+{
+  for (const auto& s : _delayed_anchors) {
+    stream() << s;
+  }
+  _delayed_anchors.clear();
 }
 
 } // ns eyestep
