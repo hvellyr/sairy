@@ -16,7 +16,7 @@ for line in sys.stdin:
         uppertbl[m.group(1)] = m.group(2)
 
 
-print r'''// DON'T THIS FILE
+print r'''// DON'T EDIT THIS FILE
 // it has been automatically create by casefold.py
 
 #include <unordered_map>
