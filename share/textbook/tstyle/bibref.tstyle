@@ -27,7 +27,7 @@
 
   (let* ((snlc (children snl))
          (authors (select-elements snlc 'author))
-         (titles (select-elements snlc 'title))
+         (titles (select-elements snlc 'bibtitle))
          (arttitles (select-elements snlc 'arttitle))
          (places (select-elements snlc 'place))
          (publs (select-elements snlc 'publ))
