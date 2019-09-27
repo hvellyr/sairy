@@ -6,6 +6,7 @@
 #include "scanner.hpp"
 #include "utils.hpp"
 
+#include "lexicon-scanner.hpp"
 #include "program_options/program_options.hpp"
 #include "textbook-scanner.hpp"
 
@@ -55,6 +56,7 @@ namespace {
   ScannerClassFactoryMap& scanner_registry() {
     if (s_scanner_factory_map.empty()) {
       register_scanner_factory<TextbookScanner>();
+      register_scanner_factory<LexiconScanner>();
     }
 
     return s_scanner_factory_map;

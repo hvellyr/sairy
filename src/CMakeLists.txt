@@ -52,6 +52,18 @@ target_compile_options(textbook-core
 
 
 #------------------------------------------------------------------------------
+add_library(lexicon
+  lexicon-scanner.cpp
+  lexicon-scanner.hpp
+)
+target_include_directories(lexicon PUBLIC "${include_dirs}")
+target_compile_options(lexicon
+  PUBLIC ${cxx11_options} ${warning_options})
+target_link_libraries(lexicon
+  textbook-core)
+
+
+#------------------------------------------------------------------------------
 add_definitions(-DSEXP_USE_KEYWORDS=1 -DSEXP_USE_QUANTITY=1)
 
 add_executable(textbook
@@ -71,6 +83,7 @@ target_compile_options(textbook
   PUBLIC ${cxx11_options} ${warning_options})
 target_link_libraries(textbook
   textbook-core
+  lexicon
   scheme
   program_options
   ${fspp_LIBRARIES}
