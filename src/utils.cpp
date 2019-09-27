@@ -91,6 +91,36 @@ namespace utils {
   }
 
 
+  std::vector<std::string> split_str(const std::string& str, const std::string& substr,
+                                     bool trim_token) {
+    using namespace std;
+
+    const auto push_substr = [&](vector<string>& res, const std::string& src, size_t p,
+                                 size_t count) {
+      const auto tmp = src.substr(p, count);
+      res.emplace_back(trim_token ? trim_copy(tmp) : tmp);
+    };
+
+    auto result = vector<string>{};
+
+    auto pos = std::size_t{0};
+
+    while (pos < str.size()) {
+      auto idx = str.find(substr, pos);
+      if (idx == std::string::npos) {
+        push_substr(result, str, pos, std::string::npos);
+        return result;
+      }
+
+      push_substr(result, str, pos, idx - pos);
+
+      pos = idx + substr.size();
+    }
+
+    return result;
+  }
+
+
   std::vector<fs::path> split_paths(const std::string& path) {
     using namespace std;
 
