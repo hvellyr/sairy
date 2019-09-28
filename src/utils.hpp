@@ -24,6 +24,9 @@ namespace utils {
 
   std::vector<filesystem::path> split_paths(const std::string& path);
 
+  std::string replace_str(const std::string& src, const std::string& pattern,
+                          const std::string& replcm);
+
   filesystem::path make_relative(const filesystem::path& from,
                                  const filesystem::path& to);
 

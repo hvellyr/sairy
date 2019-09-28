@@ -121,6 +121,12 @@ namespace utils {
   }
 
 
+  std::string replace_str(const std::string& src, const std::string& pattern,
+                          const std::string& replcm) {
+    return join(split_str(src, pattern, true), replcm);
+  }
+
+
   std::vector<fs::path> split_paths(const std::string& path) {
     using namespace std;
 
