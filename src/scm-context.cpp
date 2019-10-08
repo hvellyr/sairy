@@ -1462,7 +1462,8 @@ namespace {
 
   bool is_address_sexp(sexp ctx, sexp self, sexp adr) {
     return sexp_pointerp(adr) &&
-           strcmp(sexp_string_data(sexp_object_type_name(ctx, adr)), ADDRESS_TYPE_NAME) == 0;
+           strcmp(sexp_string_data(sexp_object_type_name(ctx, adr)), ADDRESS_TYPE_NAME) ==
+             0;
   }
 
 
@@ -1527,10 +1528,10 @@ namespace {
       auto adrloc = address_local(expr);
       auto adrdest = address_destination(expr);
 
-      if (sexp_stringp(adrdest) &&
-          sexp_booleanp(adrloc)) {
-        result = fo::PropertySpec(key, fo::Address(bool(sexp_unbox_boolean(adrloc)),
-                                                   std::string(sexp_string_data(adrdest))));
+      if (sexp_stringp(adrdest) && sexp_booleanp(adrloc)) {
+        result =
+          fo::PropertySpec(key, fo::Address(bool(sexp_unbox_boolean(adrloc)),
+                                            std::string(sexp_string_data(adrdest))));
       }
       else {
         excep = sexp_user_exception(ctx, self, "Bad address members: ", expr);

@@ -59,7 +59,8 @@ private:
 };
 
 
-class SosofoIterator {
+class SosofoIterator
+{
   const Sosofo* _sosofo = nullptr;
   int _idx = 0;
 
@@ -72,16 +73,16 @@ public:
 
   /*! the end iterator */
   SosofoIterator() = default;
-  SosofoIterator(const Sosofo* sosofo, int idx) : _sosofo(sosofo), _idx(idx)
-  {
+  SosofoIterator(const Sosofo* sosofo, int idx)
+    : _sosofo(sosofo)
+    , _idx(idx) {
 
     if (_idx < 0 || _idx >= _sosofo->length()) {
       *this = {};
     }
   }
 
-  SosofoIterator& operator++()
-  {
+  SosofoIterator& operator++() {
     ++_idx;
     if (_idx >= _sosofo->length()) {
       *this = {};
@@ -89,23 +90,27 @@ public:
     return *this;
   }
 
-  SosofoIterator operator++(int)
-  {
+  SosofoIterator operator++(int) {
     SosofoIterator retval = *this;
     ++(*this);
     return retval;
   }
 
-  bool operator==(SosofoIterator other) const
-  {
+  bool operator==(SosofoIterator other) const {
     return _sosofo == other._sosofo && _idx == other._idx;
   }
 
-  bool operator!=(SosofoIterator other) const { return !(*this == other); }
+  bool operator!=(SosofoIterator other) const {
+    return !(*this == other);
+  }
 
-  reference operator*() const { return *(*_sosofo)[_idx]; }
+  reference operator*() const {
+    return *(*_sosofo)[_idx];
+  }
 
-  pointer operator->() const { return (*_sosofo)[_idx]; }
+  pointer operator->() const {
+    return (*_sosofo)[_idx];
+  }
 };
 
 } // ns eyestep

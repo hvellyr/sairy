@@ -35,8 +35,8 @@ namespace {
 
   ProcessorFactoryMap& processor_registry() {
     static auto s_processor_factory_map = ProcessorFactoryMap{
-      make_processor_factory<DebugProcessor>(),
-      make_processor_factory<HtmlProcessor>(),
+      make_processor_factory<DebugProcessor>(), //
+      make_processor_factory<HtmlProcessor>(),  //
       make_processor_factory<TexProcessor>(),
     };
 

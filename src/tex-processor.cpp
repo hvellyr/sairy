@@ -789,8 +789,7 @@ namespace {
 
       if (auto id = po->property_or_none<std::string>(fo, "id")) {
         if (!id->empty()) {
-          po->_delayed_anchors.emplace_back(
-            std::string("\\label{") + *id + "}");
+          po->_delayed_anchors.emplace_back(std::string("\\label{") + *id + "}");
         }
       }
     }
@@ -1002,8 +1001,7 @@ fo::LengthSpec TexProcessor::paper_height() const {
 }
 
 
-void TexProcessor::push_delayed_anchors()
-{
+void TexProcessor::push_delayed_anchors() {
   for (const auto& s : _delayed_anchors) {
     stream() << s;
   }

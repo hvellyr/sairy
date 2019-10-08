@@ -7,16 +7,15 @@
 #include "../nodes.hpp"
 #include "../nodeutils.hpp"
 
-#include <string>
 #include <sstream>
+#include <string>
 #include <tuple>
 
 
 using namespace eyestep;
 
 
-TEST_CASE("Traverse", "[nodes][traverse]")
-{
+TEST_CASE("Traverse", "[nodes][traverse]") {
   Grove grove;
   auto* nd = grove.make_elt_node("foo");
 
@@ -35,8 +34,7 @@ TEST_CASE("Traverse", "[nodes][traverse]")
   nd->add_child_node(args);
   nd->add_child_node(type);
 
-  SECTION("Full recursion")
-  {
+  SECTION("Full recursion") {
     using GiType = std::tuple<std::string, int>;
     using ExpectedGiType = std::vector<GiType>;
     ExpectedGiType gis;
@@ -50,8 +48,7 @@ TEST_CASE("Traverse", "[nodes][traverse]")
                                    GiType{"args", 1}, GiType{"type", 1}}));
   }
 
-  SECTION("Only siblings")
-  {
+  SECTION("Only siblings") {
     std::vector<std::string> gis;
     node_traverse(nd, [&gis](const Node* nd, int depth) {
       gis.emplace_back(nd->gi());
@@ -61,8 +58,7 @@ TEST_CASE("Traverse", "[nodes][traverse]")
     REQUIRE(gis == (std::vector<std::string>{"foo"}));
   }
 
-  SECTION("Mixed recursion/siblings")
-  {
+  SECTION("Mixed recursion/siblings") {
     std::vector<std::string> gis;
     node_traverse(nd, [&gis](const Node* nd, int depth) {
       gis.emplace_back(nd->gi());
@@ -77,8 +73,7 @@ TEST_CASE("Traverse", "[nodes][traverse]")
     REQUIRE(gis == (std::vector<std::string>{"foo", "title", "args", "type"}));
   }
 
-  SECTION("breaks")
-  {
+  SECTION("breaks") {
     std::vector<std::string> gis;
     node_traverse(nd, [&gis](const Node* nd, int depth) {
       gis.emplace_back(nd->gi());
@@ -98,8 +93,7 @@ TEST_CASE("Traverse", "[nodes][traverse]")
 }
 
 
-TEST_CASE("Serialize", "[nodes][serialize]")
-{
+TEST_CASE("Serialize", "[nodes][serialize]") {
   Grove grove;
 
   auto* nd = grove.make_elt_node("foo");
@@ -162,8 +156,7 @@ TEST_CASE("Serialize", "[nodes][serialize]")
 }
 
 
-TEST_CASE("Serialize without pretty printing", "[nodes][serialize]")
-{
+TEST_CASE("Serialize without pretty printing", "[nodes][serialize]") {
   Grove grove;
 
   auto* nd = grove.make_elt_node("foo");
