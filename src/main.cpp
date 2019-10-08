@@ -54,22 +54,20 @@ eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
 
   root->set_property("start-time", to_iso_timestring(std::chrono::system_clock::now()));
 
-  if (!sources.empty()) {
-    for (const auto& src : sources) {
-      std::cout << "Scan " << src << " ...";
-      std::cout.flush();
+  for (const auto& src : sources) {
+    std::cout << "Scan " << src << " ...";
+    std::cout.flush();
 
-      auto scanner = eyestep::make_scanner_for_file(src, args);
+    auto scanner = eyestep::make_scanner_for_file(src, args);
 
-      if (scanner) {
-        auto* nd = scanner->scan_file(grove, src);
-        std::cout << " ok" << std::endl;
+    if (scanner) {
+      auto* nd = scanner->scan_file(grove, src);
+      std::cout << " ok" << std::endl;
 
-        root->add_child_node(nd);
-      }
-      else {
-        std::cout << " no scanner for filetype" << std::endl;
-      }
+      root->add_child_node(nd);
+    }
+    else {
+      std::cout << " no scanner for filetype" << std::endl;
     }
   }
 
