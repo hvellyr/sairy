@@ -848,6 +848,29 @@ namespace {
   };
 
 
+  class TexScoreFoProcessor : public IFoProcessor<TexProcessor>
+  {
+  public:
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
+      po->finalize_breaks();
+
+      // const auto color = po->property_or_none<fo::Color>(fo, "color");
+      const auto thickness = po->property_or_none<fo::LengthSpec>(fo, "line-thickness");
+      const auto type = po->property(fo, "score-type", std::string("none"));
+
+      if (type == "above") {
+        // no supported
+      }
+      else if (type == "below") {
+        po->stream() << "\\noindent\\hrulefill ";
+      }
+      else if (type == "through") {
+        // no supported
+      }
+    }
+  };
+
+
   class TexLinkFoProcessor : public IFoProcessor<TexProcessor>
   {
   public:
@@ -993,6 +1016,7 @@ TexProcessor::lookup_fo_processor(const std::string& fo_classname) const {
     {"#page-number", std::make_shared<TexPageNumberFoProcessor>()},
     {"#anchor", std::make_shared<TexAnchorFoProcessor>()},
     {"#link", std::make_shared<TexLinkFoProcessor>()},
+    {"#score", std::make_shared<TexScoreFoProcessor>()},
     {"#simple-column-set-sequence",
      std::make_shared<TexSimpleColumnSetSequenceProcessor>()},
   };
