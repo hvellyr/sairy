@@ -53,9 +53,21 @@ namespace tex_detail {
 
   struct TexStyleContext
   {
-    CapsStyle _capsstyle;
-    WrapStyle _wrapstyle;
-    WsTreatment _wstreatment;
+    TexStyleContext() = default;
+    TexStyleContext(CapsStyle capsstyle, WrapStyle wrapstyle, WsTreatment wstreatment)
+      : _capsstyle(capsstyle)
+      , _wrapstyle(wrapstyle)
+      , _wstreatment(wstreatment) {}
+    TexStyleContext& operator=(const TexStyleContext& rhs) {
+      _capsstyle = rhs._capsstyle;
+      _wrapstyle = rhs._wrapstyle;
+      _wstreatment = rhs._wstreatment;
+      return *this;
+    }
+
+    CapsStyle _capsstyle = k_normal_caps;
+    WrapStyle _wrapstyle = k_normal_wrap;
+    WsTreatment _wstreatment = k_preserve_ws;
   };
 
   enum BreakKind

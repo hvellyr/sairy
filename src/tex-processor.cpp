@@ -672,6 +672,9 @@ namespace {
   public:
     void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
+
+      auto lastctx = po->style_ctx();
+
       po->stream() << "{";
 
       auto pps = po->property_or_none<fo::LengthSpec>(fo, "position-point-shift");
@@ -696,6 +699,8 @@ namespace {
       }
 
       po->stream() << "}";
+
+      po->style_ctx() = lastctx;
     }
   };
 
@@ -712,6 +717,8 @@ namespace {
 
       auto field_width = po->property_or_none<fo::LengthSpec>(fo, "field-width");
       auto field_align = po->property_or_none<std::string>(fo, "field-align");
+
+      auto lastctx = po->style_ctx();
 
       if (field_width && field_width->_value > 0) {
         if (field_width->_max != field_width->_value) {
@@ -749,6 +756,8 @@ namespace {
       if (field_align && (*field_align == "left" || *field_align == "center"))
         po->stream() << "\\hfill{}";
       po->stream() << "}";
+
+      po->style_ctx() = lastctx;
     }
   };
 
