@@ -61,7 +61,7 @@
 ;; asis, otherwise it is processed.
 (define (format-ss seq)
   (make sequence
-    font-caps: 'smallcaps
+    font-caps: 'small-caps
     (if (sosofo? seq)
         seq
         (process-node-list seq))))

@@ -57,7 +57,9 @@
 (define (section-title-sosofo title nd)
   (let ((node-title (attribute "title" nd)))
     (if (= (node-list-length node-title) 0)
-        (if title (literal title) (literal ""))
+        (if title
+            (literal title)
+            (empty-sosofo))
         (process-node-list node-title))))
 
 (define (non-p? nd)
@@ -65,10 +67,50 @@
     ((part admon itemize enumerate) #t)
     (else #f)))
 
+(define (format-title title-num sep title)
+  (case %style%
+    ((classic) (format-title-classic title-num sep title))
+    ((modern) (format-title-modern title-num sep title))
+    (else (format-title-modern title-num sep title))))
+
+(define (format-title-modern title-num sep title)
+  (sosofo-append
+   (make line-field
+     field-width: 41mm
+     field-align: 'right
+     (if (sosofo? title-num)
+        title-num
+        (process-node-list title-num)))
+   (make line-field
+     field-width: 4mm
+     (empty-sosofo))
+   (if (sosofo? title)
+       title
+       (process-node-list title))))
+
+(define (format-title-classic title-num sep title)
+  (sosofo-append
+   (if (sosofo? title-num)
+       title-num
+       (process-node-list title-num))
+   sep
+   (if (sosofo? title)
+       title
+       (process-node-list title))))
 
 (define (format-section title nd)
+  (case %style%
+    ((classic) (format-section-classic title nd))
+    ((modern) (format-section-modern title nd))
+    (else (format-section-modern title nd))))
+
+(define (format-section-modern title nd)
   (let* ((layout (section-layout (gi nd)))
-         (title-num-sosofo (literal (section-title-number nd)))
+         (dont-show-number (string=? (data (attribute "show-number" nd)) "no"))
+         (title-num-str (if dont-show-number
+                            ""
+                            (section-title-number nd)))
+         (title-num-sosofo (literal title-num-str))
          (title-sosofo (section-title-sosofo title nd))
          )
     (sosofo-append
@@ -83,19 +125,55 @@
        font-posture: (vector-ref layout 3)
 
        keep-with-next?: #t
-       first-line-start-indent: -45mm
+       first-line-start-indent: %page-left-offset-neg%
        start-indent: 0pt
        quadding: 'left
 
-       (sosofo-append
-        (make line-field
-          field-width: 41mm
-          field-align: 'right
-          title-num-sosofo)
-        (make line-field
-          field-width: 4mm
-          (empty-sosofo))
-        title-sosofo))
+       (format-title title-num-sosofo (empty-sosofo) title-sosofo))
+
+     (let ((nl (children nd)))
+       (if (or (node-list-empty? nl)
+               (any-section? (node-list-first nl))
+               (not (eqv? (gi (node-list-first nl)) 'p)))
+           (process-node-list-left-trim-idx-ws nl)
+           (sosofo-append
+            (make paragraph
+              quadding: 'justify
+              first-line-start-indent: 0pt
+              (process-node-list-left-trim-idx-ws (children (node-list-first nl))))
+            (process-node-list-left-trim-idx-ws (node-list-rest nl)))
+           ))
+     )))
+
+(define (format-section-classic title nd)
+  (let* ((layout (section-layout (gi nd)))
+         (dont-show-number (string=? (data (attribute "show-number" nd)) "no"))
+         (title-num-str (if dont-show-number
+                            ""
+                            (section-title-number nd)))
+         (title-num-sosofo (literal title-num-str))
+         (title-sep (if (> (string-length title-num-str) 0)
+                        (literal " ")
+                        (empty-sosofo)))
+         (title-sosofo (section-title-sosofo title nd))
+         )
+    (sosofo-append
+     (make anchor
+       id: (id nd))
+     (make paragraph
+       font-size: (vector-ref layout 0)
+       line-spacing: (vector-ref layout 1)
+       space-before: (vector-ref layout 4)
+       space-after:  (vector-ref layout 5)
+       font-weight:  (vector-ref layout 2)
+       font-posture: (vector-ref layout 3)
+
+       keep-with-next?: #t
+       first-line-start-indent: 0mm
+       start-indent: 0pt
+       quadding: 'center
+
+       (format-title title-num-sosofo title-sep title-sosofo))
 
      (let ((nl (children nd)))
        (if (or (node-list-empty? nl)

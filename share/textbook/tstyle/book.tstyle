@@ -4,7 +4,7 @@
 (use 'admon)
 (use 'bibref)
 (use 'book-contents)
-(use 'book-index)
+(use 'index)
 (use 'book-title)
 (use 'book-section)
 (use 'book-grammar)
@@ -13,6 +13,8 @@
 (use 'example)
 (use 'inline)
 (use 'para)
+(use 'ref)
+(use 'root)
 
 
 ;; ------------------------------------------------------------------------------
@@ -21,163 +23,3 @@
   (cond
    ((html-backend?) (book-html (current-node)))
    ((tex-backend?) (book-tex (current-node)))))
-
-
-;; ------------------------------------------------------------------------------
-;;  metainfo support
-
-(element author
-  (let ((email (attribute "email" (current-node))))
-    (make paragraph
-      first-line-start-indent: 0pt
-      quadding: "left"
-      (sosofo-append
-       (process-node-list (attribute "name" (current-node)))
-       (if (not (node-list-empty? email))
-           (sosofo-append
-            (literal " <")
-            (process-node-list email)
-            (literal ">"))))
-      )))
-
-
-;; #-----------------------------------------------------------------------------
-
-(element idx
-  (make anchor
-    id: (id (current-node))
-    (empty-sosofo)))
-
-(element vidx
-  (process-node-list (attribute "text" (current-node))))
-
-
-;; #-----------------------------------------------------------------------------
-;; # references
-
-(define (destination-title nd)
-  (let* ((title (attribute "title" nd))
-         (declsum (attribute "declsum" nd)))
-    (if (not (node-list-empty? title))
-        title
-        (if (not (node-list-empty? declsum))
-            declsum
-            (empty-node-list)))))
-
-(define (render-page-ref nd)
-  (sosofo-append
-   (literal "p.") (make-char 'narrow-non-breaking-space)
-   (make page-number
-     refid: (id nd))
-   ))
-
-(define (render-ref-to-node-tex nd)
-  (make link
-    destination: (node-list-address nd)
-    (case (gi nd)
-      ((chapter) (make sequence
-                   (sosofo-append
-                    (literal "Chapter “")
-                    (process-node-list (destination-title nd))
-                    (literal "”, ")
-                    (render-page-ref nd)
-                    )))
-      ((appendix) (make sequence
-                   (sosofo-append
-                    (literal "Appendix “")
-                    (process-node-list (destination-title nd))
-                    (literal "”, ")
-                    (render-page-ref nd)
-                    )))
-      ((introduction) (make sequence
-                   (sosofo-append
-                    (literal "Introduction “")
-                    (process-node-list (destination-title nd))
-                    (literal "”, ")
-                    (render-page-ref nd)
-                    )))
-      ((section subsection) (make sequence
-                              (sosofo-append
-                               (literal "Section “")
-                               (process-node-list (destination-title nd))
-                               (literal "”, ")
-                               (render-page-ref nd)
-                               )))
-      (else (make sequence
-              (sosofo-append
-               (literal " “")
-               (process-node-list (destination-title nd))
-               (literal "”, ")
-               (render-page-ref nd)
-               ))))
-    )
-  )
-
-
-(define (render-ref-to-node-html nd)
-  (make link
-    score-type: 'none
-    color: %html.link-color%
-    destination: (node-list-address nd)
-    (make sequence
-      (sosofo-append
-       (literal "“")
-       (process-node-list (destination-title nd))
-       (literal "”")))
-    ))
-
-
-(define (render-ref-to-node nd)
-  (cond
-   ((html-backend?) (render-ref-to-node-html nd))
-   ((tex-backend?) (render-ref-to-node-tex nd))
-   ))
-
-
-(element ref
-  (let* ((idref (data (attribute "ref" (current-node))))
-         (nl (if (> (string-length idref) 0)
-                 (elements-with-id idref (current-node))
-                 (empty-sosofo))))
-    (node-list-reduce nl
-                      (lambda (sosofo snl)
-                        (sosofo-append sosofo
-                                       (render-ref-to-node snl)))
-                      (empty-sosofo))
-    ))
-
-
-(element result
-  (literal "⇒"))
-
-(element expansion
-  (literal "↦"))
-
-(element equiv
-  (literal "≡"))
-
-(element print
-  (literal "⊣"))
-
-(element dots
-  (literal "…"))
-
-(element ?
-  (enclose "[" (attribute "optionalexpr" (current-node)) "]"))
-
-
-;; #-----------------------------------------------------------------------------
-
-;; (element error
-;;   (make glyph
-;;     name: 'error))
-
-(root
-    (process-children))
-
-;; color all elements red, which are not covered by some other rule
-(default
-    (make sequence
-      ;;color: (color 'rgb '(1.0, 0.0, 0.0))
-      color: (color 'x11 'red)
-      (process-children)))

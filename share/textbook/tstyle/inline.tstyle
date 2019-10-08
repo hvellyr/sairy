@@ -58,3 +58,20 @@
   (format-em (attribute "text" (current-node))))
 
 
+(element result
+  (literal "⇒"))
+
+(element expansion
+  (literal "↦"))
+
+(element equiv
+  (literal "≡"))
+
+(element print
+  (literal "⊣"))
+
+(element dots
+  (literal "…"))
+
+(element ?
+  (enclose "[" (attribute "optionalexpr" (current-node)) "]"))

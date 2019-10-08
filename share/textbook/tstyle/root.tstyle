@@ -1,0 +1,19 @@
+;;; Copyright (c) 2019 Gregor Klinke
+;;; All rights reserved.
+
+
+;; ------------------------------------------------------------------------------
+
+;; (element error
+;;   (make glyph
+;;     name: 'error))
+
+(root
+    (process-children))
+
+;; color all elements red, which are not covered by some other rule
+(default
+    (make sequence
+      ;;color: (color 'rgb '(1.0, 0.0, 0.0))
+      color: (color 'x11 'red)
+      (process-children)))
