@@ -277,7 +277,9 @@ namespace utils {
     using namespace std;
 
     auto u32src = utf8_to_u32string(src);
-    auto u32dst = u32string(u32src.size(), 0);
+    auto u32dst = u32string{};
+
+    u32dst.reserve(u32src.size());
 
     transform(begin(u32src), end(u32src), back_inserter(u32dst),
               [](const char32_t c) { return utils::towlower(c); });
@@ -290,7 +292,9 @@ namespace utils {
     using namespace std;
 
     auto u32src = utf8_to_u32string(src);
-    auto u32dst = u32string(u32src.size(), 0);
+    auto u32dst = u32string{};
+
+    u32dst.reserve(u32src.size());
 
     transform(begin(u32src), end(u32src), back_inserter(u32dst),
               [](const char32_t c) { return utils::towupper(c); });
