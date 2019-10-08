@@ -12,8 +12,8 @@ uppertbl = {}
 for line in sys.stdin:
     m = RE.search(line)
     if m:
-        lowertbl[m.group(2)] = m.group(1)
-        uppertbl[m.group(1)] = m.group(2)
+        lowertbl[m.group(1)] = m.group(2)
+        uppertbl[m.group(2)] = m.group(1)
 
 
 print r'''// DON'T EDIT THIS FILE
@@ -27,7 +27,7 @@ namespace {
 std::unordered_map<char32_t, char32_t> lower_to_upper_tbl = {'''
 
 for k in lowertbl:
-    print '  {{ 0x{}, 0x{} }},'.format(k, lowertbl[k])
+    print '  {{ 0x{}, 0x{} }},'.format(lowertbl[k], k)
 
 print r'''};
 
