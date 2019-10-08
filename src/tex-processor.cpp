@@ -765,9 +765,7 @@ namespace {
       po->render_sosofo(&fo->port("text"));
 
       if (pps) {
-        if (pps->_value > 0)
-          po->stream() << "}";
-        else if (pps->_value < 0)
+        if (pps->_value != 0)
           po->stream() << "}";
       }
 
