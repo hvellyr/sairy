@@ -2,6 +2,7 @@
 // All rights reserved.
 
 #include "scm-context.hpp"
+#include "casefold.hpp"
 #include "colors.hpp"
 #include "estd/memory.hpp"
 #include "fo.hpp"
@@ -1936,6 +1937,97 @@ namespace {
   }
 
 
+  sexp func_towlower(sexp ctx, sexp self, sexp_sint_t n, sexp char_arg) {
+    sexp_gc_var1(result);
+    sexp_assert_type(ctx, sexp_stringp, SEXP_CHAR, char_arg);
+    sexp_gc_preserve1(ctx, result);
+
+    result = sexp_make_character(utils::towlower(sexp_unbox_character(char_arg)));
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_towupper(sexp ctx, sexp self, sexp_sint_t n, sexp char_arg) {
+    sexp_gc_var1(result);
+    sexp_assert_type(ctx, sexp_stringp, SEXP_CHAR, char_arg);
+    sexp_gc_preserve1(ctx, result);
+
+    result = sexp_make_character(utils::towupper(sexp_unbox_character(char_arg)));
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_string_upcase(sexp ctx, sexp self, sexp_sint_t n, sexp str_arg) {
+    sexp_gc_var1(result);
+
+    sexp_assert_type(ctx, sexp_stringp, SEXP_STRING, str_arg);
+
+    sexp_gc_preserve1(ctx, result);
+
+    auto str = utils::to_upper(std::string(sexp_string_data(str_arg)));
+    result = sexp_c_string(ctx, str.c_str(), str.size());
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_string_downcase(sexp ctx, sexp self, sexp_sint_t n, sexp str_arg) {
+    sexp_gc_var1(result);
+
+    sexp_assert_type(ctx, sexp_stringp, SEXP_STRING, str_arg);
+
+    sexp_gc_preserve1(ctx, result);
+
+    auto str = utils::to_lower(std::string(sexp_string_data(str_arg)));
+    result = sexp_c_string(ctx, str.c_str(), str.size());
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_string_prefixq(sexp ctx, sexp self, sexp_sint_t n, sexp str1_arg,
+                           sexp str2_arg) {
+    sexp_gc_var1(result);
+
+    sexp_assert_type(ctx, sexp_stringp, SEXP_STRING, str1_arg);
+    sexp_assert_type(ctx, sexp_stringp, SEXP_STRING, str2_arg);
+
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_FALSE;
+
+    if (strncmp(sexp_string_data(str1_arg), sexp_string_data(str2_arg),
+                sexp_string_size(str1_arg)) == 0)
+      result = SEXP_TRUE;
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  void init_char_functions(sexp ctx) {
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "unichar-toupper", 1, &func_towupper);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "unichar-tolower", 1, &func_towlower);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "string-upcase", 1,
+                        &func_string_upcase);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "string-downcase", 1,
+                        &func_string_downcase);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "string-prefix?", 2,
+                        &func_string_prefixq);
+  }
+
+
   //----------------------------------------------------------------------------
 
   std::vector<fs::path> prepare_tstyle_search_path(const std::string& prefix_path) {
@@ -2025,6 +2117,7 @@ namespace {
     init_screen_set_model_functions(ctx);
     init_make_functions(ctx);
     init_color_functions(ctx);
+    init_char_functions(ctx);
   }
 
 

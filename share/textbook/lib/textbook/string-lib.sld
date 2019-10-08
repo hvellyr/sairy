@@ -6,7 +6,7 @@
   (export string-trim string-trim-right string-trim-both
           string-pad-left
           string-upcase-ascii string-downcase-ascii
-          string-prefix?
+;;          string-prefix?
           string-join string-split string-find
           string-contains?
           )

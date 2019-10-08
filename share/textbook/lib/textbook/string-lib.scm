@@ -97,20 +97,20 @@
 ;; (string-prefix? "" "")        @result #t
 ;; (string-prefix? "b" "abc")    @result #f
 ;; @end example
-(define (string-prefix? str0 str1)
-  (let ((len0 (string-length str0))
-        (len1 (string-length str1)))
-    (cond
-     ((> len0 len1) #f)
-     ((= len0 len1) (string=? str0 str1))
-     (else (let ((len (min len0 len1)))
-             (let loop ((i0 0)
-                        (i1 0))
-               (if (>= i0 len)
-                   #t
-                   (if (char=? (string-ref str0 i0) (string-ref str1 i1))
-                       (loop (+ i0 1) (+ i1))
-                       #f))))))))
+;; (define (string-prefix? str0 str1)
+;;   (let ((len0 (string-length str0))
+;;         (len1 (string-length str1)))
+;;     (cond
+;;      ((> len0 len1) #f)
+;;      ((= len0 len1) (string=? str0 str1))
+;;      (else (let ((len (min len0 len1)))
+;;              (let loop ((i0 0)
+;;                         (i1 0))
+;;                (if (>= i0 len)
+;;                    #t
+;;                    (if (char=? (string-ref str0 i0) (string-ref str1 i1))
+;;                        (loop (+ i0 1) (+ i1))
+;;                        #f))))))))
 
 
 ;; @doc Joins all elements from @prm{strlist} which must be strings into a
