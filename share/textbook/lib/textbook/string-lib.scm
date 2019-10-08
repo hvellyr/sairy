@@ -9,16 +9,20 @@
       (char=? c #\tab)
       (char=? c #\return) ))
 
+(define (string-empty? str)
+  (= (string-length str) 0))
+
+
 ;; @doc Returns the index of the first occurance of a character in @prm{str} for
-;; white @prm{pred} returns #f or #f if no character matches.
+;; while @prm{pred} returns #f or #f if no character matches.
 (define (string-find str pred)
   (let ((slen (string-length str)))
     (let loop ((i 0))
       (if (>= i slen)
           #f
-          (if (pred (string-ref str i))
-              (loop (+ i 1))
-              i)))))
+          (if (not (pred (string-ref str i)))
+              i
+              (loop (+ i 1)))))))
 
 (define (string-find-right str pred)
   (let loop ((i (- (string-length str) 1)))

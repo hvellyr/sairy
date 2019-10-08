@@ -1,0 +1,42 @@
+;;; Copyright (c) 2019 Gregor Klinke
+;;; All rights reserved.
+
+(define %style% 'modern)
+(define %title-style% 'modern)
+
+(define %monospace-font-name% "monospace")
+(define %body-font-name% "roman")
+(define %font-sizes%    #(7pt   8pt   9pt    10pt 12pt 14pt   16pt   20pt))
+(define %line-spacings% #(8.5pt 9.5pt 10.5pt 12pt 14pt 16.5pt 19.5pt 24pt))
+
+(define %example-background-color% #f)
+(define %example-text-color% #f)
+(define %show-boxed-examples% #f)
+(define %example-box-indent% 0pt)
+
+(define %gap-between-paragraphs% 0pt)
+
+(define %page-left-offset% 45mm)
+(define %page-left-offset-neg% -45mm)
+
+(define (enable-modern-style)
+  (set! %style% 'modern)
+  (set! %title-style% 'modern)
+  (set! %monospace-font-name% "monospace")
+  (set! %body-font-name% "roman")
+  (set! %page-left-offset% 45mm)
+  (set! %page-left-offset-neg% -45mm)
+  )
+
+(define (enable-classic-style)
+  (set! %style% 'classic)
+  (set! %title-style% 'classic)
+  (set! %monospace-font-name% "monospace")
+  (set! %body-font-name% "roman")
+  (set! %page-left-offset% 0mm)
+  (set! %page-left-offset-neg% 0mm)
+  )
+
+
+(use 'book-tex-main)
+(use 'vortaro)
