@@ -100,7 +100,7 @@ std::vector<std::string> document_root_elements_gi(eyestep::Grove& grove) {
   auto gis = std::vector<std::string>{};
 
   auto root_children = grove.root_node()->property<Nodes>(CommonProps::k_children);
-  if (root_children.size() == 1) {
+  if (root_children.size() >= 1) {
     auto document = root_children[0];
     auto top_elements = document->property<Nodes>(CommonProps::k_children);
 
