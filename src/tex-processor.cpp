@@ -677,9 +677,9 @@ namespace {
       auto pps = po->property_or_none<fo::LengthSpec>(fo, "position-point-shift");
 
       if (pps) {
-        if (pps->_value > 0)
+        if (pps->_value < 0)
           po->stream() << "\\h{";
-        else if (pps->_value < 0)
+        else if (pps->_value > 0)
           po->stream() << "\\t{";
       }
 
