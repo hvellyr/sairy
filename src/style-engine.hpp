@@ -22,7 +22,8 @@ class StyleEngine
   std::string _backend_id;
 
 public:
-  StyleEngine(const std::string& prefix_path, const std::string& backend_id);
+  StyleEngine(const std::string& prefix_path, const std::string& backend_id,
+              bool verbose);
 
   bool load_style(const filesystem::path& path);
   void define_variables(const std::vector<std::string>& defs);

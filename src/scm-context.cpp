@@ -2201,6 +2201,18 @@ namespace {
     }
 
 
+    void define_variable(const std::string& name, bool value) override {
+      sexp_gc_var1(sym);
+      sexp_gc_preserve1(_ctx, sym);
+
+      sexp_env_define(_ctx, sexp_context_env(_ctx),
+                      sym = sexp_intern(_ctx, name.c_str(), name.size()),
+                      value ? SEXP_TRUE : SEXP_FALSE);
+
+      sexp_gc_release1(_ctx);
+    }
+
+
     bool set_variable(const std::string& name,
                       const estd::optional<std::string>& value) override {
       sexp_gc_var1(res);

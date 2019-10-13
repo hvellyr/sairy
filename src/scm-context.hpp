@@ -25,6 +25,7 @@ public:
   virtual bool load_script(const filesystem::path& script_file) = 0;
 
   virtual void define_variable(const std::string& name, const std::string& value) = 0;
+  virtual void define_variable(const std::string& name, bool value) = 0;
   virtual bool set_variable(const std::string& name,
                             const estd::optional<std::string>& value) = 0;
 

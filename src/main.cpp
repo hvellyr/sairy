@@ -253,7 +253,7 @@ int main(int argc, char** argv) {
         processor->set_output_file(
           deduce_output_file(outf, sources, processor->default_output_extension()));
 
-        auto engine = eyestep::StyleEngine(prefix_path, backend);
+        auto engine = eyestep::StyleEngine(prefix_path, backend, vm.count("verbose") > 0);
         if (engine.load_style(eff_templ_path)) {
           if (vm.count("define")) {
             engine.define_variables(vm["define"].as<std::vector<std::string>>());
