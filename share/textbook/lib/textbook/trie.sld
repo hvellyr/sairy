@@ -8,7 +8,7 @@
           trie?
           trie-empty?
           trie-insert
-          trie-ref trie-contains
+          trie-ref trie-contains trie-prefix?
           trie-fold trie-keys trie-values
 
           trie-empty-value?

@@ -2,7 +2,7 @@
 ;; Copyright (c) 2019 by Gregor Klinke
 ;; All rights reserved.
 
-(import (srfi 9))
+(import (srfi 9)) ;; define record types
 (import (srfi 69))
 
 ;;; private
@@ -76,6 +76,13 @@
         (trie-node-value nd))))
 
 
+(define (trie-prefix? c key)
+  (let ((nd (trie-find-node c key (lambda (cur-nd cur-char) #f))))
+    (if (eqv? nd 'not-found)
+        #f
+        (> (hash-table-size (trie-node-children nd)) 0))))
+
+
 ;;; @doc Indicates whether @prm{key} is contained in @prm{c}.  @prm{key} is not
 ;;; contained if is only a prefix to another key.
 (define (trie-contains c key)
@@ -146,19 +153,3 @@
 ;;; @doc Indicates whether the trie @prm{t} is empty.
 (define (trie-empty? t)
   (= (hash-table-size (trie-node-children (trie-root t))) 0))
-
-
-;; ;;;----------------------------------------------------------------------------------------
-
-;; (define t (make-trie))
-
-;; (trie-insert t "abc" 42)
-;; (trie-insert t "abx" 53)
-;; (trie-insert t "abcdef" 127)
-
-
-;; (display (trie-fold t "a"
-;;                     (lambda (key val obj)
-;;                       (display key) (display " -> ") (display val) (newline)
-;;                       (append obj (list key)))
-;;                     (list))) (newline)
