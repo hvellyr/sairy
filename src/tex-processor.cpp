@@ -135,7 +135,39 @@ namespace {
                             tex_detail::TexStyleContext& ctx) {
     auto str32 = utils::utf8_to_u32string(str);
 
-    for (const auto c : str32) {
+    size_t cidx = 0;
+    while (cidx < str32.size()) {
+      size_t next_idx = cidx + 1;
+      std::stringstream post_op;
+
+      while (next_idx < str32.size() && str32[next_idx] >= 0x0303 &&
+             str32[next_idx] <= 0x036f) {
+        switch (str32[next_idx]) {
+        case 0x0300:
+          os << "\\`";
+          break;
+        case 0x0301:
+          os << "\\'";
+          break;
+        case 0x0302:
+          os << "\\^";
+          break;
+        case 0x0303:
+          os << "\\~{";
+          post_op << "}";
+          break;
+        case 0x0308:
+          os << "\\\"";
+          break;
+        case 0x0309: // ring above
+          os << "\\r{";
+          post_op << "}";
+          break;
+        }
+        ++next_idx;
+      }
+
+      auto c = str32[cidx];
       switch (c) {
       case '\\':
         os << "\\textbackslash{}";
@@ -295,6 +327,10 @@ namespace {
       default:
         os << utils::u32string_to_utf8(std::u32string() + c);
       }
+
+      os << post_op.str();
+
+      cidx = next_idx;
     }
   }
 
