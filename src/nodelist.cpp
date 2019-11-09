@@ -35,6 +35,10 @@ namespace detail {
       : _nodes(nodes)
       , _start(start) {}
 
+    const char* id() const override {
+      return "nodes";
+    }
+
     std::unique_ptr<INodeListStrategy> clone() const override {
       return estd::make_unique<NodesNodeListStrategy>(_nodes, _start);
     }
@@ -58,6 +62,15 @@ namespace detail {
           std::move(estd::make_unique<NodesNodeListStrategy>(_nodes, _start + 1)));
       }
       return NodeList();
+    }
+
+    bool concat(INodeListStrategy& other) override {
+      if (auto nls = dynamic_cast<NodesNodeListStrategy<T>*>(&other)) {
+        _nodes.insert(_nodes.end(), nls->_nodes.begin() + nls->_start, nls->_nodes.end());
+
+        return true;
+      }
+      return false;
     }
   };
 } // detail ns
@@ -116,14 +129,30 @@ NodeList::NodeList(const Node* nd, Kind kind) {
 }
 
 
-NodeList::NodeList(const std::vector<NodeList>& nl) {
+NodeList::NodeList(std::vector<NodeList> nll) {
   auto result = std::vector<NodeList>{};
-
-  for (const auto& n : nl) {
-    if (!n.empty())
-      result.emplace_back(n.clone());
+  for (auto& nl : nll) {
+    if (!nl.empty()) {
+      if (result.empty()) {
+        result.emplace_back(std::move(nl));
+      }
+      else if (nl._strategy) {
+        if (!result.back()._strategy->concat(*nl._strategy)) {
+          result.emplace_back(std::move(nl));
+        }
+      }
+    }
   }
-  _strategy = estd::make_unique<detail::CompositeNodeListStrategy>(std::move(result), -1);
+
+  if (result.empty()) {
+  }
+  else if (result.size() == 1) {
+    _strategy = std::move(result.front()._strategy);
+  }
+  else {
+    _strategy =
+      estd::make_unique<detail::CompositeNodeListStrategy>(std::move(result), -1);
+  }
 }
 
 

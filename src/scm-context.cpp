@@ -681,7 +681,7 @@ namespace {
           result = make_nodelist(ctx, new NodeList);
         }
         else {
-          result = make_nodelist(ctx, new NodeList(nodes));
+          result = make_nodelist(ctx, new NodeList(std::move(nodes)));
         }
       }
       else {
@@ -880,7 +880,7 @@ namespace {
         }
       }
 
-      result = make_nodelist(ctx, new NodeList(nodelist));
+      result = make_nodelist(ctx, new NodeList(std::move(nodelist)));
     }
     else {
       result = sexp_user_exception(ctx, self, "not a list", args_arg);
@@ -1072,7 +1072,7 @@ namespace {
         auto nl_result = elements_with_id(node->grove(), id);
 
         if (!nl_result.empty()) {
-          result = make_nodelist(ctx, new NodeList(nl_result));
+          result = make_nodelist(ctx, new NodeList(std::move(nl_result)));
         }
         else {
           result = make_nodelist(ctx, new NodeList);
