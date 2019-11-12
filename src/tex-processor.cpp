@@ -131,7 +131,7 @@ namespace {
   }
 
 
-  void escape_str_to_stream(std::ostream& os, const std::string& str,
+  void escape_str_to_stream(TexProcessor* po, std::ostream& os, const std::string& str,
                             tex_detail::TexStyleContext& ctx) {
     auto str32 = utils::utf8_to_u32string(str);
 
@@ -204,6 +204,9 @@ namespace {
         break;
       case '~':
         os << "\\textasciitilde{}";
+        break;
+      case 0x2e1b:
+        os << "\\r{\\textasciitilde{}}";
         break;
       case '|':
         os << "{\\ttfamily|}";
@@ -288,10 +291,318 @@ namespace {
       case 0x27e9:
         os << "$\\rangle{}$";
         break;
-      // case 0x2772:
-      //   break;
-      // case 0x2773:
-      //   break;
+        // case 0x2772:
+        //   break;
+        // case 0x2773:
+        //   break;
+
+      case 0x0127:
+        os << "\\textipa{\\textcrh}";
+        po->_need_tipa = true;
+        break;
+      case 0x014b:
+        os << "\\textipa{N}";
+        po->_need_tipa = true;
+        break;
+      case 0x0188:
+        os << "\\textipa{\\texthtc}";
+        po->_need_tipa = true;
+        break;
+      case 0x0199:
+        os << "\\textipa{\\texthtk}";
+        po->_need_tipa = true;
+        break;
+      case 0x01a5:
+        os << "\\textipa{\\texthtp}";
+        po->_need_tipa = true;
+        break;
+      case 0x01ad:
+        os << "\\textipa{\\texthtt}";
+        po->_need_tipa = true;
+        break;
+      case 0x0250:
+        os << "\\textipa{5}";
+        po->_need_tipa = true;
+        break;
+      case 0x0251:
+        os << "\\textipa{A}";
+        po->_need_tipa = true;
+        break;
+      case 0x0252:
+        os << "\\textipa{6}";
+        po->_need_tipa = true;
+        break;
+      case 0x0253:
+        os << "\\textipa{\\!b}";
+        po->_need_tipa = true;
+        break;
+      case 0x0254:
+        os << "\\textipa{O}";
+        po->_need_tipa = true;
+        break;
+      case 0x0255:
+        os << "\\textipa{C}";
+        po->_need_tipa = true;
+        break;
+      case 0x0256:
+        os << "\\textipa{\\:d}";
+        po->_need_tipa = true;
+        break;
+      case 0x0257:
+        os << "\\textipa{\\!d}";
+        po->_need_tipa = true;
+        break;
+      case 0x0259:
+        os << "\\textipa{@}";
+        po->_need_tipa = true;
+        break;
+      case 0x025b:
+        os << "\\textipa{E}";
+        po->_need_tipa = true;
+        break;
+      case 0x025c:
+        os << "\\textipa{3}";
+        po->_need_tipa = true;
+        break;
+      case 0x025e:
+        os << "\\textipa{\\textcloserevepsilon}";
+        po->_need_tipa = true;
+        break;
+      case 0x025f:
+        os << "\\textipa{\\textbardotlessj}";
+        po->_need_tipa = true;
+        break;
+      case 0x0260:
+        os << "\\textipa{\\!g}";
+        po->_need_tipa = true;
+        break;
+      case 0x0261:
+        os << "\\textipa{g}";
+        po->_need_tipa = true;
+        break;
+      case 0x0262:
+        os << "\\textipa{\\;G}";
+        po->_need_tipa = true;
+        break;
+      case 0x0263:
+        os << "\\textipa{G}";
+        po->_need_tipa = true;
+        break;
+      case 0x0264:
+        os << "\\textipa{7}";
+        po->_need_tipa = true;
+        break;
+      case 0x0265:
+        os << "\\textipa{\\textlhtlongy}";
+        po->_need_tipa = true;
+        break;
+      case 0x0266:
+        os << "\\textipa{H}";
+        po->_need_tipa = true;
+        break;
+      case 0x0267:
+        os << "\\textipa{\\texththeng}";
+        po->_need_tipa = true;
+        break;
+      case 0x0268:
+        os << "\\textipa{1}";
+        po->_need_tipa = true;
+        break;
+      case 0x026a:
+        os << "\\textipa{I}";
+        po->_need_tipa = true;
+        break;
+      case 0x026b:
+        os << "\\textipa{\\|~l}";
+        po->_need_tipa = true;
+        break;
+      case 0x026c:
+        os << "\\textipa{\\textbeltl}";
+        po->_need_tipa = true;
+        break;
+      case 0x026d:
+        os << "\\textipa{\\:l}";
+        po->_need_tipa = true;
+        break;
+      case 0x026e:
+        os << "\\textipa{\\textlyoghlig}";
+        po->_need_tipa = true;
+        break;
+      case 0x026f:
+        os << "\\textipa{W}";
+        po->_need_tipa = true;
+        break;
+      case 0x0270:
+        os << "\\textipa{\\textturnmrleg}";
+        po->_need_tipa = true;
+        break;
+      case 0x0271:
+        os << "\\textipa{M}";
+        po->_need_tipa = true;
+        break;
+      case 0x0272:
+        os << "\\textipa{\\textltailn}";
+        po->_need_tipa = true;
+        break;
+      case 0x0273:
+        os << "\\textipa{\\:n}";
+        po->_need_tipa = true;
+        break;
+      case 0x0274:
+        os << "\\textipa{\\;N}";
+        po->_need_tipa = true;
+        break;
+      case 0x0275:
+        os << "\\textipa{8}";
+        po->_need_tipa = true;
+        break;
+      case 0x0277:
+        os << "\\textipa{\\textcloseomega}";
+        po->_need_tipa = true;
+        break;
+      case 0x0279:
+        os << "\\textipa{\\*r}";
+        po->_need_tipa = true;
+        break;
+      case 0x027a:
+        os << "\\textipa{\\textturnlonglegr}";
+        po->_need_tipa = true;
+        break;
+      case 0x027b:
+        os << "\\textipa{\\:R}";
+        po->_need_tipa = true;
+        break;
+      case 0x027d:
+        os << "\\textipa{\\:r}";
+        po->_need_tipa = true;
+        break;
+      case 0x027e:
+        os << "\\textipa{R}";
+        po->_need_tipa = true;
+        break;
+      case 0x0280:
+        os << "\\textipa{\\;R}";
+        po->_need_tipa = true;
+        break;
+      case 0x0281:
+        os << "\\textipa{K}";
+        po->_need_tipa = true;
+        break;
+      case 0x0282:
+        os << "\\textipa{\\:s}";
+        po->_need_tipa = true;
+        break;
+      case 0x0283:
+        os << "\\textipa{S}";
+        po->_need_tipa = true;
+        break;
+      case 0x0284:
+        os << "\\textipa{\\texthtbardotlessjvar}";
+        po->_need_tipa = true;
+        break;
+      case 0x0288:
+        os << "\\textipa{\\:t}";
+        po->_need_tipa = true;
+        break;
+      case 0x0289:
+        os << "\\textipa{\\textbaru}";
+        po->_need_tipa = true;
+        break;
+      case 0x028a:
+        os << "\\textipa{U}";
+        po->_need_tipa = true;
+        break;
+      case 0x028b:
+        os << "\\textipa{V}";
+        po->_need_tipa = true;
+        break;
+      case 0x028c:
+        os << "\\textipa{2}";
+        po->_need_tipa = true;
+        break;
+      case 0x028d:
+        os << "\\textipa{\\*w}";
+        po->_need_tipa = true;
+        break;
+      case 0x028e:
+        os << "\\textipa{L}";
+        po->_need_tipa = true;
+        break;
+      case 0x028f:
+        os << "\\textipa{Y}";
+        po->_need_tipa = true;
+        break;
+      case 0x0290:
+        os << "\\textipa{\\:z}";
+        po->_need_tipa = true;
+        break;
+      case 0x0291:
+        os << "\\textipa{\\textctz}";
+        po->_need_tipa = true;
+        break;
+      case 0x0292:
+        os << "\\textipa{Z}";
+        po->_need_tipa = true;
+        break;
+      case 0x0294:
+        os << "\\textipa{P}";
+        po->_need_tipa = true;
+        break;
+      case 0x0295:
+        os << "\\textipa{Q}";
+        po->_need_tipa = true;
+        break;
+      case 0x0299:
+        os << "\\textipa{\\;B}";
+        po->_need_tipa = true;
+        break;
+      case 0x029C:
+        os << "\\textipa{\\;H}";
+        po->_need_tipa = true;
+        break;
+      case 0x029a:
+        os << "\\textipa{\\textcloserevepsilon}";
+        po->_need_tipa = true;
+        break;
+      case 0x029b:
+        os << "\\textipa{\\!G}";
+        po->_need_tipa = true;
+        break;
+      case 0x029d:
+        os << "\\textipa{J}";
+        po->_need_tipa = true;
+        break;
+      case 0x029f:
+        os << "\\textipa{\\;L}";
+        po->_need_tipa = true;
+        break;
+      case 0x02a0:
+        os << "\\textipa{\\texthtq}";
+        po->_need_tipa = true;
+        break;
+      case 0x02a1:
+        os << "\\textipa{\\textbarglotstop}";
+        po->_need_tipa = true;
+        break;
+      case 0x02a2:
+        os << "\\textipa{\\textbarrevglotstop}";
+        po->_need_tipa = true;
+        break;
+      case 0x02d0:
+        os << "\\textipa{:}";
+        po->_need_tipa = true;
+      case 0x02e0:
+        os << "\\textipa{\\textbabygamma}";
+        po->_need_tipa = true;
+        break;
+      case 0x03b2:
+        os << "\\textipa{B}";
+        po->_need_tipa = true;
+        break;
+      case 0x03b8:
+        os << "\\textipa{T}";
+        po->_need_tipa = true;
+        break;
 
       case '\n':
         switch (ctx._wrapstyle) {
@@ -397,6 +708,10 @@ namespace {
         po->stream() << "\\sffamily{}";
       else if (*fn == "roman")
         po->stream() << "\\rmfamily{}";
+      else if (*fn == "ipa") {
+        po->stream() << "\\tipaencoding{}";
+        po->_need_tipa = true;
+      }
     }
   }
 
@@ -444,17 +759,17 @@ namespace {
 
       switch (po->style_ctx()._capsstyle) {
       case tex_detail::k_normal_caps:
-        escape_str_to_stream(po->stream(), str, po->style_ctx());
+        escape_str_to_stream(po, po->stream(), str, po->style_ctx());
         break;
       case tex_detail::k_lower_caps:
-        escape_str_to_stream(po->stream(), utils::to_lower(str), po->style_ctx());
+        escape_str_to_stream(po, po->stream(), utils::to_lower(str), po->style_ctx());
         break;
       case tex_detail::k_upper_caps:
-        escape_str_to_stream(po->stream(), utils::to_upper(str), po->style_ctx());
+        escape_str_to_stream(po, po->stream(), utils::to_upper(str), po->style_ctx());
         break;
       case tex_detail::k_small_caps:
         po->stream() << "{\\sc ";
-        escape_str_to_stream(po->stream(), str, po->style_ctx());
+        escape_str_to_stream(po, po->stream(), str, po->style_ctx());
         po->stream() << "}";
         break;
       default:
@@ -641,7 +956,8 @@ namespace {
                    << std::endl
                    << "\\addtolength{\\hoffset}{-" << dimen2str(pagewidth) << "}"
                    << std::endl
-                   << "\\divide\\hoffset by 2" << std::endl
+                   << "\\divide\\hoffset by 2"
+                   << std::endl
                    // to correct tex's auto hoffset of 1in
                    << "\\addtolength{\\hoffset}{-1in}" << std::endl;
 
@@ -674,7 +990,8 @@ namespace {
                    << std::endl
                    << "\\addtolength{\\voffset}{-" << dimen2str(pageheight) << "}"
                    << std::endl
-                   << "\\divide\\voffset by 2" << std::endl
+                   << "\\divide\\voffset by 2"
+                   << std::endl
                    // to correct tex's auto voffset of 1in
                    << "\\addtolength{\\voffset}{-1in}" << std::endl;
 
@@ -920,7 +1237,7 @@ namespace {
       po->stream() << "\\end{tbmulticols}}" << std::endl;
     }
   };
-} // ns anon
+} // namespace
 
 
 TexProcessor::TexProcessor()
@@ -1028,36 +1345,16 @@ TexProcessor::lookup_fo_processor(const std::string& fo_classname) const {
 
 
 void TexProcessor::before_rendering() {
-  _file = fs::File(_output_file.string());
+  _output_file_tmp = _output_file;
+  _output_file_tmp += ".tmp";
+  _file = fs::File(_output_file_tmp.string());
 
   std::error_code ec;
-  _file.open(std::ios_base::out | std::ios_base::binary | std::ios_base::trunc, ec);
-
+  _file.open(std::ios_base::in | std::ios_base::out | std::ios_base::binary |
+               std::ios_base::trunc,
+             ec);
   if (ec) {
-    std::cerr << "Opening file '" << _output_file << "' failed" << std::endl;
-  }
-
-  //_stream << "\\usepackage{listings}" << std::endl
-  _file.stream() << "\\documentclass{textbook}" << std::endl
-                 << "\\usepackage[utf8]{inputenc}" << std::endl
-                 << "\\usepackage{makeidx}" << std::endl
-                 << "\\makeindex" << std::endl;
-  switch (_cropmarks) {
-  case tex_detail::kCamera:
-    _file.stream() << "\\newcommand*\\infofont[1]{{\\textsf{\\fontsize{7}{8.5}"
-                      "\\selectfont#1}}}"
-                   << std::endl
-                   << "\\usepackage[cam," << crop_paper_size(_paper_dimen)
-                   << ",horigin=0in,vorigin=0in,font=infofont]{crop}" << std::endl;
-    break;
-  case tex_detail::kFrame:
-    _file.stream() << "\\usepackage[frame," << crop_paper_size(_paper_dimen)
-                   << ",horigin=0in,vorigin=0in,noinfo]{crop}" << std::endl;
-    break;
-  case tex_detail::kOff:
-    _file.stream() << "\\usepackage[off," << crop_paper_size(_paper_dimen)
-                   << ",horigin=0in,vorigin=0in,noinfo]{crop}" << std::endl;
-    break;
+    std::cerr << "Opening file '" << _output_file_tmp << "' failed" << std::endl;
   }
 
   _file.stream() << "\\begin{document}" << std::endl;
@@ -1066,6 +1363,49 @@ void TexProcessor::before_rendering() {
 
 void TexProcessor::after_rendering() {
   stream() << "\\end{document}" << std::endl;
+  stream().seekg(0);
+
+  // now write the final file; we have now all info which features we've to use.
+  std::error_code ec;
+  filesystem::with_stream_for_writing(
+    _output_file, ec,
+    [&](std::ostream& os) {
+      //_stream << "\\usepackage{listings}" << std::endl
+      os << "\\documentclass{textbook}" << std::endl
+         << "\\usepackage[utf8]{inputenc}" << std::endl;
+      switch (_cropmarks) {
+      case tex_detail::kCamera:
+        os << "\\newcommand*\\infofont[1]{{\\textsf{\\fontsize{7}{8.5}"
+              "\\selectfont#1}}}"
+           << std::endl
+           << "\\usepackage[cam," << crop_paper_size(_paper_dimen)
+           << ",horigin=0in,vorigin=0in,font=infofont]{crop}" << std::endl;
+        break;
+      case tex_detail::kFrame:
+        os << "\\usepackage[frame," << crop_paper_size(_paper_dimen)
+           << ",horigin=0in,vorigin=0in,noinfo]{crop}" << std::endl;
+        break;
+      case tex_detail::kOff:
+        os << "\\usepackage[off," << crop_paper_size(_paper_dimen)
+           << ",horigin=0in,vorigin=0in,noinfo]{crop}" << std::endl;
+        break;
+      }
+
+      if (_need_tipa) {
+        os << "\\usepackage{tipa}" << std::endl;
+      }
+
+      os << stream().rdbuf();
+    },
+    std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+  if (ec) {
+    std::cerr << "Opening file '" << _output_file << "' failed" << std::endl;
+  }
+
+  _file.close(ec);
+  if (ec) {
+    std::cerr << "Closing file '" << _output_file << "' failed" << std::endl;
+  }
 }
 
 
@@ -1112,4 +1452,4 @@ void TexProcessor::push_delayed_anchors() {
   _delayed_anchors.clear();
 }
 
-} // ns eyestep
+} // namespace eyestep

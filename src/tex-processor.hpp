@@ -92,6 +92,7 @@ class TexProcessor : public AbstractProcessor<TexProcessor>
   bool _verbose;
   filesystem::File _file;
   tex_detail::TexStyleContext _style_ctx;
+  filesystem::path _output_file_tmp;
 
 public:
   TexProcessor();
@@ -138,6 +139,7 @@ public:
   // width, height, cropmarks classifier
   std::tuple<fo::LengthSpec, fo::LengthSpec, std::string> _paper_dimen;
   std::vector<std::string> _delayed_anchors;
+  bool _need_tipa = false;
 };
 
 } // ns eyestep
