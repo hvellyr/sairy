@@ -117,12 +117,15 @@ public:
   void finalize_breaks();
   void request_page_break(tex_detail::BreakKind breakKind);
 
+  void push_delayed_anchors();
+
   fo::LengthSpec _current_start_margin;
   int _first_page = true;
   tex_detail::BreakKind _break_pending = tex_detail::kNoBreak;
   tex_detail::CropMarksKind _cropmarks;
   // width, height, cropmarks classifier
   std::tuple<fo::LengthSpec, fo::LengthSpec, std::string> _paper_dimen;
+  std::vector<std::string> _delayed_anchors;
 };
 
 } // ns eyestep

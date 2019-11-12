@@ -694,7 +694,8 @@ namespace {
         else
           set_attr(attrs, "border-color", "black");
 
-        if (auto thickness = processor->property_or_none<fo::LengthSpec>(fo, "line-thickness"))
+        if (auto thickness =
+              processor->property_or_none<fo::LengthSpec>(fo, "line-thickness"))
           set_attr(attrs, "border", length_spec2css(*thickness) + " solid");
         else
           set_attr(attrs, "border", "1pt solid");
@@ -706,7 +707,8 @@ namespace {
       }
 
       if (processor->property(fo, "box-corner-rounded?", false)) {
-        if (auto radius = processor->property_or_none<fo::LengthSpec>(fo, "box-corner-radius"))
+        if (auto radius =
+              processor->property_or_none<fo::LengthSpec>(fo, "box-corner-radius"))
           set_attr(attrs, "border-radius", radius);
         else
           set_attr(attrs, "border-radius", "3pt");
@@ -1224,19 +1226,83 @@ namespace {
   };
 
 
+  class HtmlScoreFoProcessor : public IFoProcessor<HtmlProcessor>
+  {
+  public:
+    void render(HtmlProcessor* po, const IFormattingObject* fo) const override {
+      auto attrs = detail::StyleAttrs{};
+
+      const auto color = po->property_or_none<fo::Color>(fo, "color");
+      const auto thickness = po->property_or_none<fo::LengthSpec>(fo, "line-thickness");
+      const auto type = po->property(fo, "score-type", std::string("none"));
+
+      auto border_val = std::string{};
+      if (thickness)
+        border_val += length_spec2css(*thickness);
+      else
+        border_val += "1px";
+
+      if (color)
+        border_val += " solid " + enc_color(*color);
+      else
+        border_val += " solid black";
+
+      if (type == "above") {
+        set_attr(attrs, "text-decoration", "none");
+        set_attr(attrs, "border-top", border_val);
+      }
+      else if (type == "below") {
+        set_attr(attrs, "text-decoration", "none");
+        set_attr(attrs, "border-bottom", border_val);
+      }
+      else if (type == "through") {
+        // there's no way to control the thickness of line-through
+        set_attr(attrs, "text-decoration", "line-through");
+      }
+
+      auto& ctx = po->ctx();
+      auto with_tag = html::Tag{ctx.port(), "span", tag_style_attrs(po, "span", attrs)};
+      auto style_scope = StyleScope{ctx, attrs};
+
+      po->render_sosofo(&fo->port(k_text));
+    }
+  };
+
+
   class HtmlLinkFoProcessor : public IFoProcessor<HtmlProcessor>
   {
   public:
-    void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
-      if (auto adr = processor->property_or_none<fo::Address>(fo, "destination")) {
-        const auto href = adr->_local
-          ? std::string("#") + adr->_destination
-          : adr->_destination;
+    void render(HtmlProcessor* po, const IFormattingObject* fo) const override {
+      if (auto adr = po->property_or_none<fo::Address>(fo, "destination")) {
+        auto sattrs = detail::StyleAttrs{};
 
-        auto with_tag =
-          html::Tag{processor->ctx().port(), "a", {{"href", href}}};
+        if (auto color = po->property_or_none<fo::Color>(fo, "color"))
+          set_attr(sattrs, "color", enc_color(*color));
+        else
+          set_attr(sattrs, "color", "black");
 
-        processor->render_sosofo(&fo->port(k_text));
+        const auto type = po->property(fo, "score-type", std::string("none"));
+
+        if (type == "above")
+          set_attr(sattrs, "text-decoration", "overline");
+        else if (type == "below")
+          set_attr(sattrs, "text-decoration", "underline");
+        else if (type == "through")
+          set_attr(sattrs, "text-decoration", "line-through");
+        else
+          set_attr(sattrs, "text-decoration", "none");
+
+        const auto href =
+          adr->_local ? std::string("#") + adr->_destination : adr->_destination;
+
+        auto attrs = tag_style_attrs(po, "a", sattrs);
+        attrs.emplace_back(html::Attr{"href", href});
+
+        auto& ctx = po->ctx();
+        auto with_tag = html::Tag{ctx.port(), "a", attrs};
+        auto style_scope = StyleScope{ctx, sattrs};
+
+        po->render_sosofo(&fo->port(k_text));
       }
     }
   };
@@ -1321,6 +1387,7 @@ HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const {
     {"#anchor", std::make_shared<HtmlAnchorFoProcessor>()},
     {"#page-number", std::make_shared<HtmlPageNumberFoProcessor>()},
     {"#link", std::make_shared<HtmlLinkFoProcessor>()},
+    {"#score", std::make_shared<HtmlScoreFoProcessor>()},
     {"#simple-column-set-sequence",
      std::make_shared<HtmlSimpleColumnSetSequenceProcessor>()},
   };

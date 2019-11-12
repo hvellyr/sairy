@@ -71,6 +71,7 @@
 (define (symbol-to-char name)
   (case name
     ((nbsp non-breaking-space) #\x00a0)
+    ((narrow-non-breaking-space) #\x202f)
     ((bullet) #\x2022)
     ((triangle right-point-triangle) #\x2023)
     ((drop-shadowed-white-square) #\x274f)
@@ -83,6 +84,8 @@
     ((white-right-pointing-index) #\x261e)
     ((white-circle) #\x26ac)
     ((space) #\space)
+    ((endash) #\x2013)
+    ((emdash) #\x2014)
     (else #\space)))
 
 (define-syntax make-char

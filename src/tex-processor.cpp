@@ -189,6 +189,9 @@ namespace {
       case 0x2013:
         os << "--";
         break;
+      case 0x2014:
+        os << "---";
+        break;
       case 0x201c:
         os << "\\ldqo{}";
         break;
@@ -203,6 +206,9 @@ namespace {
         break;
       case 0x2026:
         os << "\\hellip{}";
+        break;
+      case 0x202f:
+        os << "\\thsp{}";
         break;
 
       case 0x21d2:
@@ -426,6 +432,7 @@ namespace {
       else if (quadding == "center")
         po->stream() << "\\quadcenter{}";
 
+      po->push_delayed_anchors();
       po->render_sosofo(&fo->port("text"));
 
       if (wstreatment == "preserve") {
@@ -476,6 +483,7 @@ namespace {
         po->render_sosofo(&text_port);
       }
       else {
+        po->push_delayed_anchors();
         po->finalize_breaks();
       }
 
@@ -760,6 +768,19 @@ namespace {
   };
 
 
+  class TexLinkFoProcessor : public IFoProcessor<TexProcessor>
+  {
+  public:
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
+      // Simple passthru for now
+      auto& text_port = fo->port("text");
+      if (text_port.length() > 0) {
+        po->render_sosofo(&text_port);
+      }
+    }
+  };
+
+
   class TexAnchorFoProcessor : public IFoProcessor<TexProcessor>
   {
   public:
@@ -767,8 +788,10 @@ namespace {
       po->finalize_breaks();
 
       if (auto id = po->property_or_none<std::string>(fo, "id")) {
-        if (!id->empty())
-          po->stream() << "\\label{" << *id << "}";
+        if (!id->empty()) {
+          po->_delayed_anchors.emplace_back(
+            std::string("\\label{") + *id + "}");
+        }
       }
     }
   };
@@ -890,6 +913,7 @@ TexProcessor::lookup_fo_processor(const std::string& fo_classname) const {
     {"#line-field", std::make_shared<TexLineFieldFoProcessor>()},
     {"#page-number", std::make_shared<TexPageNumberFoProcessor>()},
     {"#anchor", std::make_shared<TexAnchorFoProcessor>()},
+    {"#link", std::make_shared<TexLinkFoProcessor>()},
     {"#simple-column-set-sequence",
      std::make_shared<TexSimpleColumnSetSequenceProcessor>()},
   };
@@ -975,6 +999,15 @@ fo::LengthSpec TexProcessor::paper_width() const {
 
 fo::LengthSpec TexProcessor::paper_height() const {
   return std::get<1>(_paper_dimen);
+}
+
+
+void TexProcessor::push_delayed_anchors()
+{
+  for (const auto& s : _delayed_anchors) {
+    stream() << s;
+  }
+  _delayed_anchors.clear();
 }
 
 } // ns eyestep
