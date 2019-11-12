@@ -176,6 +176,24 @@ namespace {
       case '|':
         os << "{\\ttfamily|}";
         break;
+      case 0x1e60:
+        os << "\\.{S}";
+        break;
+      case 0x1e61:
+        os << "\\.{s}";
+        break;
+      case 0x1e62:
+        os << "\\d{S}";
+        break;
+      case 0x1e63:
+        os << "\\d{s}";
+        break;
+      case 0x022e:
+        os << "\\.{O}";
+        break;
+      case 0x022f:
+        os << "\\.{o}";
+        break;
       case 0x3008:
         os << "$\\langle$";
         break;
@@ -211,6 +229,12 @@ namespace {
         os << "\\thsp{}";
         break;
 
+      case 0x2190:
+        os << "$\\leftarrow{}$";
+        break;
+      case 0x2192:
+        os << "$\\rightarrow{}$";
+        break;
       case 0x21d2:
         os << "$\\Rightarrow{}$";
         break;
@@ -223,6 +247,19 @@ namespace {
       case 0x22a3:
         os << "$\\dashv{}$";
         break;
+      case 0x1ebd:
+        os << "\\~e";
+        break;
+      case 0x27e8:
+        os << "$\\langle{}$";
+        break;
+      case 0x27e9:
+        os << "$\\rangle{}$";
+        break;
+      // case 0x2772:
+      //   break;
+      // case 0x2773:
+      //   break;
 
       case '\n':
         switch (ctx._wrapstyle) {
