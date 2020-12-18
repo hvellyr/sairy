@@ -10,7 +10,7 @@
 @tag{item}       {%text?}                     {EMPTY}{P}
 @tag{itemx}      {%text?}                     {EMPTY}
 
-@tag{example}    {}                           {#TEXT | ANY}
+@tag{example}    {%title?}                    {#TEXT | ANY}
 @tag{verbatim}   {}                           {#TEXT}
 
 @tag{admon}      {%title}                     {#TEXT | ANY}
