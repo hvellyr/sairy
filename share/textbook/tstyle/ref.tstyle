@@ -105,3 +105,22 @@
                                        (render-ref-to-node snl)))
                       (empty-sosofo))
     ))
+
+(element url
+  (let* ((url (attribute "url" (current-node)))
+         (alt (attribute "alt" (current-node))))
+    (cond
+     ((html-backend?) (make link
+                        score-type: 'none
+                        color: %html.link-color%
+                        destination: (external-address (data url))
+                        (if (node-list-empty? alt)
+                            (process-node-list url)
+                            (process-node-list alt))))
+     ((tex-backend?) (if (not (node-list-empty? alt))
+                         (sosofo-append
+                          (literal "“")
+                          (process-node-list alt)
+                          (literal "”"))
+                         (format-em url)))
+     )))
