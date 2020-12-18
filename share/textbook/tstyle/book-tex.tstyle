@@ -16,6 +16,9 @@
 
 (define %gap-between-paragraphs% 0pt)
 
+(define %quote-left-indent% 10pt)
+(define %quote-right-indent% 10pt)
+
 (define %page-left-offset% 45mm)
 (define %page-left-offset-neg% -45mm)
 
