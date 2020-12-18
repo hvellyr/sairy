@@ -53,9 +53,21 @@ namespace tex_detail {
 
   struct TexStyleContext
   {
-    CapsStyle _capsstyle;
-    WrapStyle _wrapstyle;
-    WsTreatment _wstreatment;
+    TexStyleContext() = default;
+    TexStyleContext(CapsStyle capsstyle, WrapStyle wrapstyle, WsTreatment wstreatment)
+      : _capsstyle(capsstyle)
+      , _wrapstyle(wrapstyle)
+      , _wstreatment(wstreatment) {}
+    TexStyleContext& operator=(const TexStyleContext& rhs) {
+      _capsstyle = rhs._capsstyle;
+      _wrapstyle = rhs._wrapstyle;
+      _wstreatment = rhs._wstreatment;
+      return *this;
+    }
+
+    CapsStyle _capsstyle = k_normal_caps;
+    WrapStyle _wrapstyle = k_normal_wrap;
+    WsTreatment _wstreatment = k_preserve_ws;
   };
 
   enum BreakKind
@@ -80,6 +92,7 @@ class TexProcessor : public AbstractProcessor<TexProcessor>
   bool _verbose;
   filesystem::File _file;
   tex_detail::TexStyleContext _style_ctx;
+  filesystem::path _output_file_tmp;
 
 public:
   TexProcessor();
@@ -126,6 +139,7 @@ public:
   // width, height, cropmarks classifier
   std::tuple<fo::LengthSpec, fo::LengthSpec, std::string> _paper_dimen;
   std::vector<std::string> _delayed_anchors;
+  bool _need_tipa = false;
 };
 
 } // ns eyestep

@@ -38,35 +38,45 @@
       (process-children)))
   )
 
+(define (decl-space-before classic-val modern-val)
+  (case %style%
+    ((classic) (display-space classic-val conditional?: #t))
+    ((modern) (display-space modern-val conditional?: #t))
+    (else (display-space modern-val conditional?: #t))))
+
+(define (decl-space-after classic-val modern-val)
+  (case %style%
+    ((classic) (display-space classic-val conditional?: #t))
+    ((modern) (display-space modern-val conditional?: #t))
+    (else (display-space modern-val conditional?: #t))))
+
 (define (make-def-sosofo nd head-sosofo kind)
   (sosofo-append
    (make anchor
      id: (id nd))
    (make paragraph
-     space-before: (display-space 7pt conditional?: #t)
-     first-line-start-indent: -45mm
+     space-before: (decl-space-before 7pt 7pt)
+     space-after: (decl-space-after 7pt 0pt)
+     first-line-start-indent: %page-left-offset-neg%
      start-indent: 0mm
      keep-with-next?: #t
      (sosofo-append
-      (make line-field
-        field-width: 41mm
-        field-align: 'right
-        font-posture: 'italic
-        (if (sosofo? kind) kind (process-node-list kind)))
-      (make line-field
-        field-width: 4mm
-        (empty-sosofo))
-      (with-mode decl-mode
-        (make line-field
-          font-name: %monospace-font-name%
-          font-weight: 'bold
-          (process-node-list head-sosofo)) )))
+      (format-title (make sequence
+                      font-posture: 'italic
+                      kind)
+                    (literal " ")
+                    (with-mode decl-mode
+                      (make line-field
+                        font-name: %monospace-font-name%
+                        font-weight: 'bold
+                        (process-node-list head-sosofo)) ))))
    (make display-group
-     space-after: 7pt
+     space-after: (decl-space-after 14pt 7pt)
      (process-node-list (children nd)))))
 
 (element deffn
-  (make-def-sosofo (current-node) (attribute "declln" (current-node))
+  (make-def-sosofo (current-node)
+                   (attribute "declln" (current-node))
                    (literal "Function")))
 
 (element decl
@@ -79,4 +89,4 @@
 (element def
   (make-def-sosofo (current-node)
                    (attribute "declsum" (current-node))
-                   (attribute "kind" (current-node))))
+                   (process-node-list (attribute "kind" (current-node)))))

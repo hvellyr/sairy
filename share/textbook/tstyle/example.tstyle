@@ -41,26 +41,41 @@
   )
 
 (element example
-  (make display-group
-    space-before: (display-space 7pt conditional?: #t)
-    space-after:  (display-space 7pt conditional?: #t)
+  (let* ((title (attribute "title" (current-node))))
+    (make display-group
+      space-before: (display-space 7pt conditional?: #t)
+      space-after:  (display-space 7pt conditional?: #t)
 
-    (if %show-boxed-examples%
-        (make box
-          display?: #t
-          box-type: 'background
-          background-color: %example-background-color%
-          box-corner-rounded?: #t
-          box-corner-radius: 3pt
+      (sosofo-append
+       (if (not (node-list-empty? title))
+            (make paragraph
+              first-line-start-indent: 0 ;;%page-left-offset-neg%
+              font-posture: 'italic
+              space-after:  (display-space 7pt conditional?: #t)
+              keep-with-next?: #t
 
-          (make display-group
-            space-before: (display-space 7pt conditional?: #f)
-            space-after:  (display-space 7pt conditional?: #f)
-            (with-mode example-mode
-              (process-children))))
-        (with-mode example-mode
-          (process-children))
-        )))
+              (sosofo-append
+               (process-node-list title)
+               (literal ":")))
+            (empty-sosofo))
+       (if %show-boxed-examples%
+           (make box
+             display?: #t
+             box-type: 'background
+             background-color: %example-background-color%
+             box-corner-rounded?: #t
+             box-corner-radius: 3pt
+
+             (make display-group
+               space-before: (display-space 7pt conditional?: #f)
+               space-after:  (display-space 7pt conditional?: #f)
+               (with-mode example-mode
+                 (process-children))))
+           (with-mode example-mode
+             (process-children))
+           )))
+    )
+  )
 
 
 (mode verbatim-mode

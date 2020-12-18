@@ -29,9 +29,7 @@ using json = nlohmann::json;
 
 
 namespace {
-Node* with_parser_scan(Grove& grove,
-                       const std::function<void(textbook::Parser&)>& proc)
-{
+Node* with_parser_scan(Grove& grove, const std::function<void(textbook::Parser&)>& proc) {
   Node* doc_node = grove.make_node(document_class_definition());
 
   std::vector<fs::path> _catalog_path;
@@ -52,8 +50,7 @@ Node* with_parser_scan(Grove& grove,
   return doc_node;
 }
 
-json reparse_node_as_json(Node* nd)
-{
+json reparse_node_as_json(Node* nd) {
   std::stringstream buf;
   serialize(buf, nd, false);
 
@@ -61,15 +58,13 @@ json reparse_node_as_json(Node* nd)
 }
 
 void serialize_node_if_missing(Node* nd, const fs::path& path,
-                               const po::variables_map& vm)
-{
+                               const po::variables_map& vm) {
   if (vm.count("serialize")) {
     serialize(std::cout, nd, true);
   }
 }
 
-bool test_file(const fs::path& path, const po::variables_map& vm)
-{
+bool test_file(const fs::path& path, const po::variables_map& vm) {
   if (path.extension() == ".textbook" && fs::is_regular_file(path)) {
     std::cerr << "Testing input file " << path << " ...";
     std::cerr.flush();
@@ -89,14 +84,12 @@ bool test_file(const fs::path& path, const po::variables_map& vm)
     }
     catch (const eyestep::textbook::ParseException& e) {
       std::cerr << "FAILED" << std::endl
-                << "    parsing of source file failed: " << e.what()
-                << std::endl;
+                << "    parsing of source file failed: " << e.what() << std::endl;
       return false;
     }
     catch (const std::exception& e) {
       std::cerr << "FAILED" << std::endl
-                << "    parsing of source file failed: " << e.what()
-                << std::endl;
+                << "    parsing of source file failed: " << e.what() << std::endl;
       return false;
     }
 
@@ -123,8 +116,7 @@ bool test_file(const fs::path& path, const po::variables_map& vm)
       if (vm.count("verbose")) {
         std::cerr << "EXPECTED:" << std::endl;
         std::cerr << std::setw(4) << expected_root_elt;
-        std::cerr << std::endl
-                  << "ACTUAL:" << std::endl;
+        std::cerr << std::endl << "ACTUAL:" << std::endl;
         std::cerr << std::setw(4) << parsed_json;
         std::cerr << std::endl;
       }
@@ -140,8 +132,7 @@ bool test_file(const fs::path& path, const po::variables_map& vm)
   return true;
 }
 
-int test_in_dir(const fs::path& path, const po::variables_map& vm)
-{
+int test_in_dir(const fs::path& path, const po::variables_map& vm) {
   int result = 0;
 
   std::vector<fs::directory_entry> dirents;
@@ -158,8 +149,7 @@ int test_in_dir(const fs::path& path, const po::variables_map& vm)
   return result;
 }
 
-int run_tests(const std::vector<fs::path>& sources, const po::variables_map& vm)
-{
+int run_tests(const std::vector<fs::path>& sources, const po::variables_map& vm) {
   int result = 0;
 
   for (const auto& path : sources) {
@@ -182,8 +172,7 @@ int run_tests(const std::vector<fs::path>& sources, const po::variables_map& vm)
 } // anon ns
 
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   po::options_description all_options("Options");
 
   // clang-format off

@@ -40,10 +40,12 @@ namespace {
 } // ns anon
 
 
-StyleEngine::StyleEngine(const std::string& prefix_path, const std::string& backend_id)
+StyleEngine::StyleEngine(const std::string& prefix_path, const std::string& backend_id,
+                         bool verbose)
   : _backend_id(backend_id) {
   _ctx = setup_scheme_context(prefix_path);
   _ctx->define_variable("%textbook-prefix-paths%", prefix_path);
+  _ctx->define_variable("%verbose%?", verbose);
 }
 
 
@@ -75,9 +77,7 @@ void StyleEngine::define_variables(const std::vector<std::string>& defs) {
   for (const auto& def : defs) {
     const auto parts = utils::split(def, "=");
 
-    auto value = parts.size() == 2
-      ? parts[1]
-      : estd::optional<std::string>{};
+    auto value = parts.size() == 2 ? parts[1] : estd::optional<std::string>{};
 
     if (!_ctx->set_variable(parts[0], value)) {
       std::cerr << "Failed to set variable " << parts[0] << std::endl;

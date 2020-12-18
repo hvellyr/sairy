@@ -18,10 +18,16 @@
 
 (define %gap-between-paragraphs% (display-space 7pt conditional?: #t))
 
+(define %quote-left-indent% 10pt)
+(define %quote-right-indent% 10pt)
+
 (define %html.section-numbers% #t)
 (define %html.link-color% (color 'rgb '(0.1333 0.3686 0.0267)))
 (define %html.link-color-active% (color 'rgb '(0.1333 0.3686 0.0267)))
 (define %html.link-color-visited% (color 'rgb '(0.1333 0.3686 0.0267)))
+
+(define %page-left-offset% 45mm)
+(define %page-left-offset-neg% -45mm)
 
 
 (define (enable-modern-style)
@@ -29,6 +35,8 @@
   (set! %title-style% 'modern)
   (set! %monospace-font-name% "monospace")
   (set! %body-font-name% "roman")
+  (set! %page-left-offset% 45mm)
+  (set! %page-left-offset-neg% -45mm)
   )
 
 (define (enable-classic-style)
@@ -36,6 +44,8 @@
   (set! %title-style% 'classic)
   (set! %monospace-font-name% "monospace")
   (set! %body-font-name% "roman")
+  (set! %page-left-offset% 0mm)
+  (set! %page-left-offset-neg% 0mm)
   )
 
 (define (enable-website)
@@ -48,6 +58,8 @@
   (set! %example-background-color% (color 'rgb '(0.3254 0.4078 0.4705)))
   (set! %example-text-color% (color 'rgb '(0.9372 0.9215 0.9137)))
   (set! %html.section-numbers% #f)
+  (set! %page-left-offset% 45mm)
+  (set! %page-left-offset-neg% -45mm)
   )
 
 

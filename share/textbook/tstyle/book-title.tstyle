@@ -1,16 +1,16 @@
 ;;; Copyright (c) 2017 Gregor Klinke
 ;;; All rights reserved.
 
-(element (book info)
+(element info
   (empty-sosofo))
 
-(element (book titlepage)
+(element titlepage
   (empty-sosofo))
 
-(element (book titlepage title)
+(element (titlepage title)
   (process-children))
 
-(element (book info author)
+(element (info author)
   (process-node-list (attribute "name" (current-node))))
 
 (define (format-book-front-matter nd)
@@ -161,7 +161,7 @@
          (authors-sosofo (sosofo-append
                           (make paragraph
                             first-line-start-indent: 0pt
-                            start-indent: 45mm
+                            start-indent: %page-left-offset%
                             quadding: 'left
                             font-size: 12pt
                             line-spacing: 14.4pt
@@ -170,7 +170,7 @@
                           (make paragraph
                             space-before: 4pt
                             first-line-start-indent: 0pt
-                            start-indent: 45mm
+                            start-indent: %page-left-offset%
                             quadding: 'left
                             font-size: 18pt
                             line-spacing: 21.6pt
@@ -201,7 +201,7 @@
                                                sosofo
                                                (make paragraph
                                                  first-line-start-indent: 0pt
-                                                 start-indent: 45mm
+                                                 start-indent: %page-left-offset%
                                                  quadding: 'left
                                                  font-size:  24pt
                                                  line-spacing: 28pt
@@ -213,7 +213,7 @@
                               (empty-sosofo)
                               (make paragraph
                                 first-line-start-indent: 0pt
-                                start-indent: 45mm
+                                start-indent: %page-left-offset%
                                 quadding: 'left
                                 font-size: 18pt
                                 line-spacing: 21.6pt
@@ -223,7 +223,7 @@
                               (empty-sosofo)
                               (make paragraph
                                 first-line-start-indent: 0pt
-                                start-indent: 45mm
+                                start-indent: %page-left-offset%
                                 quadding: 'left
                                 font-size: 18pt
                                 line-spacing: 21.6pt

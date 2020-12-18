@@ -9,16 +9,20 @@
       (char=? c #\tab)
       (char=? c #\return) ))
 
+(define (string-empty? str)
+  (= (string-length str) 0))
+
+
 ;; @doc Returns the index of the first occurance of a character in @prm{str} for
-;; white @prm{pred} returns #f or #f if no character matches.
+;; while @prm{pred} returns #f or #f if no character matches.
 (define (string-find str pred)
   (let ((slen (string-length str)))
     (let loop ((i 0))
       (if (>= i slen)
           #f
-          (if (pred (string-ref str i))
-              (loop (+ i 1))
-              i)))))
+          (if (not (pred (string-ref str i)))
+              i
+              (loop (+ i 1)))))))
 
 (define (string-find-right str pred)
   (let loop ((i (- (string-length str) 1)))
@@ -97,20 +101,20 @@
 ;; (string-prefix? "" "")        @result #t
 ;; (string-prefix? "b" "abc")    @result #f
 ;; @end example
-(define (string-prefix? str0 str1)
-  (let ((len0 (string-length str0))
-        (len1 (string-length str1)))
-    (cond
-     ((> len0 len1) #f)
-     ((= len0 len1) (string=? str0 str1))
-     (else (let ((len (min len0 len1)))
-             (let loop ((i0 0)
-                        (i1 0))
-               (if (>= i0 len)
-                   #t
-                   (if (char=? (string-ref str0 i0) (string-ref str1 i1))
-                       (loop (+ i0 1) (+ i1))
-                       #f))))))))
+;; (define (string-prefix? str0 str1)
+;;   (let ((len0 (string-length str0))
+;;         (len1 (string-length str1)))
+;;     (cond
+;;      ((> len0 len1) #f)
+;;      ((= len0 len1) (string=? str0 str1))
+;;      (else (let ((len (min len0 len1)))
+;;              (let loop ((i0 0)
+;;                         (i1 0))
+;;                (if (>= i0 len)
+;;                    #t
+;;                    (if (char=? (string-ref str0 i0) (string-ref str1 i1))
+;;                        (loop (+ i0 1) (+ i1))
+;;                        #f))))))))
 
 
 ;; @doc Joins all elements from @prm{strlist} which must be strings into a

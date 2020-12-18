@@ -10,8 +10,7 @@
 #include <string>
 
 
-TEST_CASE("Empty nodelist", "[nodelist]")
-{
+TEST_CASE("Empty nodelist", "[nodelist]") {
   eyestep::NodeList nl;
 
   REQUIRE(nl.length() == 0);
@@ -19,8 +18,7 @@ TEST_CASE("Empty nodelist", "[nodelist]")
 }
 
 
-TEST_CASE("NodeList of all children", "[nodelist]")
-{
+TEST_CASE("NodeList of all children", "[nodelist]") {
   eyestep::Grove grove;
   auto* nd = grove.make_elt_node("foo");
 
@@ -47,8 +45,7 @@ TEST_CASE("NodeList of all children", "[nodelist]")
   nd->add_child_node(type);
 
 
-  SECTION("Children")
-  {
+  SECTION("Children") {
     auto nl = eyestep::NodeList(nd, eyestep::NodeList::k_children);
     REQUIRE(nl.length() == 3);
     REQUIRE(nl.head() == title);
@@ -56,8 +53,7 @@ TEST_CASE("NodeList of all children", "[nodelist]")
     REQUIRE(nl.rest().rest().head() == type);
   }
 
-  SECTION("Siblings middle")
-  {
+  SECTION("Siblings middle") {
     auto nl = eyestep::NodeList(args, eyestep::NodeList::k_siblings);
     REQUIRE(nl.length() == 3);
     REQUIRE(nl.head() == title);
@@ -65,8 +61,7 @@ TEST_CASE("NodeList of all children", "[nodelist]")
     REQUIRE(nl.rest().rest().head() == type);
   }
 
-  SECTION("Siblings @ start")
-  {
+  SECTION("Siblings @ start") {
     auto nl = eyestep::NodeList(title, eyestep::NodeList::k_siblings);
     REQUIRE(nl.length() == 3);
     REQUIRE(nl.head() == title);
@@ -74,8 +69,7 @@ TEST_CASE("NodeList of all children", "[nodelist]")
     REQUIRE(nl.rest().rest().head() == type);
   }
 
-  SECTION("Siblings @ end")
-  {
+  SECTION("Siblings @ end") {
     auto nl = eyestep::NodeList(type, eyestep::NodeList::k_siblings);
     REQUIRE(nl.length() == 3);
     REQUIRE(nl.head() == title);
@@ -83,27 +77,23 @@ TEST_CASE("NodeList of all children", "[nodelist]")
     REQUIRE(nl.rest().rest().head() == type);
   }
 
-  SECTION("Children on a leaf")
-  {
+  SECTION("Children on a leaf") {
     auto nl = eyestep::NodeList(moo, eyestep::NodeList::k_children);
     REQUIRE(nl.length() == 0);
   }
 
 
-  SECTION("Preced @ start")
-  {
+  SECTION("Preced @ start") {
     auto nl = eyestep::NodeList(title, eyestep::NodeList::k_preced);
     REQUIRE(nl.length() == 0);
   }
 
-  SECTION("Preced @ middle")
-  {
+  SECTION("Preced @ middle") {
     auto nl = eyestep::NodeList(args, eyestep::NodeList::k_preced);
     REQUIRE(nl.length() == 1);
     REQUIRE(nl.head() == title);
   }
-  SECTION("Preced @ end")
-  {
+  SECTION("Preced @ end") {
     auto nl = eyestep::NodeList(type, eyestep::NodeList::k_preced);
     REQUIRE(nl.length() == 2);
     REQUIRE(nl.head() == title);
@@ -111,29 +101,25 @@ TEST_CASE("NodeList of all children", "[nodelist]")
   }
 
 
-  SECTION("Follow @ start")
-  {
+  SECTION("Follow @ start") {
     auto nl = eyestep::NodeList(title, eyestep::NodeList::k_follow);
     REQUIRE(nl.length() == 2);
     REQUIRE(nl.head() == args);
     REQUIRE(nl.rest().head() == type);
   }
 
-  SECTION("Follow @ middle")
-  {
+  SECTION("Follow @ middle") {
     auto nl = eyestep::NodeList(args, eyestep::NodeList::k_follow);
     REQUIRE(nl.length() == 1);
     REQUIRE(nl.head() == type);
   }
-  SECTION("Follow @ end")
-  {
+  SECTION("Follow @ end") {
     auto nl = eyestep::NodeList(type, eyestep::NodeList::k_follow);
     REQUIRE(nl.length() == 0);
   }
 
 
-  SECTION("Ancestors")
-  {
+  SECTION("Ancestors") {
     auto nl = eyestep::NodeList(gaz, eyestep::NodeList::k_ancestors);
     REQUIRE(nl.length() == 2);
     // calling length() again, gives the same result
@@ -144,15 +130,13 @@ TEST_CASE("NodeList of all children", "[nodelist]")
     REQUIRE(nl.rest().rest().length() == 0);
   }
 
-  SECTION("Ancestors from root")
-  {
+  SECTION("Ancestors from root") {
     auto nl = eyestep::NodeList(nd, eyestep::NodeList::k_ancestors);
     REQUIRE(nl.length() == 0);
   }
 
 
-  SECTION("Descendants")
-  {
+  SECTION("Descendants") {
     auto nl = eyestep::NodeList(nd, eyestep::NodeList::k_descendants);
 
     REQUIRE(nl.length() == 5);
@@ -178,8 +162,7 @@ TEST_CASE("NodeList of all children", "[nodelist]")
   }
 
 
-  SECTION("Descendants from leaf")
-  {
+  SECTION("Descendants from leaf") {
     auto nl = eyestep::NodeList(moo, eyestep::NodeList::k_descendants);
     REQUIRE(nl.length() == 0);
   }

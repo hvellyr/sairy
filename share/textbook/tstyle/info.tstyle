@@ -1,0 +1,20 @@
+;;; Copyright (c) 2019 Gregor Klinke
+;;; All rights reserved.
+
+
+;; ------------------------------------------------------------------------------
+;;  metainfo support
+
+(element author
+  (let ((email (attribute "email" (current-node))))
+    (make paragraph
+      first-line-start-indent: 0pt
+      quadding: "left"
+      (sosofo-append
+       (process-node-list (attribute "name" (current-node)))
+       (if (not (node-list-empty? email))
+           (sosofo-append
+            (literal " <")
+            (process-node-list email)
+            (literal ">"))))
+      )))

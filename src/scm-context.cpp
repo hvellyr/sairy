@@ -2,6 +2,7 @@
 // All rights reserved.
 
 #include "scm-context.hpp"
+#include "casefold.hpp"
 #include "colors.hpp"
 #include "estd/memory.hpp"
 #include "fo.hpp"
@@ -680,7 +681,7 @@ namespace {
           result = make_nodelist(ctx, new NodeList);
         }
         else {
-          result = make_nodelist(ctx, new NodeList(nodes));
+          result = make_nodelist(ctx, new NodeList(std::move(nodes)));
         }
       }
       else {
@@ -879,7 +880,7 @@ namespace {
         }
       }
 
-      result = make_nodelist(ctx, new NodeList(nodelist));
+      result = make_nodelist(ctx, new NodeList(std::move(nodelist)));
     }
     else {
       result = sexp_user_exception(ctx, self, "not a list", args_arg);
@@ -1071,7 +1072,7 @@ namespace {
         auto nl_result = elements_with_id(node->grove(), id);
 
         if (!nl_result.empty()) {
-          result = make_nodelist(ctx, new NodeList(nl_result));
+          result = make_nodelist(ctx, new NodeList(std::move(nl_result)));
         }
         else {
           result = make_nodelist(ctx, new NodeList);
@@ -1462,7 +1463,8 @@ namespace {
 
   bool is_address_sexp(sexp ctx, sexp self, sexp adr) {
     return sexp_pointerp(adr) &&
-           strcmp(sexp_string_data(sexp_object_type_name(ctx, adr)), ADDRESS_TYPE_NAME) == 0;
+           strcmp(sexp_string_data(sexp_object_type_name(ctx, adr)), ADDRESS_TYPE_NAME) ==
+             0;
   }
 
 
@@ -1527,10 +1529,10 @@ namespace {
       auto adrloc = address_local(expr);
       auto adrdest = address_destination(expr);
 
-      if (sexp_stringp(adrdest) &&
-          sexp_booleanp(adrloc)) {
-        result = fo::PropertySpec(key, fo::Address(bool(sexp_unbox_boolean(adrloc)),
-                                                   std::string(sexp_string_data(adrdest))));
+      if (sexp_stringp(adrdest) && sexp_booleanp(adrloc)) {
+        result =
+          fo::PropertySpec(key, fo::Address(bool(sexp_unbox_boolean(adrloc)),
+                                            std::string(sexp_string_data(adrdest))));
       }
       else {
         excep = sexp_user_exception(ctx, self, "Bad address members: ", expr);
@@ -1935,6 +1937,97 @@ namespace {
   }
 
 
+  sexp func_towlower(sexp ctx, sexp self, sexp_sint_t n, sexp char_arg) {
+    sexp_gc_var1(result);
+    sexp_assert_type(ctx, sexp_stringp, SEXP_CHAR, char_arg);
+    sexp_gc_preserve1(ctx, result);
+
+    result = sexp_make_character(utils::towlower(sexp_unbox_character(char_arg)));
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_towupper(sexp ctx, sexp self, sexp_sint_t n, sexp char_arg) {
+    sexp_gc_var1(result);
+    sexp_assert_type(ctx, sexp_stringp, SEXP_CHAR, char_arg);
+    sexp_gc_preserve1(ctx, result);
+
+    result = sexp_make_character(utils::towupper(sexp_unbox_character(char_arg)));
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_string_upcase(sexp ctx, sexp self, sexp_sint_t n, sexp str_arg) {
+    sexp_gc_var1(result);
+
+    sexp_assert_type(ctx, sexp_stringp, SEXP_STRING, str_arg);
+
+    sexp_gc_preserve1(ctx, result);
+
+    auto str = utils::to_upper(std::string(sexp_string_data(str_arg)));
+    result = sexp_c_string(ctx, str.c_str(), str.size());
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_string_downcase(sexp ctx, sexp self, sexp_sint_t n, sexp str_arg) {
+    sexp_gc_var1(result);
+
+    sexp_assert_type(ctx, sexp_stringp, SEXP_STRING, str_arg);
+
+    sexp_gc_preserve1(ctx, result);
+
+    auto str = utils::to_lower(std::string(sexp_string_data(str_arg)));
+    result = sexp_c_string(ctx, str.c_str(), str.size());
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_string_prefixq(sexp ctx, sexp self, sexp_sint_t n, sexp str1_arg,
+                           sexp str2_arg) {
+    sexp_gc_var1(result);
+
+    sexp_assert_type(ctx, sexp_stringp, SEXP_STRING, str1_arg);
+    sexp_assert_type(ctx, sexp_stringp, SEXP_STRING, str2_arg);
+
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_FALSE;
+
+    if (strncmp(sexp_string_data(str1_arg), sexp_string_data(str2_arg),
+                sexp_string_size(str1_arg)) == 0)
+      result = SEXP_TRUE;
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  void init_char_functions(sexp ctx) {
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "unichar-toupper", 1, &func_towupper);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "unichar-tolower", 1, &func_towlower);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "string-upcase", 1,
+                        &func_string_upcase);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "string-downcase", 1,
+                        &func_string_downcase);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "string-prefix?", 2,
+                        &func_string_prefixq);
+  }
+
+
   //----------------------------------------------------------------------------
 
   std::vector<fs::path> prepare_tstyle_search_path(const std::string& prefix_path) {
@@ -2024,6 +2117,7 @@ namespace {
     init_screen_set_model_functions(ctx);
     init_make_functions(ctx);
     init_color_functions(ctx);
+    init_char_functions(ctx);
   }
 
 
@@ -2104,6 +2198,18 @@ namespace {
                       val = sexp_c_string(_ctx, value.c_str(), value.size()));
 
       sexp_gc_release2(_ctx);
+    }
+
+
+    void define_variable(const std::string& name, bool value) override {
+      sexp_gc_var1(sym);
+      sexp_gc_preserve1(_ctx, sym);
+
+      sexp_env_define(_ctx, sexp_context_env(_ctx),
+                      sym = sexp_intern(_ctx, name.c_str(), name.size()),
+                      value ? SEXP_TRUE : SEXP_FALSE);
+
+      sexp_gc_release1(_ctx);
     }
 
 

@@ -1,0 +1,396 @@
+@c -*-textbook-*-
+@book
+
+@titlepage
+@title{Lexicon markup}
+@end titlepage
+
+@info
+@docid{ecf2b303-7434-49e2-8111-fd773ad0d330}
+@author{Gregor Klinke}{}
+@copyright{Copyright (c) 2020 Gregor Klinke. All Rights Reserved.}
+@end info
+
+@c -----------------------------------------------------------------------------
+@content
+@showtoc
+@end content
+
+@c -----------------------------------------------------------------------------
+
+@chapter{Lexicon markup}
+
+Inspired very much by SIL’s @acr{MDF}
+(@url{https://software.sil.org/shoebox/mdf/}) the lexicon markup documented here
+is a simple format to encode dictionaries, most likely for language to language
+translation.  Though @acr{MDF} is deprecated or reached its end of life and is
+not developed any further, it is a very powerful base for simple (and powerful)
+tools.  It clear advantage are:
+
+@itemize
+@item the format can be type with every basic tool and therefore everywhere
+      without any special setup
+@item since it’s text based it can be passed around simply with a lot of tools
+      (incl. simple text chat)
+@item complete data sets can be written or one line and thus make processing
+      with ordinary UNIX tools possible
+@item it is fast and easy to parse
+@item it is concise, but still comprehensive and can be transferred into larger
+      formats easily (like @acr{LIFT})
+@end itemize
+
+I still added a number of differences to make the format even more versatile.
+Since the original MDF format is not available anymore I won’t list all the
+difference here.
+
+
+@section{Format}
+
+A dictionary is build around lexem entries.  Every entry can indeed encompass
+multiple different lexems, which are related but typically every entry is one
+lexem.  To each lexem various attributes are added, with all possible attributes
+being optional. Definitions and examples into multiple languages are all part of
+the same lexem entry.
+
+The order of the lexem entries in the source document is not relevant,
+processors can sort them, produce subsets, or reorganize into sections at their
+discretion.  Therefore every lexem is only allowed once.  In case of homophones
+the identity of a lexem can be guaranteed by homophone markers.
+@end section
+
+
+@section{Basic syntax}
+
+An entry consists of a sequence of data field. The order of most of the data
+fields is irrelevant, but for some the order and place in the sequence matters.
+The following listing clears shows and explains where this makes a difference.
+
+Every data field consists of a leading data field tag and the following text.
+The data field tag is a short 2 or 3 letter token which starts with a backslash
+(@code{\}) or a dot (@code{.}).
+
+Some tokens are composed of the token proper and a language marker. This is the
+ISO-639-1 two letter abbreviation for the language the field should belong to.
+For example the token @tag{.gen} is the english gloss for an entry, @tag{.gde}
+the german gloss, and the @tag{.xfr} is the french translation of a preceding
+example.  Multiple language fields can be added to the same entry without
+conflicts.
+
+Every entry starts with a @tag{.lx} data field.  Therefore entries can follow
+without empty lines; but if data fields are not notated on the same line, but on
+one line per data field, empty lines can be put between entry to increase
+readability.  Empty lines should be ignored by processors.
+
+The entire source file should be encoded in @acr{UTF}-8.
+
+@example{Example}
+.lx Baum .ps n .pd gen = m .gen tree
+
+.lx Haus
+  .ps n
+  .pd gen = n ; pl = Bäume
+  .gen house
+@end example
+
+@end section
+
+
+@section{Data fields overview}
+
+@definitions
+@item{@tag{.lx}} lexem (1st level)
+@item{@tag{.ln}} language (ISO 639-1 code)  (1st level)
+@item{@tag{.lc}} citation form  (1st level)
+@item{@tag{.la}} aggregated citation form (multiple)
+@item{@tag{.hm}} homophone (1st level)
+@item{@tag{.se}} subentry (1st level, multiple)
+@item{@tag{.sn}} sense number
+@item{@tag{.pn}} phonetic form (IPA) (multiple)
+@item{@tag{.pnx}} phonetic form (X-SAMPA) (multiple)
+@item{@tag{.ps}} part of speech (multiple)
+@item{@tag{.pd}} paradigm (multiple)
+@item{@tag{.g**}} gloss (multiple)
+@item{@tag{.d**}} definition, free text
+@item{@tag{.ex}} example (multiple)
+@item{@tag{.x**}} gloss to preceding @tag{.ex} field (multiple)
+@item{@tag{.t**}} free translation to preceding @tag{.ex} field (multiple)
+@item{@tag{.rf}} source and location of preceding @tag{.ex} field
+@item{@tag{.lf}} lexical functions (multiple)
+@item{@tag{.lf**}} gloss for preceding @tag{.lf} field
+@item{@tag{.sc}} scientific name
+@item{@tag{.u**}} usage (multiple)
+@item{@tag{.o**}} restrictions (multiple)
+@item{@tag{.cf}} confer
+@item{@tag{.cf**}} gloss to preceding .cf field
+@item{@tag{.mn}} reference to main entry
+@item{@tag{.va}} variant forms (multiple)
+@item{@tag{.et}} etymology
+@item{@tag{.eg**}} gloss to preceding @tag{.et} field
+@item{@tag{.es}} source to preceding @tag{.et} field
+@item{@tag{.pc}} picture, @acr{URI} to image (multiple)
+@item{@tag{.nt}} notes
+@item{@tag{.st}} status (e.g. @code{.st no print}, @code{.st done})
+@item{@tag{.dt}} last edited
+@item{@tag{.au}} author/editor (multiple)
+@end definitions
+
+
+@itemize
+@item The data field always refer to the main entry (matters
+in @tag{.se} entries only)
+
+@item Some data fields can have multiple values (marked with “multiple”).  They can
+either occur multiple times with a single value or the value of a single data
+field can be separated by “ ; “ delimiters (space semicolon space): @code{.lx
+vyras .pd du = vyru ; pl = vyrai}.
+
+@item Fields with “**” are localized fields; the ** is to be replaced with the
+two-letter code from ISO 639-1.
+@end itemize
+
+@end section
+
+
+@section{Basic entry}
+
+The main entry consists of a @tag{.lx} data field, the @tag{.ln} language field,
+an optional @tag{.lc} citation field or alternative @tag{.la} fields.
+
+The @tag{.ln} field is typically not given per entry, but with a introducing
+.template statement, but it allows to maintain entries for multiple languages in
+the same source files.
+
+The @tag{.lx} field is the distinguishing identifier of the entry.  When
+referring to entries with fields like @tag{.mn} or @tag{.va} it’s the value of
+the @tag{.lx} field which is to be given.
+
+The textual form to be shown in a dictionary is the @tag{.lc} field (if given)
+or the @tag{.lx} field.  If an @tag{.la} field is given it takes precedence over
+@tag{.lc} and @tag{.lx} fields (see below).
+
+Definitions are given with the @tag{.g**} and @tag{.d**} fields.
+
+@example{Example}
+.lx helrang
+  .ps n
+  .gen sword
+  .den weapon with a long blade used in ancient times
+  .gde Schwert
+  .gfr épée
+@end example
+
+The @tag{.ps} field (part of speech) denotes the type the lexem takes in the
+language.  Its possible values are open, but typical values are:
+
+@definitions
+@item{n} noun
+@item{adj} adjective
+@item{adv} adverb
+@item{int.adv} interrogative adverb
+@item{vt} transitive verb
+@item{vi} intransitive verb
+@item{vti} verb which can be used intransitive and transitive
+@item{vr} reflexive verb
+@item{vq} qualitative verb
+@item{va} auxiliary verb
+@item{num} number word
+@item{conj} conjunction
+@item{pron} pronoun
+@end definitions
+
+The @tag{.pd} field (paradigm) is designed to be open, since there’s not one
+model fitting all languages.  The field takes “ = ”-separated (space equal
+space) key-value pairs where the key is the paradigm and the value the language
+form or grammatical value.  Typical keys are:
+
+@definitions
+@item{sg} singular form, e.g. @code{.pd sg = Haus}
+@item{du} dual form, e.g. @code{.pd du = méirde}
+@item{pl} plural form, e.g. @code{.pd pl = Männer}
+@item{dec} declension pattern, e.g. @code{.pd dec = T12}
+@item{inf} inflexion pattern, e.g. @code{.pd inf = V3a}
+@end definitions
+
+@example{Example}
+.lx Baum .pd pl = Bäume
+@end example
+
+The @tag{.lf} field (lexical functions) can be used to encode various aspects
+about the lexical function of a lexem.  This field is designed to be open and
+extensible.  It takes a “ = ”-separated key-value pair, where the key denotes
+the function type. Typical keys are:
+
+@definitions
+@item{syn} synonym, e.g. @code{.lf syn = öffnen}
+@item{ant} antonym, e.g. @code{.lf syn = schließen}
+@end definitions
+
+For some fields the order matters.  The @tag{.pn} (or @tag{.pnx}) field refers
+to the directly preceding fied.  If it follows a @tag{.lx} field it specifies
+the phonetication of the main entry, if it follows a @tag{.pd} field though it
+refers to the citation form in it.
+
+@example{Example}
+.lx foo .pn fu:
+.lx foo .pd du = fai .pn faɪ
+@end example
+
+might be rendered as:
+
+@quote
+@b{foo} [fu:]
+
+@b{foo} (@em{dual:} fai [faɪ])
+@end quote
+
+@end section
+
+
+@section{Multiple senses}
+
+The @tag{.sn} field is used to bundle multiple entries, translations, and
+meanings into one entry. Fields like @tag{.ps}, @tag{.pd}, @tag{.lf},
+@tag{.g**}, etc. refer to the subentries, therefore order matters.
+
+@example{Example}
+.lx Schwert .ps n .pn ʃve:ɐ̯t
+.sn 1 .lf ant = Scheide .dde aus Metall bestehende Klingenwaffe
+   .ex Er zückte sein Schwert
+.sn 2 .dde Rückenflossen beim Wal (Finne)
+@end example
+
+might be rendered as:
+
+@quote
+@b{Schwert} [ʃve:ɐ̯t] @b{@em{n.}} @b{1.} aus Metall bestehende Klingenwaffe,
+@em{Er zückte sein Schwert.} @b{2.} Rückenflossen beim Wal (Finne)
+@end quote
+
+When referring to a lexem’s subsense from fields like @tag{.mn} or @tag{.g**}
+the sense number has to be added to the @tag{.lx} value to disambiguate it.
+
+@example{Example}
+.lx épée .ln fr .gde Schwert1
+.lx Schwert .ln de
+  .sn 1 .dde Waffe mit langer Klinge
+  .sn 2 .dde Rückenflossen beim Wal (Finne)
+@end example
+@end section
+
+
+@section{Homophones}
+
+An alternative to the @tag{.sn} field is to encoding multiple homophones as
+separate main entries with the same @tag{.lx} field and distinguish them with
+the @tag{.hm} field.  This approach is to be preferred when the different
+homophones form different parts of the speech (like one is a verb, the other a
+noun).
+
+@example{Example}
+.lx group .hm 1 .ps vt
+.lx group .hm 2 .ps n
+@end example
+
+When referring to a lexem with a homophone field, for instance in a @tag{.mn}
+field, the homophone number is to be added to form.
+
+@example{Example}
+.lx gruppieren .ln de .mn group1
+.lx group .ln en .hm 1 .ps vt .ex to group people
+.lx group .ln en .hm 2 .ps n .ex a group of people
+@end example
+@end section
+
+
+@section{Multiple subentries}
+
+When lexems are closely related they might be grouped into a single entry.  For
+this derivative forms can be added with the @tag{.se} field.  It forms a
+separate lexem, but is organized hierarchically beneath a @tag{.lx} entry.  Each
+@tag{.se} field subentry takes its own set of @tag{.lc}, @tag{.ps}, @tag{.pn},
+@tag{.g**} and even @tag{.sn} fields.
+
+@example{Example}
+.lx put .pn pʊt .ps vt
+  .se put out
+    .lc to put out .ps vt .gde ausmachen
+  .se put up
+    .lc to put up .ps vt
+      .sn 1 .gde hochlegen
+      .sn 2 .gde wegpacken
+      .sn 3 .gde unterbringen
+@end example
+@end section
+
+
+@section{Aggregating and grouping entries}
+
+As a more flexible alternative to hierarchical organizing entries with @tag{.se}
+fields the @tag{.la} field encodes a lexem aggregation relationship of multiple
+entries.  Processors can group these entries into one paragraph, symbols like
+“~” can be used to abbreviate common parts.  All entries with the root-key given
+before a “=” refer to the main entry, the rest behind the “=” encodes the
+citation form in syllable abbreviated form.  @tag{.la} without a root key entry
+is like @tag{.lc} when given.  Processors can replace “|” in the rootkey and “~”
+with other characters, if desired.  In some languages other abbreviations might
+be useful, too (e.g. in German “⸛” is often used to indicate an Umlaut-variation
+to the main entry).
+
+@example{Example}
+.lx kerne          .la kern|e
+.lx kerndir        .la kerne = ~dir
+.lx kerne vahir    .la kerne = ~e vahir
+.lx do kerne vana  .la kerne = do ~e vana
+.lx kernái         .la kerne = ~ái
+@end example
+
+might be rendered as:
+
+@quote
+@b{kern|e} …; @b{~dir} …; @b{do ~e vahir} …; @b{~e vana} …; @b{~ái} …
+@end quote
+
+Multiple @tag{.la} fields with different root-keys can appear in the same entry.
+This allows to group entries into multiple main entries:
+
+@example
+.lx Kopfjäger .la Kopf = ~jäger ; Jäger = Kopf-
+@end example
+@end section
+
+
+@section{Templates}
+
+A template specification allows to inject data fields into all following
+entries.  All fields defined in a template are taken verbatim in the following
+lexem entries, unless a field is already given in an entry.
+
+Typical fields where this is handy are @tag{.ln}, @tag{.dt}, @tag{.st}, or @tag{.au}.
+
+@example{Example}
+.template .ln eo
+@end example
+@end section
+
+@section{Examples}
+
+@example
+.lx helrang .ln hv
+  .ps n .pd pl = helræng
+      .gen sword
+      .gde Schwert1
+      .gfr épée
+      .den weapon with long blade used in ancient times
+ 
+.lx Schwert .ln de
+  .hm 1 .ps n
+  .dde Waffe mit langer Klinge, die vor allem früher verwendet wurde
+ 
+.lx Schwert .ln de
+  .hm 2 .ps n
+  .dde Bauteil am Kiel eines Schiffes, das die Lage stabilisiert
+@end example
+@end section
+@end chapter
+
+@end book

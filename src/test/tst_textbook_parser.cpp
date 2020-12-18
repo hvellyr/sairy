@@ -22,9 +22,7 @@ using namespace eyestep;
 namespace fs = filesystem;
 
 namespace {
-Node* with_parser_scan(Grove& grove,
-                       const std::function<void(textbook::Parser&)>& proc)
-{
+Node* with_parser_scan(Grove& grove, const std::function<void(textbook::Parser&)>& proc) {
   Node* doc_node = grove.make_node(document_class_definition());
 
   std::vector<fs::path> _catalog_path;
@@ -48,8 +46,7 @@ Node* with_parser_scan(Grove& grove,
 } // anon ns
 
 
-TEST_CASE("Basic textbook parsing works", "[textbook][parser]")
-{
+TEST_CASE("Basic textbook parsing works", "[textbook][parser]") {
   Grove grove;
   auto* nd = with_parser_scan(grove, [](textbook::Parser& parser) {
     parser.parse_string("@doc Hello world @end{doc}");

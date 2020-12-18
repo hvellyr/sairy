@@ -1,8 +1,15 @@
+;; -*-scheme-*-
 ;; Copyright (c) 2017 by Gregor Klinke
 ;; All rights reserved.
 
 (define-library (textbook dsssl)
-  (import (chibi) (srfi 9) (srfi 28) (srfi 39) (srfi 69) (srfi 89) (srfi 95)
+  (import (chibi)
+          (srfi 9)  ;; Defining Record Types
+          (srfi 28) ;; basic string format
+          (srfi 39) ;; parameter objects
+          (srfi 69) ;; basic hash tables
+          (srfi 89) ;; Optional positional and named parameters
+          (srfi 95) ;; Sorting and Merging
           (textbook string-lib))
   (export %in-current-definition%
           attribute

@@ -24,20 +24,15 @@
         (with-mode admon-mode
           (sosofo-append
            (make paragraph
-             first-line-start-indent: -45mm
+             first-line-start-indent: %page-left-offset-neg%
              font-posture: 'italic
-             (sosofo-append
-              (make line-field
-                font-weight: 'bold
-                field-width: 41mm
-                field-align: 'right
-                (sosofo-append
-                 (process-node-list (attribute "title" (current-node)))
-                 (literal ".")))
-              (make line-field
-                field-width: 4mm
-                (empty-sosofo))
-              (process-node-list (children first-p))))
+             (format-title (make sequence
+                             font-weight: 'bold
+                             (sosofo-append
+                              (process-node-list (attribute "title" (current-node)))
+                              (literal ".")))
+                           (literal " ")
+                           (process-node-list (children first-p))))
            (process-node-list (node-list-rest kids))))
         (with-mode admon-mode
           (sosofo-append

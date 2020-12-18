@@ -1,0 +1,756 @@
+;;; Copyright(c) 2019 Gregor Klinke
+;;; All rights reserved.
+
+(use 'common)
+(import (srfi 1)) ;; list function (fold, ...)
+(import (srfi 69))
+(import (textbook string-collate))
+
+
+(define (log . args)
+  (if %verbose%?
+      (display (apply format args))))
+
+
+;;------------------------------------------------------------------------------
+
+(define (collate-str collation-dict s)
+  (string-join (collate-string->list collation-dict s) ""))
+
+
+
+(define (create-collation-dict lang)
+  (make-collation
+   (string-append
+    "1;2;3;4;5;6;7;8;9;0;"
+   (data (attribute "coll" (node-list-filter
+                            (lambda (snl)
+                              (string=? (data (attribute "lang" snl)) lang))
+                            (select-elements (descendants (grove-root))
+                                             'lexiconcollation))))
+   ";.,(,),[,]")))
+
+
+;;------------------------------------------------------------------------------
+
+(define (format-letter-title-classic title-sosofo)
+  (sosofo-append
+   (make paragraph
+     font-size: (font-size 4)
+     line-spacing: (line-spacing 4)
+     space-before: (display-space (line-spacing 4) conditional?: #t)
+     space-after:  (display-space 7pt conditional?: #t)
+     font-weight:  'bold
+     font-posture: 'upright
+     keep-with-next?: #t
+     first-line-start-indent: %page-left-offset-neg%
+     start-indent: 0pt
+     quadding: 'center
+     title-sosofo)
+   (make paragraph
+     line-spacing: 0pt
+     space-before: 0pt
+     space-after: 0pt
+     keep-with-previous?: #t
+     keep-with-next?: #t
+     first-line-start-indent: %page-left-offset-neg%
+     start-indent: 0pt
+     quadding: 'center
+     (make line-field
+       field-width: 96pt
+       (make score
+         score-type: 'below)))
+   ))
+
+(define (format-letter-title-modern title-sosofo)
+  (make paragraph
+    font-size: (font-size 4)
+    line-spacing: (line-spacing 4)
+    space-before: (display-space (line-spacing 4) conditional?: #t)
+    space-after:  (display-space 7pt conditional?: #t)
+    font-weight:  'bold
+    font-posture: 'upright
+
+    keep-with-next?: #t
+    first-line-start-indent: %page-left-offset-neg%
+    start-indent: 0pt
+    quadding: 'left
+
+    (format-title (empty-sosofo) (empty-sosofo) title-sosofo)))
+
+
+;;;-----------------------------------------------------------------------------
+
+(define *lexems* (empty-node-list))
+
+(define (all-lexems)
+  (if (node-list-empty? *lexems*)
+      (set! *lexems* (select-elements (descendants (grove-root)) 'lexem)))
+  *lexems*)
+
+(define (lexem-lx snl)
+  (data (select-elements (children snl) 'lx)))
+
+(define (lexem-lang snl)
+  (data (select-elements (children snl) 'ln)))
+
+(define (lexem-key snl)
+  (node-property 'lx snl default: ""))
+
+
+;; filters @prm{lexems} to only contain main lexems.  Main lexems are those
+;; lexems items with no @tag{la} key or at least one @tag{la} key without
+;; root-key reference.
+(define (node-list-filter-main-lexems lexems)
+  (node-list-filter
+   (lambda (snl)
+     (let ((las (select-elements (children snl) 'la)))
+       (or (node-list-empty? las)
+           (node-list-reduce las
+                             (lambda (is-match la-snl)
+                               (or is-match
+                                   (string-empty?
+                                    (data (attribute "sub"
+                                                     (node-list-first la-snl))))))
+                             #f))))
+   lexems))
+
+
+(define *source-lang* "")
+(define *translation-lang* "")
+
+(define (node-list-filter-lang nl lang)
+  (node-list-filter
+   (lambda (snl)
+     (string=? (data (attribute "ln" snl)) lang))
+   nl))
+
+(define *lang-lexem-cache* (make-hash-table))
+
+(define (node-list-filter-lang-node nl lang)
+  (hash-table-ref *lang-lexem-cache* lang
+                  (lambda ()
+                    (let ((lang-lexems (node-list-filter
+                                        (lambda (snl) (string=? (lexem-lang snl) lang))
+                                        nl)))
+                      (hash-table-set! *lang-lexem-cache* lang
+                                       lang-lexems)
+                      lang-lexems))))
+
+(define (export-sorted-collated-itemlists collated-items collation-dict)
+  (let loop ((sk (vector->list (sort (list->vector (hash-table-keys collated-items))
+                                     (lambda (s0 s1)
+                                       (string-collated<? collation-dict s0 s1))
+                                     )))
+             (result (list)))
+    (if (null? sk)
+        result
+        (loop (cdr sk)
+              (append result
+                      (list (hash-table-ref/default collated-items (car sk) (list)))
+                      ))
+        )))
+
+
+(define (build-root-key-referrers lexems)
+  (node-list-reduce
+   lexems
+   (lambda (referrer-tbl snl)
+     (node-list-reduce (select-elements (children snl) 'la)
+                       (lambda (obj la-snl)
+                         (let* ((root-key (data (attribute "sub" la-snl)))
+                                (entry (if (not (string-empty? root-key))
+                                           (hash-table-ref
+                                            referrer-tbl root-key
+                                            (lambda ()
+                                              (hash-table-set! referrer-tbl root-key
+                                                               (list snl))
+                                              #f))
+                                           #f)))
+                           (if entry
+                               (hash-table-set! referrer-tbl root-key
+                                                (append entry (list snl))))
+                           )
+                         obj)
+                       #f)
+     referrer-tbl)
+   (make-hash-table)))
+
+
+(define (root-key-referrers referrers root-key)
+  (hash-table-ref/default referrers root-key (list)))
+
+
+(define (collate-lexems lexems referrers collation-dict)
+  (let* ((collated-items
+          (node-list-reduce
+           lexems
+           (lambda (lexem-tbl snl)
+             (let* ((root-key (lexem-key snl))
+                    (root-referrers (root-key-referrers referrers root-key))
+                    )
+               (if (hash-table-ref lexem-tbl root-key
+                                   (lambda ()
+                                     (hash-table-set! lexem-tbl root-key
+                                                      (append (list snl) root-referrers))
+                                     #f))
+                   (log "multiple entries for key ~a~%" root-key))
+               )
+             lexem-tbl)
+           (make-hash-table))
+         ))
+    (export-sorted-collated-itemlists collated-items collation-dict)))
+
+
+(define (node-filter-la-roots nl root-key)
+  (node-list-filter
+   (lambda (snl)
+     (let* ((key (data (attribute "sub" snl))))
+       (string=? root-key key)))
+   nl))
+
+
+(define ($format-se$ snl main-lx)
+  (let ((las (node-filter-la-roots (select-elements (children snl) 'la)
+                                   main-lx))
+        (lxs (select-elements (children snl) 'lx))
+        (lcs (select-elements (children snl) 'lc))
+        (sns (select-elements (children snl) 'sn))
+        )
+    (with-mode lexem-mode
+      (sosofo-append
+       (if (not (node-list-empty? las))
+           (process-node-list las)
+           (if (not (node-list-empty? lcs))
+               (process-node-list lcs)
+               (process-node-list lxs)))
+       ($format-lexem-body$ snl)
+       (process-conditional-list-join " " "" sns "; ")
+     ))))
+
+
+(define ($format-lexem-body$ snl)
+  (let* ((pss (select-elements (children snl) 'ps))
+         (pns (select-elements (children snl) 'pn))
+         (pds (select-elements (children snl) 'pd))
+         (ets (select-elements (children snl) 'et))
+         (defs (node-list-filter-lang
+                (select-elements (children snl) 'def)
+                *translation-lang*))
+         (glosses (node-list-filter-lang
+                   (select-elements (children snl) 'gloss)
+                   *translation-lang*))
+         (mns (select-elements (children snl) 'mn))
+         (vas (select-elements (children snl) 'va))
+         (cfs (select-elements (children snl) 'cfgloss))
+         (exs (select-elements (children snl) 'ex))
+         (uses (node-list-filter-lang
+                (select-elements (children snl) 'use)
+                *source-lang*))
+         )
+    (with-mode lexem-mode
+      (sosofo-append
+       (process-conditional-list-join " " "" pss " ")
+       (process-conditional-list-join " " "" pns " ")
+       (process-conditional-list-join " (" ")" pds ", ")
+       (process-conditional-list-join " " "" uses " ")
+       (if (node-list-empty? defs)
+           (process-conditional-list-join " " "" glosses ", ")
+           (process-conditional-list-join " " "" defs ", "))
+       (process-conditional-list-join* "; " "" exs "; "
+                                       (lambda (snl)
+                                         (process-example-node-with-variant snl 'exgloss)))
+       (process-conditional-list-join " ⟨" "⟩" ets ", ")
+       (process-conditional-list-join " " "" mns " ")
+       (process-conditional-list-join " " "" cfs " ")
+       (process-conditional-list-join " " "" vas " ")
+       ))))
+
+
+(define ($format-lexem-main-entry$ snl use-la)
+  (let* ((las (if use-la
+                  (node-filter-la-roots (select-elements (children snl) 'la)
+                                        "")
+                  (node-list)))
+         (lxs (select-elements (children snl) 'lx))
+         (lcs (select-elements (children snl) 'lc))
+         (hms (select-elements (children snl) 'hm))
+         (sns (select-elements (children snl) 'sn))
+         (ses (select-elements (children snl) 'se))
+         )
+    (sosofo-append
+     (if (not (node-list-empty? las))
+         (process-node-list las)
+         (if (not (node-list-empty? lcs))
+             (process-node-list lcs)
+             (process-node-list lxs)))
+     (process-conditional-list-join "" "" hms " ")
+     ($format-lexem-body$ snl)
+     (process-conditional-list-join " " "" sns "; ")
+     (process-conditional-list-join "; " "" ses "; ")
+     )
+    ))
+
+
+(mode collated-main-lexem-mode
+  (element lexem
+    (with-mode lexem-mode
+      ($format-lexem-main-entry$ (current-node) #t)))
+  )
+
+
+(define (format-collated-lexem-as-se snl main-lx)
+  (with-mode lexem-mode
+    ($format-se$ snl main-lx)))
+
+
+(define (format-collated-lexem-item collation-dict lexem-list)
+  (define (sort-subentries lexems)
+    (vector->list (sort (list->vector lexems)
+                        (lambda (lex0 lex1)
+                          (string-collated<? collation-dict (lexem-key lex0) (lexem-key lex1)))
+                        )))
+
+  (if (= (length lexem-list) 0)
+      (empty-sosofo)
+      (make paragraph
+        first-line-start-indent: -7pt
+        start-indent: 7pt
+        quadding: "justify"
+        space-before: %gap-between-paragraphs%
+
+        (let ((main-lx (lexem-key (car lexem-list))))
+          (sosofo-append
+           ;;; main entry
+           (with-mode collated-main-lexem-mode
+             (process-node-list (car lexem-list)))
+           ;;; aggregated sub-entries
+           (let loop ((lex-items (sort-subentries (cdr lexem-list)))
+                      (result-sosofo (empty-sosofo)))
+             (if (null? lex-items)
+                 result-sosofo
+                 (loop (cdr lex-items)
+                       (sosofo-append
+                        result-sosofo
+                        (literal "; ")
+                        (format-collated-lexem-as-se (car lex-items) main-lx)))
+                 ))))
+        )))
+
+
+(define (format-letter-section letter title-sosofo section-id
+                               lexems referrers lang trl-lang collation-dict)
+  (set! *source-lang* lang)
+  (set! *translation-lang* trl-lang)
+
+  (let* ((letter-lexems (node-list-filter
+                         (lambda (snl)
+                           (string=? letter
+                                     (list-ref (collate-string->list collation-dict (lexem-lx snl))
+                                               0)))
+                         lexems))
+         (main-lexems (node-list-filter-main-lexems letter-lexems))
+         (collated-items (collate-lexems main-lexems referrers collation-dict))
+         )
+
+    (sosofo-append
+     (make anchor
+       id: section-id)
+     (case %style%
+       ((classic) (format-letter-title-classic title-sosofo))
+       ((modern) (format-letter-title-modern title-sosofo))
+       (else (format-letter-title-modern title-sosofo)))
+
+     (make simple-column-set-sequence
+       keep-with-previous?: #t
+       gutter-width: 14pt
+       column-number: 2
+       (log "Processing letter: ~a~%" letter)
+
+       (let loop ((lexitems collated-items)
+                  (result-sosofo (empty-sosofo)))
+         (if (null? lexitems)
+             result-sosofo
+             (loop (cdr lexitems)
+                   (sosofo-append
+                    result-sosofo
+                    (format-collated-lexem-item collation-dict (car lexitems))))))
+       ))))
+
+
+(element lxshowletter
+  (let ((node-title (attribute "title" (current-node)))
+        (lang (data (attribute "lang" (current-node))))
+        (trl-lang (data (attribute "trllang" (current-node))))
+        (lang-lexems (node-list-filter-lang-node (all-lexems) lang))
+        (referrers (build-root-key-referrers lang-lexems))
+        (collation-dict (create-collation-dict lang))
+        )
+    (format-letter-section (collate-str collation-dict (data node-title))
+                           (process-node-list node-title)
+                           (id (current-node))
+                           lang-lexems
+                           referrers
+                           lang trl-lang
+                           collation-dict)))
+
+(element lxshowlexicon
+  (let* ((lang (data (attribute "lang" (current-node))))
+         (trl-lang (data (attribute "trllang" (current-node))))
+         (letters (attribute "letters" (current-node)))
+         (lexid (id (current-node)))
+         (lang-lexems (node-list-filter-lang-node (all-lexems) lang))
+         (referrers (build-root-key-referrers lang-lexems))
+         (collation-dict (create-collation-dict lang))
+         )
+    (let loop ((l (string-split (data letters) #\,))
+               (idcount 0)
+               (sosofo (empty-sosofo)))
+      (if (null? l)
+          sosofo
+          (if (= (string-length (car l)) 0)
+              (loop (cdr l) idcount sosofo)
+              (loop (cdr l) (+ idcount 1)
+                    (sosofo-append
+                     sosofo
+                     (format-letter-section (collate-str collation-dict (car l))
+                                            (literal (car l))
+                                            (string-append lexid "-" (number->string idcount))
+                                            lang-lexems
+                                            referrers
+                                            lang trl-lang
+                                            collation-dict)
+                     ))
+              ))
+      )))
+
+
+(define (process-conditional-list-join pre post nl sep)
+  (if (node-list-empty? nl)
+      (empty-sosofo)
+      (sosofo-append
+       (literal pre)
+       (process-node-list-join nl (literal sep))
+       (literal post))))
+
+
+(define (process-example-node-with-variant snl pattern)
+  (let* ((var (node-list-filter-lang
+               (select-elements (follow snl) pattern) *translation-lang*)))
+    (sosofo-append
+     (process-node-list snl)
+     (if (> (node-list-length var) 0)
+         (process-conditional-list-join ": " "" (node-list-first var) "")
+         (empty-sosofo)))))
+
+
+(define (process-conditional-list-join* pre post nl sep proc)
+  (if (node-list-empty? nl)
+      (empty-sosofo)
+      (sosofo-append
+       (literal pre)
+       (proc (node-list-first nl))
+       (node-list-reduce (node-list-rest nl)
+                         (lambda (sosofo snl)
+                           (sosofo-append sosofo (literal sep)
+                                          (proc snl)))
+                         (empty-sosofo))
+       (literal post))))
+
+
+(define ($format-pn$ nd)
+  (sosofo-append
+   (literal "[")
+   (make sequence
+     font-name: "ipa"
+     font-posture: 'upright
+       (process-node-list-trim (children nd)))
+   (literal "]")))
+
+
+(define ($format-lx$ seq)
+  (format-bold
+   (literal (string-join (string-split
+                          (cond
+                           ((node-list? seq) (data (children seq)))
+                           ((string? seq) seq))
+                          #\|) "·"))))
+
+
+(mode lexem-mode
+  (element ex
+    (format-em (process-children)))
+
+  (element exgloss
+    (process-children))
+
+  (element lx
+    ($format-lx$ (current-node)))
+
+  (element lc
+    ($format-lx$ (current-node)))
+
+  (element la
+    ($format-lx$ (current-node)))
+
+  (element hm
+    (make sequence
+      position-point-shift: (/ (line-spacing 2) 2)
+      font-size: (font-size 1)
+      (process-children)))
+
+  (element sn
+    (sosofo-append
+     (format-bold (attribute "index" (current-node)))
+     (literal ". ")
+     ($format-lexem-body$ (current-node))))
+
+  (element pn
+    ($format-pn$ (current-node)))
+
+  (element ps
+    (format-em (process-children)))
+
+  (element pd
+    (let* ((sub (attribute "sub" (current-node))))
+      (sosofo-append
+       (if (node-list-empty? sub)
+           (empty-sosofo)
+           (sosofo-append
+            (process-node-list sub) (literal ". ")))
+       (process-children))))
+
+  (element (pd pn)
+    (sosofo-append
+     (literal " ")
+     ($format-pn$ (current-node))))
+
+  (element gloss
+    (process-children))
+
+  (element def
+    (process-children))
+
+  (element mn
+    (sosofo-append
+     (literal "→")
+     (process-children)))
+
+  (element cfgloss
+    (sosofo-append
+     (literal "→")
+     (process-children)))
+
+  (element va
+    (sosofo-append
+     (literal "→")
+     (process-children)))
+
+  (element use
+    (format-ss (process-children)))
+
+  (element se
+    ($format-se$ (current-node) ""))
+
+  (element et
+    (process-children))
+
+  ) ;; end of lexem-mode
+
+
+(element lexem
+  (make paragraph
+    first-line-start-indent: -7pt
+    start-indent: 7pt
+    quadding: "justify"
+    space-before: %gap-between-paragraphs%
+    (with-mode lexem-mode
+      ($format-lexem-main-entry$ (current-node) #f))))
+
+
+(define (build-lexems-cache lexems collation-dict)
+  (node-list-reduce
+   lexems
+   (lambda (lexem-tbl snl)
+     (let* ((key (lexem-key snl))
+            (coll-key (collate-str collation-dict key))
+            )
+       (if (hash-table-ref lexem-tbl coll-key
+                           (lambda ()
+                             (hash-table-set! lexem-tbl coll-key snl)
+                             #f))
+           (log "Multiple definition of lexem ~a~%" key))
+       lexem-tbl))
+   (make-hash-table)))
+
+
+(define (select-single-lexem cache word)
+  (hash-table-ref/default cache word (node-list)))
+
+
+(element lxshowwords
+  (let* ((lang (data (attribute "lang" (current-node))))
+         (trl-lang (data (attribute "trllang" (current-node))))
+         (words (attribute "words" (current-node)))
+         (lexid (id (current-node)))
+         (lang-lexems (node-list-filter-lang-node (all-lexems) lang))
+         (collation-dict (create-collation-dict lang))
+         (lexems-cache (build-lexems-cache lang-lexems collation-dict))
+         )
+    (set! *source-lang* lang)
+    (set! *translation-lang* trl-lang)
+
+    (make simple-column-set-sequence
+      keep-with-previous?: #t
+      gutter-width: 14pt
+      column-number: 2
+
+      (fold (lambda (w sosofo)
+              (let ((wo (collate-str collation-dict (string-trim w))))
+                (log "Add category lexem: ~a~%" wo)
+                (if (> (string-length wo) 0)
+                    (sosofo-append
+                     sosofo
+                     ;;(process-node-list (select-single-lexem wo lang-lexems collation-dict)))
+                     (process-node-list (select-single-lexem lexems-cache wo)))
+                    sosofo)))
+            (empty-sosofo)
+            (string-split (data words) #\,))
+      )))
+
+
+(element lexiconcollation (empty-sosofo))
+
+;;------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(element lxwd
+  (format-bold (attribute "text" (current-node))))
+
+(element lxuse
+  (format-em (attribute "text" (current-node))))
+
+(element lxgram
+  (format-ss (attribute "text" (current-node))))
+
+(element lxexp
+  (format-em (attribute "text" (current-node))))
+
+(element lxgraph
+  (sosofo-append
+   (literal "<")
+   (process-node-list-trim (attribute "text" (current-node)))
+   (literal ">")))
+
+(element lxword
+  (let ((form (attribute "form" (current-node)))
+        (transl (attribute "transl" (current-node))))
+    (sosofo-append
+     (format-em form)
+     (if (not (node-list-empty? transl))
+         (sosofo-append
+          (format-em (literal " “"))
+          (process-node-list-trim transl)
+          (format-em (literal "”")))))))
+
+(element lxtransf
+  (sosofo-append
+   (process-node-list-trim (attribute "from" (current-node)))
+   (literal " > ")
+   (process-node-list-trim (attribute "to" (current-node)))))
+
+
+(element lxphon
+  (sosofo-append
+   (literal "[")
+   (make sequence
+     font-name: "ipa"
+     font-posture: 'upright
+     (process-node-list-trim (attribute "text" (current-node))))
+   (literal "]")))
+
+(element lexicon
+  (let ((node-title (attribute "title" (current-node))))
+    (sosofo-append
+     (make anchor
+       id: (id (current-node)))
+     (make paragraph
+       font-size: (font-size 4)
+       line-spacing: (line-spacing 4)
+       space-before: (display-space (line-spacing 4) conditional?: #t)
+       space-after:  (display-space 7pt conditional?: #t)
+       font-weight:  'bold
+       font-posture: 'upright
+
+       keep-with-next?: #t
+       first-line-start-indent: %page-left-offset-neg%
+       start-indent: 0pt
+       quadding: 'left
+
+       (format-title (empty-sosofo) (empty-sosofo) node-title))
+
+     (make simple-column-set-sequence
+       keep-with-previous?: #t
+       gutter-width: 14pt
+       column-number: 2
+       (process-children-trim)))))
+
+
+(element (lexicon p lxitem)
+  (empty-sosofo))
+
+(element (lexicon p)
+  (let ((nds (node-list-filter (lambda (snl)
+                                 (not (or (invisible-tag? snl)
+                                          (empty-text-node? snl))))
+                               (children (current-node)))))
+    (if (node-list-empty? nds)
+        (make display-group
+          (process-node-list-left-trim-idx-ws (children (current-node))))
+        (make paragraph
+          first-line-start-indent: -7pt
+          start-indent: 7pt
+          quadding: "justify"
+          space-before: %gap-between-paragraphs%
+          (process-node-list-left-trim-idx-ws (children (current-node))))
+        )))
+
+
+(element lxdef
+  (make display-group
+    space-before: (display-space 7pt conditional?: #t)
+    space-after: (display-space 7pt conditional?: #t)
+    (process-children-trim)))
+
+(element (lxdef p item)
+  (make line-field
+    field-width: 24pt
+    field-align: 'left
+    (let ((txt (attribute "text" (current-node))))
+      (process-node-list-trim txt) )))
+
+(element (lxdef p)
+  (make paragraph
+    first-line-start-indent: -7pt
+    start-indent: 7pt
+    quadding: "justify"
+    space-before: %gap-between-paragraphs%
+    (process-node-list-left-trim-idx-ws (children (current-node)))))
+
+
+;;------------------------------------------------------------------------------

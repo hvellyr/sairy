@@ -16,5 +16,30 @@
 
 (define %gap-between-paragraphs% 0pt)
 
+(define %quote-left-indent% 10pt)
+(define %quote-right-indent% 10pt)
+
+(define %page-left-offset% 45mm)
+(define %page-left-offset-neg% -45mm)
+
+
+(define (enable-modern-style)
+  (set! %style% 'modern)
+  (set! %title-style% 'modern)
+  (set! %monospace-font-name% "monospace")
+  (set! %body-font-name% "roman")
+  (set! %page-left-offset% 45mm)
+  (set! %page-left-offset-neg% -45mm)
+  )
+
+(define (enable-classic-style)
+  (set! %style% 'classic)
+  (set! %title-style% 'classic)
+  (set! %monospace-font-name% "monospace")
+  (set! %body-font-name% "roman")
+  (set! %page-left-offset% 0mm)
+  (set! %page-left-offset-neg% 0mm)
+  )
+
 (use 'book)
 (use 'book-tex-main)

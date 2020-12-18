@@ -1,0 +1,23 @@
+;;; Copyright (c) 2019 Gregor Klinke
+;;; All rights reserved.
+
+(use 'admon)
+(use 'bibref)
+(use 'book-contents)
+(use 'index)
+(use 'book-title)
+(use 'book-section)
+(use 'book-def)
+(use 'common)
+(use 'example)
+(use 'inline)
+(use 'para)
+(use 'ref)
+(use 'lexicon)
+(use 'root)
+
+
+(element vortaro
+  (cond
+   ((html-backend?) (book-html (current-node)))
+   ((tex-backend?) (book-tex (current-node)))))

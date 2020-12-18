@@ -2,13 +2,17 @@
 ;;; All rights reserved.
 
 (define (content-chapter title nd)
-  (let* ((title-num-sosofo (literal (section-title-number nd)))
+  (let* ((dont-show-number (string=? (data (attribute "show-number" nd)) "no"))
+         (title-num-str (if dont-show-number
+                            ""
+                            (section-title-number nd)))
+         (title-num-sosofo (literal title-num-str))
          (title-sosofo (section-title-sosofo title nd)))
     (make paragraph
       space-before: (display-space 7pt conditional?: #t)
       space-after: 3pt
       quadding: 'left
-      first-line-start-indent: -45mm
+      first-line-start-indent: %page-left-offset-neg%
       start-indent: 0pt
       font-size: (font-size 4)
       line-spacing: (line-spacing 4)
@@ -17,14 +21,11 @@
       last-line-end-indent: -15pt
 
       (sosofo-append
-       (make line-field
-         field-width: 41mm
-         field-align: 'right
-         title-num-sosofo)
-       (make line-field
-         field-width: 4mm
-         (empty-sosofo))
-       title-sosofo
+       (format-title title-num-sosofo
+                     (if (> (string-length title-num-str) 0)
+                         (literal " ")
+                         (empty-sosofo))
+                     title-sosofo)
        (literal " ")
        (make line-field
          field-align: 'right
@@ -34,7 +35,11 @@
 
 
 (define (content-section title nd)
-  (let* ((title-num-sosofo (literal (section-title-number nd)))
+  (let* ((dont-show-number (string=? (data (attribute "show-number" nd)) "no"))
+         (title-num-str (if dont-show-number
+                            ""
+                            (section-title-number nd)))
+         (title-num-sosofo (literal title-num-str))
          (title-sosofo (section-title-sosofo title nd)))
     (make paragraph
       quadding: 'left

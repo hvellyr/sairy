@@ -1,0 +1,126 @@
+;;; Copyright (c) 2019 Gregor Klinke
+;;; All rights reserved.
+
+;; #-----------------------------------------------------------------------------
+
+(element idx
+  (make anchor
+    id: (id (current-node))
+    (empty-sosofo)))
+
+(element vidx
+  (process-node-list (attribute "text" (current-node))))
+
+
+;; #-----------------------------------------------------------------------------
+;; # references
+
+(define (destination-title nd)
+  (let* ((title (attribute "title" nd))
+         (declsum (attribute "declsum" nd)))
+    (if (not (node-list-empty? title))
+        title
+        (if (not (node-list-empty? declsum))
+            declsum
+            (empty-node-list)))))
+
+(define (render-page-ref nd)
+  (sosofo-append
+   (literal "p.") (make-char 'narrow-non-breaking-space)
+   (make page-number
+     refid: (id nd))
+   ))
+
+(define (render-ref-to-node-tex nd)
+  (make link
+    destination: (node-list-address nd)
+    (case (gi nd)
+      ((chapter) (make sequence
+                   (sosofo-append
+                    (literal "Chapter “")
+                    (process-node-list (destination-title nd))
+                    (literal "”, ")
+                    (render-page-ref nd)
+                    )))
+      ((appendix) (make sequence
+                   (sosofo-append
+                    (literal "Appendix “")
+                    (process-node-list (destination-title nd))
+                    (literal "”, ")
+                    (render-page-ref nd)
+                    )))
+      ((introduction) (make sequence
+                   (sosofo-append
+                    (literal "Introduction “")
+                    (process-node-list (destination-title nd))
+                    (literal "”, ")
+                    (render-page-ref nd)
+                    )))
+      ((section subsection) (make sequence
+                              (sosofo-append
+                               (literal "Section “")
+                               (process-node-list (destination-title nd))
+                               (literal "”, ")
+                               (render-page-ref nd)
+                               )))
+      (else (make sequence
+              (sosofo-append
+               (literal " “")
+               (process-node-list (destination-title nd))
+               (literal "”, ")
+               (render-page-ref nd)
+               ))))
+    )
+  )
+
+
+(define (render-ref-to-node-html nd)
+  (make link
+    score-type: 'none
+    color: %html.link-color%
+    destination: (node-list-address nd)
+    (make sequence
+      (sosofo-append
+       (literal "“")
+       (process-node-list (destination-title nd))
+       (literal "”")))
+    ))
+
+
+(define (render-ref-to-node nd)
+  (cond
+   ((html-backend?) (render-ref-to-node-html nd))
+   ((tex-backend?) (render-ref-to-node-tex nd))
+   ))
+
+
+(element ref
+  (let* ((idref (data (attribute "ref" (current-node))))
+         (nl (if (> (string-length idref) 0)
+                 (elements-with-id idref (current-node))
+                 (empty-sosofo))))
+    (node-list-reduce nl
+                      (lambda (sosofo snl)
+                        (sosofo-append sosofo
+                                       (render-ref-to-node snl)))
+                      (empty-sosofo))
+    ))
+
+(element url
+  (let* ((url (attribute "url" (current-node)))
+         (alt (attribute "alt" (current-node))))
+    (cond
+     ((html-backend?) (make link
+                        score-type: 'none
+                        color: %html.link-color%
+                        destination: (external-address (data url))
+                        (if (node-list-empty? alt)
+                            (process-node-list url)
+                            (process-node-list alt))))
+     ((tex-backend?) (if (not (node-list-empty? alt))
+                         (sosofo-append
+                          (literal "“")
+                          (process-node-list alt)
+                          (literal "”"))
+                         (format-em url)))
+     )))

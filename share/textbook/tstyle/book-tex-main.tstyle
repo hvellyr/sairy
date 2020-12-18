@@ -32,7 +32,7 @@
        font-size: (font-size 3)
        line-spacing: (line-spacing 3)
 
-       start-margin: 45mm
+       start-margin: %page-left-offset%
        end-margin: 0mm
 
        right-header: (make line-field

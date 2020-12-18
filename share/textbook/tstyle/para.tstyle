@@ -37,20 +37,25 @@
                (else (sosofo-append sosofo (process-node-list np))))
               )))))
 
-(element p
+(define (process-p nd startind endind)
   (let ((nds (node-list-filter (lambda (snl)
                                  (not (or (invisible-tag? snl)
                                           (empty-text-node? snl))))
-                               (children (current-node)))))
+                               (children nd))))
     (if (node-list-empty? nds)
         (make display-group
-          (process-node-list-left-trim-idx-ws (children (current-node))))
+          (process-node-list-left-trim-idx-ws (children nd)))
         (make paragraph
           first-line-start-indent: 0pt
           quadding: "justify"
           space-before: %gap-between-paragraphs%
-          (process-node-list-left-trim-idx-ws (children (current-node))))
+          start-indent: startind
+          end-indent: endind
+          (process-node-list-left-trim-idx-ws (children nd)))
         )))
+
+(element p
+  (process-p (current-node) 0pt 0pt))
 
 
 ;; #-----------------------------------------------------------------------------
@@ -177,3 +182,22 @@
           (process-children-trim)
           ) ))
   )
+
+
+;; -----------------------------------------------------------------------------
+;; quote
+
+(mode quote-mode
+  (element p
+    (process-p (current-node) %quote-left-indent% %quote-right-indent%))
+  )
+
+(element quote
+  (make display-group
+    space-before: (display-space 7pt conditional?: #t)
+    space-after:  (display-space 7pt conditional?: #t)
+    end-indent: %quote-right-indent%
+    font-size:    (font-size 1)
+
+    (with-mode quote-mode
+      (process-children))))

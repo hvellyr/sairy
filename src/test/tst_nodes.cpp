@@ -7,30 +7,27 @@
 #include "../nodes.hpp"
 #include "../nodeutils.hpp"
 
-#include <string>
 #include <sstream>
+#include <string>
 #include <tuple>
 
 
 using namespace eyestep;
 
 
-TEST_CASE("Base node creation", "[nodes]")
-{
+TEST_CASE("Base node creation", "[nodes]") {
   Node nd(element_class_definition());
   REQUIRE(nd.classname() == "element");
 }
 
 
-TEST_CASE("Default node as no gi", "[nodes]")
-{
+TEST_CASE("Default node as no gi", "[nodes]") {
   Node nd;
   REQUIRE(nd.gi().empty());
 }
 
 
-TEST_CASE("Set properties", "[nodes]")
-{
+TEST_CASE("Set properties", "[nodes]") {
   Node nd;
   nd.set_property("name", "foo");
   nd.set_property("size", 42);
@@ -40,8 +37,7 @@ TEST_CASE("Set properties", "[nodes]")
 }
 
 
-TEST_CASE("Unknown properties report as default", "[nodes]")
-{
+TEST_CASE("Unknown properties report as default", "[nodes]") {
   Node nd;
 
   REQUIRE(nd.property<std::string>("name").empty());
@@ -49,8 +45,7 @@ TEST_CASE("Unknown properties report as default", "[nodes]")
 }
 
 
-TEST_CASE("Add node", "[nodes]")
-{
+TEST_CASE("Add node", "[nodes]") {
   Grove grove;
   Node* nd = grove.make_node(document_class_definition());
 
@@ -63,8 +58,7 @@ TEST_CASE("Add node", "[nodes]")
 }
 
 
-TEST_CASE("Parent property", "[nodes]")
-{
+TEST_CASE("Parent property", "[nodes]") {
   Grove grove;
   auto* a = grove.set_root_node(root_class_definition());
   auto* b = grove.make_elt_node("b");
@@ -79,8 +73,7 @@ TEST_CASE("Parent property", "[nodes]")
 }
 
 
-TEST_CASE("Attributes add text nodes", "[nodes][attributes]")
-{
+TEST_CASE("Attributes add text nodes", "[nodes][attributes]") {
   Grove grove;
 
   auto* nd = grove.make_elt_node("foo");
@@ -88,18 +81,15 @@ TEST_CASE("Attributes add text nodes", "[nodes][attributes]")
 
   REQUIRE(nd->attributes().size() == 1);
   REQUIRE(nd->attributes()[0]->classname() == "text");
-  REQUIRE(nd->attributes()[0]->property<std::string>(
-            CommonProps::k_attr_name) == "gaz");
-  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_data) ==
-          "fieps");
+  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_attr_name) == "gaz");
+  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_data) == "fieps");
 
   REQUIRE(nd->has_attribute("gaz"));
   REQUIRE(!nd->has_attribute("boo"));
 }
 
 
-TEST_CASE("Attributes add nodes", "[nodes][attributes]")
-{
+TEST_CASE("Attributes add nodes", "[nodes][attributes]") {
   Grove grove;
 
   auto* nd = grove.make_elt_node("foo");
@@ -109,18 +99,15 @@ TEST_CASE("Attributes add nodes", "[nodes][attributes]")
 
   REQUIRE(nd->attributes().size() == 1);
   REQUIRE(nd->attributes()[0]->classname() == "element");
-  REQUIRE(nd->attributes()[0]->property<std::string>(
-            CommonProps::k_attr_name) == "gaz");
-  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_gi) ==
-          "boo");
+  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_attr_name) == "gaz");
+  REQUIRE(nd->attributes()[0]->property<std::string>(CommonProps::k_gi) == "boo");
 
   REQUIRE(nd->has_attribute("gaz"));
   REQUIRE(!nd->has_attribute("boo"));
 }
 
 
-TEST_CASE("Attributes add nodelist", "[nodes][attributes]")
-{
+TEST_CASE("Attributes add nodelist", "[nodes][attributes]") {
   Grove grove;
 
   auto* nd = grove.make_elt_node("foo");
@@ -136,10 +123,9 @@ TEST_CASE("Attributes add nodelist", "[nodes][attributes]")
   REQUIRE(nd->attributes().size() == texts.size());
   for (auto i = 0u; i < texts.size(); ++i) {
     REQUIRE(nd->attributes()[i]->classname() == "text");
-    REQUIRE(nd->attributes()[i]->property<std::string>(
-              CommonProps::k_attr_name) == "gaz");
-    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) ==
-            texts[i]);
+    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_attr_name) ==
+            "gaz");
+    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) == texts[i]);
   }
 
   REQUIRE(nd->has_attribute("gaz"));
@@ -148,8 +134,7 @@ TEST_CASE("Attributes add nodelist", "[nodes][attributes]")
 
 
 TEST_CASE("Attributes setting attributes removes previous attributes",
-          "[nodes][attributes]")
-{
+          "[nodes][attributes]") {
   Grove grove;
 
   auto* nd = grove.make_elt_node("foo");
@@ -173,10 +158,9 @@ TEST_CASE("Attributes setting attributes removes previous attributes",
   REQUIRE(nd->attributes().size() == texts.size());
   for (auto i = 0u; i < texts.size(); ++i) {
     REQUIRE(nd->attributes()[i]->classname() == "text");
-    REQUIRE(nd->attributes()[i]->property<std::string>(
-              CommonProps::k_attr_name) == attrnms[i]);
-    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) ==
-            texts[i]);
+    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_attr_name) ==
+            attrnms[i]);
+    REQUIRE(nd->attributes()[i]->property<std::string>(CommonProps::k_data) == texts[i]);
   }
 
   REQUIRE(!nd->has_attribute("gaz"));
@@ -186,8 +170,7 @@ TEST_CASE("Attributes setting attributes removes previous attributes",
 }
 
 
-TEST_CASE("Attributes access", "[nodes][attributes]")
-{
+TEST_CASE("Attributes access", "[nodes][attributes]") {
   Grove grove;
 
   auto* nd = grove.make_elt_node("foo");

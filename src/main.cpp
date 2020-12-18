@@ -54,22 +54,20 @@ eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
 
   root->set_property("start-time", to_iso_timestring(std::chrono::system_clock::now()));
 
-  if (!sources.empty()) {
-    for (const auto& src : sources) {
-      std::cout << "Scan " << src << " ...";
-      std::cout.flush();
+  for (const auto& src : sources) {
+    std::cout << "Scan " << src << " ...";
+    std::cout.flush();
 
-      auto scanner = eyestep::make_scanner_for_file(src, args);
+    auto scanner = eyestep::make_scanner_for_file(src, args);
 
-      if (scanner) {
-        auto* nd = scanner->scan_file(grove, src);
-        std::cout << " ok" << std::endl;
+    if (scanner) {
+      auto* nd = scanner->scan_file(grove, src);
+      std::cout << " ok" << std::endl;
 
-        root->add_child_node(nd);
-      }
-      else {
-        std::cout << " no scanner for filetype" << std::endl;
-      }
+      root->add_child_node(nd);
+    }
+    else {
+      std::cout << " no scanner for filetype" << std::endl;
     }
   }
 
@@ -100,7 +98,7 @@ std::vector<std::string> document_root_elements_gi(eyestep::Grove& grove) {
   auto gis = std::vector<std::string>{};
 
   auto root_children = grove.root_node()->property<Nodes>(CommonProps::k_children);
-  if (root_children.size() == 1) {
+  if (root_children.size() >= 1) {
     auto document = root_children[0];
     auto top_elements = document->property<Nodes>(CommonProps::k_children);
 
@@ -255,7 +253,7 @@ int main(int argc, char** argv) {
         processor->set_output_file(
           deduce_output_file(outf, sources, processor->default_output_extension()));
 
-        auto engine = eyestep::StyleEngine(prefix_path, backend);
+        auto engine = eyestep::StyleEngine(prefix_path, backend, vm.count("verbose") > 0);
         if (engine.load_style(eff_templ_path)) {
           if (vm.count("define")) {
             engine.define_variables(vm["define"].as<std::vector<std::string>>());
