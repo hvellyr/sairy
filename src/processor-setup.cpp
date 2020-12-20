@@ -28,8 +28,8 @@ namespace {
   template <typename T>
   std::pair<std::string, ProcessorFactoryFunc> make_processor_factory() {
     const auto proc = T{};
-    return std::make_pair(proc.proc_id(), [](const po::variables_map& args) {
-      return ::estd::make_unique<T>(args);
+    return std::make_pair(proc.proc_id(), [](const cxxopts::ParseResult& args) {
+      return estd::make_unique<T>(args);
     });
   }
 

@@ -43,7 +43,7 @@ namespace {
 
     assert(s_scanner_factory_map.find(id) == s_scanner_factory_map.end());
     s_scanner_factory_map[id] = [](const po::variables_map& args) {
-      return ::estd::make_unique<ScannerClass>(args);
+      return estd::make_unique<ScannerClass>(args);
     };
 
     for (const auto& ext : scanner.supported_extensions()) {

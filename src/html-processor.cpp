@@ -506,8 +506,8 @@ namespace {
 
     auto& ctx = processor->ctx();
 
-    auto port = ::estd::make_unique<html::Writer>(doctype, k_TEXTBOOK_GENERATOR,
-                                                  processor->style_ctx());
+    auto port = estd::make_unique<html::Writer>(doctype, k_TEXTBOOK_GENERATOR,
+                                                processor->style_ctx());
 
     port->open(path);
 

@@ -146,7 +146,7 @@ namespace lexicon {
       : _verbose(is_verbose)
       , _grove(grove)
       , _root_nd(rootnd)
-      , _text(::estd::make_unique<std::stringstream>()) {}
+      , _text(estd::make_unique<std::stringstream>()) {}
 
 
     bool eof() {
@@ -438,7 +438,7 @@ namespace lexicon {
         _current_nd->set_property(CommonProps::k_gi, "lexem");
       }
       else if (tag == template_tag) {
-        _current_template = ::estd::make_unique<Template>();
+        _current_template = estd::make_unique<Template>();
       }
     }
   };
