@@ -1,5 +1,6 @@
 *.1                text
 *.a                binary
+*.build            text
 *.c                text diff=cpp
 *.chibi            text
 *.cmake            text
@@ -10,6 +11,7 @@
 *.h                text diff=cpp
 *.hpp              text diff=cpp
 *.in               text
+*.in-meson         text diff=cpp
 *.ipp              text diff=cpp
 *.libs             text
 *.modulemap        text
