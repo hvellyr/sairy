@@ -1,15 +1,18 @@
+// Copyright (c) 2020 Gregor Klinke
+// All rights reserved.
+
 #include "chibi/eval.h"
 
 #define sexp_init_library sexp_init_lib_srfi_39
-#include "../../chibi-scheme/lib/srfi/39/param.c"
+#include "dist/lib/srfi/39/param.c"
 #undef sexp_init_library
 
 #define sexp_init_library sexp_init_lib_srfi_69
-#include "../../chibi-scheme/lib/srfi/69/hash.c"
+#include "dist/lib/srfi/69/hash.c"
 #undef sexp_init_library
 
 #define sexp_init_library sexp_init_lib_srfi_95
-#include "../../chibi-scheme/lib/srfi/95/qsort.c"
+#include "dist/lib/srfi/95/qsort.c"
 #undef sexp_init_library
 
 
