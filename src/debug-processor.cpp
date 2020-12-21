@@ -6,9 +6,9 @@
 #include "fo.hpp"
 #include "sosofo.hpp"
 
-#include "program_options/program_options.hpp"
-
 #include "fspp/filesystem.hpp"
+
+#include "cxxopts.hpp"
 
 #include <iostream>
 #include <map>
@@ -18,7 +18,6 @@
 namespace eyestep {
 
 namespace fs = filesystem;
-namespace po = program_options;
 
 namespace {
   class DebugFoProcessor : public IFoProcessor<DebugProcessor>
@@ -88,14 +87,11 @@ namespace {
 
 } // ns anon
 
-DebugProcessor::DebugProcessor(const po::variables_map& /*args*/) {}
+DebugProcessor::DebugProcessor(const cxxopts::ParseResult& /*args*/) {}
 
 
-po::options_description DebugProcessor::program_options() const {
-  auto opts_title = std::string("Debug renderer [selector: '") + proc_id() + "']";
-  auto desc = po::options_description(opts_title);
-
-  return desc;
+void DebugProcessor::add_program_options(cxxopts::Options& options) const {
+  options.add_options("Debug renderer");
 }
 
 

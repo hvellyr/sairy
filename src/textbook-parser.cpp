@@ -97,7 +97,7 @@ namespace textbook {
 
 
     std::unique_ptr<DocSpec> make_docspec(const Node* nd) {
-      auto docspec = ::estd::make_unique<DocSpec>();
+      auto docspec = estd::make_unique<DocSpec>();
 
       for (const auto* tagnd : nd->property<Nodes>(CommonProps::k_children)) {
         if (tagnd->gi() == k_tag_tag) {
@@ -169,7 +169,7 @@ namespace textbook {
 
 
     std::unique_ptr<DocSpec> model_doc_type_doc_spec() {
-      auto docspec = ::estd::make_unique<DocSpec>();
+      auto docspec = estd::make_unique<DocSpec>();
 
       docspec->add(TagSpec(k_tag_tag,
                            {
@@ -229,7 +229,7 @@ namespace textbook {
       return nullptr;
     }
 
-  } // anon namespace
+  } // namespace
 
 
   //------------------------------------------------------------------------------
@@ -410,7 +410,7 @@ namespace textbook {
                  bool is_verbose)
     : _verbose(is_verbose)
     , _catalog_path(catalog_path)
-    , _text(::estd::make_unique<std::stringstream>())
+    , _text(estd::make_unique<std::stringstream>())
     , _grove(grove)
     , _grovebuilder(grovebuilder)
     , _vars(vars)
@@ -976,9 +976,8 @@ namespace textbook {
           _doctype = tag;
         }
         else {
-          throw ParseException("",
-                               std::string("Can't read document spec: ") +
-                                 path->string());
+          throw ParseException("", std::string("Can't read document spec: ") +
+                                     path->string());
         }
       }
       else {
@@ -1003,5 +1002,5 @@ namespace textbook {
     }
   }
 
-} // ns textbook
-} // ns eyestep
+} // namespace textbook
+} // namespace eyestep

@@ -7,8 +7,8 @@ pluggable and extensible architecture.
 Requirements
 ------------
 
-  - cmake >= 2.8.12
-  - a decent c++11 enabled compiler, apple's clang "6.0" should do
+- meson >= 0.54
+- a decent c++14 enabled compiler, apple's clang "6.0" should do
 
 Development is happening mostly on Mac OS X for now.
 
@@ -17,15 +17,15 @@ Build and Test
 --------------
 
 ```
-git submodule update --init --recursive
-mkdir build
-cd build
-cmake ..
-cmake --build .
+$ git submodule update --init --recursive
+$ meson setup --prefix=<PREFIX> output
+$ cd output
+$ meson compile
+$ meson install
 ```
 
-The unit tests can be executed with ctest:
+Some unit tests can be executed from within the build folder (`output`) with:
 
 ```
-ctest -V
+$ meson test
 ```

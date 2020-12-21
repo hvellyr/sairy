@@ -1,7 +1,7 @@
-diff --git a/third-party/chibi-scheme/eval.c b/third-party/chibi-scheme/eval.c
+diff --git a/third-party/chibi-scheme/dist/eval.c b/third-party/chibi-scheme/dist/eval.c
 index 1c2a176..5fc3e83 100644
---- a/third-party/chibi-scheme/eval.c
-+++ b/third-party/chibi-scheme/eval.c
+--- a/third-party/chibi-scheme/dist/eval.c
++++ b/third-party/chibi-scheme/dist/eval.c
 @@ -385,6 +385,9 @@ sexp sexp_make_synclo_op (sexp ctx, sexp self, sexp_sint_t n, sexp env, sexp fv,
  #if SEXP_USE_KEYWORDS
           || sexp_keywordp(expr)
@@ -80,10 +80,10 @@ index 1c2a176..5fc3e83 100644
    "r7rs",
    "chibi",
    NULL,
-diff --git a/third-party/chibi-scheme/include/chibi/features.h b/third-party/chibi-scheme/include/chibi/features.h
+diff --git a/third-party/chibi-scheme/dist/include/chibi/features.h b/third-party/chibi-scheme/dist/include/chibi/features.h
 index 5b85975..5d0d3ae 100644
---- a/third-party/chibi-scheme/include/chibi/features.h
-+++ b/third-party/chibi-scheme/include/chibi/features.h
+--- a/third-party/chibi-scheme/dist/include/chibi/features.h
++++ b/third-party/chibi-scheme/dist/include/chibi/features.h
 @@ -202,6 +202,10 @@
  /* uncomment this to enable SRFI-88 keywords */
  /* #define SEXP_USE_KEYWORDS 1 */
@@ -106,10 +106,10 @@ index 5b85975..5d0d3ae 100644
  #ifndef SEXP_USE_AUTOCLOSE_PORTS
  #define SEXP_USE_AUTOCLOSE_PORTS ! SEXP_USE_NO_FEATURES
  #endif
-diff --git a/third-party/chibi-scheme/include/chibi/sexp.h b/third-party/chibi-scheme/include/chibi/sexp.h
+diff --git a/third-party/chibi-scheme/dist/include/chibi/sexp.h b/third-party/chibi-scheme/dist/include/chibi/sexp.h
 index f9fa64e..5411637 100755
---- a/third-party/chibi-scheme/include/chibi/sexp.h
-+++ b/third-party/chibi-scheme/include/chibi/sexp.h
+--- a/third-party/chibi-scheme/dist/include/chibi/sexp.h
++++ b/third-party/chibi-scheme/dist/include/chibi/sexp.h
 @@ -168,6 +168,9 @@ enum sexp_types {
  #if SEXP_USE_KEYWORDS
    SEXP_KEYWORD,
@@ -196,10 +196,10 @@ index f9fa64e..5411637 100755
    SEXP_OP_NUM_OPCODES
  };
  
-diff --git a/third-party/chibi-scheme/lib/chibi/ast.c b/third-party/chibi-scheme/lib/chibi/ast.c
+diff --git a/third-party/chibi-scheme/dist/lib/chibi/ast.c b/third-party/chibi-scheme/dist/lib/chibi/ast.c
 index 7fdf05c..d4fa2db 100644
---- a/third-party/chibi-scheme/lib/chibi/ast.c
-+++ b/third-party/chibi-scheme/lib/chibi/ast.c
+--- a/third-party/chibi-scheme/dist/lib/chibi/ast.c
++++ b/third-party/chibi-scheme/dist/lib/chibi/ast.c
 @@ -208,6 +208,10 @@ static sexp sexp_type_of (sexp ctx, sexp self, sexp_sint_t n, sexp x) {
    else if (sexp_keywordp(x))
      return sexp_type_by_index(ctx, SEXP_KEYWORD);
@@ -211,10 +211,10 @@ index 7fdf05c..d4fa2db 100644
  #if SEXP_USE_IMMEDIATE_FLONUMS
    else if (sexp_flonump(x))
      return sexp_type_by_index(ctx, SEXP_FLONUM);
-diff --git a/third-party/chibi-scheme/lib/chibi/heap-stats.c b/third-party/chibi-scheme/lib/chibi/heap-stats.c
+diff --git a/third-party/chibi-scheme/dist/lib/chibi/heap-stats.c b/third-party/chibi-scheme/dist/lib/chibi/heap-stats.c
 index ea5369d..e536cf7 100644
---- a/third-party/chibi-scheme/lib/chibi/heap-stats.c
-+++ b/third-party/chibi-scheme/lib/chibi/heap-stats.c
+--- a/third-party/chibi-scheme/dist/lib/chibi/heap-stats.c
++++ b/third-party/chibi-scheme/dist/lib/chibi/heap-stats.c
 @@ -18,6 +18,9 @@ static void sexp_print_simple (sexp ctx, sexp x, sexp out, int depth) {
  #if SEXP_USE_KEYWORDS
        || sexp_keywordp(x)
@@ -225,10 +225,10 @@ index ea5369d..e536cf7 100644
      ) {
      sexp_write(ctx, x, out);
    } else if (depth <= 0) {
-diff --git a/third-party/chibi-scheme/lib/init-7.scm b/third-party/chibi-scheme/lib/init-7.scm
+diff --git a/third-party/chibi-scheme/dist/lib/init-7.scm b/third-party/chibi-scheme/dist/lib/init-7.scm
 index 3a63da9..5d8d9f5 100644
---- a/third-party/chibi-scheme/lib/init-7.scm
-+++ b/third-party/chibi-scheme/lib/init-7.scm
+--- a/third-party/chibi-scheme/dist/lib/init-7.scm
++++ b/third-party/chibi-scheme/dist/lib/init-7.scm
 @@ -732,7 +732,7 @@
                                               (,_i (,_- ,_len ,len))
                                               (,_res (,_quote ())))
@@ -277,10 +277,10 @@ index 3a63da9..5d8d9f5 100644
  
  (define (modulo a b)
    (let ((res (remainder a b)))
-diff --git a/third-party/chibi-scheme/lib/srfi/95/qsort.c b/third-party/chibi-scheme/lib/srfi/95/qsort.c
+diff --git a/third-party/chibi-scheme/dist/lib/srfi/95/qsort.c b/third-party/chibi-scheme/dist/lib/srfi/95/qsort.c
 index d96f27d..bd5c7d6 100644
---- a/third-party/chibi-scheme/lib/srfi/95/qsort.c
-+++ b/third-party/chibi-scheme/lib/srfi/95/qsort.c
+--- a/third-party/chibi-scheme/dist/lib/srfi/95/qsort.c
++++ b/third-party/chibi-scheme/dist/lib/srfi/95/qsort.c
 @@ -101,6 +101,11 @@ static int sexp_object_compare (sexp ctx, sexp a, sexp b) {
            res = strcmp(sexp_keyword_data(a), sexp_keyword_data(b));
            break;
@@ -293,10 +293,10 @@ index d96f27d..bd5c7d6 100644
          /* TODO: consider recursively traversing containers.  requires */
          /* cycle detection. */
          /* case SEXP_PAIR: */
-diff --git a/third-party/chibi-scheme/opcodes.c b/third-party/chibi-scheme/opcodes.c
+diff --git a/third-party/chibi-scheme/dist/opcodes.c b/third-party/chibi-scheme/dist/opcodes.c
 index b626d57..2afd0ff 100644
---- a/third-party/chibi-scheme/opcodes.c
-+++ b/third-party/chibi-scheme/opcodes.c
+--- a/third-party/chibi-scheme/dist/opcodes.c
++++ b/third-party/chibi-scheme/dist/opcodes.c
 @@ -276,6 +276,10 @@ _OP(SEXP_OPC_TYPE_PREDICATE, SEXP_OP_KEYWORDP,  1, 0, _I(SEXP_BOOLEAN), _I(SEXP_
  _FN1(_I(SEXP_KEYWORD), _I(SEXP_STRING), "string->keyword", 0, sexp_string_to_keyword_op),
  _FN1(_I(SEXP_STRING), _I(SEXP_KEYWORD), "keyword->string", 0, sexp_keyword_to_string_op),
@@ -308,10 +308,10 @@ index b626d57..2afd0ff 100644
  _OP(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
  };
  
-diff --git a/third-party/chibi-scheme/sexp.c b/third-party/chibi-scheme/sexp.c
+diff --git a/third-party/chibi-scheme/dist/sexp.c b/third-party/chibi-scheme/dist/sexp.c
 index f6b8f13..71ba28b 100644
---- a/third-party/chibi-scheme/sexp.c
-+++ b/third-party/chibi-scheme/sexp.c
+--- a/third-party/chibi-scheme/dist/sexp.c
++++ b/third-party/chibi-scheme/dist/sexp.c
 @@ -241,6 +241,9 @@ static struct sexp_type_struct _sexp_type_specs[] = {
  #if SEXP_USE_KEYWORDS
    {SEXP_KEYWORD, 0, 0, 0, 0, 0, sexp_sizeof(symbol)+1, sexp_offsetof(symbol, length), 1, 0, 0, 0, 0, 0, 0, (sexp)"Keyword", SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, SEXP_FALSE, NULL, SEXP_FALSE, NULL, NULL},
@@ -488,10 +488,10 @@ index f6b8f13..71ba28b 100644
  #if SEXP_USE_FLONUMS
          if (sexp_flonump(res))
  #if SEXP_USE_IMMEDIATE_FLONUMS
-diff --git a/third-party/chibi-scheme/vm.c b/third-party/chibi-scheme/vm.c
+diff --git a/third-party/chibi-scheme/dist/vm.c b/third-party/chibi-scheme/dist/vm.c
 index a3f9fdc..c4d0088 100644
---- a/third-party/chibi-scheme/vm.c
-+++ b/third-party/chibi-scheme/vm.c
+--- a/third-party/chibi-scheme/dist/vm.c
++++ b/third-party/chibi-scheme/dist/vm.c
 @@ -1495,6 +1495,10 @@ sexp sexp_apply (sexp ctx, sexp proc, sexp args) {
    case SEXP_OP_KEYWORDP:
      _ARG1 = sexp_make_boolean(sexp_keywordp(_ARG1)); break;

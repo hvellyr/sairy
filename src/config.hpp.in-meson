@@ -1,0 +1,15 @@
+// Copyright (c) 2020 Gregor Klinke
+// All rights reserved.
+
+#pragma once
+
+#define TEXTBOOK_VERSION "@version@"
+#define TEXTBOOK_COPYRIGHT_YEAR "@copyright_year@"
+#define TEXTBOOK_COPYRIGHT_OWNER "@copyright_owner@"
+
+#mesondefine TEXTBOOK_HAVE_STD_CODECVT
+#mesondefine TEXTBOOK_HAVE_STD_MAKE_UNIQUE
+#mesondefine TEXTBOOK_HAVE_STD_CODECVT
+#mesondefine TEXTBOOK_HAVE_STD_ENABLE_IF_T
+
+#define TEXTBOOK_DEFAULT_PREFIX "@textbook_default_prefix@"

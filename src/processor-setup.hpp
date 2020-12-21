@@ -3,17 +3,21 @@
 
 #pragma once
 
-#include "program_options/program_options.hpp"
+#include "cxxopts.hpp"
 
 #include <memory>
+#include <string>
+#include <vector>
+
 
 namespace eyestep {
 
 class IProcessor;
 
-program_options::options_description processor_options();
+std::vector<std::string> all_processors();
+void add_processor_options(cxxopts::Options& options);
 
 std::unique_ptr<eyestep::IProcessor>
-make_processor(const std::string& proc_id, const program_options::variables_map& args);
+make_processor(const std::string& proc_id, const cxxopts::ParseResult& args);
 
 } // ns eyestep

@@ -8,8 +8,7 @@
 #include "../textbook-model.hpp"
 #include "../textbook-parser.hpp"
 
-#include "program_options/program_options.hpp"
-
+#include "cxxopts.hpp"
 #include "fspp/filesystem.hpp"
 #include "fspp/utils.hpp"
 
@@ -23,17 +22,15 @@
 
 using namespace eyestep;
 namespace fs = filesystem;
-namespace po = program_options;
 
 using json = nlohmann::json;
 
 
 namespace {
+std::vector<fs::path> _catalog_path;
+
 Node* with_parser_scan(Grove& grove, const std::function<void(textbook::Parser&)>& proc) {
   Node* doc_node = grove.make_node(document_class_definition());
-
-  std::vector<fs::path> _catalog_path;
-  _catalog_path.push_back("share/textbook/spec");
 
   textbook::GroveBuilder grove_builder(doc_node);
   textbook::VariableEnv vars;
@@ -43,7 +40,7 @@ Node* with_parser_scan(Grove& grove, const std::function<void(textbook::Parser&)
                           _catalog_path,
                           false, // mixed content
                           false  // verbose
-                          );
+  );
 
   proc(parser);
 
@@ -58,13 +55,13 @@ json reparse_node_as_json(Node* nd) {
 }
 
 void serialize_node_if_missing(Node* nd, const fs::path& path,
-                               const po::variables_map& vm) {
-  if (vm.count("serialize")) {
+                               const cxxopts::ParseResult& args) {
+  if (args.count("serialize")) {
     serialize(std::cout, nd, true);
   }
 }
 
-bool test_file(const fs::path& path, const po::variables_map& vm) {
+bool test_file(const fs::path& path, const cxxopts::ParseResult& args) {
   if (path.extension() == ".textbook" && fs::is_regular_file(path)) {
     std::cerr << "Testing input file " << path << " ...";
     std::cerr.flush();
@@ -107,13 +104,13 @@ bool test_file(const fs::path& path, const po::variables_map& vm) {
 
       if (expected_root_elt == parsed_json) {
         std::cerr << "ok" << std::endl;
-        serialize_node_if_missing(nd, path, vm);
+        serialize_node_if_missing(nd, path, args);
         return true;
       }
 
       std::cerr << "FAILED" << std::endl
                 << "    parsed and expected outcome differ" << std::endl;
-      if (vm.count("verbose")) {
+      if (args.count("verbose")) {
         std::cerr << "EXPECTED:" << std::endl;
         std::cerr << std::setw(4) << expected_root_elt;
         std::cerr << std::endl << "ACTUAL:" << std::endl;
@@ -124,7 +121,7 @@ bool test_file(const fs::path& path, const po::variables_map& vm) {
     }
     else {
       std::cerr << "parsed" << std::endl;
-      serialize_node_if_missing(nd, path, vm);
+      serialize_node_if_missing(nd, path, args);
       return true;
     }
   }
@@ -132,7 +129,7 @@ bool test_file(const fs::path& path, const po::variables_map& vm) {
   return true;
 }
 
-int test_in_dir(const fs::path& path, const po::variables_map& vm) {
+int test_in_dir(const fs::path& path, const cxxopts::ParseResult& args) {
   int result = 0;
 
   std::vector<fs::directory_entry> dirents;
@@ -140,7 +137,7 @@ int test_in_dir(const fs::path& path, const po::variables_map& vm) {
             std::back_inserter(dirents));
   for (const auto& dirent : dirents) {
     if (dirent.status().type() == fs::file_type::regular) {
-      if (!test_file(dirent.path(), vm)) {
+      if (!test_file(dirent.path(), args)) {
         result = 1;
       }
     }
@@ -149,18 +146,18 @@ int test_in_dir(const fs::path& path, const po::variables_map& vm) {
   return result;
 }
 
-int run_tests(const std::vector<fs::path>& sources, const po::variables_map& vm) {
+int run_tests(const std::vector<fs::path>& sources, const cxxopts::ParseResult& args) {
   int result = 0;
 
   for (const auto& path : sources) {
     if (fs::is_directory(path)) {
-      auto r = test_in_dir(path, vm);
+      auto r = test_in_dir(path, args);
       if (r != 0) {
         result = r;
       }
     }
     else if (fs::is_regular_file(path)) {
-      if (!test_file(path, vm)) {
+      if (!test_file(path, args)) {
         result = 1;
       }
     }
@@ -169,44 +166,50 @@ int run_tests(const std::vector<fs::path>& sources, const po::variables_map& vm)
   return result;
 }
 
-} // anon ns
+} // namespace
 
 
 int main(int argc, char** argv) {
-  po::options_description all_options("Options");
+  cxxopts::Options options_decl(argv[0], " <inputs> - textbook test parser");
 
-  // clang-format off
-  all_options.add_options()
-    ("help,h",         "produce help message")
-    ("verbose,v",      "being verbose")
-    ("serialize,S",    "parse & print json to stdout")
-    ("input-file",     po::value<std::vector<std::string>>(),
-                       "input file")
+  options_decl.add_options()
+    // clang-format off
+    ("h,help",         "produce help message")
+    ("v,verbose",      "being verbose")
+    ("S,serialize",    "parse & print json to stdout")
+    ("input-file",     "input file(s)", cxxopts::value<std::vector<std::string>>())
+    ("C,catalog",      "textbook catalog path", cxxopts::value<std::string>())
     ;
   // clang-format on
 
-  po::positional_options_description pos_options;
-  pos_options.add("input-file", -1);
-
-  po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, all_options, pos_options), vm);
-  po::notify(vm);
-
-  if (vm.count("help")) {
-    std::cout << all_options << std::endl;
-    exit(1);
+  auto options = cxxopts::ParseResult{};
+  try {
+    options_decl.parse_positional("input-file");
+    options = options_decl.parse(argc, argv);
+  }
+  catch (const std::exception& opt) {
+    std::cerr << "Error: " << opt.what() << std::endl;
+    return 1;
   }
 
+  if (options.count("help")) {
+    std::cout << options_decl.help({""}) << std::endl;
+    return 1;
+  }
+
+  if (options.count("catalog"))
+    _catalog_path.push_back(fs::u8path(options["catalog"].as<std::string>()));
+
   std::vector<fs::path> sources;
-  if (vm.count("input-file")) {
-    for (const auto& input : vm["input-file"].as<std::vector<std::string>>()) {
+  if (options.count("input-file")) {
+    for (const auto& input : options["input-file"].as<std::vector<std::string>>()) {
       sources.emplace_back(input);
     }
   }
   else {
-    std::cout << all_options << std::endl;
+    std::cout << options_decl.help({""}) << std::endl;
     exit(1);
   }
 
-  return run_tests(sources, vm);
+  return run_tests(sources, options);
 }

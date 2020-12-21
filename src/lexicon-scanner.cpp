@@ -7,10 +7,10 @@
 #include "nodes.hpp"
 #include "nodeutils.hpp"
 #include "textbook-parser.hpp"
+#include "tool-setup.hpp"
 #include "utils.hpp"
 
-#include "program_options/program_options.hpp"
-
+#include "cxxopts.hpp"
 #include "fspp/filesystem.hpp"
 
 #include <algorithm>
@@ -35,7 +35,7 @@ namespace props {
   const std::string k_sub = "sub";
   const std::string k_text = "text";
   const std::string k_app_info = "app-info";
-}
+} // namespace props
 
 constexpr auto lx_tag = "lx";
 constexpr auto pd_tag = "pd";
@@ -115,11 +115,16 @@ namespace lexicon {
   };
 
   const auto PD_TAGS = std::unordered_set<std::string>{
-    "pn", "pnx", "ps",
+    "pn",
+    "pnx",
+    "ps",
   };
 
   const auto TEMPL_TAGS = std::unordered_set<std::string>{
-    "ct", "dt", "ln", "st",
+    "ct",
+    "dt",
+    "ln",
+    "st",
   };
 
 
@@ -146,7 +151,7 @@ namespace lexicon {
       : _verbose(is_verbose)
       , _grove(grove)
       , _root_nd(rootnd)
-      , _text(::estd::make_unique<std::stringstream>()) {}
+      , _text(estd::make_unique<std::stringstream>()) {}
 
 
     bool eof() {
@@ -438,11 +443,11 @@ namespace lexicon {
         _current_nd->set_property(CommonProps::k_gi, "lexem");
       }
       else if (tag == template_tag) {
-        _current_template = ::estd::make_unique<Template>();
+        _current_template = estd::make_unique<Template>();
       }
     }
   };
-}
+} // namespace lexicon
 
 
 //----------------------------------------------------------------------------------------
@@ -450,21 +455,14 @@ namespace lexicon {
 LexiconScanner::LexiconScanner() = default;
 
 
-LexiconScanner::LexiconScanner(const program_options::variables_map& args)
+LexiconScanner::LexiconScanner(const ToolSetup& setup, const cxxopts::ParseResult& args)
   : _debug(false) {
-
-  if (!args.empty()) {
-    _debug = args.count("debug") != 0;
-  }
+  _debug = args.count("debug") != 0;
 }
 
 
-program_options::options_description LexiconScanner::program_options() const {
-  namespace po = program_options;
-
-  auto opts_title = std::string("Lexicon parser [selector: '") + scanner_id() + "']";
-  auto desc = po::options_description(opts_title);
-  return desc;
+void LexiconScanner::add_program_options(cxxopts::Options& options) const {
+  options.add_options("Lexicon parser");
 }
 
 
@@ -484,4 +482,4 @@ Node* LexiconScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile) 
   return doc_node;
 }
 
-} // ns eyestep
+} // namespace eyestep

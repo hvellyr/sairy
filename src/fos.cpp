@@ -656,7 +656,7 @@ namespace fo {
   {
     static FoClassFactoryFunc make_factory_func() {
       return [](const PropertySpecs&, const Sosofo&) {
-        return ::estd::make_unique<FoClass>();
+        return estd::make_unique<FoClass>();
       };
     }
   };
@@ -666,7 +666,7 @@ namespace fo {
   {
     static FoClassFactoryFunc make_factory_func() {
       return [](const PropertySpecs& p, const Sosofo&) {
-        return ::estd::make_unique<FoClass>(p);
+        return estd::make_unique<FoClass>(p);
       };
     }
   };
@@ -676,7 +676,7 @@ namespace fo {
   {
     static FoClassFactoryFunc make_factory_func() {
       return [](const PropertySpecs& p, const Sosofo& s) {
-        return ::estd::make_unique<FoClass>(p, s);
+        return estd::make_unique<FoClass>(p, s);
       };
     }
   };

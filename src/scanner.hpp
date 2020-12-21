@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "program_options/program_options.hpp"
+#include "cxxopts.hpp"
 
 #include "fspp/filesystem.hpp"
 
@@ -25,7 +25,7 @@ public:
   virtual std::string scanner_id() const = 0;
   virtual std::unordered_set<std::string> supported_extensions() const = 0;
 
-  virtual program_options::options_description program_options() const = 0;
+  virtual void add_program_options(cxxopts::Options& options) const = 0;
 
   virtual Node* scan_file(eyestep::Grove& grove, const filesystem::path& srcfile) = 0;
 };

@@ -3,20 +3,25 @@
 
 #pragma once
 
-#include "program_options/program_options.hpp"
-
+#include "cxxopts.hpp"
 #include "fspp/filesystem.hpp"
 
 #include <memory>
+#include <string>
+#include <vector>
+
 
 namespace eyestep {
 
 class IScanner;
+class ToolSetup;
 
-program_options::options_description scanner_options();
+
+std::vector<std::string> all_scanners();
+void add_scanner_options(cxxopts::Options& options);
 
 std::unique_ptr<eyestep::IScanner>
-make_scanner_for_file(const filesystem::path& file,
-                      const program_options::variables_map& args);
+make_scanner_for_file(const filesystem::path& file, const ToolSetup& setup,
+                      const cxxopts::ParseResult& args);
 
-} // ns eyestep
+} // namespace eyestep

@@ -1,6 +1,6 @@
-/build/
 temp
 bin/textbook
 .dir-locals.el
 .projectile
 .DS_Store
+/output/

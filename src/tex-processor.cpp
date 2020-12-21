@@ -10,8 +10,7 @@
 #include "sosofo.hpp"
 #include "utils.hpp"
 
-#include "program_options/program_options.hpp"
-
+#include "cxxopts.hpp"
 #include "fspp/filesystem.hpp"
 
 #include <cassert>
@@ -26,7 +25,6 @@
 namespace eyestep {
 
 namespace fs = filesystem;
-namespace po = program_options;
 
 
 //------------------------------------------------------------------------------
@@ -1250,72 +1248,63 @@ TexProcessor::TexProcessor()
                                  std::string("a4"))) {}
 
 
-TexProcessor::TexProcessor(const po::variables_map& args)
+TexProcessor::TexProcessor(const cxxopts::ParseResult& args)
   : TexProcessor() {
-  if (!args.empty()) {
-    _verbose = args.count("verbose") != 0;
+  _verbose = args.count("verbose") != 0;
 
-    if (args.count("cropmarks")) {
-      auto cropmarks = args["cropmarks"].as<std::string>();
-      if (cropmarks == "cam")
-        _cropmarks = tex_detail::kCamera;
-      else if (cropmarks == "frame")
-        _cropmarks = tex_detail::kFrame;
-      else
-        _cropmarks = tex_detail::kOff;
-    }
+  auto cropmarks =
+    args.count("cropmarks") ? args["cropmarks"].as<std::string>() : std::string("off");
+  if (cropmarks == "cam")
+    _cropmarks = tex_detail::kCamera;
+  else if (cropmarks == "frame")
+    _cropmarks = tex_detail::kFrame;
+  else
+    _cropmarks = tex_detail::kOff;
 
-    if (args.count("paper-size")) {
-      auto ps = args["paper-size"].as<std::string>();
+  auto ps =
+    args.count("paper-size") ? args["paper-size"].as<std::string>() : std::string("a4");
 
-      if (ps == "a3")
-        _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 297, fo::k_mm),
-                                       fo::LengthSpec(fo::kDimen, 420, fo::k_mm), ps);
-      else if (ps == "a4")
-        _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 210, fo::k_mm),
-                                       fo::LengthSpec(fo::kDimen, 297, fo::k_mm), ps);
-      else if (ps == "a5")
-        _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 148, fo::k_mm),
-                                       fo::LengthSpec(fo::kDimen, 210, fo::k_mm), ps);
-      else if (ps == "letter")
-        _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 8.5, fo::k_in),
-                                       fo::LengthSpec(fo::kDimen, 11, fo::k_in), ps);
-      else if (ps == "legal")
-        _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 8.5, fo::k_in),
-                                       fo::LengthSpec(fo::kDimen, 14, fo::k_in), ps);
-      else {
-        std::smatch user_dimen;
-        std::regex_search(ps, user_dimen,
-                          std::regex(std::regex("([[:digit:]]+)([[:alpha:]]+)x"
-                                                "([[:digit:]]+)([[:alpha:]]+)")));
-        if (!user_dimen.empty()) {
-          _paper_dimen =
-            std::make_tuple(fo::LengthSpec(fo::kDimen, std::stof(user_dimen[1].str()),
-                                           unit_str2unit(user_dimen[2].str())),
-                            fo::LengthSpec(fo::kDimen, std::stof(user_dimen[3].str()),
-                                           unit_str2unit(user_dimen[4].str())),
-                            std::string("user"));
-        }
-      }
+  if (ps == "a3")
+    _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 297, fo::k_mm),
+                                   fo::LengthSpec(fo::kDimen, 420, fo::k_mm), ps);
+  else if (ps == "a4")
+    _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 210, fo::k_mm),
+                                   fo::LengthSpec(fo::kDimen, 297, fo::k_mm), ps);
+  else if (ps == "a5")
+    _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 148, fo::k_mm),
+                                   fo::LengthSpec(fo::kDimen, 210, fo::k_mm), ps);
+  else if (ps == "letter")
+    _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 8.5, fo::k_in),
+                                   fo::LengthSpec(fo::kDimen, 11, fo::k_in), ps);
+  else if (ps == "legal")
+    _paper_dimen = std::make_tuple(fo::LengthSpec(fo::kDimen, 8.5, fo::k_in),
+                                   fo::LengthSpec(fo::kDimen, 14, fo::k_in), ps);
+  else {
+    std::smatch user_dimen;
+    std::regex_search(ps, user_dimen,
+                      std::regex(std::regex("([[:digit:]]+)([[:alpha:]]+)x"
+                                            "([[:digit:]]+)([[:alpha:]]+)")));
+    if (!user_dimen.empty()) {
+      _paper_dimen =
+        std::make_tuple(fo::LengthSpec(fo::kDimen, std::stof(user_dimen[1].str()),
+                                       unit_str2unit(user_dimen[2].str())),
+                        fo::LengthSpec(fo::kDimen, std::stof(user_dimen[3].str()),
+                                       unit_str2unit(user_dimen[4].str())),
+                        std::string("user"));
     }
   }
 }
 
 
-po::options_description TexProcessor::program_options() const {
-  auto opts_title = std::string("Tex renderer [selector: '") + proc_id() + "']";
-  auto desc = po::options_description(opts_title);
-
-  // clang-format off
-  desc.add_options()
-    ("cropmarks", po::value<std::string>()->default_value(std::string()),
-     "enable crop marks style: cam, frame, off.  Default is off")
-    ("paper-size", po::value<std::string>()->default_value(std::string("a4")),
-     "give size of paper use.  Default is 'a4'")
+void TexProcessor::add_program_options(cxxopts::Options& options) const {
+  options.add_options("Tex renderer")
+    // clang-format off
+    ("cropmarks", "enable crop marks style: cam, frame, off.  Default is off",
+                  cxxopts::value<std::string>())
+    ("paper-size", "give size of paper use.  Default is 'a4'",
+                  cxxopts::value<std::string>()->default_value("a4"))
     ;
   // clang-format on
-
-  return desc;
 }
 
 

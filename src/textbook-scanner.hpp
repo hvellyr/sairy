@@ -5,8 +5,7 @@
 
 #include "scanner.hpp"
 
-#include "program_options/program_options.hpp"
-
+#include "cxxopts.hpp"
 #include "fspp/filesystem.hpp"
 
 #include <string>
@@ -18,6 +17,8 @@ namespace eyestep {
 
 class Node;
 class Grove;
+class ToolSetup;
+
 
 class TextbookScanner : public IScanner
 {
@@ -27,7 +28,7 @@ class TextbookScanner : public IScanner
 
 public:
   TextbookScanner();
-  TextbookScanner(const program_options::variables_map& /*args*/);
+  TextbookScanner(const ToolSetup& setup, const cxxopts::ParseResult& /*args*/);
 
   std::string scanner_id() const override {
     return "textbook";
@@ -37,9 +38,9 @@ public:
     return {".tb", ".textbook"};
   }
 
-  program_options::options_description program_options() const override;
+  void add_program_options(cxxopts::Options& options) const override;
 
   Node* scan_file(eyestep::Grove& grove, const filesystem::path& srcfile) override;
 };
 
-} // ns eyestep
+} // namespace eyestep
