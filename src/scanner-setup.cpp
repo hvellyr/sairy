@@ -4,10 +4,11 @@
 #include "scanner-setup.hpp"
 #include "estd/memory.hpp"
 #include "scanner.hpp"
+#include "tool-setup.hpp"
 #include "utils.hpp"
 
+#include "cxxopts.hpp"
 #include "lexicon-scanner.hpp"
-#include "program_options/program_options.hpp"
 #include "textbook-scanner.hpp"
 
 #include "fspp/filesystem.hpp"
@@ -22,12 +23,12 @@
 namespace eyestep {
 
 namespace fs = filesystem;
-namespace po = program_options;
 
 
 namespace {
   using ScannerFactoryFunc =
-    std::function<std::unique_ptr<IScanner>(const po::variables_map& args)>;
+    std::function<std::unique_ptr<IScanner>(const ToolSetup& setup,
+                                            const cxxopts::ParseResult& args)>;
   using ScannerClassFactoryMap = std::map<std::string, ScannerFactoryFunc>;
 
   using ScannerExtensionMap = std::unordered_map<std::string, std::string>;
@@ -42,8 +43,9 @@ namespace {
     const auto id = scanner.scanner_id();
 
     assert(s_scanner_factory_map.find(id) == s_scanner_factory_map.end());
-    s_scanner_factory_map[id] = [](const po::variables_map& args) {
-      return estd::make_unique<ScannerClass>(args);
+    s_scanner_factory_map[id] = [](const ToolSetup& setup,
+                                   const cxxopts::ParseResult& args) {
+      return estd::make_unique<ScannerClass>(setup, args);
     };
 
     for (const auto& ext : scanner.supported_extensions()) {
@@ -61,37 +63,36 @@ namespace {
 
     return s_scanner_factory_map;
   }
-} // anon ns
+} // namespace
 
 
-po::options_description scanner_options() {
-  std::vector<std::string> parsers;
-  std::vector<po::options_description> options;
+std::vector<std::string> all_scanners() {
+  auto scanner_ids = std::vector<std::string>{};
 
   for (const auto& reg : scanner_registry()) {
-    auto scanner = reg.second(po::variables_map{});
+    auto scanner = reg.second(ToolSetup{}, cxxopts::ParseResult{});
     if (scanner) {
-      parsers.push_back(scanner->scanner_id());
-      auto opts = scanner->program_options();
-      if (!opts.empty()) {
-        options.push_back(opts);
-      }
+      scanner_ids.push_back(scanner->scanner_id());
     }
   }
 
-  auto title = std::string("PARSERS [") + utils::join(parsers, ", ") + "]";
-  auto result = po::options_description(title);
-
-  for (const auto& opt : options) {
-    result.add(opt);
-  }
-
-  return result;
+  return scanner_ids;
 }
 
 
-std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file,
-                                                         const po::variables_map& args) {
+void add_scanner_options(cxxopts::Options& options) {
+  for (const auto& reg : scanner_registry()) {
+    auto scanner = reg.second(ToolSetup{}, cxxopts::ParseResult{});
+    if (scanner) {
+      scanner->add_program_options(options);
+    }
+  }
+}
+
+
+std::unique_ptr<eyestep::IScanner>
+make_scanner_for_file(const fs::path& file, const ToolSetup& setup,
+                      const cxxopts::ParseResult& args) {
   const auto& registry = scanner_registry();
 
   auto ext = file.extension().string();
@@ -100,11 +101,11 @@ std::unique_ptr<eyestep::IScanner> make_scanner_for_file(const fs::path& file,
   if (i_scanner_type != s_scanner_extension_map.end()) {
     const auto i_scanner_factory = registry.find(i_scanner_type->second);
     if (i_scanner_factory != registry.end()) {
-      return i_scanner_factory->second(args);
+      return i_scanner_factory->second(setup, args);
     }
   }
 
   return nullptr;
 }
 
-} // ns eyestep
+} // namespace eyestep

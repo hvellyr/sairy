@@ -12,12 +12,12 @@
 #include "scm-context.hpp"
 #include "sosofo.hpp"
 #include "style-engine.hpp"
+#include "tool-setup.hpp"
 #include "utils.hpp"
 
 #include "processor-setup.hpp"
 
-#include "program_options/program_options.hpp"
-
+#include "cxxopts.hpp"
 #include "fspp/filesystem.hpp"
 
 #include <algorithm>
@@ -34,7 +34,6 @@
 
 
 namespace fs = eyestep::filesystem;
-namespace po = program_options;
 
 namespace {
 
@@ -48,7 +47,8 @@ std::string to_iso_timestring(std::chrono::system_clock::time_point tp) {
 
 
 eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
-                            const po::variables_map& args) {
+                            const eyestep::ToolSetup& setup,
+                            const cxxopts::ParseResult& args) {
   auto grove = eyestep::Grove{};
   auto* root = grove.set_root_node(eyestep::root_class_definition());
 
@@ -58,7 +58,7 @@ eyestep::Grove scan_sources(const std::vector<fs::path>& sources,
     std::cout << "Scan " << src << " ...";
     std::cout.flush();
 
-    auto scanner = eyestep::make_scanner_for_file(src, args);
+    auto scanner = eyestep::make_scanner_for_file(src, setup, args);
 
     if (scanner) {
       auto* nd = scanner->scan_file(grove, src);
@@ -156,83 +156,95 @@ std::string textbook_prefix() {
 
   return TEXTBOOK_DEFAULT_PREFIX;
 }
-} // anon namespace
+} // namespace
 
 
 int main(int argc, char** argv) {
   try {
-    // Declare the supported options.
-    auto desc = po::options_description("");
+    std::string prog_name(argv[0]);
+    cxxopts::Options options_decl(prog_name, " <inputs> - textbook processor");
+
+    auto all_scanners = eyestep::utils::join(eyestep::all_scanners(), ", ");
+    auto all_procs = eyestep::utils::join(eyestep::all_processors(), ", ");
 
     // clang-format off
-    desc.add_options()
-      ("help,h",         "produce help message")
-      ("verbose,v",      "being verbose")
+    options_decl.add_options()
+      ("h,help",         "produce help message and exit")
+      ("version",        "print version and exit")
+      ("v,verbose",      "being verbose")
       ("debug",          "being very verbose printing a lot of internal details (for debugging)")
-      ("output,o",       po::value<std::string>()->default_value(std::string()),
-                         "write result to arg")
-      ("backend,b",      po::value<std::string>()->default_value(std::string("auto")),
-                         "use backend processor")
-      ("template,t",     po::value<std::string>()->default_value("auto"),
-                         "use template")
-      ("input-file",     po::value<std::vector<std::string>>(),
-                         "input file")
-      ("define,D",       po::value<std::vector<std::string>>(), "Set the variable or call toplevel "
+      ("o,output",       "write result to arg",
+                         cxxopts::value<std::string>())
+      ("b,backend",      std::string("use backend processor [") + all_procs + "]",
+                         cxxopts::value<std::string>()->default_value("auto"))
+      ("t,template",     "use template",
+                         cxxopts::value<std::string>()->default_value("auto"))
+      ("D,define",       "Set the variable or call toplevel "
                          "setting <arg>.  If <arg> has the form KEY=VALUE the top-level variable "
                          "%KEY% is set to VALUE.  If it has the form NAME then the top-level "
-                         "function (enable-name) will be called.")
-      ;
-
-    auto hidden = po::options_description("Hidden options");
-    hidden.add_options()
-      ("textbook-prefix",   po::value<std::string>()->default_value(textbook_prefix()), "")
+                         "function (enable-name) will be called.",
+                         cxxopts::value<std::vector<std::string>>())
+      ("textbook-prefix", "",
+                          cxxopts::value<std::string>()->default_value(textbook_prefix()))
+      ("input-file",     "input file(s)", cxxopts::value<std::vector<std::string>>())
       ;
     // clang-format on
 
-    auto all_options = po::options_description("All");
-    auto visible_options = po::options_description("");
+    eyestep::add_scanner_options(options_decl);
+    eyestep::add_processor_options(options_decl);
 
-    all_options.add(desc).add(hidden);
-    visible_options.add(desc);
-
-    all_options.add(eyestep::scanner_options());
-    visible_options.add(eyestep::scanner_options());
-
-    all_options.add(eyestep::processor_options());
-    visible_options.add(eyestep::processor_options());
-
-    auto pos_options = po::positional_options_description{};
-    pos_options.add("input-file", -1);
-
-    auto vm = po::variables_map{};
-    po::store(po::parse_command_line(argc, argv, all_options, pos_options), vm);
-    po::notify(vm);
-
-    if (vm.count("help")) {
-      std::cout << visible_options << "\n";
-      exit(1);
+    auto options = cxxopts::ParseResult{};
+    try {
+      options_decl.parse_positional("input-file");
+      options = options_decl.parse(argc, argv);
+    }
+    catch (const std::exception& opt) {
+      std::cout << "ERROR: " << opt.what() << std::endl;
+      return 1;
     }
 
-    auto outf = vm["output"].as<std::string>();
-    auto templ_path = fs::path(vm["template"].as<std::string>());
-    auto prefix_path = vm["textbook-prefix"].as<std::string>();
-    auto backend = vm["backend"].as<std::string>();
-
-    if (vm.count("verbose")) {
-      std::cout << "outf        : " << outf << std::endl;
-      std::cout << "prefix path : " << prefix_path << std::endl;
-      std::cout << "templ_path  : " << templ_path << std::endl;
+    if (options.count("help")) {
+      std::cout << options_decl.help() << std::endl;
+      return 1;
     }
+    if (options.count("version")) {
+      std::cout << prog_name << " - vr. " << TEXTBOOK_VERSION << std::endl;
+      std::cout << "Copyright (c) " << TEXTBOOK_COPYRIGHT_YEAR << ", "
+                << TEXTBOOK_COPYRIGHT_OWNER << std::endl;
+      return 1;
+    }
+
+    auto outf =
+      options.count("output") ? options["output"].as<std::string>() : std::string{};
+    auto templ_path = options.count("template")
+                        ? fs::path(options["template"].as<std::string>())
+                        : fs::u8path("auto");
+    auto prefix_path = options.count("textbook-prefix")
+                         ? options["textbook-prefix"].as<std::string>()
+                         : textbook_prefix();
+    auto backend = options.count("backend") ? options["backend"].as<std::string>()
+                                            : std::string("auto");
+
+    if (options.count("verbose")) {
+      std::cout << "outf           : " << outf << std::endl;
+      std::cout << "prefix path    : " << prefix_path << std::endl;
+      std::cout << "templ_path     : " << templ_path << std::endl;
+      std::cout << "all processors : " << all_procs << std::endl;
+      std::cout << "all scanners   : " << all_scanners << std::endl;
+    }
+
+    auto tool_setup = eyestep::ToolSetup{};
+    tool_setup._prefix_path = eyestep::utils::split_paths(prefix_path);
 
     auto sources = std::vector<fs::path>{};
-    if (vm.count("input-file")) {
-      for (const auto& input : vm["input-file"].as<std::vector<std::string>>()) {
+    if (options.count("input-file")) {
+      for (const auto& input : options["input-file"].as<std::vector<std::string>>()) {
         sources.emplace_back(input);
       }
     }
 
-    auto grove = scan_sources(sources, vm);
-    if (vm.count("debug")) {
+    auto grove = scan_sources(sources, tool_setup, options);
+    if (options.count("debug")) {
       eyestep::serialize(std::cout, grove.root_node());
     }
 
@@ -245,18 +257,19 @@ int main(int argc, char** argv) {
         exit(1);
       }
 
-      if (vm.count("verbose"))
+      if (options.count("verbose"))
         std::cout << "use template  : " << eff_templ_path << std::endl;
 
-      auto processor = eyestep::make_processor(backend, vm);
+      auto processor = eyestep::make_processor(backend, options);
       if (processor) {
         processor->set_output_file(
           deduce_output_file(outf, sources, processor->default_output_extension()));
 
-        auto engine = eyestep::StyleEngine(prefix_path, backend, vm.count("verbose") > 0);
+        auto engine =
+          eyestep::StyleEngine(prefix_path, backend, options.count("verbose") > 0);
         if (engine.load_style(eff_templ_path)) {
-          if (vm.count("define")) {
-            engine.define_variables(vm["define"].as<std::vector<std::string>>());
+          if (options.count("define")) {
+            engine.define_variables(options["define"].as<std::vector<std::string>>());
           }
           auto sosofo = engine.process_node(grove.root_node());
 

@@ -11,8 +11,7 @@
 #include "sosofo.hpp"
 #include "utils.hpp"
 
-#include "program_options/program_options.hpp"
-
+#include "cxxopts.hpp"
 #include "fspp/estd/optional.hpp"
 #include "fspp/filesystem.hpp"
 
@@ -30,7 +29,6 @@
 namespace eyestep {
 
 namespace fs = filesystem;
-namespace po = program_options;
 
 const auto k_text = std::string("text");
 
@@ -1357,18 +1355,14 @@ HtmlProcessor::HtmlProcessor()
   , _css_port(k_TEXTBOOK_GENERATOR) {}
 
 
-HtmlProcessor::HtmlProcessor(const po::variables_map& args)
+HtmlProcessor::HtmlProcessor(const cxxopts::ParseResult& args)
   : HtmlProcessor() {
-  if (!args.empty())
-    _verbose = args.count("verbose") != 0;
+  _verbose = args.count("verbose") != 0;
 }
 
 
-po::options_description HtmlProcessor::program_options() const {
-  auto opts_title = std::string("HTML renderer [selector: '") + proc_id() + "']";
-  auto desc = po::options_description(opts_title);
-
-  return desc;
+void HtmlProcessor::add_program_options(cxxopts::Options& options) const {
+  options.add_options("HTML renderer");
 }
 
 

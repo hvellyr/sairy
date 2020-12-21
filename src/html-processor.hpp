@@ -8,8 +8,7 @@
 #include "html-types.hpp"
 #include "html-writer.hpp"
 
-#include "program_options/program_options.hpp"
-
+#include "cxxopts.hpp"
 #include "fspp/estd/optional.hpp"
 #include "fspp/filesystem.hpp"
 
@@ -97,7 +96,7 @@ class HtmlProcessor : public AbstractProcessor<HtmlProcessor>
 
 public:
   HtmlProcessor();
-  HtmlProcessor(const program_options::variables_map& args);
+  HtmlProcessor(const cxxopts::ParseResult& args);
 
   std::string proc_id() const override {
     return "html";
@@ -107,7 +106,7 @@ public:
     return ".html";
   }
 
-  program_options::options_description program_options() const override;
+  void add_program_options(cxxopts::Options& options) const override;
 
   const IFoProcessor<HtmlProcessor>*
   lookup_fo_processor(const std::string& fo_classname) const override;

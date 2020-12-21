@@ -6,8 +6,7 @@
 #include "abstract-processor.hpp"
 #include "fo.hpp"
 
-#include "program_options/program_options.hpp"
-
+#include "cxxopts.hpp"
 #include "fspp/filesystem.hpp"
 #include "fspp/utils.hpp"
 
@@ -96,7 +95,7 @@ class TexProcessor : public AbstractProcessor<TexProcessor>
 
 public:
   TexProcessor();
-  TexProcessor(const program_options::variables_map& args);
+  TexProcessor(const cxxopts::ParseResult& args);
 
   std::string proc_id() const override {
     return "tex";
@@ -106,7 +105,7 @@ public:
     return ".tex";
   }
 
-  program_options::options_description program_options() const override;
+  void add_program_options(cxxopts::Options& options) const override;
 
   const IFoProcessor<TexProcessor>*
   lookup_fo_processor(const std::string& fo_classname) const override;

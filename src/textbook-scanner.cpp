@@ -7,10 +7,10 @@
 #include "nodeutils.hpp"
 #include "textbook-model.hpp"
 #include "textbook-parser.hpp"
+#include "tool-setup.hpp"
 #include "utils.hpp"
 
-#include "program_options/program_options.hpp"
-
+#include "cxxopts.hpp"
 #include "fspp/filesystem.hpp"
 
 #include <algorithm>
@@ -32,25 +32,18 @@ namespace fs = filesystem;
 TextbookScanner::TextbookScanner() = default;
 
 
-TextbookScanner::TextbookScanner(const program_options::variables_map& args)
-  : _debug(false) {
-  if (!args.empty()) {
-    _prefix_path = utils::split_paths(args["textbook-prefix"].as<std::string>());
+TextbookScanner::TextbookScanner(const ToolSetup& setup, const cxxopts::ParseResult& args)
+  : _debug(false)
+  , _prefix_path(setup._prefix_path) {
+  transform(begin(_prefix_path), end(_prefix_path), back_inserter(_catalog_path),
+            [](const fs::path& path) { return path / "spec"; });
 
-    transform(begin(_prefix_path), end(_prefix_path), back_inserter(_catalog_path),
-              [](const fs::path& path) { return path / "spec"; });
-
-    _debug = args.count("debug") != 0;
-  }
+  _debug = args.count("debug") != 0;
 }
 
 
-program_options::options_description TextbookScanner::program_options() const {
-  namespace po = program_options;
-
-  auto opts_title = std::string("Textbook parser [selector: '") + scanner_id() + "']";
-  auto desc = po::options_description(opts_title);
-  return desc;
+void TextbookScanner::add_program_options(cxxopts::Options& options) const {
+  options.add_options("Textbook parser");
 }
 
 
@@ -66,9 +59,8 @@ Node* TextbookScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile)
   auto parser = textbook::Parser(grove, grove_builder, vars, catalog,
                                  nullptr, // docspec
                                  _catalog_path,
-                                 false, // mixed content
-                                 false  // verbose
-                                 );
+                                 false,  // mixed content
+                                 false); // verbose
 
   parser.parse_file(srcfile);
 
@@ -79,4 +71,4 @@ Node* TextbookScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile)
   return doc_node;
 }
 
-} // ns eyestep
+} // namespace eyestep

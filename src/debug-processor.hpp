@@ -5,7 +5,7 @@
 
 #include "abstract-processor.hpp"
 
-#include "program_options/program_options.hpp"
+#include "cxxopts.hpp"
 
 #include <string>
 
@@ -24,7 +24,7 @@ class DebugProcessor : public AbstractProcessor<DebugProcessor>
 
 public:
   DebugProcessor() = default;
-  DebugProcessor(const program_options::variables_map& args);
+  DebugProcessor(const cxxopts::ParseResult& args);
 
   std::string proc_id() const override {
     return "debug";
@@ -34,7 +34,7 @@ public:
     return {};
   }
 
-  program_options::options_description program_options() const override;
+  void add_program_options(cxxopts::Options& options) const override;
 
   const IFoProcessor<DebugProcessor>*
   lookup_fo_processor(const std::string& fo_classname) const override;

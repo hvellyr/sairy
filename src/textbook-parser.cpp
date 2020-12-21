@@ -229,7 +229,7 @@ namespace textbook {
       return nullptr;
     }
 
-  } // anon namespace
+  } // namespace
 
 
   //------------------------------------------------------------------------------
@@ -976,9 +976,8 @@ namespace textbook {
           _doctype = tag;
         }
         else {
-          throw ParseException("",
-                               std::string("Can't read document spec: ") +
-                                 path->string());
+          throw ParseException("", std::string("Can't read document spec: ") +
+                                     path->string());
         }
       }
       else {
@@ -1003,5 +1002,5 @@ namespace textbook {
     }
   }
 
-} // ns textbook
-} // ns eyestep
+} // namespace textbook
+} // namespace eyestep
