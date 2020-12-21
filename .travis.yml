@@ -11,14 +11,13 @@ addons:
       - kubuntu-backports
       - ubuntu-toolchain-r-test
     packages:
-      - cmake
+      - meson
       - gcc-4.9
       - g++-4.9
 
 before_script:
-    - mkdir build && cd build
-    - CXX=g++-4.9 CC=gcc-4.9 cmake ..
+    - CXX=g++-4.9 CC=gcc-4.9 meson setup output && cd output
 
 script:
-    - CXX=g++-4.9 CC=gcc-4.9 cmake --build .
-    - ctest -V
+    - CXX=g++-4.9 CC=gcc-4.9 meson compile
+    - meson test
