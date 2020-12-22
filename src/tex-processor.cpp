@@ -283,6 +283,9 @@ namespace {
       case 0x1ebd:
         os << "\\~e";
         break;
+      case 0x26a0:
+        os << "\\danger{}";
+        break;
       case 0x27e8:
         os << "$\\langle{}$";
         break;

@@ -101,6 +101,9 @@
 \newcommand{\tbless}{\char"3C}
 \newcommand{\tbgreater}{\char"3E}
 \newcommand{\thsp}{\kern.1em}
+\newcommand*{\TakeFourierOrnament}[1]{{%
+\fontencoding{U}\fontfamily{futs}\selectfont\char#1}}
+\newcommand*{\danger}{\TakeFourierOrnament{66}}
 %
 %
 \newcommand{\vln}[2]{{\leavevmode\tt\insp{#1}#2\par}}

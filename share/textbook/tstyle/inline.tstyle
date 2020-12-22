@@ -79,3 +79,7 @@
 
 (element ?
   (enclose "[" (attribute "optionalexpr" (current-node)) "]"))
+
+
+(element error
+  (literal "⚠"))
