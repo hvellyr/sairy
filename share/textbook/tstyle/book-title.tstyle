@@ -314,7 +314,7 @@
 (define (format-book-copyright nd)
   (let* ((info (select-elements (children nd) 'info))
          (body-sosofo (make display-group
-                        break-after?: 'page
+                        break-after: 'page
                         space-before: (display-space 10pt max: 'inf
                                                      conditional?: #f
                                                      priority: 2)

@@ -182,8 +182,8 @@ namespace fo {
       {"space-after", LengthSpec(kDisplay, 0, k_pt)},
       {"keep-with-previous?", false},
       {"keep-with-next?", false},
-      {"break-after?", false},
-      {"break-before?", false},
+      {"break-after", false},
+      {"break-before", false},
       {"lines", "wrap"},
       {"whitespace-treatment", "collapse"},
       {"asis-wrap-indent", 10},
@@ -221,8 +221,8 @@ namespace fo {
     static const auto propspecs = PropertySpecs{
       {"space-before", LengthSpec(kDisplay, 0, k_pt)},
       {"space-after", LengthSpec(kDisplay, 0, k_pt)},
-      {"break-before?", false},
-      {"break-after?", false},
+      {"break-before", false},
+      {"break-after", false},
       {"font-caps", ""},
       {"font-name", ""},
       {"font-posture", ""},
@@ -264,8 +264,8 @@ namespace fo {
       {"color", ""},
       {"space-before", LengthSpec(kDisplay, 0, k_pt)},
       {"space-after", LengthSpec(kDisplay, 0, k_pt)},
-      {"break-before?", false},
-      {"break-after?", false},
+      {"break-before", false},
+      {"break-after", false},
       {"line-thickness", LengthSpec(kDisplay, 1, k_pt)},
     };
     // clang-format on
@@ -428,8 +428,8 @@ namespace fo {
       {"space-after", LengthSpec(kDisplay, 0, k_pt)},
       {"keep-with-previous?", false},
       {"keep-with-next?", false},
-      {"break-after?", false},
-      {"break-before?", false},
+      {"break-after", false},
+      {"break-before", false},
       {"column-number", 1},
       {"gutter-width", LengthSpec(kDimen, 21, k_pt)},
       // clang-format on

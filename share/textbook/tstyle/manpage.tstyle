@@ -35,7 +35,7 @@
      font-caps: 'small-caps
      font-size: 14pt
      font-weight: 'bold
-     break-after?: #f
+     break-after: #f
      keep-with-next?: #t
      first-line-start-indent: 0pt
      space-before: 14pt
@@ -63,7 +63,7 @@
      font-caps: 'small-caps
      font-size: 14pt
      font-weight: 'bold
-     break-after?: #f
+     break-after: #f
      space-before: 14pt
      space-after: 7pt
      keep-with-next?: #t
@@ -88,7 +88,7 @@
        (sosofo-append
         (make paragraph
           font-weight: 'bold
-          break-after?: #f
+          break-after: #f
           space-before: 0pt
           space-after: 7pt
           keep-with-next?: #t
@@ -104,7 +104,7 @@
           font-size: 14pt
           line-spacing: 17pt
           font-weight: 'bold
-          break-after?: #f
+          break-after: #f
           space-before: 20pt
           space-after: 7pt
           keep-with-next?: #t
@@ -131,7 +131,7 @@
             font-size: 14pt
             line-spacing: 17pt
             font-weight: 'bold
-            break-after?: #f
+            break-after: #f
             space-before: 20pt
             space-after: 7pt
             keep-with-next?: #t
@@ -213,7 +213,7 @@
      font-caps: 'small-caps
      font-size: 14pt
      font-weight: 'bold
-     break-after?: #f
+     break-after: #f
      space-before: 14pt
      space-after: 7pt
      keep-with-next?: #t

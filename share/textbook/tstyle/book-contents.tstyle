@@ -103,8 +103,8 @@
 
 (element content
   (make display-group
-    break-before?: 'page
-    break-after?: 'page
+    break-before: 'page
+    break-after: 'page
     (format-section "Contents" (current-node))))
 
 

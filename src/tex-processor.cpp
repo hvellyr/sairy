@@ -857,7 +857,7 @@ namespace {
   {
   public:
     void render(TexProcessor* po, const IFormattingObject* fo) const override {
-      if (auto break_before = po->property_or_none<std::string>(fo, "break-before?")) {
+      if (auto break_before = po->property_or_none<std::string>(fo, "break-before")) {
         if (*break_before == "page")
           po->request_page_break(tex_detail::kBreakPageBefore);
       }
@@ -875,7 +875,7 @@ namespace {
 
       vspace(po, fo, "space-after", "keep-with-next?");
 
-      if (auto break_after = po->property_or_none<std::string>(fo, "break-after?")) {
+      if (auto break_after = po->property_or_none<std::string>(fo, "break-after")) {
         if (*break_after == "page")
           po->request_page_break(tex_detail::kBreakPageAfter);
       }

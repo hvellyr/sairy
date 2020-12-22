@@ -192,17 +192,17 @@
 (define %chapters-on-separate-pages% #f)
 (element chapter
   (make display-group
-    break-before?: (if %chapters-on-separate-pages% 'page #f)
+    break-before: (if %chapters-on-separate-pages% 'page #f)
     (format-section "Chapter" (current-node))))
 
 (element introduction
   (make display-group
-    break-before?: (if %chapters-on-separate-pages% 'page #f)
+    break-before: (if %chapters-on-separate-pages% 'page #f)
     (format-section "Introduction" (current-node))))
 
 (element preface
   (make display-group
-    break-before?: (if %chapters-on-separate-pages% 'page #f)
+    break-before: (if %chapters-on-separate-pages% 'page #f)
     (format-section "Preface" (current-node))))
 
 (element section
@@ -219,12 +219,12 @@
 
 (element appendix
   (make display-group
-    break-before?: (if %chapters-on-separate-pages% 'page #f)
+    break-before: (if %chapters-on-separate-pages% 'page #f)
     (format-section "Appendix" (current-node))))
 
 (element index
   (make display-group
-    break-before?: 'page
+    break-before: 'page
     (format-section "Index" (current-node))))
 
 ;; part
