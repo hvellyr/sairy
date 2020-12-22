@@ -52,8 +52,7 @@
   (format-monospace (attribute "text" (current-node))))
 
 (element tag
-  (format-bold
-   (format-monospace (attribute "text" (current-node)))))
+  (format-monospace (attribute "text" (current-node))))
 
 (element prm
   (format-em (attribute "text" (current-node))))
