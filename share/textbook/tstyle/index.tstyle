@@ -140,17 +140,21 @@
            )))))
 
 (element showindex
-  (let* ((type (attribute "type" (current-node)))
+  (let* ((type (data (attribute "type" (current-node))))
          (descs (descendants (grove-root)))
          (idx-nds (node-list
                    (select-elements descs 'idx)
                    (select-elements descs 'vidx)))
+         (filtered-idx-nds (node-list-filter (lambda (snl)
+                                               (let* ((nd-type (data (attribute "type" snl))))
+                                                 (string=? type nd-type)))
+                                             idx-nds))
          (idx-data (prepare-index-data (map (lambda (snl)
                                               (list (data (attribute "text" snl))
                                                     (data (attribute "type" snl))
                                                     snl)
                                               )
-                                            (node-list->list idx-nds))))
+                                            (node-list->list filtered-idx-nds))))
          )
     (make simple-column-set-sequence
       keep-with-previous?: #t
