@@ -529,10 +529,9 @@ namespace {
     auto csspath = open_html_port(processor, path, doctype);
 
     processor->ctx().port().header(title, author, desc, [&](std::ostream&) {
-      processor->ctx().port().write_link("stylesheet",
-                                         {{"media", "screen"},
-                                          {"type", "text/css"},
-                                          {"href", csspath.string()}});
+      processor->ctx().port().write_link("stylesheet", {{"media", "screen"},
+                                                        {"type", "text/css"},
+                                                        {"href", csspath.string()}});
     });
 
     functor(processor);
@@ -746,10 +745,9 @@ namespace {
 
       if (!ctx.port().has_header()) {
         ctx.port().header(title, author, desc, [&](std::ostream&) {
-          ctx.port().write_link("stylesheet",
-                                {{"media", "screen"},
-                                 {"type", "text/css"},
-                                 {"href", processor->css_file().string()}});
+          ctx.port().write_link("stylesheet", {{"media", "screen"},
+                                               {"type", "text/css"},
+                                               {"href", processor->css_file().string()}});
         });
       }
 
@@ -867,15 +865,13 @@ namespace {
 
       if (!ctx.port().has_header()) {
         ctx.port().header(title, author, desc, [&](std::ostream&) {
-          ctx.port().write_link("stylesheet",
-                                {{"media", "screen"},
-                                 {"type", "text/css"},
-                                 {"href", processor->css_file().string()}});
+          ctx.port().write_link("stylesheet", {{"media", "screen"},
+                                               {"type", "text/css"},
+                                               {"href", processor->css_file().string()}});
           if (links) {
-            ctx.port().write_link("stylesheet",
-                                  {{"media", "screen"},
-                                   {"type", "text/css"},
-                                   {"href", *links}});
+            ctx.port().write_link("stylesheet", {{"media", "screen"},
+                                                 {"type", "text/css"},
+                                                 {"href", *links}});
           }
         });
       }
@@ -1347,7 +1343,7 @@ namespace {
       po->render_sosofo(&fo->port(k_text));
     }
   };
-} // ns anon
+} // namespace
 
 
 HtmlProcessor::HtmlProcessor()
@@ -1401,4 +1397,4 @@ void HtmlProcessor::after_rendering() {
   close_html_port(this);
 }
 
-} // ns eyestep
+} // namespace eyestep

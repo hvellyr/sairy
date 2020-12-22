@@ -124,18 +124,17 @@ namespace fo {
 
   //----------------------------------------------------------------------------
 
-  /*! Return the set of defined properties */
   const PropertySpecs& Literal::default_properties() const {
     static const auto propspecs = PropertySpecs{
-      {"text", ""}, {"language", ""},
+      {"text", ""},
+      {"language", ""},
     };
 
     return propspecs;
   }
 
 
-  /*! Return a port by @p portName */
-  const Sosofo& Literal::port(const std::string& portName) const {
+  const Sosofo& Literal::port(const std::string& /*portName*/) const {
     return k_nil_sosofo;
   }
 
@@ -653,9 +652,8 @@ namespace fo {
   struct FoClassFactory<FoClass, 0>
   {
     static FoClassFactoryFunc make_factory_func() {
-      return [](const PropertySpecs&, const Sosofo&) {
-        return estd::make_unique<FoClass>();
-      };
+      return
+        [](const PropertySpecs&, const Sosofo&) { return estd::make_unique<FoClass>(); };
     }
   };
 
@@ -780,5 +778,5 @@ namespace fo {
   }
 
 
-} // ns fo
-} // ns eyestep
+} // namespace fo
+} // namespace eyestep
