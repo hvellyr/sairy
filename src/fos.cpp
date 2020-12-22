@@ -35,8 +35,6 @@ namespace fo {
     {"box-corner-radius", false},      // LengthSpec
     {"box-corner-rounded?", false},    // Bool
     {"box-type", true},                // Keyw: border, background, both
-    {"break-after?", false},           // Bool
-    {"break-before?", false},          // Bool
     {"center-footer", false},          // Sosofo
     {"center-header", false},          // Sosofo
     {"class", false},                  // String
