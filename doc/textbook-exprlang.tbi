@@ -1,0 +1,289 @@
+@c -*-textbook-*-
+
+@section{Expression language}
+
+@subsection{Nodes}
+
+@deffn{(gi @prm{snl})}
+@idx{@fun{gi}}{sym}
+Returns the @dfn{general identifier} of a node @prm{snl}, i.e. the name of the
+node's class.
+@end deffn
+
+@deffn{(id @prm{snl})}
+@idx{@fun{id}}{sym}
+Returns the identifier of the node @prm{snl} or the empty string if no
+identifier is given in the input document.
+@end deffn
+@end subsection
+
+
+@subsection{Addresses}{id.address}
+
+Producing cross references in textbook is done with the @ty{link} (see
+@ref{id.link}) formatting object and the @ty{address} type of the expression
+language.
+
+The @class{address} type represents the address of the destination.  It supports
+local references (to nodes inside of the current document) and external
+addresses (as URIs).
+
+@deffn{(address? @prm{obj})}
+@idx{@fun{address?}}{sym}
+Indicates whether @prm{obj} is of type @class{address}.
+@end{deffn}
+
+@deffn{(address-local? @prm{adr})}
+@idx{@fun{address-local?}}{sym}
+Indicates whether @prm{adr} is a local address.
+@end{deffn}
+
+@deffn{(external-address URL)}
+@idx{@fun{external-address}}{sym}
+Returns an address object representing the resource referred to by @prm{url}.
+@end{deffn}
+
+@deffn{(current-node-address)}
+@idx{@fun{current-node-address}}{sym}
+Returns an address object representing the current node.
+@end{deffn}
+
+@deffn{(node-list-address @prm{nl})}
+@idx{@fun{node-list-address}}{sym}
+Returns a list of an address objects refering each to the nodes in @prm{nl}.
+@end{deffn}
+
+@end subsection
+
+
+@subsection{Node list access and manipulation}
+
+@deffn{(node-list @prm{nl1} @prm{nl2} ... @prm{nln})}
+@idx{@fun{node-list}}{sym}
+Returns the node-list that results from appending the members of @prm{nl1},
+@prm{nl2}, ... @prm{nln}.  If there are no arguments, returns the empty
+node-list.
+@end{deffn}
+
+@deffn{(node-list-property @prm{name} @prm{nl})}
+@idx{@fun{node-list-property}}{sym}
+Returns the mapping over @prm{nl} of the function on a node that returns
+the value that the node exhibits for the property propname or an empty
+node-list if the node does not exhibit a value or exhibits a null value for
+propname.  @prm{name} can be specified in any of the ways allowed for the
+node-property procedure.
+@end{deffn}
+
+@deffn{(node-list-reduce @prm{nl} @prm{proc} @prm{obj})}
+@idx{@fun{node-list-reduce}}{sym}
+If @prm{nl} has no members, returns @prm{obj}, and otherwise returns the result
+of applying node-list-reduce to
+@itemize
+ @item a node-list containing all but the first member of nl,
+ @item proc, and
+ @item the result of applying proc to obj and the first member of nl.
+@end{itemize}
+@end{deffn}
+
+@deffn{(node-list-map @prm{proc} @prm{nl})}
+@idx{@fun{node-list-map}}{sym}
+For each member of @prm{nl}, applies @prm{proc} to a singleton node-list
+containing just that member and appends the resulting node-lists.  It shall
+be an error if @prm{proc} does not return a node-list when applied to any
+member of @prm{nl}.
+@end{deffn}
+
+@deffn{(node-list-filter @prm{predicate} @prm{nl})}
+@idx{@fun{node-list-filter}}{sym}
+Returns a node-list containing just those members of @prm{nl} for which
+@prm{predicate} applied to a singleton node-list containing just that member
+does not return #f.  The resulting members in node-list preserve their order
+from @prm{nl}.
+@end{deffn}
+
+@deffn{(node-list->list @prm{nl})}
+@idx{@fun{node-list->list}}{sym}
+Returns a list containing, for each member of nl, a singleton node-list
+containing just that member.
+@end{deffn}
+
+@deffn{(node-list-reverse @prm{nl})}
+@idx{@fun{node-list-reverse}}{sym}
+Returns a node-list containing the members of @prm{nl} in reverse order.
+@end{deffn}
+
+@deffn{(node-list-ref @prm{nl} @prm{k})}
+@idx{@fun{node-list-ref}}{sym}
+Returns a node-list containing the @prm{k}th member of nl (zero-based),
+if there is such a member, and otherwise returns the empty node-list.
+@end{deffn}
+
+@deffn{(node-list-tail @prm{nl} @prm{k})}
+@idx{@fun{node-list-tail}}{sym}
+Returns the node-list comprising all but the first @prm{k} members of
+@prm{nl}.  If @prm{nl} has @prm{k} or fewer members, returns the empty
+node-list.
+@end{deffn}
+
+@deffn{(node-list-head @prm{nl} @prm{k})}
+@idx{@fun{node-list-head}}{sym}
+Returns a node-list comprising the first @prm{k} members of @prm{nl}.
+If @prm{nl} has @prm{k} or fewer members, returns @prm{nl}.
+@end{deffn}
+
+@deffn{(node-list-sublist @prm{nl} @prm{k1} @prm{k2})}
+@idx{@fun{node-list-sublist}}{sym}
+Returns a node-list containing those members of @prm{nl} from index
+@prm{k1} inclusive to @prm{k2} exclusive.
+@end{deffn}
+
+@deffn{(named-node-list-names @prm{nnl})}
+@idx{@fun{named-node-list-names}}{sym}
+Returns the names of all members of @prm{nnl} in the same order as
+@prm{nnl} as list.
+@end{deffn}
+
+@deffn{(node-list=? @prm{nl1} @prm{nl2})}
+@idx{@fun{node-list=?}}{sym}
+Returns @val{#t} if @prm{nl1} and @prm{nl2} are the same node-list, that is, they contain
+the same members in the same order, and otherwise returns @val{#f}.
+@end deffn
+
+@deffn{(node-list-contains? @prm{nl} @prm{snl})}
+@idx{@fun{node-list-contains?}}{sym}
+Returns @val{#t} if @prm{nl} contains a node equal to the member of @prm{snl},
+and otherwise returns @val{#f}.
+@end deffn
+
+@deffn{(node-list-remove-duplicates @prm{nl})}
+@idx{@fun{node-list-remove-duplicates}}{sym}
+Returns a node-list which is the same as @prm{nl} except that any member
+@prm{nl} which is equal to a preceding member of @prm{nl} is removed.
+@end deffn
+
+@deffn{(node-list-union @prm{nl1} @prm{nl2} ... @prm{nln})}
+@idx{@fun{node-list-union}}{sym}
+Returns a node-list containing the union of all the arguments, which
+shall be node-lists.  The result shall contain no duplicates.  With no
+arguments, an empty node-list shall be returned.
+@end deffn
+
+@deffn{(node-list-intersection @prm{nl1} @prm{nl2} ... @prm{nln})}
+@idx{@fun{node-list-intersection}}{sym}
+Returns a node-list containing the intersection of all the arguments,
+which shall be node-lists.  The result shall contain no duplicates.  With no
+arguments, an empty node-list shall be returned.
+@end deffn
+
+@deffn{(node-list-difference @prm{nl1} @prm{nl2} ... @prm{nln})}
+@idx{@fun{node-list-difference}}{sym}
+Returns a node-list containing the set difference of all the arguments,
+which shall be node-lists.  The set difference is defined to be those members
+of the first argument that are not members of any of the other arguments.
+The result shall contain no duplicates.  With no arguments, an empty
+node-list shall be returned.
+@end deffn
+
+@deffn{(node-list-some? @prm{proc} @prm{nl})}
+@idx{@fun{node-list-some?}}{sym}
+Returns @val{#t} if, for some member of @prm{nl}, @prm{proc} does not return
+@val{#f} when applied to a singleton node-list containing just that member, and
+otherwise returns @val{#f}.  An implementation is allowed, but not required, to
+signal an error if, for some member of @prm{nl}, @prm{proc} would signal an
+error when applied to a singleton node-list containing just that member.
+@end deffn
+
+@deffn{(node-list-every? @prm{proc} @prm{nl})}
+@idx{@fun{node-list-every?}}{sym}
+Returns @val{#t} if, for every member of @prm{nl}, @prm{proc} does not return
+@val{#f} when applied to a singleton node-list containing just that member, and
+otherwise returns @val{#f}.  An implementation is allowed to signal an error if,
+for some member of @prm{nl}, @prm{proc} would signal an error when applied to
+a singleton node-list containing just that member.
+@end deffn
+
+@deffn{(attributes @prm{nl})}
+@idx{@fun{attributes}}{sym}
+Returns the @fun{attributes} property of all nodes in @prm{nl}
+@end{deffn}
+
+@deffn{(attribute @prm{name} @prm{nl})}
+@idx{@fun{attribute}}{sym}
+Returns the mapping over @prm{nl} of the function that returns the
+member of the value of the attributes property whose name is @prm{name}.
+@end{deffn}
+
+@deffn{(id @prm{osnl})}
+@idx{@fun{id}}{sym}
+Returns the value of the @var{id} property of the node in @prm{osnl}.
+If @prm{osnl} is empty or the node in @prm{osnl} does not contain an @var{id}
+property return #f.
+@end{deffn}
+
+@end subsection
+
+
+@subsection{Processing nodes}
+
+@deffn{(process-children)}
+@idx{@fun{process-children}}{sym}
+Returns the sosofo that results from appending the sosofos that result
+from processing in order the children of the current node.
+@end deffn
+
+@deffn{(process-children-trim)}
+@idx{@fun{process-children-trim}}{sym}
+Returns the sosofo that results from appending the sosofos that result
+from processing in order the children of the current node after removing any
+leading and trailing whitespace from leading and trailing text nodes.
+@end deffn
+
+@deffn{(process-node-list-join @prm{nl} @prm{sep})}
+@idx{@fun{process-node-list-join}}{sym}
+Returns the sosofo that results from appending the sosofos that result
+from processing in order the elements of @prm{nl}.  Each sosofo such produced
+is separated by @prm{sep} which should be a valid sosofo.
+
+If @prm{nl} contains zero or extactly one node @prm{sep} is not added at all.
+@end deffn
+
+@deffn{(process-node-list @prm{nl})}
+@idx{@fun{process-node-list}}{sym}
+Returns the sosofo that results from appending the sosofos that result
+from processing the members of the @prm{nl} in order.
+@end deffn
+
+@deffn{(process-node-list-trim @prm{nl} @prm{[left?: #t]} @prm{[right?: #t]})}
+@idx{@fun{process-node-list-trim}}{sym}
+Returns the sosofo that results from appending the sosofos that result
+from processing @prm{nl} in order after removing any leading and trailing
+whitespace from leading and trailing text nodes.
+@end deffn
+
+@deffn{(current-node)}
+@idx{@fun{current-node}}{sym}
+Returns the node currently processed as a singleton node list.
+@end deffn
+
+@deffn{(current-mode)}
+@idx{@fun{current-mode}}{sym}
+Returns the mode currently set.
+@end deffn
+
+@end subsection
+
+
+@subsection{Selecting and matching elements}
+
+@deffn{(match-element? @prm{pattern} @prm{snl})}
+@idx{@fun{match-element?}}{sym}
+tbd.
+@end deffn
+
+@deffn{(select-elements @prm{nl} @prm{pattern})}
+@idx{@fun{select-elements}}{sym}
+tbd.
+@end deffn
+
+@end subsection
+@end section

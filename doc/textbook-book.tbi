@@ -1,0 +1,341 @@
+@c -*-textbook-*-
+
+@section{Books}
+
+@idx{@tag{@@book}}{sym}
+The @tag{@@book} document class is used to mark up entire books.  “Books” in
+this sense come typically with a front matter (title page, cover), multiple
+chapters, and probably a table of content and even index.  Books might come in
+multiple volumes.
+
+A typical book mark-up will look like:
+
+@example
+@@book
+  
+@@titlepage
+@@title{The Textbook Manual}
+@@end titlepage
+  
+@@info
+@@author{William Shakespeare}{}
+@@copyright{Copyright: in public domain}
+@@end info
+  
+@@introduction{Introduction}
+@@c text
+@@end introduction
+  
+@@chapter{1. Chapter}
+@@c text
+@@end chapter
+  
+@@end book
+@end example
+
+
+@subsection{The Front Matter}
+
+@idx{title cover}{con}
+@idx{cover}{con}
+@idx{titlepage}{con}
+@idx{front matter}{con}
+@idx{@tag{@@titlepage}}{sym}
+@idx{@tag{@@info}}{sym}
+Every book should start with a proper front matter.  This is used for defining
+the book title, the authors and possible editors, copyright information,
+document ids, etc.  Since some information is typically a meta information
+useful to other document classes, too, the front matter is constructed from
+the @tag{@@info}} and the @tag{@@titlepage}} tags.  Extra empty pages and
+other material, typically found with classic book printing (like half-title)
+might be automatically produced by the stylesheets.
+
+@idx{@tag{@@title}}{sym}
+@idx{@tag{@@subtitle}}{sym}
+@idx{@tag{@@cover}}{sym}
+The @tag{@@titlepage} block tag may take the book's main title
+(@tag{@@title}), optional subtitles (@tag{@@subtitle}), and an optional cover
+art (@tag{@@cover}).  The later takes a file reference (@code{FREF}) to a
+image file.
+
+@idx{author}{con}
+@idx{copyright}{con}
+@idx{@tag{@@copyright}}{sym}
+@idx{@tag{@@author}}{sym}
+Further information, like the author and the copyright, is taken by the
+stylesheets from the @tag{@@info} block tag (@tag{@@author} and
+@tag{@@copyright}).
+
+@end subsection
+
+
+@subsection{Structure}
+
+Once a text grows it needs structure.  The classical separation in chapter,
+section, subsection, and subsubsection is done with the block tags
+@tag{@@chapter}, @tag{@@section}, @tag{@@subsection}, and
+@tag{@@subsubsection}.  Below a sub-sub-section there's one more level,
+@tag{@@paragraph}:
+  
+@example
+@@chapter{First Chapter}               @@c -> 1.
+@@c ...
+@@section{First Section}               @@c -> 1.1.
+@@c ...
+@@subsection{First Subsection}         @@c -> 1.1.1.
+@@c ...
+@@end subsection
+@@end section
+@@section{Second Section}              @@c -> 1.2.
+@@c ...
+@@end section
+@@end chapter
+  
+@@chapter{Second Chapter}              @@c -> 2.
+@@section{First Section}               @@c -> 2.1.
+@@c ...
+@@end section
+@@end chapter
+@end example
+
+@idx{@tag{@@part}}{sym}
+@idx{@tag{@@tome}}{sym}
+For even larger texts there're @tag{@@part} and @tag{@@tome}.  Especially the
+later is though mostly a theoretical construct, and authors should consider
+splitting their text into multiple books.
+
+@parsep
+
+Chapters and sections are automatically numbered.  The numbering is
+hierarchical and depending on the stylesheets used numbers are presented in
+“scientic” scheme (e.g. “5.1.12.4”) or more in a classical style (e.g. using
+roman or arabian numbers and letters).
+
+It's possible to ignore a chapter entirely in the numbering by passing a “no”
+as third parameter to any of the structure tags.  This is most useful if
+there's only one appendix which doesn't require numbering.
+
+@example
+@@chapter{Intermission}{}{no}
+@@c ...
+@@end chapter
+
+@@appendix{Appendix}{}{no}
+@@c ...
+@@end appendix
+@end example
+
+@end subsection
+
+
+@subsection{Special Chapters}
+
+Besides the common chapter types there are also some special ones:
+
+@idx{@tag{@@appendix}}{sym}
+@idx{@tag{@@prefix}}{sym}
+@idx{@tag{@@introduction}}{sym}
+@idx{@tag{@@content}}{sym}
+@idx{@tag{@@index}}{sym}
+@definitions
+@item{@tag{@@appendix}} Used to mark up an appendix, when no title given
+automatically titled “Appendix”
+
+@item{@tag{@@prefix}} Used to mark up a preface, when no title given
+automatically titled “Preface”
+
+@item{@tag{@@introduction}} Used to mark up an introduction, when no title
+given automatically titled “Introduction”
+
+@item{@tag{@@content}} Used to mark up the table of contents, when no title
+given automatically titled “Contents” (see @ref{sect.contents})
+
+@item{@tag{@@index}} Used to mark up an index, when no title given
+automatically titled “Index” (see @ref{sect.add-idx})
+@end definitions
+
+These special chapter types are structurally on the same level as the
+@tag{@@chapter} tag, but they will use (typically) their own numberin scheme.
+
+@parsep
+
+If these tags are still not sufficient to structure the text there are some more tags:
+
+@idx{@tag{@@parsep}}{sym}
+@head{@tag{@@parsep}} can be used to separate a long consecutive text with a
+simple empty line:
+
+@example
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr,
+sed diam nonumy eirmod tempor
+  
+@@parsep
+  
+At vero eos et accusam et justo duo dolores et ea rebum.
+Stet clita kasd gubergren, no sea takimata sanctus est
+Lorem ipsum dolor sit amet.
+@end example
+
+@idx{@tag{@@asterisk}}{sym}
+@head{@tag{@@asterisk}} in contrast is typically used in novels or fiction.
+It introduces some vertical gap with a separation marker, probably a “*”
+(therefore the name of the tag).  A different separator can be given as first
+parameter:
+
+@example
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr,
+sed diam nonumy eirmod tempor
+  
+@@asterisk
+  
+At vero eos et accusam et justo duo dolores et ea rebum.
+Stet clita kasd gubergren, no sea takimata sanctus est
+Lorem ipsum dolor sit amet.
+@end example
+
+@idx{@tag{@@head}}{sym}
+@head{As a last grouping tag the @tag{@@head}} can be used to mark the
+beginning of a paragraph to be a header.  This can be used to introduce a kind
+of inbetween ordering if the text discusses a list of topics.
+
+@example
+@@head{Lorem ipsum.}  Dolor sit amet, consetetur sadipscing
+elitr, sed diam nonumy eirmod tempor
+  
+@@head{At vero eos et accusam.} Et justo duo dolores et ea
+rebum.  Stet clita kasd gubergren, no sea takimata sanctus
+est Lorem ipsum dolor sit amet.
+@end example
+
+@end subsection
+
+
+@subsection{A Table of Contents}{sect.contents}
+
+@idx{table of contents}{con}
+@idx{@tag{@@showtoc}}{sym}
+@idx{@tag{@@content}}{sym}
+A table of content can be added to a book with the @tag{@@showtoc} tag.  It's
+typically put inside of a @tag{@@content} chapter group such that it get's a
+proper title itself:
+
+@example
+@@content
+@@showtoc
+@@end content
+@end example
+
+The title of the content section can be given on the @tag{@@content} section tag:
+
+@example
+@@content{Übersicht}
+@@showtoc
+@@end content
+@end example
+
+Whether the table of content comes first in the book or last is up to the
+author.  In the moment only a single table of content is possible.
+@end subsection
+
+
+@subsection{Create an Index}
+
+@idx{index, adding entries}{con}
+@idx{@tag{@@idx}}{sym}
+@idx{@tag{@@vidx}}{sym}
+Adding an index to a book is a two step task.  First the author has to mark up
+items, words, or names in the text to appear in the index.  For this they use
+the @tag{@@idx} or @tag{@@vidx} tags.  Finally they define the place where the
+index should be shown in the book (@ref{sect.add-idx}).
+
+Authors have two tags to mark words or tokens to appear in an index.  The
+@tag{@@idx} tag takes some text, which will produce a single item in the index,
+but doesn't appear in the main body of the text.  The @tag{@@vidx} tag however
+will add its text content to the index @em{and} the main body.
+
+The first is to be used of course when the index item has to follow textual
+normalization or special structuring of the data, which is necessary to produce
+good and usable indices.  Take for instance an index of (person) names.  The
+author might decide to order the names by surname first and abbreviate the first
+name:
+
+@example
+However, in 1623, two fellow actors and friends of
+@@idx{Sharespeare, W.}Shakespeare's,
+@@idx{Heminges, J.}John Heminges and @@idx{Condell, H.}Henry
+Condell, published a more definitive text known as the [...]
+@end example
+
+This would produce three items – “Sharespeare, W.”, “Heminges, J.”, and
+“Condell, H.” – in the index.
+
+@idx{multiple indices}{con}
+@idx{index, multiple}{con}
+It is sometimes good to provide more than one index, e.g. an index of names and
+places.  This can be achieved by specifying on @em{each} @tag{@@idx} or
+@tag{@@vidx} tag to which index the item should go:
+
+@example
+Although no attendance records for the period survive, most
+biographers agree that @@idx{Sharespeare, W.}{nms}Shakespeare
+was probably educated at the King's New School in
+@@vidx{Stratford}{plcs}, [...]
+@end example
+
+It is possible to add inline markup (like highlighting a word as bold or with
+emphasis) into the item; while this is useful for @tag{@@idx} tags, it can be
+unwanted with @tag{@@vidx} (as it might bring textual emphasis from the main
+body into the index):
+
+@example
+@@idx{@@fun{foo}(...)}
+
+It was @@vidx{@@em{Sharespeares'}} wish ...
+@end example
+
+@end subsection
+
+
+@subsection{Show the Index}{sect.add-idx}
+
+@idx{index}{con}
+@idx{@tag{@@showindex}}{sym}
+@idx{@tag{@@index}}{sym}
+In a second step the index is added to book (using the @tag{@@showindex} tag).
+Like the table of contents the index should be grouped into its own section.
+There's a special section tag for this: @tag{@@index}, which will produce a
+proper page break and title.
+
+@example
+@@index
+@@showindex
+@@end index
+@end example
+
+The index title can be given explicitly:
+
+@example
+@@index{Index}
+@@showindex
+@@end index
+@end example
+
+@idx{@tag{@@idx}}{sym}
+@idx{@tag{@@vidx}}{sym}
+It's possible to create more than one index from the same source, for instance a
+index of places and names.  For this each @tag{@@idx} and @tag{@@vidx} has to
+specify the index type to use and the @tag{@@showindex} should be given multiple
+times with the index type passed as first parameter:
+
+@example
+@@index{Index of Places}
+@@showindex{plcs}
+@@end index
+@@index{Index of Names}
+@@showindex{nms}
+@@end index
+@end example
+
+@end subsection
+
+@end section

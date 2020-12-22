@@ -1,0 +1,322 @@
+#c -*-textbook-*-
+
+@chapter{Reference: Textbook markup}
+
+@section{Block Tags}
+
+@subsection{List Tags}
+
+@idx{lists, numbered}{con}
+@idx{@tag{@@enumerate}}{sym}
+@idx{@tag{@@item}}{sym}
+A @dfn{numbered list} should be marked up with the @tag{@@enumerate} tag.  Every
+item starts within with a @tag{@@item} tag and is automatically numbered by the
+stylesheet.  There's currently no way to start from a specific number.
+
+@example
+@@enumerate
+@@item Lorem ipsum,
+@@item dolor sit amet, consetetur
+@@item sadipscing elitr, sed diam nonumy eirmod tempor
+@@end enumerate
+@end example
+
+will be rendered typically as
+
+@display
+@enumerate
+@item Lorem ipsum,
+@item dolor sit amet, consetetur
+@item sadipscing elitr, sed diam nonumy eirmod tempor
+@end enumerate
+@end display
+
+
+@idx{lists, unnumbered}{con}
+@idx{@tag{@@itemize}}{sym}
+@idx{@tag{@@item}}{sym}
+An @dfn{unnumbered list} (a “bullet point list”) is marked with the
+@tag{@@itemize} tag.  Like with @tag{@@enumerate} every item is started with the
+@tag{@@item} tag:
+
+@example
+@@itemize
+@@item Lorem ipsum,
+@@item dolor sit amet, consetetur
+@@item sadipscing elitr, sed diam nonumy eirmod tempor
+@@end itemize
+@end example
+
+will be rendered typically as
+
+@display
+@itemize
+@item Lorem ipsum,
+@item dolor sit amet, consetetur
+@item sadipscing elitr, sed diam nonumy eirmod tempor
+@end itemize
+@end display
+
+@c @tag{list}  <-- deprecated?
+
+
+@idx{lists, definition-}{con}
+@idx{glossaries}{con}
+@idx{@tag{@@definitions}}{sym}
+@idx{@tag{@@item}}{sym}
+A @dfn{definition list} can be used to build kind of glossaries, where terms or
+short phrases are explained.  Each item forms one definition and is introduced
+with the @tag{@@item} tag, which carries the term to defined as parameter.  The
+@tag{@@itemx} can be used to add a further term to a definition without staring
+a new definition paragraph.  As the definition list is a general utility, the
+item terms don't impose any special mark-up, but the parameters might contain
+extra mark-up:
+
+@example
+@@definitions
+@@item{@@em{Lorem ipsum}} dolor sit amet, consetetur
+@@item{@@em{sadipscing}} elitr, sed diam nonumy eirmod tempor
+@@itemx{At vero}
+@@item{@@em{takimata}} sanctus est Lorem ipsum dolor sit amet.
+@@end definitions
+@end example
+
+will be rendered typically as
+
+@display
+@definitions
+@item{@em{Lorem ipsum}} dolor sit amet, consetetur nonumy eirmod
+tempor invidunt ut labore et dolore magna aliquyam erat,
+@item{@em{sadipscing}} elitr, sed diam nonumy eirmod tempor sit amet,
+consetetur sadipscing elitr, sed diam nonumy eirmod tempor
+@item{@em{takimata sit amet, consetetur sadipscing elitr}} sanctus
+est Lorem ipsum dolor sit amet, sed diam nonumy eirmod tempor.
+@end definitions
+@end display
+
+@end subsection
+
+@c @tag{item}       {%text?}                     {EMPTY}{P}
+@c @tag{itemx}      {%text?}                     {EMPTY}
+
+@c @tag{example}    {%title?}                    {#TEXT | ANY}
+@c @tag{verbatim}   {}                           {#TEXT}
+@c @tag{display}    {}                           {#TEXT}
+
+@c @tag{admon}      {%title}                     {#TEXT | ANY}
+
+@c @tag{quote}      {}                           {#TEXT | ANY}
+
+@c @tag{p}          {}                           {#TEXT | ANY}
+
+
+@c @c ---------------------------------------------------------------------------
+@c @c Definitions:
+
+@c @c define function
+@c @c declln = used as headline
+@c @c declsum = used as the title of references
+@c @tag{deffn}      {%declln, %declsum?, ID?}    {#TEXT | ANY}
+@c @c kind = function, special, class, type, etc.
+@c @c declsum = declaration summary, used as headline
+@c @tag{def}        {%kind, %declsum, ID?}       {#TEXT | ANY}
+
+@c @c pre-formatted declaration part, takes %inline
+@c @tag{decl}       {%index?, ID?}               {#TEXT | ANY}
+
+@c @c mark optional parts in declarations ([])
+@c @tag{?}          {%optionalexpr}              {EMPTY}
+
+@end section
+
+
+@section{Inline Tags}
+
+@def{Tag}{@@acr@{@prm{text}@}}
+@idx{@tag{@@acr}}{sym}
+Marks the enclosed @prm{text} to denote an @em{acronym} (e.g. @acr{MIDI}).
+@end def
+
+@def{Tag}{@@app@{@prm{text}@}}
+@idx{@tag{@@app}}{sym}
+Marks the enclosed @prm{text} to denote an @em{application} name.
+@end def
+
+@def{Tag}{@@b@{@prm{text}@}}
+@idx{@tag{@@b}}{sym}
+Marks the enclosed @prm{text} as bold.  Though called “bold”, this tag is
+suggested as a general mark-up stronger than @tag{@@em}.
+@end def
+
+@def{Tag}{@@class@{@prm{text}@}}
+@idx{@tag{@@class}}{sym}
+Marks the enclosed @prm{text} to denote a @em{class} name in an (object
+oriented) programming language.  This is a rather special tag and should be
+replaced with @tag{@@ty} probably.
+@end def
+
+@def{Tag}{@@const@{@prm{text}@}}
+@idx{@tag{@@const}}{sym}
+Marks the enclosed @prm{text} to denote a @em{constant} in a programming
+language.
+@end def
+
+@def{Tag}{@@code@{@prm{text}@}}
+@idx{@tag{@@code}}{sym}
+Marks the enclosed @prm{text} to denote general @em{code}.  Though this will
+typically be rendered in monospaced font, this tag should only be used when
+marking up short inline code phrases like in programming languages, but not for
+function parameters (use @tag{@@prm} for that) or variables (use @tag{@@var}).
+@end def
+
+@def{Tag}{@@dfn@{@prm{text}@}}
+@idx{@tag{@@dfn}}{sym}
+Marks the enclosed @prm{text} to denote a @em{definition}.  This is typically
+used when introducing terms for the first time in a discussion.
+@end def
+
+@def{Tag}{@@em@{@prm{text}@}}
+@idx{@tag{@@em}}{sym}
+Marks the enclosed @prm{text} as emphasis.  This is typically rendered with an
+italic or oblique font face, underlined, or even with a bold face.
+@end def
+
+@def{Tag}{@@file@{@prm{text}@}}
+@idx{@tag{@@file}}{sym}
+Marks the enclosed @prm{text} to denote a @em{file name}.
+@end def
+
+@def{Tag}{@@fun@{@prm{text}@}}
+@idx{@tag{@@fun}}{sym}
+Marks the enclosed @prm{text} to denote a @em{function} name in a programming
+language.  Though this is named “function” this tag should also be used for
+procedure and signals.
+@end def
+
+@def{Tag}{@@keyw@{@prm{text}@}}
+@idx{@tag{@@keyw}}{sym}
+Marks the enclosed @prm{text} to denote a @em{keyword} in a programming
+language.
+@end def
+
+@def{Tag}{@@op@{@prm{text}@}}
+@idx{@tag{@@op}}{sym}
+Marks the enclosed @prm{text} to denote an @em{operator} in a programming
+language.
+@end def
+
+@def{Tag}{@@opt@{@prm{text}@}}
+@idx{@tag{@@opt}}{sym}
+Marks the enclosed @prm{text} to denote an @em{option}, like used to pass to a
+command line tool, or to be specified in a configuration file.
+@end def
+
+@def{Tag}{@@prm@{@prm{text}@}}
+@idx{@tag{@@prm}}{sym}
+Marks the enclosed @prm{text} to denote a @em{parameter} name, as defined in or
+passed to a function.
+@end def
+
+@def{Tag}{@@r@{@prm{text}@}}
+@idx{@tag{@@r}}{sym}
+Un-mark the enclosed @prm{text} to be without emphasis.  Though this named
+“roman”, it is conceptually the opposite of @tag{@@em} or @tag{@@b}.
+@end def
+
+@def{Tag}{@@tag@{@prm{text}@}}
+@idx{@tag{@@tag}}{sym}
+Marks the enclosed @prm{text} to denote a @em{tag} in a markup language (like
+@acr{HTML} or @acr{XML}).
+@end def
+
+@def{Tag}{@@ty@{@prm{text}@}}
+@idx{@tag{@@ty}}{sym}
+Marks the enclosed @prm{text} to denote a @em{type} name in a programming
+language.
+@end def
+
+@def{Tag}{@@val@{@prm{text}@}}
+@idx{@tag{@@val}}{sym}
+Marks the enclosed @prm{text} to denote a @em{value}.  Note that not every
+“value” (i.e. every number) in a technical documentation should be marked with
+this, but when in a description special values are to be highlighted this tag
+should be preferred to other non semantical ones, like @tag{@@b} or @tag{@@em}.
+@end def
+
+@def{Tag}{@@var@{@prm{text}@}}
+@idx{@tag{@@var}}{sym}
+Marks the enclosed @prm{text} to denote a @em{variable} name, as defined and
+used in a programming language.
+@end def
+
+@end section
+
+
+@section{Special Character Tags}
+
+The following tags are used to help encoding with special unicode characters,
+which are not easy to input or might not even be available in a text editor's
+font.
+
+@def{Tag}{@@dots}
+@idx{@tag{@@dots}}{sym}
+Inserts an ellipsis (“…”).  This could be used as an alternative to the
+ordinary unicode character (@code{U+2026}).
+@end def
+
+@def{Tag}{@@result}
+@idx{@tag{@@result}}{sym}
+Inserts the special character “@result”, which is prefered in examples to show
+the result of an operation:
+
+@example
+(+ 4 + 5)
+@@result 9
+@end example
+@end def
+
+@def{Tag}{@@print}
+@idx{@tag{@@print}}{sym}
+Inserts the special character “@print”, which is prefered in examples to show
+that an operation @em{printed} something (e.g. to the screen):
+
+@example
+println("{} {}".format("hello", "world")
+@@print hello world
+@end example
+@end def
+
+@def{Tag}{@@expansion}
+@idx{@tag{@@expansion}}{sym}
+Inserts the special character “@expansion”, which is prefered in examples to show
+that a macro expanded into something:
+
+@example
+\vsc
+@@expansion \addvspace{#1}
+@end example
+@end def
+
+@def{Tag}{@@equiv}
+@idx{@tag{@@equiv}}{sym}
+Inserts the special character “@equiv”, which is prefered in examples to show
+that two expressions or values are equivalent:
+
+@example
+a.b.c(1) @@equiv c(b(a(1)))
+@end example
+@end def
+
+@def{Tag}{@@error}
+@idx{@tag{@@error}}{sym}
+Inserts the special character “@error”, which is prefered in examples to show
+that an expression or code phrases would produce an error:
+
+@example
+a(1) = "foo" @@error
+@end example
+@end def
+
+@end section
+
+@end chapter
