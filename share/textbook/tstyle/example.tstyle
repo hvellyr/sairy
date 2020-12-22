@@ -12,7 +12,7 @@
                                                    (string-length b))
                                                 a b))
                                           0
-                                          lines))))pen
+                                          lines))))
           (loop (node-list-rest c)
                 (if (> ml maxlen) ml maxlen))) )))
 
