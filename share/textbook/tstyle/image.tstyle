@@ -1,0 +1,51 @@
+;;; Copyright (c) 2020 Gregor Klinke
+;;; All rights reserved.
+
+(use 'common)
+
+
+;; ------------------------------------------------------------------------------
+
+(element figure
+  (let* ((desc (attribute "desc" (current-node)))
+;;         (pos (data (attribute "position" (current-node))))
+         )
+    (make display-group
+      keep-with-previous?: #f
+      space-before: (display-space 7pt conditional?: #f)
+      space-after: (display-space 7pt conditional?: #t)
+      quadding: 'left
+      start-indent: 0pt
+      end-indent: 0pt
+
+      (sosofo-append
+       (make anchor
+         id: (id (current-node)))
+
+       (process-children)
+
+       (make paragraph
+         keep-with-previous?: #t
+         space-before: (display-space 5pt conditional?: #f)
+         font-posture: 'italic
+         start-indent: 0pt
+         end-indent: 0pt
+         (process-node-list desc))))))
+
+(define (backend-image-extension)
+  (cond
+   ((html-backend?) ".svg")
+   ((tex-backend?) ".pdf")))
+
+(define (make-image-path p)
+  (let* ((idx (string-find-right p (lambda (c) (eq? c #\.)))))
+    (if idx
+        (string-append (substring p 0 idx) (backend-image-extension))
+        (string-append p (backend-image-extension)))))
+
+(element img
+  (let* ((image-path (data (attribute "FREF" (current-node)))))
+    (make external-graphic
+      display?: #t
+      external-path: (make-image-path image-path)
+      width: 'max)))

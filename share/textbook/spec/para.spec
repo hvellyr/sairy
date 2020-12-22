@@ -36,3 +36,15 @@
 
 @c mark optional parts in declarations ([])
 @tag{?}          {%optionalexpr}              {EMPTY}
+
+
+@c ---------------------------------------------------------------------------
+
+@c defines a figure; depending on stylesheet inline, out-of-line, %title gives
+@c the figure description.  ID can be used to ref to it.  To put the image
+@c inside use an embedded @tag{@@img}.  %position hints where the renderer
+@c should put the figure: top, inline
+@tag{figure}     {%desc, %position?, ID?}        {ANY}
+
+  @tag{img}      {FREF}                       {EMPTY}
+
