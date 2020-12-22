@@ -28,7 +28,7 @@
   (let loop ((i (- (string-length str) 1)))
       (if (< i 0)
           #f
-          (if (pred (string-ref str i))
+          (if (not (pred (string-ref str i)))
               (loop (- i 1))
               i))))
 
