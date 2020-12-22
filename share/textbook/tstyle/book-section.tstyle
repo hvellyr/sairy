@@ -20,6 +20,7 @@
    ((section)       (vector (font-size 4) (line-spacing 4) 'bold  'upright (-spc-bef 4) (-spc-aft 7pt) "1"))
    ((subsection)    (vector (font-size 3) (line-spacing 3) 'bold  'upright (-spc-bef 3) (-spc-aft 7pt) "1"))
    ((subsubsection) (vector (font-size 3) (line-spacing 3) 'bold  'italic  (-spc-bef 3) (-spc-aft 7pt) "1"))
+   ((paragraph)     (vector (font-size 3) (line-spacing 3) 'bold  'italic  (-spc-bef 3) (-spc-aft 7pt) "1"))
    ((synopsis)      (vector (font-size 4) (line-spacing 4) 'bold  'upright (-spc-bef 4) (-spc-aft 7pt) #f))
    ((seealso)       (vector (font-size 4) (line-spacing 4) 'bold  'upright (-spc-bef 4) (-spc-aft 7pt) #f))
    ))
