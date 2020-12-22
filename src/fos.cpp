@@ -55,6 +55,7 @@ namespace fo {
     {"footer-margin", false},          // LengthSpec
     {"gutter-width", false},           // LengthSpec
     {"header-margin", false},          // LengthSpec
+    {"height", false},                 // LengthSpec
     {"inhibit-line-breaks?", false},   // Bool
     {"keep-with-next?", false},        // Bool
     {"keep-with-previous?", false},    // Bool
@@ -148,6 +149,32 @@ namespace fo {
 
     return "";
   }
+
+
+  //----------------------------------------------------------------------------
+
+  const PropertySpecs& ExternalGraphic::default_properties() const {
+    static const auto propspecs = PropertySpecs{
+      {"display?", true}, {"external-path", ""}, {"language", ""},
+      {"height", false},  {"width", false},
+    };
+
+    return propspecs;
+  }
+
+  const Sosofo& ExternalGraphic::port(const std::string& /*portname*/) const {
+    return k_nil_sosofo;
+  }
+
+  std::string ExternalGraphic::external_path() const {
+    if (auto spec = _props.lookup_key("external-path")) {
+      if (const auto* val = fo::get<const std::string>(&spec->_value)) {
+        return *val;
+      }
+    }
+
+    return "";
+  };
 
 
   //----------------------------------------------------------------------------
@@ -694,6 +721,7 @@ namespace fo {
       make_fo_class_factory<LineField, 2>(),
       make_fo_class_factory<Link, 2>(),
       make_fo_class_factory<Literal, 1>(),
+      make_fo_class_factory<ExternalGraphic, 1>(),
       make_fo_class_factory<PageNumber, 1>(),
       make_fo_class_factory<Paragraph, 2>(),
       make_fo_class_factory<ParagraphBreak, 0>(),

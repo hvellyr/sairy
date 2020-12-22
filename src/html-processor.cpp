@@ -563,6 +563,58 @@ namespace {
   };
 
 
+  class HtmlExternalGraphicFoProcessor : public IFoProcessor<HtmlProcessor>
+  {
+  public:
+    void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
+      auto gfx_path = static_cast<const fo::ExternalGraphic*>(fo)->external_path();
+      // TODO: produce relative file path
+
+      auto sattrs = detail::StyleAttrs{};
+      set_attr(sattrs, extract_space_characteristics(processor, fo));
+
+      // auto color = processor->property_or_none<fo::Color>(fo, "color");
+      // if (color)
+      //   set_attr(sattrs, "color", enc_color(*color));
+
+      // auto bgcolor = processor->property_or_none<fo::Color>(fo, "background-color");
+      // if (bgcolor)
+      //   set_attr(sattrs, "background-color", enc_color(*bgcolor));
+
+      auto is_display = processor->property_or_none<bool>(fo, "display?");
+      set_attr(sattrs, "display", (is_display && *is_display) ? "block" : "inline");
+
+      auto& ctx = processor->ctx();
+      auto d_attrs = intersect_css_attrs(ctx, sattrs);
+
+      auto attrs = tag_style_attrs(processor, "img", d_attrs);
+      attrs.emplace_back(html::Attr{"src", gfx_path});
+
+      if (auto width = processor->property_or_none<fo::LengthSpec>(fo, "width")) {
+        attrs.emplace_back(html::Attr{"width", length_spec2css(*width)});
+      }
+      else if (auto keyw = processor->property_or_none<std::string>(fo, "width")) {
+        if (*keyw == "max")
+          attrs.emplace_back(html::Attr{"width", "100%"});
+        else if (*keyw == "auto")
+          attrs.emplace_back(html::Attr{"width", "auto"});
+      }
+
+      if (auto height = processor->property_or_none<fo::LengthSpec>(fo, "height")) {
+        attrs.emplace_back(html::Attr{"height", length_spec2css(*height)});
+      }
+      else if (auto keyw = processor->property_or_none<std::string>(fo, "height")) {
+        if (*keyw == "max")
+          attrs.emplace_back(html::Attr{"height", "100%"});
+        else if (*keyw == "auto")
+          attrs.emplace_back(html::Attr{"height", "auto"});
+      }
+
+      auto with_tag = html::Tag{ctx.port(), "img", attrs};
+    }
+  }; // namespace
+
+
   class HtmlParagraphFoProcessor : public IFoProcessor<HtmlProcessor>
   {
   public:
@@ -1366,6 +1418,7 @@ const IFoProcessor<HtmlProcessor>*
 HtmlProcessor::lookup_fo_processor(const std::string& fo_classname) const {
   static auto procs = std::map<std::string, std::shared_ptr<IFoProcessor<HtmlProcessor>>>{
     {"#literal", std::make_shared<HtmlLiteralFoProcessor>()},
+    {"#external-graphic", std::make_shared<HtmlExternalGraphicFoProcessor>()},
     {"#paragraph", std::make_shared<HtmlParagraphFoProcessor>()},
     {"#paragraph-break", std::make_shared<HtmlParagraphBreakFoProcessor>()},
     {"#display-group", std::make_shared<HtmlDisplayGroupFoProcessor>()},

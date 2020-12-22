@@ -5,7 +5,6 @@
 \usepackage[T1]{fontenc}
 \usepackage{palatino}
 \usepackage[varqu]{inconsolata}
-\usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tbmulticol}
 %

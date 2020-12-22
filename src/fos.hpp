@@ -53,6 +53,23 @@ namespace fo {
   };
 
 
+  class ExternalGraphic : public Fo
+  {
+  public:
+    ExternalGraphic() = default;
+    ExternalGraphic(const PropertySpecs& props)
+      : Fo(props) {}
+
+    std::string classname() const override {
+      return "#external-graphic";
+    }
+    const PropertySpecs& default_properties() const override;
+    const Sosofo& port(const std::string& portname) const override;
+
+    std::string external_path() const;
+  };
+
+
   class Paragraph : public Fo
   {
     const Sosofo _text_port;

@@ -780,6 +780,62 @@ namespace {
   };
 
 
+  class TexExternalGraphicFoProcessor : public IFoProcessor<TexProcessor>
+  {
+  public:
+    void render(TexProcessor* po, const IFormattingObject* fo) const override {
+      po->finalize_breaks();
+      auto gfx_path = static_cast<const fo::ExternalGraphic*>(fo)->external_path();
+
+      vspace(po, fo, "space-before", "keep-with-previous?");
+      auto debug_info = po->property_or_none<std::string>(fo, "metadata.debug-info");
+      if (debug_info)
+        po->stream() << "%%debug: " << *debug_info << std::endl;
+
+      std::stringstream extra_args;
+      auto sep = "[";
+      auto end = "";
+      if (auto width = po->property_or_none<fo::LengthSpec>(fo, "width")) {
+        extra_args << sep << "width=" << dimen2str(*width);
+        sep = ",";
+        end = "]";
+      }
+      else if (auto keyw = po->property_or_none<std::string>(fo, "width")) {
+        if (*keyw == "max") {
+          extra_args << sep << "width=\\columnwidth";
+          sep = ",";
+          end = "]";
+        }
+      }
+      if (auto height = po->property_or_none<fo::LengthSpec>(fo, "height")) {
+        extra_args << sep << "height=" << dimen2str(*height);
+        sep = ",";
+        end = "]";
+      }
+      extra_args << end;
+
+      auto is_display = po->property_or_none<bool>(fo, "display?");
+
+      if (*is_display)
+        po->stream() << "\\par" << std::endl;
+
+      po->stream() << "\\includegraphics" << extra_args.str() << "{" << gfx_path << "}";
+
+      if (*is_display)
+        po->stream() << "\\par" << std::endl;
+
+      if (debug_info)
+        po->stream() << "%%debug: " << *debug_info << std::endl;
+
+      vspace(po, fo, "space-after", "keep-with-next?");
+
+      po->stream() << std::endl;
+
+      po->_need_graphicx = true;
+    }
+  };
+
+
   class TexParagraphFoProcessor : public IFoProcessor<TexProcessor>
   {
   public:
@@ -1315,6 +1371,7 @@ const IFoProcessor<TexProcessor>*
 TexProcessor::lookup_fo_processor(const std::string& fo_classname) const {
   static auto procs = std::map<std::string, std::shared_ptr<IFoProcessor<TexProcessor>>>{
     {"#literal", std::make_shared<TexLiteralFoProcessor>()},
+    {"#external-graphic", std::make_shared<TexExternalGraphicFoProcessor>()},
     {"#paragraph", std::make_shared<TexParagraphFoProcessor>()},
     {"#paragraph-break", std::make_shared<TexParagraphBreakFoProcessor>()},
     {"#display-group", std::make_shared<TexDisplayGroupFoProcessor>()},
@@ -1385,6 +1442,9 @@ void TexProcessor::after_rendering() {
 
       if (_need_tipa) {
         os << "\\usepackage{tipa}" << std::endl;
+      }
+      if (_need_graphicx) {
+        os << "\\usepackage{graphicx}" << std::endl;
       }
 
       os << stream().rdbuf();

@@ -139,6 +139,7 @@ public:
   std::tuple<fo::LengthSpec, fo::LengthSpec, std::string> _paper_dimen;
   std::vector<std::string> _delayed_anchors;
   bool _need_tipa = false;
+  bool _need_graphicx = false;
 };
 
 } // ns eyestep
