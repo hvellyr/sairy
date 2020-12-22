@@ -12,6 +12,7 @@
 
 @tag{example}    {%title?}                    {#TEXT | ANY}
 @tag{verbatim}   {}                           {#TEXT}
+@tag{display}    {}                           {#TEXT | ANY}
 
 @tag{admon}      {%title}                     {#TEXT | ANY}
 

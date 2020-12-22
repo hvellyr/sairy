@@ -92,3 +92,11 @@
     space-after:  (display-space 7pt conditional?: #t)
     (with-mode verbatim-mode
       (process-children))))
+
+
+(element display
+  (make display-group
+    space-before: (display-space 7pt conditional?: #t)
+    space-after:  (display-space 7pt conditional?: #t)
+    font-size:    (font-size 1)
+    (process-children)))
