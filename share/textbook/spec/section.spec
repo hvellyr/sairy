@@ -26,9 +26,11 @@
 @c like chapter, but specific for indices
 @tag{index}      {%title?}                     {#TEXT | ANY}
 
-@c a separator line between two paragraphs
-@tag{asterisk}   {}                           {EMPTY}{NOP}
+@c a separator line between two paragraphs, if @prm{sign} is not specified the
+@c separator is chosen by the stylesheet
+@tag{asterisk}   {%sign?}                      {EMPTY}{NOP}
 
+@c marks a header as inline text.
 @tag{head}       {%text}                       {EMPTY}
 
 @c paragraph separator (empty line)

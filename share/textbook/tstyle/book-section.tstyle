@@ -227,5 +227,27 @@
     break-before: 'page
     (format-section "Index" (current-node))))
 
+(element parsep
+  (make display-group
+    keep-with-previous?: #t
+    space-before: (display-space 7pt conditional?: #t)
+    (empty-sosofo)))
+
+(element asterisk
+  (let ((sign (attribute "sign" (current-node))))
+    (make paragraph
+      keep-with-previous?: #t
+      space-before: (display-space 7pt conditional?: #f)
+      space-after: (display-space 7pt conditional?: #t)
+      quadding: 'center
+      start-indent: 0pt
+      end-indent: 0pt
+      (if (node-list-empty? sign)
+          (literal "*")
+          (process-node-list sign)) )))
+
+(element head
+  (format-bold (attribute "text" (current-node))))
+
 ;; part
 ;; tome
