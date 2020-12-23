@@ -1,23 +1,31 @@
-language: cpp
-sudo: false
-
 branches:
-    only:
-        - master
+  only:
+    - master
+
+os:
+  - linux
+
+dist: bionic
+
+compiler:
+  - clang
+  - gcc
+
+language: cpp
 
 addons:
   apt:
     sources:
-      - kubuntu-backports
       - ubuntu-toolchain-r-test
     packages:
       - meson
-      - gcc-4.9
-      - g++-4.9
+      - clang
+      - gcc
+      - g++
 
 before_script:
-    - CXX=g++-4.9 CC=gcc-4.9 meson setup output && cd output
+  - meson setup output && cd output
 
 script:
-    - CXX=g++-4.9 CC=gcc-4.9 meson compile
-    - meson test
+  - meson compile
+  - meson test
