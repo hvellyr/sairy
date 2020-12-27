@@ -68,10 +68,9 @@ textbook_sources = [
 
 textbook = executable('textbook',
                       textbook_sources,
-                      include_directories : chibi_inc,
-                      link_with : [tblexicon_lib, chibi_lib],
+                      link_with : [tblexicon_lib],
                       cpp_args : ['-DSEXP_USE_KEYWORDS=1', '-DSEXP_USE_QUANTITY=1'],
-                      dependencies : tbcore_dep,
+                      dependencies : [tbcore_dep, chibi_dep],
                       install : true)
 
 subdir('test')
