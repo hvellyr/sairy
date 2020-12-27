@@ -350,6 +350,8 @@ namespace {
     case fo::k_px:
       return false;
     }
+
+    return false;
   }
 
   sexp func_make_length_spec(sexp ctx, sexp self, sexp_sint_t n, sexp type_arg,

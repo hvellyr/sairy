@@ -56,6 +56,8 @@ namespace {
     case fo::k_in:
       return k_in;
     }
+
+    return k_pt;
   }
 
 

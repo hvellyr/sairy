@@ -761,6 +761,8 @@ namespace fo {
       case k_in:
         return "in";
       }
+
+      return "pt";
     };
 
     os << "<length-spec:" << ls._value << unit_name(ls._unit);
