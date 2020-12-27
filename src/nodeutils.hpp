@@ -3,6 +3,7 @@
 
 #include "nodes.hpp"
 
+#include <functional>
 #include <string>
 
 

@@ -7,6 +7,7 @@
 #include "sosofo.hpp"
 
 #include <algorithm>
+#include <functional>
 #include <limits>
 #include <ostream>
 #include <string>
