@@ -7,6 +7,9 @@ os:
 
 dist: bionic
 
+env:
+  - PYTHON_BUILD_VERSION=3.8.0
+
 compiler:
   - clang
   - gcc
