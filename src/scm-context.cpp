@@ -984,7 +984,7 @@ namespace {
 
       if (parent) {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
-        auto i_find = find_if(begin(siblings), end(siblings), [&node](const Node* lnd) {
+        auto i_find = find_if(begin(siblings), end(siblings), [&](const Node* lnd) {
           return lnd->node_class() == element_class_definition();
         });
         if (i_find != siblings.end()) {
@@ -1045,7 +1045,7 @@ namespace {
         auto siblings = parent->property<Nodes>(CommonProps::k_children);
         std::reverse(siblings.begin(), siblings.end());
 
-        auto i_find = find_if(begin(siblings), end(siblings), [&node](Node* lnd) {
+        auto i_find = find_if(begin(siblings), end(siblings), [&](Node* lnd) {
           return lnd && lnd->node_class() == element_class_definition();
         });
         if (i_find != siblings.end()) {

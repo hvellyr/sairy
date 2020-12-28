@@ -130,7 +130,6 @@ namespace lexicon {
 
   class Parser
   {
-    bool _verbose;
     eyestep::Grove& _grove;
     std::shared_ptr<textbook::Stream> _stream;
     Node* _root_nd;
@@ -147,9 +146,8 @@ namespace lexicon {
     std::unique_ptr<std::stringstream> _text;
 
   public:
-    Parser(eyestep::Grove& grove, Node* rootnd, bool is_verbose)
-      : _verbose(is_verbose)
-      , _grove(grove)
+    Parser(eyestep::Grove& grove, Node* rootnd)
+      : _grove(grove)
       , _root_nd(rootnd)
       , _text(estd::make_unique<std::stringstream>()) {}
 
@@ -472,7 +470,7 @@ Node* LexiconScanner::scan_file(eyestep::Grove& grove, const fs::path& srcfile) 
   doc_node->set_property(CommonProps::k_source, srcfile.string());
   doc_node->set_property(props::k_app_info, "lexicon");
 
-  auto parser = lexicon::Parser(grove, doc_node, false);
+  auto parser = lexicon::Parser(grove, doc_node);
   parser.parse_file(srcfile);
 
   if (_debug) {
