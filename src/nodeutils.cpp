@@ -207,7 +207,7 @@ namespace {
     }
   }
 
-} // ns anon
+} // namespace
 
 
 void serialize(std::ostream& os, const Node* nd, bool pretty_printing, int depth) {
@@ -221,17 +221,18 @@ void serialize(std::ostream& os, const Node* nd, bool pretty_printing, int depth
 std::string node_data(const Node* base_nd) {
   std::stringstream ss;
 
-  node_traverse(base_nd,
-                [&ss](const Node* nd, int /*depth*/) {
-                  ss << nd->property<std::string>(CommonProps::k_data);
+  node_traverse(
+    base_nd,
+    [&ss](const Node* nd, int /*depth*/) {
+      ss << nd->property<std::string>(CommonProps::k_data);
 
-                  auto key = nd->property<std::string>(CommonProps::k_data_attr);
-                  if (auto named_attr = nd->attribute(key)) {
-                    ss << node_data(named_attr);
-                  }
-                  return TraverseRecursion::k_recurse;
-                },
-                0);
+      auto key = nd->property<std::string>(CommonProps::k_data_attr);
+      if (auto named_attr = nd->attribute(key)) {
+        ss << node_data(named_attr);
+      }
+      return TraverseRecursion::k_recurse;
+    },
+    0);
 
   return ss.str();
 }
@@ -263,4 +264,4 @@ Node* desc_element(const Node* nd) {
   return i_desc != end(nodes) ? *i_desc : nullptr;
 }
 
-} // ns eyestep
+} // namespace eyestep
