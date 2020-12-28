@@ -154,6 +154,9 @@ set_variable('supports_no_shift_negative_value_warning',
 set_variable('supports_no_expansion_to_defined_warning',
              cc.has_argument('-Wno-expansion-to-defined'))
 
+set_variable('supports_misleading_indentation_warning',
+             cc.has_argument('-Wmisleading-indentation'))
+
 # ------------------------------------------------------------------------------
 
 catch_inc = include_directories('third-party')

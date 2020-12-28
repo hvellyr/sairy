@@ -10,6 +10,7 @@ conf_data.set('TEXTBOOK_HAVE_STD_CODECVT', supports_std_codecvt)
 conf_data.set('TEXTBOOK_HAVE_STD_ENABLE_IF_T', supports_std_enable_if_t)
 #conf_data.set('TEXTBOOK_HAVE_STD_STRINGSTREAM_COPYASSIGN', supports_stringstream_copyassign)
 #conf_data.set('TEXTBOOK_HAVE_STD_MISMATCH_WITH_PREDICATE', supports_std_mismatch_with_pred)
+conf_data.set('TEXTBOOK_HAVE_MISLEADING_INDENTATION_WARNING', supports_misleading_indentation_warning)
 
 configure_file(input : 'config.hpp.in-meson',
                output : 'config.hpp',
