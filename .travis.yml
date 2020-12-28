@@ -21,6 +21,7 @@ addons:
       - clang
       - gcc
       - g++
+      - ninja-build
 
 before_script:
   - pyenv global 3.6
