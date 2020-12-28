@@ -7,9 +7,6 @@ os:
 
 dist: bionic
 
-env:
-  - PYTHON_BUILD_VERSION=3.8.0
-
 compiler:
   - clang
   - gcc
@@ -26,6 +23,7 @@ addons:
       - g++
 
 before_script:
+  - pyenv global 3.6
   - pip3 install --user meson
   - ~/.local/bin/meson setup output && cd output
 
