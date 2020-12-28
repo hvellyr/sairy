@@ -5,6 +5,7 @@
 #include "nodeclass.hpp"
 #include "nodelist.hpp"
 #include "nodes.hpp"
+#include "utils.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -138,17 +139,19 @@ namespace {
   };
 
 
-  void serialize(const JsPrinter& pp, const Node* nd, int depth) {
+  void serialize_rec(const JsPrinter& pp, const Node* nd, int depth, bool is_attr) {
     struct SerializeVisitor
     {
       using return_type = void;
 
       JsPrinter _pp;
       int _depth;
+      bool _in_attrs = false;
 
-      SerializeVisitor(const JsPrinter& pp, int depth)
+      SerializeVisitor(const JsPrinter& pp, int depth, bool in_attrs)
         : _pp(pp)
-        , _depth(depth) {}
+        , _depth(depth)
+        , _in_attrs(in_attrs) {}
 
       void operator()(const Undefined&) {}
 
@@ -162,7 +165,7 @@ namespace {
 
       void operator()(const Node* nd) {
         _pp.newln();
-        serialize(_pp, nd, _depth);
+        serialize_rec(_pp, nd, _depth, _in_attrs);
       }
 
       void operator()(const Nodes& nl) {
@@ -176,7 +179,7 @@ namespace {
             else {
               first = false;
             }
-            serialize(_pp, nd, _depth);
+            serialize_rec(_pp, nd, _depth, _in_attrs);
           }
           _pp.newln().indent(_depth, -1).close_array();
         }
@@ -191,12 +194,26 @@ namespace {
       pp.sep().indent(depth, 1).print_attrnm("gi").print_value(nd->gi());
     }
 
-    for (const auto& prop : nd->properties()) {
-      if (prop.first != CommonProps::k_gi && prop.first != CommonProps::k_parent &&
-          prop.first != CommonProps::k_auto_id) {
-        pp.sep().indent(depth, 1).print_attrnm(prop.first);
+    auto is_fref_attr = is_attr && nd->has_property(CommonProps::k_attr_name) &&
+                        nd->property<std::string>(CommonProps::k_attr_name) == "FREF";
 
-        apply(SerializeVisitor(pp, depth + 1), prop.second);
+    for (const auto& prop : nd->properties()) {
+      if (prop.first == CommonProps::k_gi || prop.first == CommonProps::k_parent ||
+          prop.first == CommonProps::k_auto_id) {
+        continue;
+      }
+
+      pp.sep().indent(depth, 1).print_attrnm(prop.first);
+
+      auto in_attrs = prop.first == CommonProps::k_attrs;
+      if (is_fref_attr && prop.first == CommonProps::k_data &&
+          prop.second._kind == PropertyValue::k_string) {
+        auto rel_path = utils::make_relative(filesystem::current_path(),
+                                             *get<std::string>(&prop.second));
+        apply(SerializeVisitor(pp, depth + 1, in_attrs), PropertyValue(rel_path));
+      }
+      else {
+        apply(SerializeVisitor(pp, depth + 1, in_attrs), prop.second);
       }
     }
 
@@ -212,7 +229,7 @@ namespace {
 
 void serialize(std::ostream& os, const Node* nd, bool pretty_printing, int depth) {
   auto pp = JsPrinter{os, pretty_printing};
-  serialize(pp, nd, depth);
+  serialize_rec(pp, nd, depth, false);
 }
 
 
