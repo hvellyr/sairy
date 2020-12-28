@@ -124,6 +124,8 @@ namespace {
       case fo::k_in:
         return k_in;
       }
+
+      return k_px;
     };
 
     std::stringstream ss;
@@ -190,6 +192,10 @@ namespace {
       case fo::kGray:
         return convert_gray_to_rgb(co);
       }
+
+      assert(false);
+      return std::make_tuple(floor(co._rgb._red * 255), floor(co._rgb._green * 255),
+                             floor(co._rgb._blue * 255));
     }();
 
     std::stringstream ss;

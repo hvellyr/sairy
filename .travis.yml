@@ -18,14 +18,14 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - meson
       - clang
       - gcc
       - g++
 
 before_script:
-  - meson setup output && cd output
+  - pip3 install --user meson
+  - ~/.local/bin/meson setup output && cd output
 
 script:
-  - meson compile
-  - meson test
+  - ~/.local/bin/meson compile
+  - ~/.local/bin/meson test

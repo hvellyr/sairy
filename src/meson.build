@@ -10,6 +10,7 @@ conf_data.set('TEXTBOOK_HAVE_STD_CODECVT', supports_std_codecvt)
 conf_data.set('TEXTBOOK_HAVE_STD_ENABLE_IF_T', supports_std_enable_if_t)
 #conf_data.set('TEXTBOOK_HAVE_STD_STRINGSTREAM_COPYASSIGN', supports_stringstream_copyassign)
 #conf_data.set('TEXTBOOK_HAVE_STD_MISMATCH_WITH_PREDICATE', supports_std_mismatch_with_pred)
+conf_data.set('TEXTBOOK_HAVE_MISLEADING_INDENTATION_WARNING', supports_misleading_indentation_warning)
 
 configure_file(input : 'config.hpp.in-meson',
                output : 'config.hpp',
@@ -67,10 +68,9 @@ textbook_sources = [
 
 textbook = executable('textbook',
                       textbook_sources,
-                      include_directories : chibi_inc,
-                      link_with : [tblexicon_lib, chibi_lib],
+                      link_with : [tblexicon_lib],
                       cpp_args : ['-DSEXP_USE_KEYWORDS=1', '-DSEXP_USE_QUANTITY=1'],
-                      dependencies : tbcore_dep,
+                      dependencies : [tbcore_dep, chibi_dep],
                       install : true)
 
 subdir('test')

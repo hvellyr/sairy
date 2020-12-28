@@ -14,9 +14,12 @@
 #include "propstack.hpp"
 #include "sosofo.hpp"
 #include "utils.hpp"
+#include "warnings.hpp"
 
+TEXTBOOK_SUPPRESS_WARNINGS
 #include "chibi/eval.h"
 #include "chibi/sexp.h"
+TEXTBOOK_RESTORE_WARNINGS
 
 #include "fspp/estd/optional.hpp"
 
@@ -30,6 +33,7 @@
 #include <utility>
 #include <vector>
 
+TEXTBOOK_SUPPRESS_SIGNCOMPARE_WARNING
 
 namespace eyestep {
 
@@ -350,6 +354,8 @@ namespace {
     case fo::k_px:
       return false;
     }
+
+    return false;
   }
 
   sexp func_make_length_spec(sexp ctx, sexp self, sexp_sint_t n, sexp type_arg,
@@ -2265,3 +2271,5 @@ std::unique_ptr<ISchemeContext> create_scheme_context() {
 }
 
 } // ns eyestep
+
+TEXTBOOK_RESTORE_WARNINGS

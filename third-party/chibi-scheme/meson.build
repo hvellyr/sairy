@@ -17,11 +17,30 @@ chibi_args = [
 ]
 
 chibi_flags = []
+chibi_private_flags = []
+
 if supports_no_shift_negative_value_warning
   chibi_flags += '-Wno-shift-negative-value'
 endif
 if supports_no_expansion_to_defined_warning
   chibi_flags += '-Wno-expansion-to-defined'
+endif
+
+ccomp = meson.get_compiler('c')
+
+if host_machine.system() == 'linux'
+  if ccomp.has_argument('-Wno-sign-compare')
+    chibi_private_flags += '-Wno-sign-compare'
+  endif
+  if ccomp.has_argument('-Wno-unused-but-set-variable')
+    chibi_private_flags += '-Wno-unused-but-set-variable'
+  endif
+  if ccomp.has_argument('-Wno-stringop-truncation')
+    chibi_private_flags += '-Wno-stringop-truncation'
+  endif
+  if ccomp.has_argument('-Wno-unused-but-set-variable')
+    chibi_private_flags += '-Wno-unused-but-set-variable'
+  endif
 endif
 
 chibi_sources = [
@@ -35,11 +54,18 @@ chibi_sources = [
   'dist/simplify.c',
 ]
 
+dl_dep = cc.find_library('dl', required : false)
+
 chibi_lib = static_library('scheme',
                            chibi_sources,
                            include_directories : [chibi_inc],
-                           c_args : chibi_args + chibi_flags,
+                           c_args : chibi_args + chibi_flags + chibi_private_flags,
                            install : false)
+
+chibi_dep = declare_dependency(include_directories : [chibi_inc],
+                               link_with : chibi_lib,
+                               compile_args : chibi_args + chibi_flags,
+                               dependencies : dl_dep)
 
 install_data([ 'dist/lib/init-7.scm',
                'dist/lib/meta-7.scm', ],
