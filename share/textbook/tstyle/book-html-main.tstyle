@@ -37,8 +37,8 @@
                      font-size: (font-size 3)
                      line-spacing: (line-spacing 3)
                      screen-set-model: (make-screen-set-model
-                                        (region zone: 'top
-                                                port: 'top
+                                        (region port: 'top
+                                                zone: 'top
                                                 fixed?: #t
                                                 y-origin: 0px
                                                 height: 60px
