@@ -361,6 +361,10 @@ Processors should render this flow object as a box around its content, either
 with a border (@var{box-type} is @val{border}) or with a filled background color
 (@var{box-type} is @val{background}).
 
+@figure{Box formatting object}{fig.box-fo}
+@img{models/box.svg}
+@end figure
+
 Defined characteristics:
 
 @definitions
@@ -373,14 +377,22 @@ Defined characteristics:
   corners.  The radius of the corners is specified with the
   @var{box-corner-radius} characteristic.  Default is @val{#f}.
 @item{@var{box-corner-radius:}} Default is @val{3pt}.
-@item{@var{background-color:}} the color used for rendering the background unset.
+@item{@var{background-color:}} the color used for rendering the background.  By
+  default unset.
 @item{@var{color:}} the color used for rendering a border.  By default unset.
 @item{@var{line-thickness:}} specifies the thickness of the border line.  Default
   is @val{1pt}.
-@item{@var{space-before:}} Default is @val{0pt}.
-@item{@var{space-after:}} Default is @val{0pt}.
-@item{@var{break-before:}} Default is @val{#f}.
-@item{@var{break-after:}} Default is @val{#f}.
+@item{@var{space-before:}} specifies how much space along the display axis should
+  be inserted before this formatting object.  Defaults to @val{0pt}.
+@item{@var{space-after:}} specifies how much space along the display axis should
+  be inserted after this formatting object.  Defaults to @val{0pt}.
+@item{@var{break-before:}} is one of the symbols @val{page} or @val{column}
+  this specifies that the formating object should break at a page or column and
+  start at the beginning of that area.  This characteristics is not inherited
+  and defaults to @val{#t}.
+@item{@var{break-after:}} is one of the symbols @val{page} or @val{column}
+  this specifies that the formating object should end an area of that type.
+  This characteristics is not inherited and defaults to @val{#f}.
 @end definitions
 @end def
 
