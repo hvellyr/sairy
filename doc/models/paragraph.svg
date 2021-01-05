@@ -229,7 +229,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1"
-     inkscape:cx="300.99839"
+     inkscape:cx="220.99839"
      inkscape:cy="201.82619"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -247,12 +247,12 @@
        originx="-20.986296"
        originy="-174.44462" />
     <sodipodi:guide
-       position="38.544954,-26.277952"
+       position="38.544954,-26.277951"
        orientation="1,0"
        id="guide2772"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="49.128286,-34.215452"
+       position="49.128286,-34.215451"
        orientation="0,1"
        id="guide3302"
        inkscape:locked="false" />
@@ -290,7 +290,7 @@
          id="tspan2220"
          x="104.51041"
          y="109.14584"
-         style="stroke-width:0.26458332">last-line-end-indent</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332">last-line-end-indent</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#marker2234)"
        d="m 100.54167,110.46875 h 41.01041"
@@ -307,7 +307,7 @@
          id="tspan2380"
          x="34.660419"
          y="40.35416"
-         style="stroke-width:0.26458332">first-line-start-indent</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332">first-line-start-indent</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#TriangleInL);marker-end:url(#marker2462)"
        d="M 33.072918,42.999997 H 51.593751"
@@ -330,7 +330,7 @@
          id="tspan2684"
          x="62.177082"
          y="32.416668"
-         style="stroke-width:0.26458332">space-before</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332">space-before</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-end:url(#marker2698)"
        d="m 59.53125,35.062497 v -6.61458"
@@ -357,7 +357,7 @@
          id="tspan2866"
          x="62.177082"
          y="119.72916"
-         style="stroke-width:0.26458332">space-after</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332">space-after</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 21.166667,27.124997 V 122.375"
@@ -379,7 +379,7 @@
          id="tspan3296"
          x="25.135416"
          y="78.718758"
-         style="stroke-width:0.26458332">start-indent</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332">start-indent</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 168.01042,27.124997 V 122.375"
@@ -395,11 +395,22 @@
          id="tspan3304"
          x="145.52083"
          y="80.041664"
-         style="stroke-width:0.26458332">end-indent</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332">end-indent</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#marker3424);marker-end:url(#marker3318)"
        d="M 144.19791,74.749997 H 166.6875"
        id="path3308"
        inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.23333311px;line-height:1.25;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="69.585419"
+       y="40.354164"
+       id="text944"><tspan
+         sodipodi:role="line"
+         id="tspan942"
+         x="69.585419"
+         y="40.354164"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;font-family:Helvetica;-inkscape-font-specification:'Helvetica, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;writing-mode:lr-tb;text-anchor:start;stroke-width:0.26458332">#text</tspan></text>
   </g>
 </svg>

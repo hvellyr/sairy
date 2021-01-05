@@ -171,8 +171,22 @@ tbd.
 
 
 @subsection{Page and top formatting objects}
+
+At the top of the sosofo there must be one structuring formatting object.  It
+prescribes how the overall layout of the “page” should look and behave.  These
+structuring formatting objects are typically media aware, i.e. they care about
+“endless” media (like websites) compared to “paged” media (books, journals,
+etc.).
+
 @def{Formatting Object}{simple-page-sequence}
-@idx{@ty{simple-page-sequence}  (F.O.)}{sym}
+@idx{@ty{simple-page-sequence} (F.O.)}{sym}
+A simple page sequence provides the document master for a sequence of pages,
+with each page having the same (physical) size and layout.  The page layout
+provides areas for a header, a footer and the text body.  Both header and footer
+areas are split into a left, middle, and right area, which allows for simple but
+typical page title and page numbering styles.
+
+A simple page sequence is typically used for (printed) books and journals.
 
 @figure{Simple page sequence formatting object}{fig.simple-page-sequence-fo}
 @img{models/simple-page-sequence.svg}
@@ -183,7 +197,10 @@ tbd.
 
 
 @def{Formatting Object}{scroll-sequence}
-@idx{@ty{scroll-sequence}  (F.O.)}{sym}
+@idx{@ty{scroll-sequence} (F.O.)}{sym}
+A scroll sequence provides a simple document master for “endless” media, where
+content is not presented in separated pages, but in a scrolling fashon
+(e.g. websites).
 
 @figure{Scroll sequence formatting object}{fig.scroll-sequence-fo}
 @img{models/scroll-sequence.svg}
@@ -205,8 +222,18 @@ Defined characteristics:
 
 
 @def{Formatting Object}{screen-set}
-@idx{@ty{screen-set}  (F.O.)}{sym}
-tbd.
+@idx{@ty{screen-set} (F.O.)}{sym}
+
+A screen set provides the document master for more elaborate presentation of
+content on a principially non-paged media (like websites).  It supports the
+definition and positioning of multiple areas which allows to render a document
+with sidebar navigations, top or footer areas and other features typical for
+modern websites.
+
+The areas are defined by the stylesheet using a @ty{screen-set-model}.
+
+A screen set is not usefull for paged media and thus likely not supported by
+backend processors dealing with such.
 
 Defined characteristics:
 
@@ -217,22 +244,23 @@ Defined characteristics:
   output.  Depends on the backend processor.
 @item{@var{metadata.desc:}} set's the description metadata field of the
   resulting output.  Depends on the backend processor.
-@item{@var{screen-set-model:}} specifies the model to use for this screen-set.
-  The value must be of type screen-set-model.
+@item{@var{screen-set-model:}} specifies the model to use for this
+  @ty{screen-set}.  The value must be of type screen-set-model.
 @end definitions
 @end def
 
-
-@def{Formatting Object}{simple-column-set-sequence}
-@idx{@ty{simple-column-set-sequence}  (F.O.)}{sym}
-tbd.
-@end def
 @end subsection
 
 
 @subsection{Display Formatting Objects}
+
+Display formatting objects organize their content along the display axis,
+i.e. in western textual layout the vertical direction.  Some of them support
+being used as an inline formating object, too; the behaviour is controlled by
+setting the @var{display?:} keyword.
+
 @def{Formatting Object}{paragraph}
-@idx{@ty{paragraph}  (F.O.)}{sym}
+@idx{@ty{paragraph} (F.O.)}{sym}
 A @ty{paragraph} represents a display formatting object with one
 principial port (@val{“text”}).  It takes any number of inline formatting
 objects and organizes them into a line by line flow.  Typical geometrical layout
@@ -326,10 +354,10 @@ tbd.
 
 @def{Formatting Object}{box}
 
-@idx{@ty{box}  (F.O.)}{sym}
+@idx{@ty{box} (F.O.)}{sym}
 This flow object has a single port and can be rendered either as a display or as
 an inline flow object, depending on the @var{display?} characteristic.
-Processor's should render this flow object as a box around its content, either
+Processors should render this flow object as a box around its content, either
 with a border (@var{box-type} is @val{border}) or with a filled background color
 (@var{box-type} is @val{background}).
 
@@ -356,42 +384,83 @@ Defined characteristics:
 @end definitions
 @end def
 
+
+@def{Formatting Object}{simple-column-set-sequence}
+@idx{@ty{simple-column-set-sequence} (F.O.)}{sym}
+
+This formatting object supports to layout the principal content flow into
+multiple organized columns along the display axis.  It has a single port and
+accepts display formatting objects only.  It can't be nested.
+
+The width of the containing display area is split into equally sized areas with
+a @dfn{gutter} between them.  The main content flow is along these areas
+starting from the left to the right.  If the content doesn't fit into all areas
+on a single page the column set sequence restarts on the next page.  The colums
+are levelled on the last page.
+
+Defined characteristics:
+
+@definitions
+@item{@var{}}
+
+@item{@var{space-before:}} specifies how much space along the display axis should
+  be inserted before this formatting object.  Defaults to @val{0pt}.
+@item{@var{space-after:}} specifies how much space along the display axis should
+  be inserted after this formatting object.  Defaults to @val{0pt}.
+@item{@var{keep-with-previous?:}} if @val{#t} indicates that a page break before
+  this formatting object is not allowed.  Defaults to @val{#f}.
+@item{@var{keep-with-next?:}} if @val{#t} indicates that a page break after
+  this formatting object is not allowed.  Defaults to @val{#f}.
+@item{@var{break-after:}} is one of the symbols @val{page} or @val{column}
+  this specifies that the formating object should end an area of that type.
+  This characteristics is not inherited and defaults to @val{#f}.
+@item{@var{break-before:}} is one of the symbols @val{page} or @val{column}
+  this specifies that the formating object should break at a page or column and
+  start at the beginning of that area.  This characteristics is not inherited
+  and defaults to @val{#t}.
+@item{@var{column-number:}} Gives the number of column areas.
+@item{@var{gutter-width:}} specifies the width of the gutter between the column
+  areas.  Defaults to @val{21pt}.
+@end definitions
+
+@end def
+
 @end subsection
 
 
 @subsection{Inline formatting objects}
 @def{Formatting Object}{sequence}
-@idx{@ty{sequence}  (F.O.)}{sym}
+@idx{@ty{sequence} (F.O.)}{sym}
 tbd.
 @end def
 
 
 @def{Formatting Object}{line-field}
-@idx{@ty{line-field}  (F.O.)}{sym}
+@idx{@ty{line-field} (F.O.)}{sym}
 tbd.
 @end def
 
 
 @def{Formatting Object}{score}
-@idx{@ty{score}  (F.O.)}{sym}
+@idx{@ty{score} (F.O.)}{sym}
 tbd.
 @end def
 
 
 @def{Formatting Object}{literal}
-@idx{@ty{literal}  (F.O.)}{sym}
+@idx{@ty{literal} (F.O.)}{sym}
 tbd.
 @end def
 
 @def{Formatting Object}{page-number}
-@idx{@ty{page-number}  (F.O.)}{sym}
+@idx{@ty{page-number} (F.O.)}{sym}
 tbd.
 @end def
 
 
 @def{Formatting Object}{link}{id.link}
 
-@idx{@ty{link}  (F.O.)}{sym}
+@idx{@ty{link} (F.O.)}{sym}
 A link flow object represents a link to either an internal or external resource.
 In interactive context it can be interactively traversed, e.g. by clicking on
 its rendered areas.  It has a single port, which can take both inlined and
@@ -406,19 +475,19 @@ characteristic is required and not inherited.
 
 
 @def{Formatting Object}{anchor}
-@idx{@ty{anchor}  (F.O.)}{sym}
+@idx{@ty{anchor} (F.O.)}{sym}
 tbd.
 @end def
 
 
 @def{Formatting Object}{pagebreak}
-@idx{@ty{pagebreak}  (F.O.)}{sym}
+@idx{@ty{pagebreak} (F.O.)}{sym}
 tbd.
 @end def
 
 
 @def{Formatting Object}{footnote}
-@idx{@ty{footnote}  (F.O.)}{sym}
+@idx{@ty{footnote} (F.O.)}{sym}
 tbd.
 @end def
 
