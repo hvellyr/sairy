@@ -410,11 +410,13 @@ starting from the left to the right.  If the content doesn't fit into all areas
 on a single page the column set sequence restarts on the next page.  The colums
 are levelled on the last page.
 
+@figure{Simple column set sequence formatting object}{fig.simple-column-set-sequence-fo}
+@img{models/simple-column-set-sequence.svg}
+@end figure
+
 Defined characteristics:
 
 @definitions
-@item{@var{}}
-
 @item{@var{space-before:}} specifies how much space along the display axis should
   be inserted before this formatting object.  Defaults to @val{0pt}.
 @item{@var{space-after:}} specifies how much space along the display axis should
