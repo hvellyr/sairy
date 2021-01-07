@@ -16,5 +16,11 @@
 
 (define %gap-between-paragraphs% 0pt)
 
+(define %quote-left-indent% 0pt)
+(define %quote-right-indent% 0pt)
+
+(define %page-left-offset% 0mm)
+(define %page-left-offset-neg% 0mm)
+
 (use 'book)
 (use 'book-tex-main)

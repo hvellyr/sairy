@@ -110,6 +110,8 @@ DebugProcessor::lookup_fo_processor(const std::string& fo_classname) const {
       {"#simple-page-sequence", std::make_shared<DebugFoProcessor>()},
       {"#box", std::make_shared<DebugFoProcessor>()},
       {"#screen-set", std::make_shared<DebugFoProcessor>()},
+      {"#simple-column-set-sequence", std::make_shared<DebugFoProcessor>()},
+      {"#external-graphic", std::make_shared<DebugFoProcessor>()},
     };
 
   auto i_find = procs.find(fo_classname);

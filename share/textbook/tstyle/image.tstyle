@@ -36,7 +36,8 @@
 (define (backend-image-extension)
   (cond
    ((html-backend?) ".svg")
-   ((tex-backend?) ".pdf")))
+   ((tex-backend?) ".pdf")
+   (else ".svg")))
 
 (define (make-image-path p)
   (let* ((idx (string-find-right p (lambda (c) (eq? c #\.)))))
