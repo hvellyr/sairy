@@ -80,7 +80,6 @@ const std::string CommonProps::k_attr_name = "#attr-name";
 const std::string CommonProps::k_attrs = "attributes";
 const std::string CommonProps::k_children = "children";
 const std::string CommonProps::k_data = "data";
-const std::string CommonProps::k_desc = "desc";
 const std::string CommonProps::k_gi = "gi";
 const std::string CommonProps::k_id = "id";
 const std::string CommonProps::k_auto_id = "auto-id";
