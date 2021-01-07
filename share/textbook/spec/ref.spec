@@ -22,7 +22,7 @@
 @c add text to index, but not into text
 @tag{idx}        {%text, type?}               {EMPTY}
 @c visual index item: put into text and index
-@tag{vidx}        {%text, type?}              {EMPTY}
+@tag{vidx}       {%text, type?}               {EMPTY}
 
 
 @c ---------------------------------------------------------------------------
