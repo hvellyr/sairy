@@ -6,11 +6,14 @@
 (element idx
   (make anchor
     display?: #f
-    id: (id (current-node))
-    (empty-sosofo)))
+    id: (id (current-node))))
 
 (element vidx
-  (process-node-list (attribute "text" (current-node))))
+  (sosofo-append
+   (make anchor
+     display?: #f
+     id: (id (current-node)))
+   (process-node-list (attribute "text" (current-node)))))
 
 
 ;; #-----------------------------------------------------------------------------

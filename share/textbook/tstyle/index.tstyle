@@ -59,6 +59,9 @@
   (element idx
     (let ((text (attribute "text" (current-node))))
       (process-node-list text)))
+  (element vidx
+    (let ((text (attribute "text" (current-node))))
+      (process-node-list text)))
   (element em
     (make sequence
      font-name: "roman"
@@ -142,9 +145,9 @@
 (element showindex
   (let* ((type (data (attribute "type" (current-node))))
          (descs (descendants (grove-root)))
-         (idx-nds (node-list
-                   (select-elements descs 'idx)
-                   (select-elements descs 'vidx)))
+         (attr-nodes (attributes descs))
+         (idx-nds (node-list (select-elements (node-list descs attr-nodes) 'idx)
+                             (select-elements (node-list descs attr-nodes) 'vidx)))
          (filtered-idx-nds (node-list-filter (lambda (snl)
                                                (let* ((nd-type (data (attribute "type" snl))))
                                                  (string=? type nd-type)))
