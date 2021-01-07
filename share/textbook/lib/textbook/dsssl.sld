@@ -4,6 +4,7 @@
 
 (define-library (textbook dsssl)
   (import (chibi)
+          (srfi 1)  ;; list fold/reduce utilities
           (srfi 9)  ;; Defining Record Types
           (srfi 28) ;; basic string format
           (srfi 39) ;; parameter objects
