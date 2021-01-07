@@ -50,8 +50,7 @@
                                                 y-origin: 60px
                                                 background-color: (color 'rgb '(0.9372 0.9215 0.9137))
                                                 span-screen-height?: #t
-                                                start-margin: 10px
-                                                )
+                                                start-margin: 10px)
                                         (region port: 'main
                                                 zone: 'main
                                                 width: 700px
