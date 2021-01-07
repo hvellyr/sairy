@@ -83,6 +83,7 @@
 
                      (sosofo-append
                       (make anchor
+                        display?: #t
                         id: (id node))
                       (format-book-title-multicol node)
                       (with-mode no-content

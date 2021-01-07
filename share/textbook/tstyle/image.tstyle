@@ -20,6 +20,7 @@
 
       (sosofo-append
        (make anchor
+         display?: #t
          id: (id (current-node)))
 
        (process-children)

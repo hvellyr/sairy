@@ -1366,8 +1366,9 @@ namespace {
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
       if (auto id = processor->property_or_none<std::string>(fo, "id")) {
         if (!id->empty()) {
+          const auto is_display = processor->property(fo, "display?", false);
           auto sattrs = detail::StyleAttrs{};
-          if (processor->top_zone_offset()) {
+          if (is_display && processor->top_zone_offset()) {
             set_attr(sattrs, "display", "block");
             set_attr(sattrs, "position", "relative");
             set_attr(sattrs, "top", length_spec2css(*processor->top_zone_offset()));

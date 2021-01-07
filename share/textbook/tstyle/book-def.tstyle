@@ -53,6 +53,7 @@
 (define (make-def-sosofo nd head-sosofo kind)
   (sosofo-append
    (make anchor
+     display?: #t
      id: (id nd))
    (make paragraph
      space-before: (decl-space-before 7pt 7pt)

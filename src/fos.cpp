@@ -559,6 +559,7 @@ namespace fo {
 
   const PropertySpecs& Anchor::default_properties() const {
     static const auto propspecs = PropertySpecs{
+      {"display?", false},
       {"id", false},
     };
     return propspecs;

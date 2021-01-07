@@ -355,6 +355,7 @@
 
     (sosofo-append
      (make anchor
+       display?: #t
        id: section-id)
      (case %style%
        ((classic) (format-letter-title-classic title-sosofo))
@@ -688,6 +689,7 @@
   (let ((node-title (attribute "title" (current-node))))
     (sosofo-append
      (make anchor
+       display?: #t
        id: (id (current-node)))
      (make paragraph
        font-size: (font-size 4)

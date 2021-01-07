@@ -5,6 +5,7 @@
 
 (element idx
   (make anchor
+    display?: #f
     id: (id (current-node))
     (empty-sosofo)))
 

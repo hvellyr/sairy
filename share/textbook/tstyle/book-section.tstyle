@@ -116,6 +116,7 @@
          )
     (sosofo-append
      (make anchor
+       display?: #t
        id: (id nd))
      (make paragraph
        font-size: (vector-ref layout 0)
@@ -160,6 +161,7 @@
          )
     (sosofo-append
      (make anchor
+       display?: #t
        id: (id nd))
      (make paragraph
        font-size: (vector-ref layout 0)
