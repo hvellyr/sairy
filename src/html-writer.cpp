@@ -229,6 +229,13 @@ namespace html {
 
       open_tag("head");
       newln();
+      empty_tag("meta",
+                {Attr{"charset", "UTF-8"}});
+      newln();
+      empty_tag("meta",
+                {Attr{"name", "viewport"},
+                 Attr{"content", "width=device-width, initial-scale=1.0"}});
+      newln();
       text_tag("title", title);
       newln();
       empty_tag("meta",
