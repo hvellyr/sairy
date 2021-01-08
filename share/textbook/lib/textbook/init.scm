@@ -7,3 +7,4 @@
 (import (srfi 95))
 (import (textbook dsssl))
 (import (textbook string-lib))
+(import (textbook type-of))
