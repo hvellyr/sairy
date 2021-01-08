@@ -1198,6 +1198,11 @@ namespace {
       auto attrs = detail::StyleAttrs{};
       set_attr(attrs, extract_font_characteristics(processor, fo));
 
+      if (auto color = processor->property_or_none<fo::Color>(fo, "color"))
+        set_attr(attrs, "color", enc_color(*color));
+      else
+        set_attr(attrs, "color", "black");
+
       {
         auto& ctx = processor->ctx();
 
@@ -1279,9 +1284,22 @@ namespace {
       if (refid == "#current") {
       }
       else if (!refid.empty()) {
-        auto with_tag =
-          html::Tag{processor->ctx().port(), "a", {{"href", std::string("#") + refid}}};
-        processor->ctx().port().write_text("*");
+        auto sattrs = detail::StyleAttrs{};
+
+        if (auto color = processor->property_or_none<fo::Color>(fo, "color"))
+          set_attr(sattrs, "color", enc_color(*color));
+        else
+          set_attr(sattrs, "color", "black");
+
+        auto& ctx = processor->ctx();
+
+        auto attrs = tag_style_attrs(processor, "a", sattrs);
+        attrs.emplace_back(html::Attr{"href", std::string("#") + refid});
+
+        auto with_tag = html::Tag{ctx.port(), "a", attrs};
+        auto style_scope = StyleScope{ctx, sattrs};
+
+        ctx.port().write_text("*");
       }
     }
   };

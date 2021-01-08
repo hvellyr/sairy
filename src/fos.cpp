@@ -39,7 +39,7 @@ namespace fo {
     {"center-footer", false},          // Sosofo
     {"center-header", false},          // Sosofo
     {"class", false},                  // String
-    {"color", false},                  // Color
+    {"color", true},                   // Color
     {"column-number", false},          // Int
     {"destination", false},            // Address
     {"display?", false},               // Bool
