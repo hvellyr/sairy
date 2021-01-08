@@ -205,6 +205,14 @@ namespace {
   }
 
 
+  std::string enc_posture(const std::string& post) {
+    if (post == "upright")
+      return "normal";
+    else
+      return post;
+  }
+
+
   detail::StyleAttrs intersect_css_attrs(const detail::HtmlRenderContext& ctx,
                                          const detail::StyleAttrs& attrs) {
     auto result = detail::CssAttrMap{};
@@ -388,7 +396,7 @@ namespace {
     }
 
     if (fontchar._posture) {
-      set_attr(attrs, "font-style", *fontchar._posture);
+      set_attr(attrs, "font-style", enc_posture(*fontchar._posture));
     }
 
     set_attr(attrs, "font-size", fontchar._fontsize);
