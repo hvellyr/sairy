@@ -184,7 +184,8 @@ namespace fo {
     using namespace std;
 
     return none_of(begin(sosofo), end(sosofo), [](const IFormattingObject& fo) {
-      return dynamic_cast<const Paragraph*>(&fo) != nullptr;
+      return dynamic_cast<const Paragraph*>(&fo) != nullptr &&
+        dynamic_cast<const DisplayGroup*>(&fo) != nullptr;
     });
   }
 
