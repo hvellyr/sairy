@@ -84,6 +84,16 @@
 (define (idx-entry-ids entries)
   (map (lambda (e) (id e)) entries))
 
+(define (format-index-page-no nd)
+  (cond
+   ((html-backend?) (make score
+                      score-type: %html.link-score-type%
+                      (make page-number
+                        refid: nd)))
+   ((tex-backend?) (make page-number
+                     refid: nd))
+   ))
+
 (define (process-entry-ids ids)
   (let loop ((p ids)
              (sep (empty-sosofo))
@@ -94,9 +104,8 @@
               (literal ", ")
               (sosofo-append sosofo
                              sep
-                             (make page-number
-                               refid: (car p))
-                             )))))
+                             (format-index-page-no (car p)))
+              ))))
 
 (define (process-index-entry entry)
   (make paragraph
@@ -114,6 +123,9 @@
        field-align: 'right
        (make sequence
          font-name: "roman"
+         color: (cond
+                 ((html-backend?) %html.link-color%)
+                 (else (color 'rgb '(0.0 0.0 0.0))))
          (process-entry-ids (idx-entry-ids (cddr entry)))))
      )))
 
