@@ -66,6 +66,7 @@
                        font-caps: 'caps
                        color: (color 'rgb '(1.0 1.0 1.0))
                        (make link
+                         score-type: 'none
                          color: (color 'rgb '(1.0 1.0 1.0))
                          destination: (node-list-address node)
                          (sosofo-append

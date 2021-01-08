@@ -80,8 +80,7 @@
 
 (define (render-ref-to-node-html nd)
   (make link
-    score-type: 'none
-    color: %html.link-color%
+    use: html-link-style
     destination: (node-list-address nd)
     (make sequence
       (sosofo-append
@@ -115,8 +114,7 @@
          (alt (attribute "alt" (current-node))))
     (cond
      ((html-backend?) (make link
-                        score-type: 'none
-                        color: %html.link-color%
+                        use: html-link-style
                         destination: (external-address (data url))
                         (if (node-list-empty? alt)
                             (process-node-list url)

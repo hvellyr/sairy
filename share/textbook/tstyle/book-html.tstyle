@@ -22,6 +22,7 @@
 (define %quote-right-indent% 10pt)
 
 (define %html.section-numbers% #t)
+(define %html.link-score-type% 'below) ;;'none)
 (define %html.link-color% (color 'rgb '(0.1333 0.3686 0.0267)))
 (define %html.link-color-active% (color 'rgb '(0.1333 0.3686 0.0267)))
 (define %html.link-color-visited% (color 'rgb '(0.1333 0.3686 0.0267)))
@@ -62,6 +63,6 @@
   (set! %page-left-offset-neg% -45mm)
   )
 
-
+(use 'common-html)
 (use 'book)
 (use 'book-html-main)

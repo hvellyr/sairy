@@ -110,19 +110,14 @@
 
 ;;------------------------------------------------------------------------------
 
-(define content-link-style
-  (style
-      score-type: 'none
-      color: %html.link-color%
-      ))
-
 (define (content-chapter-html-navigation title nd)
   (let* ((title-num-sosofo (if %html.section-numbers%
                                (literal (section-title-number nd))
                                (empty-sosofo)))
          (title-sosofo (section-title-sosofo title nd)))
     (make link
-      use: content-link-style
+      use: html-link-style
+      score-type: 'none
       destination: (node-list-address nd)
 
       (make paragraph
@@ -157,7 +152,8 @@
          (number-tokens (section-title-number-tokens nd))
          (title-sosofo (section-title-sosofo title nd)))
     (make link
-      use: content-link-style
+      use: html-link-style
+      score-type: 'none
       destination: (node-list-address nd)
 
       (make paragraph

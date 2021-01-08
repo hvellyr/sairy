@@ -1,0 +1,6 @@
+(define html-link-style
+  (style
+      score-type: %html.link-score-type%
+      color: %html.link-color%
+      ))
+
