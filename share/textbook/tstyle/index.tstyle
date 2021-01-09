@@ -52,16 +52,39 @@
          (folded (fold-data sorted))
          (categorized (categorize-idx-data folded))
          )
-    ;;(display (format "folded ~a~%" categorized))
     categorized))
+
+(define (format-def-in-index nd)
+  (let ((declsum (attribute "declsum" nd)))
+    (if (not (node-list-empty? declsum))
+        (format-monospace declsum)
+        (format-monospace (attribute "declln" nd)))))
 
 (mode index-mode
   (element idx
     (let ((text (attribute "text" (current-node))))
       (process-node-list text)))
+
   (element vidx
     (let ((text (attribute "text" (current-node))))
       (process-node-list text)))
+
+  (element deffn
+    (format-def-in-index (current-node)))
+  (element defty
+    (format-def-in-index (current-node)))
+  (element deftag
+    (format-def-in-index (current-node)))
+  (element defop
+    (format-def-in-index (current-node)))
+  (element defopt
+    (format-def-in-index (current-node)))
+  (element defprop
+    (format-def-in-index (current-node)))
+
+  (element def
+    (format-def-in-index (current-node)))
+
   (element em
     (make sequence
      font-name: "roman"
@@ -72,12 +95,14 @@
      font-name: "roman"
      font-posture: 'italic
      (process-node-list (attribute "text" (current-node)))))
+  (element fun
+    (format-monospace (attribute "text" (current-node))))
   )
 
 (define (font-index-name-by-type type)
   (cond
-    ((equal? type "cp") %body-font-name%)
-    ((equal? type "fn") %monospace-font-name%)
+    ((equal? type "con") %body-font-name%)
+    ((equal? type "sym") %monospace-font-name%)
     (else %body-font-name%)
     ))
 
@@ -163,12 +188,27 @@
                                                (let* ((nd-type (data (attribute "type" snl))))
                                                  (string=? type nd-type)))
                                              idx-nds))
-         (idx-data (prepare-index-data (map (lambda (snl)
-                                              (list (data (attribute "text" snl))
-                                                    (data (attribute "type" snl))
-                                                    snl)
-                                              )
-                                            (node-list->list filtered-idx-nds))))
+         (idx-nd-data (map (lambda (snl)
+                             (list (data (attribute "text" snl))
+                                   (data (attribute "type" snl))
+                                   snl))
+                           (node-list->list filtered-idx-nds)))
+         (filtered-def-nds (if (equal? type "sym")
+                               (node-list-filter (lambda (snl)
+                                                   (or (not (node-list-empty? (attribute "declsum" snl)))
+                                                       (not (node-list-empty? (attribute "declln" snl)))))
+                                                 (select-elements descs #(gis: (def deffn defty deftag defop
+                                                                                    defopt defprop))))
+                               (empty-node-list)))
+         (deffn-nd-data (map (lambda (snl)
+                               (let ((declsum (attribute "declsum" snl)))
+                                 (list (data (if (not (node-list-empty? declsum))
+                                                 declsum
+                                                 (attribute "declln" snl)))
+                                       "sym"
+                                       snl)))
+                             (node-list->list filtered-def-nds)))
+         (idx-data (prepare-index-data (append idx-nd-data deffn-nd-data)))
          )
     (make simple-column-set-sequence
       keep-with-previous?: #t

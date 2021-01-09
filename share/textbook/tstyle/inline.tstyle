@@ -3,16 +3,80 @@
 
 ;; ------------------------------------------------------------------------------
 
+(define (format-with-ref nd format-prod pattern)
+  (let* ((idref (data (attribute "ref" nd)))
+         (text (attribute "text" nd)))
+    (cond
+     ((html-backend?)
+      (cond
+       ((or (equal? idref "auto") (= (string-length idref) 0))
+        (let* ((key (data text))
+               (defs (node-list-filter (lambda (snl)
+                                         (let ((declsum (attribute "declsum" snl)))
+                                           (equal? (data (if (not (node-list-empty? declsum))
+                                                             declsum
+                                                             (attribute "declln" snl)))
+                                                   key)))
+                                       (select-elements (descendants (grove-root))
+                                                        pattern))))
+          (if (not (node-list-empty? defs))
+              (make link
+                use: html-link-style
+                destination: (node-list-address (node-list-first defs))
+                (format-prod text))
+              (format-prod text))))
+       ((equal? idref "no") (format-prod text))
+       (else (let* ((nl (elements-with-id idref nd)))
+               (make link
+                 use: html-link-style
+                 destination: (node-list-address (node-list-first nl))
+                 (format-prod text))))))
+     ((tex-backend?) (format-prod text))
+     )))
+
+(element ty
+  (format-with-ref (current-node)
+                   (lambda (snl) (format-monospace snl))
+                   #(gis: (def defty)) ))
+
+(element fun
+  (format-with-ref (current-node)
+                   (lambda (snl) (format-monospace snl))
+                   #(gis: (def deffn)) ))
+
+(element class
+  (format-with-ref (current-node)
+                   (lambda (snl) (format-monospace snl))
+                   #(gis: (def defty)) ))
+
+(element tag
+  (format-with-ref (current-node)
+                   (lambda (snl) (format-monospace snl))
+                   #(gis: (def deftag)) ))
+
+(element opt
+  (format-with-ref (current-node)
+                   (lambda (snl) (format-bold snl))
+                   #(gis: (def defopt)) ))
+
+(element op
+  (format-with-ref (current-node)
+                   (lambda (snl) (format-bold snl))
+                   #(gis: (def defop)) ))
+
+(element prop
+  (format-with-ref (current-node)
+                   (lambda (snl) (format-monospace snl))
+                   #(gis: (def defprop)) ))
+
+
+(element keyw
+  (format-monospace (attribute "text" (current-node))))
+
 (element r
   (format-r (attribute "text" (current-node))))
 
 (element b
-  (format-bold (attribute "text" (current-node))))
-
-(element opt
-  (format-bold (attribute "text" (current-node))))
-
-(element op
   (format-bold (attribute "text" (current-node))))
 
 (element app
@@ -33,25 +97,10 @@
 (element const
   (format-monospace (attribute "text" (current-node))))
 
-(element ty
-  (format-monospace (attribute "text" (current-node))))
-
 (element var
   (format-monospace (attribute "text" (current-node))))
 
 (element code
-  (format-monospace (attribute "text" (current-node))))
-
-(element fun
-  (format-monospace (attribute "text" (current-node))))
-
-(element keyw
-  (format-monospace (attribute "text" (current-node))))
-
-(element class
-  (format-monospace (attribute "text" (current-node))))
-
-(element tag
   (format-monospace (attribute "text" (current-node))))
 
 (element prm

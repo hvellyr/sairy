@@ -80,6 +80,31 @@
                    (attribute "declln" (current-node))
                    (literal "Function")))
 
+(element defop
+  (make-def-sosofo (current-node)
+                   (attribute "declln" (current-node))
+                   (literal "Operator")))
+
+(element defopt
+  (make-def-sosofo (current-node)
+                   (attribute "declln" (current-node))
+                   (literal "Option")))
+
+(element defprop
+  (make-def-sosofo (current-node)
+                   (attribute "declln" (current-node))
+                   (literal "Property")))
+
+(element defty
+  (make-def-sosofo (current-node)
+                   (attribute "declln" (current-node))
+                   (literal "Type")))
+
+(element deftag
+  (make-def-sosofo (current-node)
+                   (attribute "declln" (current-node))
+                   (literal "Tag")))
+
 (element decl
   (make display-group
     space-before: (display-space 7pt conditional?: #t)
@@ -89,5 +114,5 @@
 
 (element def
   (make-def-sosofo (current-node)
-                   (attribute "declsum" (current-node))
+                   (attribute "declln" (current-node))
                    (process-node-list (attribute "kind" (current-node)))))

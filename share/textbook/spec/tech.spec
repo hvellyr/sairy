@@ -6,20 +6,22 @@
 @tag{app}        {%text}                      {EMPTY}   @c application
 @tag{dfn}        {%text}                      {EMPTY}   @c term
 @tag{file}       {%text}                      {EMPTY}   @c file name
-@tag{opt}        {%text}                      {EMPTY}   @c option
 @tag{val}        {%text}                      {EMPTY}   @c value
 @tag{var}        {%text}                      {EMPTY}   @c variable
 @tag{prm}        {%text}                      {EMPTY}   @c parameter
 @tag{code}       {%text}                      {EMPTY}   @c code
-@tag{op}         {%text}                      {EMPTY}   @c operator
-
-@tag{ty}         {%text}                      {EMPTY}   @c type
-@tag{class}      {%text}                      {EMPTY}   @c class
-@tag{fun}        {%text}                      {EMPTY}   @c fun
 @tag{keyw}       {%text}                      {EMPTY}   @c keyword
 @tag{const}      {%text}                      {EMPTY}   @c constant
-@tag{tag}        {%text}                      {EMPTY}   @c tag in a markup lang
 
+@c ref is either auto, no, or a ref to a ID of a def* (defty, deffn, ...).  If
+@c ref is empty it defaults to auto.
+@tag{op}         {%text, ref?}                {EMPTY}   @c operator
+@tag{opt}        {%text, ref?}                {EMPTY}   @c option
+@tag{ty}         {%text, ref?}                {EMPTY}   @c type
+@tag{class}      {%text, ref?}                {EMPTY}   @c class
+@tag{fun}        {%text, ref?}                {EMPTY}   @c fun
+@tag{tag}        {%text, ref?}                {EMPTY}   @c tag in a markup lang
+@tag{prop}       {%text, ref?}                {EMPTY}   @c property
 
 @tag{result}     {}                           {EMPTY}
 @tag{print}      {}                           {EMPTY}

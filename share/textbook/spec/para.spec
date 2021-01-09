@@ -25,11 +25,28 @@
 
 @c define function
 @c declln = used as headline
-@c declsum = used as the title of references
+@c declsum = used as the title in references and indices
 @tag{deffn}      {%declln, %declsum?, ID?}    {#TEXT | ANY}
+
+@c define type
+@tag{defty}      {%declln, %declsum?, ID?}    {#TEXT | ANY}
+
+@c define tag
+@tag{deftag}     {%declln, %declsum?, ID?}    {#TEXT | ANY}
+
+@c define operator
+@tag{defop}      {%declln, %declsum?, ID?}    {#TEXT | ANY}
+
+@c define option
+@tag{defopt}     {%declln, %declsum?, ID?}    {#TEXT | ANY}
+
+@c define property
+@tag{defprop}    {%declln, %declsum?, ID?}    {#TEXT | ANY}
+
 @c kind = function, special, class, type, etc.
-@c declsum = declaration summary, used as headline
-@tag{def}        {%kind, %declsum, ID?}       {#TEXT | ANY}
+@c declln = used as headline
+@c declsum = used as the title in references and indices
+@tag{def}        {%kind, %declln, %declsum?, ID?} {#TEXT | ANY}
 
 @c pre-formatted declaration part, takes %inline
 @tag{decl}       {%index?, ID?}               {#TEXT | ANY}
