@@ -811,10 +811,9 @@ namespace {
 
       if (!ctx.port().has_header()) {
         ctx.port().header(title, author, desc, [&](std::ostream&) {
-          ctx.port().write_link("stylesheet",
-                                {{"media", "screen"},
-                                 {"type", "text/css"},
-                                 {"href", processor->css_file().string()}});
+          ctx.port().write_link("stylesheet", {{"media", "screen"},
+                                               {"type", "text/css"},
+                                               {"href", processor->css_file().string()}});
         });
       }
 
