@@ -1156,7 +1156,7 @@ namespace {
                         &func_node_list_first);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list-rest", 1,
                         &func_node_list_rest);
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "%node-list", 1,
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "list->node-list", 1,
                         &func_node_list_ctor);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "node-list=?", 2,
                         &func_node_list_equal);

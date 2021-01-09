@@ -7,7 +7,7 @@
 (define-syntax node-list
   (syntax-rules ()
     ((node-list)          (empty-node-list))
-    ((node-list args ...) (%node-list (list args ...)))
+    ((node-list args ...) (list->node-list (list args ...)))
     ))
 
 
@@ -156,15 +156,17 @@
 ;; shall be node-lists.  The result shall contain no duplicates.  With no
 ;; arguments, an empty node-list shall be returned.
 (define* (node-list-union . args)
-  (reduce args
-          (lambda (nl1 nl2)
-            (node-list-reduce nl2
-                              (lambda (result snl)
-                                (if (node-list-contains? result snl)
-                                    result
-                                    (node-list result snl)))
-                              nl1))
-          (empty-node-list)))
+  (if (null? args)
+      (empty-node-list)
+      (node-list-reduce (list->node-list args)
+                        (lambda (nl1 nl2)
+                          (node-list-reduce nl2
+                                            (lambda (result snl)
+                                              (if (node-list-contains? result snl)
+                                                  result
+                                                  (node-list result snl)))
+                                            nl1))
+                        (empty-node-list))))
 
 ;; @doc Returns a node-list containing the intersection of all the arguments,
 ;; which shall be node-lists.  The result shall contain no duplicates.  With no
@@ -172,15 +174,15 @@
 (define (node-list-intersection . args)
   (if (null? args)
       (empty-node-list)
-      (reduce (cdr args)
-              (lambda (nl1 nl2)
-                (node-list-reduce nl1
-                                  (lambda (result snl)
-                                    (if (node-list-contains? nl2 snl)
-                                        (node-list result snl)
-                                        result))
-                                  (empty-node-list)))
-              (node-list-remove-duplicates (car args)))))
+      (node-list-reduce (list->node-list (cdr args))
+                        (lambda (nl1 nl2)
+                          (node-list-reduce nl1
+                                            (lambda (result snl)
+                                              (if (node-list-contains? nl2 snl)
+                                                  (node-list result snl)
+                                                  result))
+                                            (empty-node-list)))
+                        (node-list-remove-duplicates (car args)))))
 
 ;; @doc Returns a node-list containing the set difference of all the arguments,
 ;; which shall be node-lists.  The set difference is defined to be those members
@@ -190,15 +192,15 @@
 (define (node-list-difference . args)
   (if (null? args)
       (empty-node-list)
-      (reduce (cdr args)
-              (lambda (nl1 nl2)
-                (node-list-reduce nl1
-                                  (lambda (result snl)
-                                    (if (node-list-contains? nl2 snl)
-                                        result
-                                        (node-list result snl)))
-                                  (empty-node-list)))
-              (node-list-remove-duplicates (car args)))))
+      (node-list-reduce (list->node-list (cdr args))
+                        (lambda (nl1 nl2)
+                          (node-list-reduce nl1
+                                            (lambda (result snl)
+                                              (if (node-list-contains? nl2 snl)
+                                                  result
+                                                  (node-list result snl)))
+                                            (empty-node-list)))
+                        (node-list-remove-duplicates (car args)))))
 
 ;; @doc Returns #t if, for some member of @prm{nl}, @prm{proc} does not return
 ;; #f when applied to a singleton node-list containing just that member, and
