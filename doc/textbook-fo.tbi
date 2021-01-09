@@ -12,12 +12,12 @@
 @c text
 
 @deffn{(make @prm{flow-object-class-name} @prm{keyword-argument*}
-       @prm{content-expression*})}
-@idx{@fun{make}}{sym}
+       @prm{content-expression*})}{make}
+
 Creates a formatting object of class @prm{flow-object-class-name}.  The
 formatting object's characteristics are set by the @prm{keyword-argument}s.
 
-Each @prm{content-expression} shall return an object of type sosofo.  The
+Each @prm{content-expression} shall return an object of type @ty{sosofo}.  The
 sosofos returned by the @prm{content-expression}s are concatenated to form the
 content of the formatting object.  If @prm{flow-object-class-name} is atomic no
 @prm{content-expression} is allowed.
@@ -26,10 +26,15 @@ The following keywords are allowed as @prm{keyword-argument}:
 
 @itemize
 @item A keyword that is the name of a characteristic of any formatting object
- and specifies its value.
-@item @keyw{use:} specifying a style to be used for the construction of the
- formatting object.  The value should be a style object or @val{#f} to indicate
- to not use any style object.
+  and specifies its value.
+@item @vidx{@keyw{use:}}{sym} specifying a style to be used for the construction
+  of the formatting object.  The value should be a style object or @val{#f}
+  to indicate to not use any style object.
+@item @vidx{@keyw{label:}}{sym} specifying the name of a port this formatting
+  object specification is bound to.  This bind is inherited to all contained
+  sosofos by this formatting object.  This allows to direct selected sosofos
+  to specific areas.  It is only useful for structuring formatting objects
+  which support multiple named ports (e.g. @ty{screen-set}).
 @end itemize
 
 @example
@@ -42,20 +47,17 @@ The following keywords are allowed as @prm{keyword-argument}:
 @end deffn
 
 
-@deffn{(empty-sosofo)}
-@idx{@fun{empty-sosofo}}{sym}
+@deffn{(empty-sosofo)}{empty-sosofo}
 Returns an empty sosofo.
 @end deffn
 
-@deffn{(literal @prm{string})}
-@idx{@fun{literal}}{sym}
-Returns a formatting object of type @class{literal} with the string value
+@deffn{(literal @prm{string})}{literal}
+Returns a formatting object of type @ty{literal} with the string value
 @prm{string}.
 @end deffn
 
-@deffn{(make-char @prm{name})}
-@idx{@fun{make-char}}{sym}
-Returns a formatting object of type @class{literal} with a single character
+@deffn{(make-char @prm{name})}{make-char}
+Returns a formatting object of type @ty{literal} with a single character
 created from @prm{name}.  This function can be used to generate special
 characters which are hard to introduce via unicode input.  Only a limited set of
 characters are available as names.
@@ -68,6 +70,74 @@ characters are available as names.
 @end subsection
 
 
+@subsection{Common properties on formatting objects}{sect.common-props}
+
+A number of formatting objects accept setting @dfn{font specifics}.  All
+formatting objects use the same semantics for the same properties:
+
+@definitions
+@def{}{font-size:}{font-size:}{prop.font-size}
+is a length-spec giving the size of the font.  The default value is @val{10pt}.
+@end def
+@def{}{font-caps:}{font-caps:} is a symbol specifying the capitialization
+  of the text.  Possible values are @val{normal}, @val{lower}, @val{caps},
+  @val{small-caps}.  If @val{#f} the default @code{(inherited)} value is used.
+
+@example
+(make foo
+  font-caps: #t)
+@end example
+@end def
+@def{}{position-point-shift:}{position-point-shift:} @c LengthSpec(kDimen, 0, k_pt)),
+@end def
+@def{}{font-name:}{font-name:} a string specifying the name of the font
+  family to use.  If @val{#f} use the default @code{(inherited)} font.  The
+  three abstract font family names @val{"serif"}, @val{"sans-serif"} and
+  @val{"monospace"} are always available and are mapped to appropriate system
+  fonts.  The default value is @val{"serif"}.
+@end def
+@def{}{font-posture:}{font-posture:} is a symbol specifying the slantedness
+  of the font.  Default is @val{upright}.  Possible values depend on the
+  backend processor, but typically these are: @val{upright}, @val{italic},
+  @val{oblique}.
+@end def
+@def{}{font-weight:}{font-weight:} is the weight of the font specified as
+  symbol.  Supported values depend on the font and the backend processor,
+  but typical values are: @val{medium}, @val{bold}, @val{semibold}.  Defaults
+  to @val{medium}.
+@end def
+@def{}{line-spacing:}{line-spacing:} is a length-spec specifing the spacing
+  between lines.  The default value is @val{12pt}.
+@end def
+@end definitions
+
+@c @definitions
+@c @item{@vidx{@var{font-size:}}{sym}} is a length-spec giving the size of the
+@c   font.  The default value is @val{10pt}.
+@c @item{@vidx{@var{font-caps:}}{sym}} is a symbol specifying the capitialization
+@c   of the text.  Possible values are @val{normal}, @val{lower}, @val{caps},
+@c   @val{small-caps}.  If @val{#f} the default @code{(inherited)} value is used.
+@c @item{@vidx{@var{position-point-shift:}}{sym}} @c LengthSpec(kDimen, 0, k_pt)),
+@c @item{@vidx{@var{font-name:}}{sym}} a string specifying the name of the font
+@c   family to use.  If @val{#f} use the default @code{(inherited)} font.  The
+@c   three abstract font family names @val{"serif"}, @val{"sans-serif"} and
+@c   @val{"monospace"} are always available and are mapped to appropriate system
+@c   fonts.  The default value is @val{"serif"}.
+@c @item{@vidx{@var{font-posture:}}{sym}} is a symbol specifying the slantedness
+@c   of the font.  Default is @val{upright}.  Possible values depend on the
+@c   backend processor, but typically these are: @val{upright}, @val{italic},
+@c   @val{oblique}.
+@c @item{@vidx{@var{font-weight:}}{sym}} is the weight of the font specified as
+@c   symbol.  Supported values depend on the font and the backend processor,
+@c   but typical values are: @val{medium}, @val{bold}, @val{semibold}.  Defaults
+@c   to @val{medium}.
+@c @item{@vidx{@var{line-spacing:}}{sym}} is a length-spec specifing the spacing
+@c   between lines.  The default value is @val{12pt}.
+@c @end definitions
+
+@end subsection
+
+
 @subsection{Modes}
 
 The style language always works in @dfn{modes}.  There is a default mode which
@@ -75,8 +145,7 @@ contains all matching rules not defined in a mode explicitly.  These rules are
 also active when processing elements inside of specific modes, but the default
 mode rules have a lower priority.
 
-@deffn{(mode @prm{mode-id} @prm{matching-rules} ...)}
-@idx{@fun{mode}}{sym}
+@deffn{(mode @prm{mode-id} @prm{matching-rules} ...)}{mode}
 Defining rules inside a specific mode is achieved with the @fun{mode} form.  All
 @prm{matching-rules} defined inside the mode expression's scope are defined
 inside the mode @prm{mode-id}.
@@ -91,10 +160,13 @@ inside the mode @prm{mode-id}.
 @end example
 @end deffn
 
-@deffn{(with-mode @prm{mode-id} @prm{expression})}
-@idx{@fun{with-mode}}{sym}
+@deffn{(with-mode @prm{mode-id} @prm{expression})}{with-mode}
 Evaluates @prm{expression} with the processing mode @prm{mode-id} as defined by
 a previous @fun{mode} specification.
+@end deffn
+
+@deffn{(current-mode)}{current-mode}
+Returns the mode currently set.
 @end deffn
 
 @end subsection
@@ -102,13 +174,11 @@ a previous @fun{mode} specification.
 
 @subsection{Working with sosofos}
 
-@deffn{(sosofo? @prm{o})}
-@idx{@fun{sosofo?}}{sym}
+@deffn{(sosofo? @prm{o})}{sosofo?}
 Indicates whether @prm{o} is an object of type @ty{sosofo}.
 @end deffn
 
-@deffn{(sosofo-append @prm{sosofos})}
-@idx{@fun{sosofo-append}}{sym}
+@deffn{(sosofo-append @prm{sosofos})}{sosofo-append}
 Returns the sosofo that results from appending all sosofos.  If @prm{sosofos} is
 the empty sosofo returns an empty sosofo.
 
@@ -125,13 +195,11 @@ the empty sosofo returns an empty sosofo.
 
 @subsection{Color}
 
-@deffn{(color? @prm{o})}
-@idx{@fun{color?}}{sym}
+@deffn{(color? @prm{o})}{color?}
 Indicates whether @prm{o} is an object of type @ty{color}.
 @end deffn
 
-@deffn{(color @prm{color-space} @prm{arg} ...)}
-@idx{@fun{color}}{sym}
+@deffn{(color @prm{color-space} @prm{arg} ...)}{color}
 Returns an object of type color from the color space specified by
 @prm{color-space}.  The arguments depend on the space used.
 
@@ -145,26 +213,22 @@ Returns an object of type color from the color space specified by
 
 
 @subsection{Spaces, dimensions}
-@deffn{(display-space? @prm{o})}
-@idx{@fun{display-space?}}{sym}
-Indicates whether @prm{o} is an object of type display-space.
+@deffn{(display-space? @prm{o})}{display-space?}
+Indicates whether @prm{o} is an object of type @ty{display-space}.
 @end deffn
 
-@deffn{(display-space @prm{length-spec} @prm{[min:]} @prm{[max:]}
-                     @prm{[conditional?:]} @prm{[priority:]})}
-@idx{@fun{display-space}}{sym}
-Creates a new object of type display-space.
+@deffn{(display-space @prm{length-spec} @?{@prm{min:}} @?{@prm{max:}}
+               @?{@prm{conditional?:}} @?{@prm{priority:}})}{display-space}
+Creates a new object of type @ty{display-space}.
 
 tbd.
 @end deffn
 
-@deffn{(inline-space? @prm{o})}
-@idx{@fun{inline-space?}}{sym}
-Indicates whether @prm{o} is an object of type inline-space.
+@deffn{(inline-space? @prm{o})}{inline-space?}
+Indicates whether @prm{o} is an object of type @ty{inline-space}.
 @end deffn
 
-@deffn{(inline-space @prm{length-spec} @prm{[min:]} @prm{[max:]})}
-@idx{@fun{inline-space}}{sym}
+@deffn{(inline-space @prm{length-spec} @?{@prm{min:}} @?{@prm{max:}})}{inline-space}
 tbd.
 @end deffn
 @end subsection
@@ -179,7 +243,6 @@ structuring formatting objects are typically media aware, i.e. they care about
 etc.).
 
 @def{Formatting Object}{simple-page-sequence}
-@idx{@ty{simple-page-sequence} (F.O.)}{sym}
 A simple page sequence provides the document master for a sequence of pages,
 with each page having the same (physical) size and layout.  The page layout
 provides areas for a header, a footer and the text body.  Both header and footer
@@ -197,7 +260,6 @@ tbd.
 
 
 @def{Formatting Object}{scroll-sequence}
-@idx{@ty{scroll-sequence} (F.O.)}{sym}
 A scroll sequence provides a simple document master for “endless” media, where
 content is not presented in separated pages, but in a scrolling fashon
 (e.g. websites).
@@ -211,18 +273,17 @@ tbd.
 Defined characteristics:
 
 @definitions
-@item{@var{title:}} specifies the title of the entire scroll sequence; the backend
-  processor might use it for the displaying app's header.
-@item{@var{metadata.author:}} set's the author metadata field of the resulting
-  output.  Depends on the backend processor.
-@item{@var{metadata.desc:}} set's the description metadata field of the
-  resulting output.  Depends on the backend processor.
+@item{@vidx{@var{title:}}{sym}} specifies the title of the entire scroll
+  sequence; the backend processor might use it for the displaying app's header.
+@item{@vidx{@var{metadata.author:}}{sym}} set's the author metadata field of
+  the resulting output.  Depends on the backend processor.
+@item{@vidx{@var{metadata.desc:}}{sym}} set's the description metadata field
+  of the resulting output.  Depends on the backend processor.
 @end definitions
 @end def
 
 
-@def{Formatting Object}{screen-set}
-@idx{@ty{screen-set} (F.O.)}{sym}
+@def{Formatting Object}{screen-set}{screen-set}{fo.screen-set}
 
 A screen set provides the document master for more elaborate presentation of
 content on a principially non-paged media (like websites).  It supports the
@@ -233,21 +294,78 @@ modern websites.
 The areas are defined by the stylesheet using a @ty{screen-set-model}.
 
 A screen set is not usefull for paged media and thus likely not supported by
-backend processors dealing with such.
+backend processors dealing with such.  Also backend processor might only support
+a limited set of zones defined by regions in the screen set model.
 
 Defined characteristics:
 
 @definitions
-@item{@var{title:}} specifies the title of the entire screen set; the backend
-  processor might use it for the displaying app's header.
-@item{@var{metadata.author:}} set's the author metadata field of the resulting
-  output.  Depends on the backend processor.
-@item{@var{metadata.desc:}} set's the description metadata field of the
-  resulting output.  Depends on the backend processor.
-@item{@var{screen-set-model:}} specifies the model to use for this
-  @ty{screen-set}.  The value must be of type screen-set-model.
+@item{@vidx{@var{title:}}{sym}} specifies the title of the entire screen set;
+  the backend processor might use it for the displaying app's header.
+@item{@vidx{@var{metadata.author:}}{sym}} set's the author metadata field of
+  the resulting output.  Depends on the backend processor.
+@item{@vidx{@var{metadata.desc:}}{sym}} set's the description metadata field
+  of the resulting output.  Depends on the backend processor.
+@item{@vidx{@var{screen-set-model:}}{sym}} specifies the model to use for this
+  @ty{screen-set}.  The value must be of type @ty{screen-set-model}.
+@item{@vidx{@var{html.add-css-link:}}{sym}} takes a string which is included
+  as a @tag{link}{no} tag into the generated @acr{HTML}.  This can be used to
+  include @acr{CSS} or javascript sources.  By default unset.
 @end definitions
 @end def
+
+@deffn{(make-screen-set-model @prm{regions*})}{make-screen-set-model}
+Creates a screen set model with @prm{regions} which can be used with top
+structuring formatting objects like @ty{screen-class}.
+@end deffn
+
+@deffn{(region @prm{keyword-argument*})}{region}
+
+Defines a region in a screen set model.  Each region has a @dfn{zone} identifier
+and defines a @dfn{port}.  All regions with the same zone identifier are
+rendered into the same zone defined by the backend processor.  Depending on the
+kind of the region (fixed or floating), only single region definitions might be
+useful in a given zone.
+
+Sosofo specifications are bound with the @keyw{label:} property to ports defined
+in these regions.
+
+Defined characteristics:
+
+@definitions
+@item{@vidx{@var{port:}}{sym}} gives an identifier which names the port sosofos
+  are bound to with the @keyw{label:} property.
+@item{@vidx{@var{zone:}}{sym}} binds the region to one of the zones defined by
+  the backend processor.  See the documentation for the backend processor which
+  zones are available.
+@item{@vidx{@var{fixed?:}}{sym}} if @val{#t} specifies that the region is
+  positioned on a fixed point.  Defaults to @val{#f}, which speicifies that the
+  region is a floating region.
+@item{@vidx{@var{height:}}{sym}} defines the height of the region; ignored if
+  the @keyw{fixed?:} property is @val{#f}.  Defaults to @val{auto} and unlimited
+  resizing.
+@item{@vidx{@var{width:}}{sym}} defines the width of the region.  Defaults to @val{auto}
+  and unlimited resizing.
+@item{@vidx{@var{x-origin:}}{sym}} defines the x position of the region on the
+  screen.
+@item{@vidx{@var{y-origin:}}{sym}} defines the y position of the region on the
+  screen.
+@item{@vidx{@var{background-color:}}{sym}} Specifies the background color of
+  the text to use.  If @val{#f} the default @code{(inherited)} value is used.
+@item{@vidx{@var{span-screen-height?:}}{sym}}
+@item{@vidx{@var{start-margin:}}{sym}}
+@item{@vidx{@var{end-margin:}}{sym}}
+@item{@vidx{@var{font-size:}}{sym}} see @ref{sect.common-props}
+@item{@vidx{@var{font-caps:}}{sym}} see @ref{sect.common-props}
+@item{@vidx{@var{position-point-shift:}}{sym}} see @ref{sect.common-props}
+@item{@vidx{@var{font-name:}}{sym}} see @ref{sect.common-props}
+@item{@vidx{@var{font-posture:}}{sym}} see @ref{sect.common-props}
+@item{@vidx{@var{font-weight:}}{sym}} see @ref{sect.common-props}
+@item{@vidx{@var{line-spacing:}}{sym}} see @ref{sect.common-props}
+@end definitions
+
+@end deffn
+
 
 @end subsection
 
@@ -260,7 +378,7 @@ being used as an inline formating object, too; the behaviour is controlled by
 setting the @var{display?:} keyword.
 
 @def{Formatting Object}{paragraph}
-@idx{@ty{paragraph} (F.O.)}{sym}
+
 A @ty{paragraph} represents a display formatting object with one
 principial port (@val{“text”}).  It takes any number of inline formatting
 objects and organizes them into a line by line flow.  Typical geometrical layout
@@ -276,73 +394,62 @@ characteristics.
 Defined characteristics:
 
 @definitions
-@item{@var{first-line-start-indent:}} is a length-spec giving an indent for the
-  first line.  This is added to the general indent @var{start-indent} and can be
-  negative.  The default value is @val{0pt}.
-@item{@var{last-line-end-indent:}} is a length-spec giving an indent for the
-  last line.  This is added to the @var{end-indent} and can be negative.  The
-  default value is the inline-space equivalent to @code{(inline-space 1em min: 1em
-  max: 'inf)}.
-@item{@var{line-spacing:}} is a length-spec specifing the spacing between
-  lines.  The default value is @val{12pt}.
-@item{@var{font-caps:}} is a symbol specifying the capitialization of the text.
-  Possible values are @val{normal}, @val{lower}, @val{caps},
-  @val{small-caps}.  If @val{#f} the default @code{(inherited)} value is used.
-@item{@var{font-name:}} a string specifying the name of the font family to use.
-  If @val{#f} use the default @code{(inherited)} font.  The three abstract font family
-  names @val{"serif"}, @val{"sans-serif"} and @val{"monospace"} are always available
-  and are mapped to appropriate system fonts.  The default value is @val{"serif"}.
-@item{@var{font-posture:}} is a symbol specifying the slantedness of the font.  Default
-  is @val{upright}.  Possible values depend on the backend processor, but typically
-  these are: @val{upright}, @val{italic}, @val{oblique}.
-@item{@var{font-size:}} is a length-spec giving the size of the font.  The
-  default value is @val{10pt}.
-@item{@var{font-weight:}} is the weight of the font specified as symbol.  Supported values
-  depend on the font and the backend processor, but typical values are: @val{medium},
-  @val{bold}, @val{semibold}.  Defaults to @val{medium}.
-@item{@var{language:}} @c ""),
-@item{@var{start-indent:}} is a length-spec specifying the left indent of the text.
-  Default is @val{0em}.
-@item{@var{end-indent:}} is a length-spec specifying the right indent of the text.
-  Default is @val{0em}.
-@item{@var{quadding:}} is a symbol specifying the text layout in line.  If @val{left} the
-  text is left aligned (ragged-right aligned), if @val{right} it is right
-  aligned (ragged-left), if @val{center} the text lines are centered, and if
-  @val{justify} the text lines are justified.  Default is @val{justify}.
-@item{@var{space-before:}} is a length-spec specifying the leading distance
-  between the paragraphs text body top and the previous formatting object.  If
-  @val{#f} defaults to @code{(display-space 0pt)}.
-@item{@var{space-after:}} is a length-spec specifying the trailing distance
-  between the paragraphs text body bottom and the following formatting object.  If
-  @val{#f} defaults to @code{(display-space 0pt)}.
-@item{@var{keep-with-previous?:}} if @val{#t} indicates that a page break before
-  this formatting object is not allowed.  Defaults to @val{#f}.
-@item{@var{keep-with-next?:}} if @val{#t} indicates that a page break after
-  this formatting object is not allowed.  Defaults to @val{#f}.
-@item{@var{break-after:}} is one of the symbols @val{page} or @val{column}
-  this specifies that the formating object should end an area of that type.
-  This characteristics is not inherited and defaults to @val{#f}.
-@item{@var{break-before:}} is one of the symbols @val{page} or @val{column}
-  this specifies that the formating object should break at a page or column and
-  start at the beginning of that area.  This characteristics is not inherited
-  and defaults to @val{#t}.
-@item{@var{lines:}} Default is @val{wrap}.
-@item{@var{whitespace-treatment:}} Default is @val{collapse}.
-@item{@var{asis-wrap-indent:}} @c 10),
-@item{@var{numbered-lines?:}} @c false),
-@item{@var{line-number-side:}} @c "start"),
-@item{@var{position-point-shift:}} @c LengthSpec(kDimen, 0, k_pt)),
-@item{@var{color:}} Specifies the foreground color of the text to use.  If
-  @val{#f} the default @code{(inherited)} value is used.
-@item{@var{background-color:}} Specifies the background color of the text to
+@item{@vidx{@var{first-line-start-indent:}}{sym}} is a length-spec giving an
+  indent for the first line.  This is added to the general indent
+  @var{start-indent} and can be negative.  The default value is @val{0pt}.
+@item{@vidx{@var{last-line-end-indent:}}{sym}} is a length-spec giving an indent
+  for the last line.  This is added to the @var{end-indent} and can be
+  negative.  The default value is the inline-space equivalent to
+  @code{(inline-space 1em min: 1em max: 'inf)}.
+@item{@vidx{@var{line-spacing:}}{sym}} see @ref{sect.common-props}
+@item{@vidx{@var{font-caps:}}{sym}} see @ref{sect.common-props}
+@item{@vidx{@var{font-name:}}{sym}} see @ref{sect.common-props}
+@item{@vidx{@var{font-posture:}}{sym}} see @ref{sect.common-props}
+@item{@vidx{@var{font-size:}}{sym}} see @ref{sect.common-props}
+@item{@vidx{@var{font-weight:}}{sym}} see @ref{sect.common-props}
+@item{@vidx{@var{language:}}{sym}} @c ""),
+@item{@vidx{@var{start-indent:}}{sym}} is a length-spec specifying the left
+  indent of the text.  Default is @val{0em}.
+@item{@vidx{@var{end-indent:}}{sym}} is a length-spec specifying the right
+  indent of the text.  Default is @val{0em}.
+@item{@vidx{@var{quadding:}}{sym}} is a symbol specifying the text layout
+  in line.  If @val{left} the text is left aligned (ragged-right aligned),
+  if @val{right} it is right aligned (ragged-left), if @val{center} the
+  text lines are centered, and if @val{justify} the text lines are justified.
+  Default is @val{justify}.
+@item{@vidx{@var{space-before:}}{sym}} is a length-spec specifying the
+  leading distance between the paragraphs text body top and the previous
+  formatting object.  If @val{#f} defaults to @code{(display-space 0pt)}.
+@item{@vidx{@var{space-after:}}{sym}} is a length-spec specifying the trailing
+  distance between the paragraphs text body bottom and the following formatting
+  object.  If @val{#f} defaults to @code{(display-space 0pt)}.
+@item{@vidx{@var{keep-with-previous?:}}{sym}} if @val{#t} indicates that a page
+  break before this formatting object is not allowed.  Defaults to @val{#f}.
+@item{@vidx{@var{keep-with-next?:}}{sym}} if @val{#t} indicates that a page
+  break after this formatting object is not allowed.  Defaults to @val{#f}.
+@item{@vidx{@var{break-after:}}{sym}} is one of the symbols @val{page} or
+  @val{column} this specifies that the formating object should end an area of
+  that type.  This characteristics is not inherited and defaults to @val{#f}.
+@item{@vidx{@var{break-before:}}{sym}} is one of the symbols @val{page} or
+  @val{column} this specifies that the formating object should break at a page
+  or column and start at the beginning of that area.  This characteristics is
+  not inherited and defaults to @val{#t}.
+@item{@vidx{@var{lines:}}{sym}} Default is @val{wrap}.
+@item{@vidx{@var{whitespace-treatment:}}{sym}} Default is @val{collapse}.
+@item{@vidx{@var{asis-wrap-indent:}}{sym}} @c 10),
+@item{@vidx{@var{numbered-lines?:}}{sym}} @c false),
+@item{@vidx{@var{line-number-side:}}{sym}} @c "start"),
+@item{@vidx{@var{position-point-shift:}}{sym}} @c LengthSpec(kDimen, 0, k_pt)),
+@item{@vidx{@var{color:}}{sym}} Specifies the foreground color of the text to
   use.  If @val{#f} the default @code{(inherited)} value is used.
+@item{@vidx{@var{background-color:}}{sym}} Specifies the background color of
+  the text to use.  If @val{#f} the default @code{(inherited)} value is used.
 @end definitions
 
 @end def
 
 
 @def{Formatting Object}{display-group}
-@idx{@ty{display-group} (F.O.)}{sym}
 
 @figure{Display group formatting object}{fig.display-group-fo}
 @img{models/display-group.svg}
@@ -354,7 +461,6 @@ tbd.
 
 @def{Formatting Object}{box}
 
-@idx{@ty{box} (F.O.)}{sym}
 This flow object has a single port and can be rendered either as a display or as
 an inline flow object, depending on the @var{display?} characteristic.
 Processors should render this flow object as a box around its content, either
@@ -368,37 +474,38 @@ with a border (@var{box-type} is @val{border}) or with a filled background color
 Defined characteristics:
 
 @definitions
-@item{@var{box-type}} is a symbol specifying whether the box is rendered with
-  border or background.  Possible values are @val{border}, @val{background}, and
-  @val{both}.  The default is @val{border}.
-@item{@var{display?}} when @val{#t} indicates whether this box is a display
-  object; default is @val{#f}
-@item{@var{box-corner-rounded?:}} when @val{#t} the box is rendered with rounded
-  corners.  The radius of the corners is specified with the
-  @var{box-corner-radius} characteristic.  Default is @val{#f}.
-@item{@var{box-corner-radius:}} Default is @val{3pt}.
-@item{@var{background-color:}} the color used for rendering the background.  By
+@item{@vidx{@var{box-type}}{sym}} is a symbol specifying whether the box is
+  rendered with border or background.  Possible values are @val{border},
+  @val{background}, and @val{both}.  The default is @val{border}.
+@item{@vidx{@var{display?}}{sym}} when @val{#t} indicates whether this box is
+  a display object; default is @val{#f}
+@item{@vidx{@var{box-corner-rounded?:}}{sym}} when @val{#t} the box is
+  rendered with rounded corners.  The radius of the corners is specified with
+  the @var{box-corner-radius} characteristic.  Default is @val{#f}.
+@item{@vidx{@var{box-corner-radius:}}{sym}} Default is @val{3pt}.
+@item{@vidx{@var{background-color:}}{sym}} the color used for rendering the
+  background.  By default unset.
+@item{@vidx{@var{color:}}{sym}} the color used for rendering a border.  By
   default unset.
-@item{@var{color:}} the color used for rendering a border.  By default unset.
-@item{@var{line-thickness:}} specifies the thickness of the border line.  Default
-  is @val{1pt}.
-@item{@var{space-before:}} specifies how much space along the display axis should
-  be inserted before this formatting object.  Defaults to @val{0pt}.
-@item{@var{space-after:}} specifies how much space along the display axis should
-  be inserted after this formatting object.  Defaults to @val{0pt}.
-@item{@var{break-before:}} is one of the symbols @val{page} or @val{column}
-  this specifies that the formating object should break at a page or column and
-  start at the beginning of that area.  This characteristics is not inherited
-  and defaults to @val{#t}.
-@item{@var{break-after:}} is one of the symbols @val{page} or @val{column}
-  this specifies that the formating object should end an area of that type.
-  This characteristics is not inherited and defaults to @val{#f}.
+@item{@vidx{@var{line-thickness:}}{sym}} specifies the thickness of the border
+  line.  Default is @val{1pt}.
+@item{@vidx{@var{space-before:}}{sym}} specifies how much space along the
+  display axis should be inserted before this formatting object.  Defaults to
+  @val{0pt}.
+@item{@vidx{@var{space-after:}}{sym}} specifies how much space along the display
+  axis should be inserted after this formatting object.  Defaults to @val{0pt}.
+@item{@vidx{@var{break-before:}}{sym}} is one of the symbols @val{page} or
+  @val{column} this specifies that the formating object should break at a page
+  or column and start at the beginning of that area.  This characteristics is
+  not inherited and defaults to @val{#t}.
+@item{@vidx{@var{break-after:}}{sym}} is one of the symbols @val{page} or
+  @val{column} this specifies that the formating object should end an area
+  of that type.  This characteristics is not inherited and defaults to @val{#f}.
 @end definitions
 @end def
 
 
 @def{Formatting Object}{simple-column-set-sequence}
-@idx{@ty{simple-column-set-sequence} (F.O.)}{sym}
 
 This formatting object supports to layout the principal content flow into
 multiple organized columns along the display axis.  It has a single port and
@@ -417,24 +524,24 @@ are levelled on the last page.
 Defined characteristics:
 
 @definitions
-@item{@var{space-before:}} specifies how much space along the display axis should
-  be inserted before this formatting object.  Defaults to @val{0pt}.
-@item{@var{space-after:}} specifies how much space along the display axis should
-  be inserted after this formatting object.  Defaults to @val{0pt}.
-@item{@var{keep-with-previous?:}} if @val{#t} indicates that a page break before
-  this formatting object is not allowed.  Defaults to @val{#f}.
-@item{@var{keep-with-next?:}} if @val{#t} indicates that a page break after
-  this formatting object is not allowed.  Defaults to @val{#f}.
-@item{@var{break-after:}} is one of the symbols @val{page} or @val{column}
+@item{@vidx{@var{space-before:}}{sym}} specifies how much space along the display
+  axis should be inserted before this formatting object.  Defaults to @val{0pt}.
+@item{@vidx{@var{space-after:}}{sym}} specifies how much space along the display
+  axis should be inserted after this formatting object.  Defaults to @val{0pt}.
+@item{@vidx{@var{keep-with-previous?:}}{sym}} if @val{#t} indicates that a page
+  break before this formatting object is not allowed.  Defaults to @val{#f}.
+@item{@vidx{@var{keep-with-next?:}}{sym}} if @val{#t} indicates that a page break
+  after this formatting object is not allowed.  Defaults to @val{#f}.
+@item{@vidx{@var{break-after:}}{sym}} is one of the symbols @val{page} or @val{column}
   this specifies that the formating object should end an area of that type.
   This characteristics is not inherited and defaults to @val{#f}.
-@item{@var{break-before:}} is one of the symbols @val{page} or @val{column}
-  this specifies that the formating object should break at a page or column and
-  start at the beginning of that area.  This characteristics is not inherited
-  and defaults to @val{#t}.
-@item{@var{column-number:}} Gives the number of column areas.
-@item{@var{gutter-width:}} specifies the width of the gutter between the column
-  areas.  Defaults to @val{21pt}.
+@item{@vidx{@var{break-before:}}{sym}} is one of the symbols @val{page} or
+  @val{column} this specifies that the formating object should break at a page or
+  column and start at the beginning of that area.  This characteristics is not
+  inherited and defaults to @val{#t}.
+@item{@vidx{@var{column-number:}}{sym}} Gives the number of column areas.
+@item{@vidx{@var{gutter-width:}}{sym}} specifies the width of the gutter between
+  the column areas.  Defaults to @val{21pt}.
 @end definitions
 
 @end def
@@ -444,64 +551,55 @@ Defined characteristics:
 
 @subsection{Inline formatting objects}
 @def{Formatting Object}{sequence}
-@idx{@ty{sequence} (F.O.)}{sym}
 tbd.
 @end def
 
 
 @def{Formatting Object}{line-field}
-@idx{@ty{line-field} (F.O.)}{sym}
 tbd.
 @end def
 
 
 @def{Formatting Object}{score}
-@idx{@ty{score} (F.O.)}{sym}
 tbd.
 @end def
 
 
 @def{Formatting Object}{literal}
-@idx{@ty{literal} (F.O.)}{sym}
 tbd.
 @end def
 
 @def{Formatting Object}{page-number}
-@idx{@ty{page-number} (F.O.)}{sym}
 tbd.
 @end def
 
 
-@def{Formatting Object}{link}{id.link}
+@def{Formatting Object}{link}{link}
 
-@idx{@ty{link} (F.O.)}{sym}
 A link flow object represents a link to either an internal or external resource.
 In interactive context it can be interactively traversed, e.g. by clicking on
 its rendered areas.  It has a single port, which can take both inlined and
 displayed flow objects.  If nested the innermost link is effective.
 
 @definitions
-@item{@var{destination:}} is either @val{#f} or an object of type @code{address}
-(see @ref{id.address}) or a list of one or more objects of type address.  This
-characteristic is required and not inherited.
+@item{@vidx{@var{destination:}}{sym}} is either @val{#f} or an object of type
+  @ty{address} or a list of one or more objects of type address.  This
+  characteristic is required and not inherited.
 @end definitions
 @end def
 
 
 @def{Formatting Object}{anchor}
-@idx{@ty{anchor} (F.O.)}{sym}
 tbd.
 @end def
 
 
 @def{Formatting Object}{pagebreak}
-@idx{@ty{pagebreak} (F.O.)}{sym}
 tbd.
 @end def
 
 
 @def{Formatting Object}{footnote}
-@idx{@ty{footnote} (F.O.)}{sym}
 tbd.
 @end def
 

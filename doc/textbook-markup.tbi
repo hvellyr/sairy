@@ -94,6 +94,36 @@ est Lorem ipsum dolor sit amet, sed diam nonumy eirmod tempor.
 @end definitions
 @end display
 
+It is also possible to put @tag{def} tags into a @tag{definitions} list.  This
+will typically be rendered in a similar style as a definitions list with
+@tag{item}s, but the @tag{def} definitions will be used by the stylesheets for
+automatical cross referencing with @tag{fun}, @tag{ty}, @tag{prop}, and similar
+tags.
+
+@example
+@@definitions
+@@def{}{int _count;}{_count} keeps the number of times the signal has happened.
+@@end def
+@@def{}{int _name;}{_name} keeps the name of the signal.
+@@end def
+@@end definitions
+
+The user can check @@prop{_count} and @@prop{_name} for ...
+@end example
+
+will be rendered typically as
+
+@display
+@definitions
+@def{}{int _count;}{_count} keeps the number of times the signal has happened.
+@end def
+@def{}{int _name;}{_name} keeps the name of the signal.
+@end def
+@end definitions
+
+The user can check @prop{_count} and @prop{_name} for ...
+@end display
+
 @end subsection
 
 @c @tag{item}       {%text?}                     {EMPTY}{P}
@@ -109,145 +139,76 @@ est Lorem ipsum dolor sit amet, sed diam nonumy eirmod tempor.
 
 @c @tag{p}          {}                           {#TEXT | ANY}
 
-
-@c @c ---------------------------------------------------------------------------
-@c @c Definitions:
-
-@c @c define function
-@c @c declln = used as headline
-@c @c declsum = used as the title of references
-@c @tag{deffn}      {%declln, %declsum?, ID?}    {#TEXT | ANY}
-@c @c kind = function, special, class, type, etc.
-@c @c declsum = declaration summary, used as headline
-@c @tag{def}        {%kind, %declsum, ID?}       {#TEXT | ANY}
-
-@c @c pre-formatted declaration part, takes %inline
-@c @tag{decl}       {%index?, ID?}               {#TEXT | ANY}
-
-@c @c mark optional parts in declarations ([])
-@c @tag{?}          {%optionalexpr}              {EMPTY}
-
 @end section
 
 
 @section{Inline Tags}
 
-@def{Tag}{@@acr@{@prm{text}@}}
-@idx{@tag{@@acr}}{sym}
+@deftag{@@acr@{@prm{text}@}}{@@acr}
 Marks the enclosed @prm{text} to denote an @em{acronym} (e.g. @acr{MIDI}).
-@end def
+@end deftag
 
-@def{Tag}{@@app@{@prm{text}@}}
-@idx{@tag{@@app}}{sym}
+@deftag{@@app@{@prm{text}@}}{@@app}
 Marks the enclosed @prm{text} to denote an @em{application} name.
-@end def
+@end deftag
 
-@def{Tag}{@@b@{@prm{text}@}}
-@idx{@tag{@@b}}{sym}
+@deftag{@@b@{@prm{text}@}}{@@b}
 Marks the enclosed @prm{text} as bold.  Though called “bold”, this tag is
 suggested as a general mark-up stronger than @tag{@@em}.
-@end def
+@end deftag
 
-@def{Tag}{@@class@{@prm{text}@}}
-@idx{@tag{@@class}}{sym}
-Marks the enclosed @prm{text} to denote a @em{class} name in an (object
-oriented) programming language.  This is a rather special tag and should be
-replaced with @tag{@@ty} probably.
-@end def
-
-@def{Tag}{@@const@{@prm{text}@}}
-@idx{@tag{@@const}}{sym}
+@deftag{@@const@{@prm{text}@}}{@@const}
 Marks the enclosed @prm{text} to denote a @em{constant} in a programming
 language.
-@end def
+@end deftag
 
-@def{Tag}{@@code@{@prm{text}@}}
-@idx{@tag{@@code}}{sym}
+@deftag{@@code@{@prm{text}@}}{@@code}
 Marks the enclosed @prm{text} to denote general @em{code}.  Though this will
 typically be rendered in monospaced font, this tag should only be used when
 marking up short inline code phrases like in programming languages, but not for
 function parameters (use @tag{@@prm} for that) or variables (use @tag{@@var}).
-@end def
+@end deftag
 
-@def{Tag}{@@dfn@{@prm{text}@}}
-@idx{@tag{@@dfn}}{sym}
+@deftag{@@dfn@{@prm{text}@}}{@@dfn}
 Marks the enclosed @prm{text} to denote a @em{definition}.  This is typically
 used when introducing terms for the first time in a discussion.
-@end def
+@end deftag
 
-@def{Tag}{@@em@{@prm{text}@}}
-@idx{@tag{@@em}}{sym}
+@deftag{@@em@{@prm{text}@}}{@@em}
 Marks the enclosed @prm{text} as emphasis.  This is typically rendered with an
 italic or oblique font face, underlined, or even with a bold face.
-@end def
+@end deftag
 
-@def{Tag}{@@file@{@prm{text}@}}
-@idx{@tag{@@file}}{sym}
+@deftag{@@file@{@prm{text}@}}{@@file}
 Marks the enclosed @prm{text} to denote a @em{file name}.
-@end def
+@end deftag
 
-@def{Tag}{@@fun@{@prm{text}@}}
-@idx{@tag{@@fun}}{sym}
-Marks the enclosed @prm{text} to denote a @em{function} name in a programming
-language.  Though this is named “function” this tag should also be used for
-procedure and signals.
-@end def
-
-@def{Tag}{@@keyw@{@prm{text}@}}
-@idx{@tag{@@keyw}}{sym}
+@deftag{@@keyw@{@prm{text}@}}{@@keyw}
 Marks the enclosed @prm{text} to denote a @em{keyword} in a programming
 language.
-@end def
+@end deftag
 
-@def{Tag}{@@op@{@prm{text}@}}
-@idx{@tag{@@op}}{sym}
-Marks the enclosed @prm{text} to denote an @em{operator} in a programming
-language.
-@end def
-
-@def{Tag}{@@opt@{@prm{text}@}}
-@idx{@tag{@@opt}}{sym}
-Marks the enclosed @prm{text} to denote an @em{option}, like used to pass to a
-command line tool, or to be specified in a configuration file.
-@end def
-
-@def{Tag}{@@prm@{@prm{text}@}}
-@idx{@tag{@@prm}}{sym}
+@deftag{@@prm@{@prm{text}@}}{@@prm}
 Marks the enclosed @prm{text} to denote a @em{parameter} name, as defined in or
 passed to a function.
-@end def
+@end deftag
 
-@def{Tag}{@@r@{@prm{text}@}}
-@idx{@tag{@@r}}{sym}
+@deftag{@@r@{@prm{text}@}}{@@r}
 Un-mark the enclosed @prm{text} to be without emphasis.  Though this named
 “roman”, it is conceptually the opposite of @tag{@@em} or @tag{@@b}.
-@end def
+@end deftag
 
-@def{Tag}{@@tag@{@prm{text}@}}
-@idx{@tag{@@tag}}{sym}
-Marks the enclosed @prm{text} to denote a @em{tag} in a markup language (like
-@acr{HTML} or @acr{XML}).
-@end def
-
-@def{Tag}{@@ty@{@prm{text}@}}
-@idx{@tag{@@ty}}{sym}
-Marks the enclosed @prm{text} to denote a @em{type} name in a programming
-language.
-@end def
-
-@def{Tag}{@@val@{@prm{text}@}}
-@idx{@tag{@@val}}{sym}
+@deftag{@@val@{@prm{text}@}}{@@val}
 Marks the enclosed @prm{text} to denote a @em{value}.  Note that not every
 “value” (i.e. every number) in a technical documentation should be marked with
 this, but when in a description special values are to be highlighted this tag
 should be preferred to other non semantical ones, like @tag{@@b} or @tag{@@em}.
-@end def
+@end deftag
 
-@def{Tag}{@@var@{@prm{text}@}}
-@idx{@tag{@@var}}{sym}
+@deftag{@@var@{@prm{text}@}}{@@var}
 Marks the enclosed @prm{text} to denote a @em{variable} name, as defined and
 used in a programming language.
-@end def
+@end deftag
 
 @end section
 
@@ -258,14 +219,12 @@ The following tags are used to help encoding with special unicode characters,
 which are not easy to input or might not even be available in a text editor's
 font.
 
-@def{Tag}{@@dots}
-@idx{@tag{@@dots}}{sym}
+@deftag{@@dots}
 Inserts an ellipsis (“…”).  This could be used as an alternative to the
 ordinary unicode character (@code{U+2026}).
-@end def
+@end deftag
 
-@def{Tag}{@@result}
-@idx{@tag{@@result}}{sym}
+@deftag{@@result}
 Inserts the special character “@result”, which is prefered in examples to show
 the result of an operation:
 
@@ -273,10 +232,9 @@ the result of an operation:
 (+ 4 + 5)
 @@result 9
 @end example
-@end def
+@end deftag
 
-@def{Tag}{@@print}
-@idx{@tag{@@print}}{sym}
+@deftag{@@print}
 Inserts the special character “@print”, which is prefered in examples to show
 that an operation @em{printed} something (e.g. to the screen):
 
@@ -284,10 +242,9 @@ that an operation @em{printed} something (e.g. to the screen):
 println("{} {}".format("hello", "world")
 @@print hello world
 @end example
-@end def
+@end deftag
 
-@def{Tag}{@@expansion}
-@idx{@tag{@@expansion}}{sym}
+@deftag{@@expansion}
 Inserts the special character “@expansion”, which is prefered in examples to show
 that a macro expanded into something:
 
@@ -295,27 +252,208 @@ that a macro expanded into something:
 \vsc
 @@expansion \addvspace{#1}
 @end example
-@end def
+@end deftag
 
-@def{Tag}{@@equiv}
-@idx{@tag{@@equiv}}{sym}
+@deftag{@@equiv}
 Inserts the special character “@equiv”, which is prefered in examples to show
 that two expressions or values are equivalent:
 
 @example
 a.b.c(1) @@equiv c(b(a(1)))
 @end example
-@end def
+@end deftag
 
-@def{Tag}{@@error}
-@idx{@tag{@@error}}{sym}
+@deftag{@@error}
 Inserts the special character “@error”, which is prefered in examples to show
 that an expression or code phrases would produce an error:
 
 @example
 a(1) = "foo" @@error
 @end example
-@end def
+@end deftag
+
+@end section
+
+
+@section{Documenting technical and programming APIs}
+
+For defining programming APIs a list of special tags are provided.  They allow
+to document classes, types, functions, properties, tags, etc. and by marking
+names of these symbols with special inline tags the stylesheets and backends can
+automatically generate cross references.
+
+@deftag{@@def@{@prm{kind}@}@{@prm{synapsis}@}@?{@{@prm{keyform}@}@?{@{@prm{id}@}}}
+...
+@@end def}{@@def}
+
+This block tag is a general definition tag.  The type of thing documented here
+is given by @prm{kind}; this can be any text and will be used by the stylesheet
+to flag the definition accordingly.  The @prm{synapsis} gives the printed
+representation of the documented entity; any other inline can be used to format
+this representation, but the most important tags inhere will be @tag{prm},
+@tag{?}, @tag{prop}, etc. to mark parameters, optional parts, etc.
+
+@example
+@@def{Port}{AUX channel}{aux channel}
+The AUX port is used with ...
+@@end def
+@end example
+@end deftag
+
+@deftag{@@deffn@{@prm{synapsis}@}@?{@{@prm{keyform}@}@?{@{@prm{id}@}}}}{@@deffn}
+This a special form of the @tag{def} tag to be used for functions, methods,
+signals, procedures, etc.
+
+@example
+@@deffn{@@ty{int} printf(@@ty{char*} @@prm{format}, ...)}{printf}
+The @@fun{printf} function produces output according to @@prm{format} ...
+@@end deffn
+@end example
+
+will typically be rendered as
+
+@display
+@deffn{@ty{int} printf(@ty{char*} @prm{format}, ...)}{printf}
+The @fun{printf} function produces output according to @prm{format} ...
+@end deffn
+@end display
+
+@end deftag
+
+@deftag{@@defty@{@prm{synapsis}@}@?{@{@prm{keyform}@}@?{@{@prm{id}@}}}}{@@defty}
+This a special form of the @tag{def} tag to be used for types, classes, records,
+etc.
+@end deftag
+
+@deftag{@@deftag@{@prm{synapsis}@}@?{@{@prm{keyform}@}@?{@{@prm{id}@}}}}{@@deftag}
+This a special form of the @tag{def} tag to be used for tags (in markup languages).
+@end deftag
+
+@deftag{@@defop@{@prm{synapsis}@}@?{@{@prm{keyform}@}@?{@{@prm{id}@}}}}{@@defop}
+This a special form of the @tag{def} tag to be used for operators.
+@end deftag
+
+@deftag{@@defopt@{@prm{synapsis}@}@?{@{@prm{keyform}@}@?{@{@prm{id}@}}}}{@@defopt}
+This a special form of the @tag{def} tag to be used for options.
+@end deftag
+
+@deftag{@@defprop@{@prm{synapsis}@}@?{@{@prm{keyform}@}@?{@{@prm{id}@}}}}{@@defprop}
+This a special form of the @tag{def} tag to be used for properties, member
+variables, slots, data fields, etc.
+@end deftag
+
+
+@deftag{@@class@{@prm{text}@}@?{@{@prm{ref}@}}}{@@class}
+Marks the enclosed @prm{text} to denote a @em{class} name in an (object
+oriented) programming language.  This is a rather special tag and should be
+replaced with @tag{@@ty} probably.
+
+If the optional parameter @prm{ref} is set, the stylesheets (and backend) shall
+create a link to the corresponding class (or type) definition created by
+@tag{def} or @tag{defty}.  If @prm{ref} is @val{auto} (or empty) the link should
+be automatically created.  For this all relevant @tag{def} and @tag{defty}
+definitions should be checked.  If @prm{ref} is @val{no} no link shall be
+created
+@end deftag
+
+@deftag{@@fun@{@prm{text}@}@?{@{@prm{ref}@}}}{@@fun}
+Marks the enclosed @prm{text} to denote a @dfn{function} name in a programming
+language.  Though this is named “function” this tag should also be used for
+procedure and signals.
+
+If the optional parameter @prm{ref} is set, the stylesheets (and backend) shall
+create a link to the corresponding function (or procedure) definition created by
+@tag{def} or @tag{deffn}.  If @prm{ref} is @val{auto} (or empty) the link should
+be automatically created.  For this all relevant @tag{def} and @tag{deffn}
+definitions should be checked.  If @prm{ref} is @val{no} no link shall be
+created
+@end deftag
+
+@deftag{@@op@{@prm{text}@}@?{@{@prm{ref}@}}}{@@op}
+Marks the enclosed @prm{text} to denote an @em{operator} in a programming
+language.
+
+If the optional parameter @prm{ref} is set, the stylesheets (and backend) shall
+create a link to the corresponding operator definition created by @tag{def} or
+@tag{defop}.  If @prm{ref} is @val{auto} (or empty) the link should be
+automatically created.  For this all relevant @tag{def} and @tag{defop}
+definitions should be checked.  If @prm{ref} is @val{no} no link shall be
+created
+@end deftag
+
+@deftag{@@opt@{@prm{text}@}@?{@{@prm{ref}@}}}{@@opt}
+Marks the enclosed @prm{text} to denote an @em{option}, like used to pass to a
+command line tool, or to be specified in a configuration file.
+
+If the optional parameter @prm{ref} is set, the stylesheets (and backend) shall
+create a link to the corresponding option definition created by @tag{def} or
+@tag{defopt}.  If @prm{ref} is @val{auto} (or empty) the link should be
+automatically created.  For this all relevant @tag{def} and @tag{defopt}
+definitions should be checked.  If @prm{ref} is @val{no} no link shall be
+created
+@end deftag
+
+@deftag{@@prop@{@prm{text}@}@?{@{@prm{ref}@}}}{@@prop}
+Marks the enclosed @prm{text} to denote a @dfn{property} name in a programming
+language.  Though this is called “property” this tag can be used for members
+(variables), slots, and similar concepts.
+
+If the optional parameter @prm{ref} is set, the stylesheets (and backend) shall
+create a link to the corresponding property definition created by @tag{def} or
+@tag{defprop}.  If @prm{ref} is @val{auto} (or empty) the link should be
+automatically created.  For this all relevant @tag{def} and @tag{defprop}
+definitions should be checked.  If @prm{ref} is @val{no} no link shall be
+created
+@end deftag
+
+@deftag{@@tag@{@prm{text}@}@?{@{@prm{ref}@}}}{@@tag}
+Marks the enclosed @prm{text} to denote a @em{tag} in a markup language (like
+@acr{HTML} or @acr{XML}).
+
+If the optional parameter @prm{ref} is set, the stylesheets (and backend) shall
+create a link to the corresponding tag definition created by @tag{def} or
+@tag{deftag}.  If @prm{ref} is @val{auto} (or empty) the link should be
+automatically created.  For this all relevant @tag{def} and @tag{deftag}
+definitions should be checked.  If @prm{ref} is @val{no} no link shall be
+created
+@end deftag
+
+@deftag{@@ty@{@prm{text}@}@?{@{@prm{ref}@}}}{@@ty}
+Marks the enclosed @prm{text} to denote a @em{type} name in a programming
+language.
+
+If the optional parameter @prm{ref} is set, the stylesheets (and backend) shall
+create a link to the corresponding type (or class) definition created by
+@tag{def} or @tag{defty}.  If @prm{ref} is @val{auto} (or empty) the link should
+be automatically created.  For this all relevant @tag{def} and @tag{defty}
+definitions should be checked.  If @prm{ref} is @val{no} no link shall be
+created
+@end deftag
+
+@deftag{@@?@{@prm{text}@}}{@@?}
+
+Marks the enclosed @prm{text} as optional.  This tag is typically used in
+function definitions to mark optional parameters:
+
+@example
+@@deffn{@@ty{void} Logger::log(@@ty{char*} @@prm{msg}
+                             @@?@{, @@ty{int} @@prm{level}@})}
+       {Logger::log}
+...
+@@end deffn
+@end example
+
+will typically be rendered as
+
+@display
+@deffn{@ty{void} Logger::log(@ty{char*} @prm{msg} @?{, @ty{int} @prm{level}})}{Logger::log}
+...
+@end deffn
+@end display
+@end deftag
+
+@c @c pre-formatted declaration part, takes %inline
+@c @tag{decl}       {%index?, ID?}               {#TEXT | ANY}
 
 @end section
 
