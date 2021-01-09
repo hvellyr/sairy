@@ -116,3 +116,50 @@
   (make-def-sosofo (current-node)
                    (attribute "declln" (current-node))
                    (process-node-list (attribute "kind" (current-node)))))
+
+
+(element (definitions def)
+  (let ((declln (attribute "declln" (current-node)))
+        (first-elt (node-list-first (children (current-node))))
+        )
+    (sosofo-append
+     (make anchor
+       display?: #t
+       id: (id (current-node)))
+
+     (if (or (> (string-length (data declln)) 15)
+             (and (not (node-list-empty? first-elt))
+                  (not (equal? (gi first-elt) 'p))))
+         (sosofo-append
+          (make paragraph
+            first-line-start-indent: 0pt
+            start-indent: 0pt
+            quadding: 'justify
+
+            (with-mode decl-mode
+              (make sequence
+                font-name: %monospace-font-name%
+                (process-node-list declln))))
+          (make paragraph
+            first-line-start-indent: 0pt
+            start-indent: 70pt
+            quadding: 'justify
+            (process-node-list-trim (node-list-first (children (current-node)))))
+          )
+         (sosofo-append
+          (make paragraph
+            first-line-start-indent: -70pt
+            start-indent: 70pt
+            quadding: 'justify
+            (sosofo-append
+             (make line-field
+               font-name: %monospace-font-name%
+               ;;font-weight: 'bold
+               field-width: (inline-space 70pt max: 'inf)
+               field-align: 'left
+               (sosofo-append
+                (with-mode decl-mode
+                  (process-node-list declln))
+                (make-char 'non-breaking-space)))
+             (process-node-list-trim (children first-elt))))))
+     (process-node-list (node-list-rest (children (current-node)))))))
