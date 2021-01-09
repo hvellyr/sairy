@@ -277,12 +277,55 @@ Returns the mode currently set.
 
 @deffn{(match-element? @prm{pattern} @prm{snl})}
 @idx{@fun{match-element?}}{sym}
-tbd.
+Returns @val{#t} if @prm{snl} is a node of class @ty{element} that matches
+@prm{pattern}.
+
+@prm{pattern} is either a list or a single match-step, where each match-step is
+either a string, symbol, or a vector.  In case of a single match-step the
+pattern is treated as if it was a singleton list with that match-step.
+
+If a match-step is a vector it takes the form @code{#(class: value)}, with the
+following @code{class}es being defined:
+
+@definitions
+@item{@code{gi:}} the @code{value} of the match step is a single string or
+symbol.  A node in @prm{snl} will match the step, when its general identifier
+(as returned by @fun{gi}) is equal to this step's @code{value}.
+
+@item{@code{gis:}} the @code{value} is a list of strings or symbols.  A node in
+@prm{snl} will match, if its general identifier is equal to any of the strings
+or symbols in this list.
+@end definitions
+
+If the match-step is a single string or symbol it is a short-hand form for
+@code{#(gi: string)}.
+
+The element matches the list if the last item in the pattern matches the
+element, and the next to last matches the element's parent, and so on.
+
+For example, @code{(match-element? '(A B C) nd)} returns @val{#t} if
+
+@itemize
+@item the GI of @code{nd} is @val{C},
+@item the GI of @code{nd}'s parent is @val{B},
+@item the GI of @code{nd}'s grandparent is @val{A}.
+@end itemize
+
+The expression @code{(match-element? '(A #(gis: (B C)) #(gis: (D E F))))},
+returns @val{#t} if
+
+@itemize
+@item the GI of @code{nd} is any of @val{D}, @val{E}, or @val{F},
+@item the GI of @code{nd}'s parent is either @val{B} or @val{C},
+@item the GI of @code{nd}'s grandparent is @val{A}.
+@end itemize
+
 @end deffn
 
 @deffn{(select-elements @prm{nl} @prm{pattern})}
 @idx{@fun{select-elements}}{sym}
-tbd.
+Returns a node-list composed of all nodes in @prm{nl} that match @prm{pattern}
+as defined by @fun{match-element?}.
 @end deffn
 
 @end subsection
