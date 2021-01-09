@@ -70,7 +70,7 @@
                       (make line-field
                         font-name: %monospace-font-name%
                         font-weight: 'bold
-                        (process-node-list head-sosofo)) ))))
+                        (process-node-list head-sosofo))))))
    (make display-group
      space-after: (decl-space-after 14pt 7pt)
      (process-node-list (children nd)))))

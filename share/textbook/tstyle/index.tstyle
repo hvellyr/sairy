@@ -87,14 +87,14 @@
 
   (element em
     (make sequence
-     font-name: "roman"
-     font-posture: 'italic
-     (process-node-list (attribute "text" (current-node)))))
+      font-name: "roman"
+      font-posture: 'italic
+      (process-node-list (attribute "text" (current-node)))))
   (element r
     (make sequence
-     font-name: "roman"
-     font-posture: 'italic
-     (process-node-list (attribute "text" (current-node)))))
+      font-name: "roman"
+      font-posture: 'italic
+      (process-node-list (attribute "text" (current-node)))))
   (element fun
     (format-monospace (attribute "text" (current-node))))
   )

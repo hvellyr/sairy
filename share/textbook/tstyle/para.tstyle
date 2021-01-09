@@ -94,7 +94,7 @@
             (make paragraph
               first-line-start-indent: -70pt
               start-indent: 70pt
-               quadding: 'justify
+              quadding: 'justify
               (sosofo-append
                (process-node-list (node-list-first (children (current-node))))
                (process-node-list-trim (node-list-rest (children (current-node)))))))
