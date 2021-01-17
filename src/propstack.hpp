@@ -5,7 +5,10 @@
 
 #include "fo.hpp"
 
+#include "fspp/estd/optional.hpp"
+
 #include <list>
+#include <memory>
 #include <string>
 
 
@@ -13,14 +16,23 @@ namespace eyestep {
 
 class PropertiesStack
 {
-  std::list<fo::PropertySpecs> _stack;
+  struct FoProps
+  {
+    fo::PropertySpecs _props;
+    fo::PropertySpecs _default_props;
+  };
+
+  std::list<FoProps> _stack;
 
 public:
-  void push(const fo::PropertySpecs& props);
+  void push(const IFormattingObject* fo);
+  void push(const fo::PropertySpecs& props, const fo::PropertySpecs& default_props = {});
   void pop();
 
-  fo::PropertySpecOrNone get(const std::string& key,
-                             const fo::PropertySpecs& defaults) const;
+  template <typename T>
+  estd::optional<T> lookup(const std::string& key) const;
 };
 
 } // namespace eyestep
+
+#include "propstack.ipp"

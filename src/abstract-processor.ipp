@@ -55,7 +55,7 @@ void AbstractProcessor<ProcessorT>::render_fo(const IFormattingObject* fo) {
     std::cerr << "Flow object '" << fo->classname() << "' unhandled" << std::endl;
   }
   else {
-    _props.push(fo->properties());
+    _props.push(fo);
 
     foproc->render(static_cast<ProcessorT*>(this), fo);
 
@@ -65,39 +65,18 @@ void AbstractProcessor<ProcessorT>::render_fo(const IFormattingObject* fo) {
 
 
 template <typename ProcessorT>
-fo::PropertySpecOrNone
-AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
-                                        const std::string& key) const {
-  return _props.get(key, fo->default_properties());
-}
-
-
-template <typename ProcessorT>
 template <typename T>
 estd::optional<T>
-AbstractProcessor<ProcessorT>::property_or_none(const IFormattingObject* fo,
-                                                const std::string& key) const {
-  auto prop = property(fo, key);
-  if (prop) {
-    if (const T* val = fo::get<const T>(&prop->_value)) {
-      return *val;
-    }
-  }
-
-  return {};
+AbstractProcessor<ProcessorT>::property_or_none(const std::string& key) const {
+  return _props.lookup<T>(key);
 }
 
 
 template <typename ProcessorT>
 template <typename T>
-T AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
-                                          const std::string& key, T default_value) const {
-  auto prop = property(fo, key);
-  if (prop) {
-    if (const T* val = fo::get<const T>(&prop->_value)) {
-      return *val;
-    }
-  }
+T AbstractProcessor<ProcessorT>::property(const std::string& key, T default_value) const {
+  if (auto prop = _props.lookup<T>(key))
+    return *prop;
 
   return default_value;
 }

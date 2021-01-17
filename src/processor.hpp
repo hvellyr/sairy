@@ -30,9 +30,6 @@ public:
 
   virtual void render_sosofo(const Sosofo* sosofo) = 0;
   virtual void render_fo(const IFormattingObject* fo) = 0;
-
-  virtual fo::PropertySpecOrNone property(const IFormattingObject* fo,
-                                          const std::string& key) const = 0;
 };
 
 } // namespace eyestep

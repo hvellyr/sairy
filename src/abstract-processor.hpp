@@ -41,15 +41,10 @@ public:
   virtual void before_rendering();
   virtual void after_rendering();
 
-  fo::PropertySpecOrNone property(const IFormattingObject* fo,
-                                  const std::string& key) const override;
-
   template <typename T>
-  T property(const IFormattingObject* fo, const std::string& key, T default_value) const;
-
+  estd::optional<T> property_or_none(const std::string& key) const;
   template <typename T>
-  estd::optional<T> property_or_none(const IFormattingObject* fo,
-                                     const std::string& key) const;
+  T property(const std::string& key, T default_value) const;
 };
 
 } // namespace eyestep

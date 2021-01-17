@@ -350,20 +350,19 @@ namespace {
   };
 
 
-  FontCharacteristics extract_font_characteristics(HtmlProcessor* processor,
-                                                   const IFormattingObject* fo) {
+  FontCharacteristics extract_font_characteristics(HtmlProcessor* processor) {
     auto result = FontCharacteristics{};
 
-    result._fontsize = processor->property_or_none<fo::LengthSpec>(fo, "font-size");
-    result._fontcaps = processor->property_or_none<std::string>(fo, "font-caps");
+    result._fontsize = processor->property_or_none<fo::LengthSpec>("font-size");
+    result._fontcaps = processor->property_or_none<std::string>("font-caps");
     result._posptshift =
-      processor->property_or_none<fo::LengthSpec>(fo, "position-point-shift");
+      processor->property_or_none<fo::LengthSpec>("position-point-shift");
 
-    result._fontname = processor->property_or_none<std::string>(fo, "font-name");
-    result._posture = processor->property_or_none<std::string>(fo, "font-posture");
-    result._weight = processor->property_or_none<std::string>(fo, "font-weight");
+    result._fontname = processor->property_or_none<std::string>("font-name");
+    result._posture = processor->property_or_none<std::string>("font-posture");
+    result._weight = processor->property_or_none<std::string>("font-weight");
 
-    result._linespacing = processor->property_or_none<fo::LengthSpec>(fo, "line-spacing");
+    result._linespacing = processor->property_or_none<fo::LengthSpec>("line-spacing");
 
     return result;
   }
@@ -421,16 +420,15 @@ namespace {
   };
 
 
-  SpaceCharacteristics extract_space_characteristics(HtmlProcessor* processor,
-                                                     const IFormattingObject* fo) {
+  SpaceCharacteristics extract_space_characteristics(HtmlProcessor* processor) {
     auto result = SpaceCharacteristics{};
 
-    result._startindent = processor->property_or_none<fo::LengthSpec>(fo, "start-indent");
-    result._endindent = processor->property_or_none<fo::LengthSpec>(fo, "end-indent");
+    result._startindent = processor->property_or_none<fo::LengthSpec>("start-indent");
+    result._endindent = processor->property_or_none<fo::LengthSpec>("end-indent");
     result._firstline_startindent =
-      processor->property_or_none<fo::LengthSpec>(fo, "first-line-start-indent");
-    result._spacebefore = processor->property_or_none<fo::LengthSpec>(fo, "space-before");
-    result._spaceafter = processor->property_or_none<fo::LengthSpec>(fo, "space-after");
+      processor->property_or_none<fo::LengthSpec>("first-line-start-indent");
+    result._spacebefore = processor->property_or_none<fo::LengthSpec>("space-before");
+    result._spaceafter = processor->property_or_none<fo::LengthSpec>("space-after");
 
     return result;
   }
@@ -464,12 +462,11 @@ namespace {
   };
 
 
-  MarginCharacteristics extract_margin_characteristics(HtmlProcessor* processor,
-                                                       const IFormattingObject* fo) {
+  MarginCharacteristics extract_margin_characteristics(HtmlProcessor* processor) {
     auto result = MarginCharacteristics{};
 
-    result._startmargin = processor->property_or_none<fo::LengthSpec>(fo, "start-margin");
-    result._endmargin = processor->property_or_none<fo::LengthSpec>(fo, "end-margin");
+    result._startmargin = processor->property_or_none<fo::LengthSpec>("start-margin");
+    result._endmargin = processor->property_or_none<fo::LengthSpec>("end-margin");
 
     return result;
   }
@@ -581,21 +578,21 @@ namespace {
   {
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
-      auto gfx_path = static_cast<const fo::ExternalGraphic*>(fo)->external_path();
+      auto gfx_path = processor->property("external-path", std::string{});
       // TODO: produce relative file path
 
       auto sattrs = detail::StyleAttrs{};
-      set_attr(sattrs, extract_space_characteristics(processor, fo));
+      set_attr(sattrs, extract_space_characteristics(processor));
 
-      // auto color = processor->property_or_none<fo::Color>(fo, "color");
+      // auto color = processor->property_or_none<fo::Color>("color");
       // if (color)
       //   set_attr(sattrs, "color", enc_color(*color));
 
-      // auto bgcolor = processor->property_or_none<fo::Color>(fo, "background-color");
+      // auto bgcolor = processor->property_or_none<fo::Color>("background-color");
       // if (bgcolor)
       //   set_attr(sattrs, "background-color", enc_color(*bgcolor));
 
-      auto is_display = processor->property_or_none<bool>(fo, "display?");
+      auto is_display = processor->property_or_none<bool>("display?");
       set_attr(sattrs, "display", (is_display && *is_display) ? "block" : "inline");
 
       auto& ctx = processor->ctx();
@@ -604,20 +601,20 @@ namespace {
       auto attrs = tag_style_attrs(processor, "img", d_attrs);
       attrs.emplace_back(html::Attr{"src", gfx_path});
 
-      if (auto width = processor->property_or_none<fo::LengthSpec>(fo, "width")) {
+      if (auto width = processor->property_or_none<fo::LengthSpec>("width")) {
         attrs.emplace_back(html::Attr{"width", length_spec2css(*width)});
       }
-      else if (auto keyw = processor->property_or_none<std::string>(fo, "width")) {
+      else if (auto keyw = processor->property_or_none<std::string>("width")) {
         if (*keyw == "max")
           attrs.emplace_back(html::Attr{"width", "100%"});
         else if (*keyw == "auto")
           attrs.emplace_back(html::Attr{"width", "auto"});
       }
 
-      if (auto height = processor->property_or_none<fo::LengthSpec>(fo, "height")) {
+      if (auto height = processor->property_or_none<fo::LengthSpec>("height")) {
         attrs.emplace_back(html::Attr{"height", length_spec2css(*height)});
       }
-      else if (auto keyw = processor->property_or_none<std::string>(fo, "height")) {
+      else if (auto keyw = processor->property_or_none<std::string>("height")) {
         if (*keyw == "max")
           attrs.emplace_back(html::Attr{"height", "100%"});
         else if (*keyw == "auto")
@@ -635,10 +632,10 @@ namespace {
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
       auto attrs = detail::StyleAttrs{};
 
-      set_attr(attrs, extract_font_characteristics(processor, fo));
-      set_attr(attrs, extract_space_characteristics(processor, fo));
+      set_attr(attrs, extract_font_characteristics(processor));
+      set_attr(attrs, extract_space_characteristics(processor));
 
-      auto quadding = processor->property(fo, "quadding", std::string("left"));
+      auto quadding = processor->property("quadding", std::string("left"));
       if (quadding == "left")
         set_attr(attrs, "text-align", "left");
       else if (quadding == "right")
@@ -649,11 +646,11 @@ namespace {
         set_attr(attrs, "text-align", "justify");
       set_attr(attrs, "text-justify", "inter-word");
 
-      auto color = processor->property_or_none<fo::Color>(fo, "color");
+      auto color = processor->property_or_none<fo::Color>("color");
       if (color)
         set_attr(attrs, "color", enc_color(*color));
 
-      auto bgcolor = processor->property_or_none<fo::Color>(fo, "background-color");
+      auto bgcolor = processor->property_or_none<fo::Color>("background-color");
       if (bgcolor)
         set_attr(attrs, "background-color", enc_color(*bgcolor));
 
@@ -667,14 +664,13 @@ namespace {
 
         auto b_tag = html::Tag{
           optional_tag(processor, "b",
-                       processor->property_or_none<std::string>(fo, "font-weight"),
-                       "bold")};
-        auto i_tag = html::Tag{
-          optional_tag(processor, "i",
-                       processor->property_or_none<std::string>(fo, "font-posture"),
-                       "italic")};
+                       processor->property_or_none<std::string>("font-weight"), "bold")};
+        auto i_tag =
+          html::Tag{optional_tag(processor, "i",
+                                 processor->property_or_none<std::string>("font-posture"),
+                                 "italic")};
 
-        auto linesprops = processor->property(fo, "lines", std::string("wrap"));
+        auto linesprops = processor->property("lines", std::string("wrap"));
         if (linesprops == "asis")
           processor->style_ctx()._wrapstyle = html::detail::k_asis_wrap;
         else
@@ -682,7 +678,7 @@ namespace {
 
         auto old_wstreatment = processor->style_ctx()._wstreatment;
         auto wstreatment =
-          processor->property(fo, "whitespace-treatment", std::string("collapse"));
+          processor->property("whitespace-treatment", std::string("collapse"));
         if (wstreatment == "preserve")
           processor->style_ctx()._wstreatment = html::detail::k_preserve_ws;
         else if (wstreatment == "collapse")
@@ -717,8 +713,8 @@ namespace {
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
       auto attrs = detail::StyleAttrs{};
 
-      set_attr(attrs, extract_font_characteristics(processor, fo));
-      set_attr(attrs, extract_space_characteristics(processor, fo));
+      set_attr(attrs, extract_font_characteristics(processor));
+      set_attr(attrs, extract_space_characteristics(processor));
 
       auto& ctx = processor->ctx();
 
@@ -743,35 +739,35 @@ namespace {
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
       auto attrs = detail::StyleAttrs{};
 
-      // set_attr(attrs, extract_font_characteristics(processor, fo));
-      // set_attr(attrs, extract_space_characteristics(processor, fo));
+      // set_attr(attrs, extract_font_characteristics(processor));
+      // set_attr(attrs, extract_space_characteristics(processor));
 
-      const auto is_display = processor->property(fo, "display?", false);
-      const auto boxtype = processor->property(fo, "box-type", std::string("border"));
+      const auto is_display = processor->property("display?", false);
+      const auto boxtype = processor->property("box-type", std::string("border"));
       const auto has_border = boxtype == "border" || boxtype == "both";
       const auto has_background = boxtype == "background" || boxtype == "both";
 
       if (has_border) {
-        if (auto color = processor->property_or_none<fo::Color>(fo, "color"))
+        if (auto color = processor->property_or_none<fo::Color>("color"))
           set_attr(attrs, "border-color", enc_color(*color));
         else
           set_attr(attrs, "border-color", "black");
 
         if (auto thickness =
-              processor->property_or_none<fo::LengthSpec>(fo, "line-thickness"))
+              processor->property_or_none<fo::LengthSpec>("line-thickness"))
           set_attr(attrs, "border", length_spec2css(*thickness) + " solid");
         else
           set_attr(attrs, "border", "1pt solid");
       }
 
       if (has_background) {
-        if (auto bgcolor = processor->property_or_none<fo::Color>(fo, "background-color"))
+        if (auto bgcolor = processor->property_or_none<fo::Color>("background-color"))
           set_attr(attrs, "background-color", enc_color(*bgcolor));
       }
 
-      if (processor->property(fo, "box-corner-rounded?", false)) {
+      if (processor->property("box-corner-rounded?", false)) {
         if (auto radius =
-              processor->property_or_none<fo::LengthSpec>(fo, "box-corner-radius"))
+              processor->property_or_none<fo::LengthSpec>("box-corner-radius"))
           set_attr(attrs, "border-radius", radius);
         else
           set_attr(attrs, "border-radius", "3pt");
@@ -802,10 +798,10 @@ namespace {
   {
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
-      auto title = processor->property(fo, "title", std::string());
-      auto author = processor->property(fo, "metadata.author", std::string());
-      auto desc = processor->property(fo, "metadata.desc", std::string());
-      auto width = processor->property_or_none<fo::LengthSpec>(fo, "width");
+      auto title = processor->property("title", std::string());
+      auto author = processor->property("metadata.author", std::string());
+      auto desc = processor->property("metadata.desc", std::string());
+      auto width = processor->property_or_none<fo::LengthSpec>("width");
 
       auto& ctx = processor->ctx();
 
@@ -820,15 +816,15 @@ namespace {
       auto attrs = detail::StyleAttrs{};
       set_attr(attrs, "width", width);
 
-      auto color = processor->property_or_none<fo::Color>(fo, "color");
+      auto color = processor->property_or_none<fo::Color>("color");
       if (color)
         set_attr(attrs, "color", enc_color(*color));
 
-      auto bgcolor = processor->property_or_none<fo::Color>(fo, "background-color");
+      auto bgcolor = processor->property_or_none<fo::Color>("background-color");
       if (bgcolor)
         set_attr(attrs, "background-color", enc_color(*bgcolor));
 
-      set_attr(attrs, extract_margin_characteristics(processor, fo));
+      set_attr(attrs, extract_margin_characteristics(processor));
 
       {
         auto with_tag =
@@ -923,10 +919,10 @@ namespace {
 
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
-      auto title = processor->property(fo, "title", std::string());
-      auto author = processor->property(fo, "metadata.author", std::string());
-      auto desc = processor->property(fo, "metadata.desc", std::string());
-      auto links = processor->property_or_none<std::string>(fo, "html.add-css-link");
+      auto title = processor->property("title", std::string());
+      auto author = processor->property("metadata.author", std::string());
+      auto desc = processor->property("metadata.desc", std::string());
+      auto links = processor->property_or_none<std::string>("html.add-css-link");
       auto& ctx = processor->ctx();
 
       if (!ctx.port().has_header()) {
@@ -949,24 +945,20 @@ namespace {
       zones["right"] = {};
       zones["bottom"] = {};
 
-      if (auto compound_value =
-            processor->property_or_none<
-              std::shared_ptr<fo::ICompoundValue>>(fo, "screen-set-model")) {
-        if (auto screen_set_model =
-              std::dynamic_pointer_cast<fo::ScreenSetModel>(*compound_value)) {
-          for (const auto& region : screen_set_model->_regions) {
-            auto i_zone = zones.find(region._zone);
-            if (i_zone != zones.end()) {
-              i_zone->second.emplace_back(
-                translate_screen_set_region(region._zone, region));
-            }
+      auto screen_set = dynamic_cast<const fo::ScreenSet*>(fo);
+      if (auto screen_set_model = screen_set->screen_set_model()) {
+        for (const auto& region : screen_set_model->_regions) {
+          auto i_zone = zones.find(region._zone);
+          if (i_zone != zones.end()) {
+            i_zone->second.emplace_back(
+              translate_screen_set_region(region._zone, region));
           }
         }
       }
 
       auto fo_attrs = detail::StyleAttrs{};
 
-      set_attr(fo_attrs, extract_font_characteristics(processor, fo));
+      set_attr(fo_attrs, extract_font_characteristics(processor));
 
       render_top_bottom_zones(processor, fo, zones["top"], k_top, fo_attrs);
       render_fixed_side_zones(processor, fo, zones["left"], k_left, fo_attrs);
@@ -1195,9 +1187,9 @@ namespace {
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
       auto attrs = detail::StyleAttrs{};
-      set_attr(attrs, extract_font_characteristics(processor, fo));
+      set_attr(attrs, extract_font_characteristics(processor));
 
-      if (auto color = processor->property_or_none<fo::Color>(fo, "color"))
+      if (auto color = processor->property_or_none<fo::Color>("color"))
         set_attr(attrs, "color", enc_color(*color));
       else
         set_attr(attrs, "color", "black");
@@ -1211,12 +1203,11 @@ namespace {
 
         auto b_tag = html::Tag{
           optional_tag(processor, "b",
-                       processor->property_or_none<std::string>(fo, "font-weight"),
-                       "bold")};
-        auto i_tag = html::Tag{
-          optional_tag(processor, "i",
-                       processor->property_or_none<std::string>(fo, "font-posture"),
-                       "italic")};
+                       processor->property_or_none<std::string>("font-weight"), "bold")};
+        auto i_tag =
+          html::Tag{optional_tag(processor, "i",
+                                 processor->property_or_none<std::string>("font-posture"),
+                                 "italic")};
 
         processor->render_sosofo(&fo->port(k_text));
       }
@@ -1233,10 +1224,10 @@ namespace {
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
       auto attrs = detail::StyleAttrs{};
-      set_attr(attrs, extract_font_characteristics(processor, fo));
+      set_attr(attrs, extract_font_characteristics(processor));
 
-      auto field_width = processor->property_or_none<fo::LengthSpec>(fo, "field-width");
-      auto field_align = processor->property_or_none<std::string>(fo, "field-align");
+      auto field_width = processor->property_or_none<fo::LengthSpec>("field-width");
+      auto field_align = processor->property_or_none<std::string>("field-align");
 
       if (field_width && field_width->_value > 0) {
         const auto max_inf = std::numeric_limits<double>::infinity();
@@ -1262,12 +1253,11 @@ namespace {
 
         auto b_tag = html::Tag{
           optional_tag(processor, "b",
-                       processor->property_or_none<std::string>(fo, "font-weight"),
-                       "bold")};
-        auto i_tag = html::Tag{
-          optional_tag(processor, "i",
-                       processor->property_or_none<std::string>(fo, "font-posture"),
-                       "italic")};
+                       processor->property_or_none<std::string>("font-weight"), "bold")};
+        auto i_tag =
+          html::Tag{optional_tag(processor, "i",
+                                 processor->property_or_none<std::string>("font-posture"),
+                                 "italic")};
 
         processor->render_sosofo(&fo->port(k_text));
       }
@@ -1279,13 +1269,13 @@ namespace {
   {
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
-      auto refid = processor->property(fo, "refid", std::string("#current"));
+      auto refid = processor->property("refid", std::string("#current"));
       if (refid == "#current") {
       }
       else if (!refid.empty()) {
         auto sattrs = detail::StyleAttrs{};
 
-        if (auto color = processor->property_or_none<fo::Color>(fo, "color"))
+        if (auto color = processor->property_or_none<fo::Color>("color"))
           set_attr(sattrs, "color", enc_color(*color));
         else
           set_attr(sattrs, "color", "black");
@@ -1310,9 +1300,9 @@ namespace {
     void render(HtmlProcessor* po, const IFormattingObject* fo) const override {
       auto attrs = detail::StyleAttrs{};
 
-      const auto color = po->property_or_none<fo::Color>(fo, "color");
-      const auto thickness = po->property_or_none<fo::LengthSpec>(fo, "line-thickness");
-      const auto type = po->property(fo, "score-type", std::string("none"));
+      const auto color = po->property_or_none<fo::Color>("color");
+      const auto thickness = po->property_or_none<fo::LengthSpec>("line-thickness");
+      const auto type = po->property("score-type", std::string("none"));
 
       auto border_val = std::string{};
       if (thickness)
@@ -1351,15 +1341,15 @@ namespace {
   {
   public:
     void render(HtmlProcessor* po, const IFormattingObject* fo) const override {
-      if (auto adr = po->property_or_none<fo::Address>(fo, "destination")) {
+      if (auto adr = po->property_or_none<fo::Address>("destination")) {
         auto sattrs = detail::StyleAttrs{};
 
-        if (auto color = po->property_or_none<fo::Color>(fo, "color"))
+        if (auto color = po->property_or_none<fo::Color>("color"))
           set_attr(sattrs, "color", enc_color(*color));
         else
           set_attr(sattrs, "color", "black");
 
-        const auto type = po->property(fo, "score-type", std::string("none"));
+        const auto type = po->property("score-type", std::string("none"));
 
         if (type == "above")
           set_attr(sattrs, "text-decoration", "overline");
@@ -1390,9 +1380,9 @@ namespace {
   {
   public:
     void render(HtmlProcessor* processor, const IFormattingObject* fo) const override {
-      if (auto id = processor->property_or_none<std::string>(fo, "id")) {
+      if (auto id = processor->property_or_none<std::string>("id")) {
         if (!id->empty()) {
-          const auto is_display = processor->property(fo, "display?", false);
+          const auto is_display = processor->property("display?", false);
           auto sattrs = detail::StyleAttrs{};
           if (is_display && processor->top_zone_offset()) {
             set_attr(sattrs, "display", "block");
@@ -1417,7 +1407,7 @@ namespace {
   public:
     void render(HtmlProcessor* po, const IFormattingObject* fo) const override {
       auto attrs = detail::StyleAttrs{};
-      auto col_num = po->property(fo, "column-number", 1);
+      auto col_num = po->property("column-number", 1);
       set_attr(attrs, "column-count", col_num);
 
       auto& ctx = po->ctx();

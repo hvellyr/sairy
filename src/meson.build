@@ -32,7 +32,6 @@ tbcore_sources = [
   'fos.cpp',
   'sosofo.cpp',
   'colors.cpp',
-  'propstack.cpp',
   'html-processor.cpp',
   'html-writer.cpp',
   'tex-processor.cpp',

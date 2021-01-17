@@ -649,10 +649,9 @@ namespace {
   }
 
 
-  void vspace(TexProcessor* po, const IFormattingObject* fo, const char* property_name,
-              const char* keep_prop_name) {
-    auto nobreak = po->property_or_none<bool>(fo, keep_prop_name);
-    auto val = po->property_or_none<fo::LengthSpec>(fo, property_name);
+  void vspace(TexProcessor* po, const char* property_name, const char* keep_prop_name) {
+    auto nobreak = po->property_or_none<bool>(keep_prop_name);
+    auto val = po->property_or_none<fo::LengthSpec>(property_name);
 
     if (val && val->_value != 0) {
       if (nobreak && *nobreak)
@@ -669,13 +668,13 @@ namespace {
   }
 
 
-  void enc_fontsize(TexProcessor* po, const IFormattingObject* fo) {
-    auto fs = po->property(fo, "font-size", fo::LengthSpec(fo::kDimen, 10.0, fo::k_pt));
-    auto ls = po->property(fo, "line-spacing",
-                           fo::LengthSpec(fo::kDimen, fs._value * 1.2, fo::k_pt));
-    // auto posptshift = po->property(fo, "position-point-shift",
-    //                                fo::LengthSpec(fo::kDimen, 0.0, fo::k_pt));
-    auto fontcaps = po->property(fo, "font-caps", std::string("normal"));
+  void enc_fontsize(TexProcessor* po) {
+    auto fs = po->property("font-size", fo::LengthSpec(fo::kDimen, 10.0, fo::k_pt));
+    auto ls =
+      po->property("line-spacing", fo::LengthSpec(fo::kDimen, fs._value * 1.2, fo::k_pt));
+    // auto posptshift = po->property("position-point-shift",
+    //                            fo::LengthSpec(fo::kDimen, 0.0, fo::k_pt));
+    auto fontcaps = po->property("font-caps", std::string("normal"));
 
     if (fontcaps == "normal")
       po->style_ctx()._capsstyle = tex_detail::k_normal_caps;
@@ -688,14 +687,14 @@ namespace {
 
     po->stream() << "\\fns{" << dimen2str(fs) << "}{" << dimen2str(ls) << "}";
 
-    if (auto fw = po->property_or_none<std::string>(fo, "font-weight")) {
+    if (auto fw = po->property_or_none<std::string>("font-weight")) {
       if (*fw == "bold")
         po->stream() << "\\bfseries{}";
       else if (*fw == "medium")
         po->stream() << "\\mdseries{}";
     }
 
-    if (auto fp = po->property_or_none<std::string>(fo, "font-posture")) {
+    if (auto fp = po->property_or_none<std::string>("font-posture")) {
       if (*fp == "italic")
         po->stream() << "\\itshape{}";
       else if (*fp == "oblique")
@@ -704,7 +703,7 @@ namespace {
         po->stream() << "\\upshape{}";
     }
 
-    if (auto fn = po->property_or_none<std::string>(fo, "font-name")) {
+    if (auto fn = po->property_or_none<std::string>("font-name")) {
       if (*fn == "monospace")
         po->stream() << "\\ttfamily{}";
       else if (*fn == "sans-serif")
@@ -719,18 +718,18 @@ namespace {
   }
 
 
-  void enc_paraprops(TexProcessor* po, const IFormattingObject* fo) {
+  void enc_paraprops(TexProcessor* po) {
     auto max_inf = std::numeric_limits<double>::infinity();
 
-    auto ind = dimen2str(po->property(fo, "first-line-start-indent",
+    auto ind = dimen2str(po->property("first-line-start-indent",
                                       fo::LengthSpec(fo::kInline, 0.0, fo::k_pt)));
     auto ext =
-      dimen2str(po->property(fo, "last-line-end-indent",
+      dimen2str(po->property("last-line-end-indent",
                              fo::LengthSpec(fo::kInline, 1.0, fo::k_em, 1.0, max_inf)));
-    auto sind = dimen2str(
-      po->property(fo, "start-indent", fo::LengthSpec(fo::kInline, 0.0, fo::k_pt)));
-    auto eind = dimen2str(
-      po->property(fo, "end-indent", fo::LengthSpec(fo::kInline, 0.0, fo::k_pt)));
+    auto sind =
+      dimen2str(po->property("start-indent", fo::LengthSpec(fo::kInline, 0.0, fo::k_pt)));
+    auto eind =
+      dimen2str(po->property("end-indent", fo::LengthSpec(fo::kInline, 0.0, fo::k_pt)));
 
     po->stream() << "\\ps{" << ind << "}{" << ext << "}{" << sind << "}{" << eind << "}";
   }
@@ -787,36 +786,36 @@ namespace {
   public:
     void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
-      auto gfx_path = static_cast<const fo::ExternalGraphic*>(fo)->external_path();
+      auto gfx_path = po->property("external-path", std::string{});
 
-      vspace(po, fo, "space-before", "keep-with-previous?");
-      auto debug_info = po->property_or_none<std::string>(fo, "metadata.debug-info");
+      vspace(po, "space-before", "keep-with-previous?");
+      auto debug_info = po->property_or_none<std::string>("metadata.debug-info");
       if (debug_info)
         po->stream() << "%%debug: " << *debug_info << std::endl;
 
       std::stringstream extra_args;
       auto sep = "[";
       auto end = "";
-      if (auto width = po->property_or_none<fo::LengthSpec>(fo, "width")) {
+      if (auto width = po->property_or_none<fo::LengthSpec>("width")) {
         extra_args << sep << "width=" << dimen2str(*width);
         sep = ",";
         end = "]";
       }
-      else if (auto keyw = po->property_or_none<std::string>(fo, "width")) {
+      else if (auto keyw = po->property_or_none<std::string>("width")) {
         if (*keyw == "max") {
           extra_args << sep << "width=\\columnwidth";
           sep = ",";
           end = "]";
         }
       }
-      if (auto height = po->property_or_none<fo::LengthSpec>(fo, "height")) {
+      if (auto height = po->property_or_none<fo::LengthSpec>("height")) {
         extra_args << sep << "height=" << dimen2str(*height);
         sep = ",";
         end = "]";
       }
       extra_args << end;
 
-      auto is_display = po->property_or_none<bool>(fo, "display?");
+      auto is_display = po->property_or_none<bool>("display?");
 
       if (*is_display)
         po->stream() << "\\par" << std::endl;
@@ -829,7 +828,7 @@ namespace {
       if (debug_info)
         po->stream() << "%%debug: " << *debug_info << std::endl;
 
-      vspace(po, fo, "space-after", "keep-with-next?");
+      vspace(po, "space-after", "keep-with-next?");
 
       po->stream() << std::endl;
 
@@ -846,21 +845,20 @@ namespace {
 
       auto lastctx = po->style_ctx();
 
-      vspace(po, fo, "space-before", "keep-with-previous?");
+      vspace(po, "space-before", "keep-with-previous?");
 
-      auto debug_info = po->property_or_none<std::string>(fo, "metadata.debug-info");
+      auto debug_info = po->property_or_none<std::string>("metadata.debug-info");
       if (debug_info)
         po->stream() << "%%debug: " << *debug_info << std::endl;
 
       po->stream() << "\\para{";
-      enc_paraprops(po, fo);
+      enc_paraprops(po);
 
-      auto linesprops = po->property(fo, "lines", std::string("wrap"));
+      auto linesprops = po->property("lines", std::string("wrap"));
       if (linesprops == "asis")
         po->style_ctx()._wrapstyle = tex_detail::k_asis_wrap;
 
-      auto wstreatment =
-        po->property(fo, "whitespace-treatment", std::string("collapse"));
+      auto wstreatment = po->property("whitespace-treatment", std::string("collapse"));
       if (wstreatment == "preserve")
         po->style_ctx()._wstreatment = tex_detail::k_preserve_ws;
       else if (wstreatment == "collapse")
@@ -869,9 +867,9 @@ namespace {
         po->style_ctx()._wstreatment = tex_detail::k_ignore_ws;
 
       po->stream() << "}{";
-      enc_fontsize(po, fo);
+      enc_fontsize(po);
 
-      auto quadding = po->property(fo, "quadding", std::string("left"));
+      auto quadding = po->property("quadding", std::string("left"));
       if (quadding == "left")
         po->stream() << "\\quadleft{}";
       else if (quadding == "right")
@@ -895,7 +893,7 @@ namespace {
       if (debug_info)
         po->stream() << "%%debug: " << *debug_info << std::endl;
 
-      vspace(po, fo, "space-after", "keep-with-next?");
+      vspace(po, "space-after", "keep-with-next?");
 
       po->style_ctx() = lastctx;
 
@@ -918,12 +916,12 @@ namespace {
   {
   public:
     void render(TexProcessor* po, const IFormattingObject* fo) const override {
-      if (auto break_before = po->property_or_none<std::string>(fo, "break-before")) {
+      if (auto break_before = po->property_or_none<std::string>("break-before")) {
         if (*break_before == "page")
           po->request_page_break(tex_detail::kBreakPageBefore);
       }
 
-      vspace(po, fo, "space-before", "keep-with-previous?");
+      vspace(po, "space-before", "keep-with-previous?");
 
       auto& text_port = fo->port("text");
       if (text_port.length() > 0) {
@@ -934,9 +932,9 @@ namespace {
         po->finalize_breaks();
       }
 
-      vspace(po, fo, "space-after", "keep-with-next?");
+      vspace(po, "space-after", "keep-with-next?");
 
-      if (auto break_after = po->property_or_none<std::string>(fo, "break-after")) {
+      if (auto break_after = po->property_or_none<std::string>("break-after")) {
         if (*break_after == "page")
           po->request_page_break(tex_detail::kBreakPageAfter);
       }
@@ -970,30 +968,30 @@ namespace {
       }
       po->request_page_break(tex_detail::kNoBreak);
 
-      auto title = po->property(fo, "metadata.title", std::string());
-      auto author = po->property(fo, "metadata.author", std::string());
-      auto desc = po->property(fo, "metadata.desc", std::string());
-      auto cover = po->property(fo, "metadata.cover", std::string());
+      auto title = po->property("metadata.title", std::string());
+      auto author = po->property("metadata.author", std::string());
+      auto desc = po->property("metadata.desc", std::string());
+      auto cover = po->property("metadata.cover", std::string());
 
-      auto pagewidth = po->property(fo, "page-width", po->paper_width());
-      auto pageheight = po->property(fo, "page-height", po->paper_height());
+      auto pagewidth = po->property("page-width", po->paper_width());
+      auto pageheight = po->property("page-height", po->paper_height());
       auto leftmargin =
-        po->property(fo, "left-margin", fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
+        po->property("left-margin", fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
       auto rightmargin =
-        po->property(fo, "right-margin", fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
+        po->property("right-margin", fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
       auto topmargin =
-        po->property(fo, "top-margin", fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
+        po->property("top-margin", fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
       auto bottommargin =
-        po->property(fo, "bottom-margin", fo::LengthSpec(fo::kDimen, 30, fo::k_mm));
+        po->property("bottom-margin", fo::LengthSpec(fo::kDimen, 30, fo::k_mm));
       auto headermargin =
-        po->property(fo, "header-margin", fo::LengthSpec(fo::kDimen, 10, fo::k_mm));
-      // auto footermargin = po->property(fo, "footer-margin",
+        po->property("header-margin", fo::LengthSpec(fo::kDimen, 10, fo::k_mm));
+      // auto footermargin = po->property("footer-margin",
       //                                  fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
       auto startmargin =
-        po->property(fo, "start-margin", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+        po->property("start-margin", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
       po->_current_start_margin = startmargin;
       auto endmargin =
-        po->property(fo, "end-margin", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+        po->property("end-margin", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
 
       po->stream() << "\\setlength\\paperwidth{" << dimen2str(pagewidth) << "}"
                    << std::endl;
@@ -1062,11 +1060,9 @@ namespace {
       po->stream() << "\\changelayout%%" << std::endl;
 
       //--------
-      auto leftheader = po->property_or_none<std::shared_ptr<Sosofo>>(fo, "left-header");
-      auto centerheader =
-        po->property_or_none<std::shared_ptr<Sosofo>>(fo, "center-header");
-      auto rightheader =
-        po->property_or_none<std::shared_ptr<Sosofo>>(fo, "right-header");
+      auto leftheader = po->property_or_none<std::shared_ptr<Sosofo>>("left-header");
+      auto centerheader = po->property_or_none<std::shared_ptr<Sosofo>>("center-header");
+      auto rightheader = po->property_or_none<std::shared_ptr<Sosofo>>("right-header");
 
       if (leftheader || rightheader || centerheader) {
         po->stream() << "\\makeheadline{";
@@ -1081,11 +1077,9 @@ namespace {
         po->stream() << "}";
       }
 
-      auto leftfooter = po->property_or_none<std::shared_ptr<Sosofo>>(fo, "left-footer");
-      auto centerfooter =
-        po->property_or_none<std::shared_ptr<Sosofo>>(fo, "center-footer");
-      auto rightfooter =
-        po->property_or_none<std::shared_ptr<Sosofo>>(fo, "right-footer");
+      auto leftfooter = po->property_or_none<std::shared_ptr<Sosofo>>("left-footer");
+      auto centerfooter = po->property_or_none<std::shared_ptr<Sosofo>>("center-footer");
+      auto rightfooter = po->property_or_none<std::shared_ptr<Sosofo>>("right-footer");
 
       if (leftfooter || rightfooter || centerfooter) {
         po->stream() << "\\makefootline{";
@@ -1126,7 +1120,7 @@ namespace {
 
       po->stream() << "{";
 
-      auto pps = po->property_or_none<fo::LengthSpec>(fo, "position-point-shift");
+      auto pps = po->property_or_none<fo::LengthSpec>("position-point-shift");
 
       if (pps) {
         if (pps->_value < 0)
@@ -1135,8 +1129,8 @@ namespace {
           po->stream() << "\\t{";
       }
 
-      enc_fontsize(po, fo);
-      if (auto co = po->property_or_none<fo::Color>(fo, "color"))
+      enc_fontsize(po);
+      if (auto co = po->property_or_none<fo::Color>("color"))
         enc_color(po, *co);
       po->render_sosofo(&fo->port("text"));
 
@@ -1162,15 +1156,15 @@ namespace {
     void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
 
-      auto field_width = po->property_or_none<fo::LengthSpec>(fo, "field-width");
-      auto field_align = po->property_or_none<std::string>(fo, "field-align");
+      auto field_width = po->property_or_none<fo::LengthSpec>("field-width");
+      auto field_align = po->property_or_none<std::string>("field-align");
 
       auto lastctx = po->style_ctx();
 
       if (field_width && field_width->_value > 0) {
         if (field_width->_max != field_width->_value) {
           po->stream() << "{";
-          enc_fontsize(po, fo);
+          enc_fontsize(po);
 
           auto left_hss =
             field_align && (*field_align == "right" || *field_align == "center")
@@ -1197,7 +1191,7 @@ namespace {
       if (field_align && (*field_align == "right" || *field_align == "center"))
         po->stream() << "\\hfill{}";
 
-      enc_fontsize(po, fo);
+      enc_fontsize(po);
       po->render_sosofo(&fo->port("text"));
 
       if (field_align && (*field_align == "left" || *field_align == "center"))
@@ -1215,7 +1209,7 @@ namespace {
     void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
 
-      auto refid = po->property(fo, "refid", std::string("#current"));
+      auto refid = po->property("refid", std::string("#current"));
       if (refid == "#current")
         po->stream() << "\\pageno{}";
       else if (!refid.empty())
@@ -1230,9 +1224,9 @@ namespace {
     void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
 
-      // const auto color = po->property_or_none<fo::Color>(fo, "color");
-      const auto thickness = po->property_or_none<fo::LengthSpec>(fo, "line-thickness");
-      const auto type = po->property(fo, "score-type", std::string("none"));
+      // const auto color = po->property_or_none<fo::Color>("color");
+      const auto thickness = po->property_or_none<fo::LengthSpec>("line-thickness");
+      const auto type = po->property("score-type", std::string("none"));
 
       if (type == "above") {
         // no supported
@@ -1266,7 +1260,7 @@ namespace {
     void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
 
-      if (auto id = po->property_or_none<std::string>(fo, "id")) {
+      if (auto id = po->property_or_none<std::string>("id")) {
         if (!id->empty()) {
           po->_delayed_anchors.emplace_back(std::string("\\label{") + *id + "}");
         }
@@ -1281,10 +1275,10 @@ namespace {
     void render(TexProcessor* po, const IFormattingObject* fo) const override {
       po->finalize_breaks();
 
-      auto col_num = po->property(fo, "column-number", 1);
+      auto col_num = po->property("column-number", 1);
 
       auto gutterwidth =
-        po->property(fo, "gutter-width", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
+        po->property("gutter-width", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
 
       po->stream() << "{\\leftskip0pt\\relax%" << std::endl
                    << " \\setlength{\\columnsep}{" << dimen2str(gutterwidth) << "}%"
