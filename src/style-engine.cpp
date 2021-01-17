@@ -44,13 +44,18 @@ StyleEngine::StyleEngine(const std::string& prefix_path, const std::string& back
                          bool verbose)
   : _backend_id(backend_id) {
   _ctx = setup_scheme_context(prefix_path);
-  _ctx->define_variable("%textbook-prefix-paths%", prefix_path);
-  _ctx->define_variable("%verbose%?", verbose);
+
+  if (_ctx) {
+    _ctx->define_variable("%textbook-prefix-paths%", prefix_path);
+    _ctx->define_variable("%verbose%?", verbose);
+  }
 }
 
 
 bool StyleEngine::load_style(const filesystem::path& path) {
-  assert(_ctx);
+  if (!_ctx) {
+    return false;
+  }
 
   _ctx->define_variable("%style-path%", path.string());
   _ctx->define_variable("%backend%", _backend_id);
@@ -65,14 +70,18 @@ bool StyleEngine::load_style(const filesystem::path& path) {
 
 
 std::unique_ptr<Sosofo> StyleEngine::process_node(const Node* root) {
-  assert(_ctx);
+  if (_ctx) {
+    auto x = _ctx->process_root_node(root);
+    return x;
+  }
 
-  return _ctx->process_root_node(root);
+  return {};
 }
 
 
 void StyleEngine::define_variables(const std::vector<std::string>& defs) {
-  assert(_ctx);
+  if (!_ctx)
+    return;
 
   for (const auto& def : defs) {
     const auto parts = utils::split(def, "=");
