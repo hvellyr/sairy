@@ -365,5 +365,5 @@ namespace fo {
     void set_port(const std::string& portnm, const Sosofo& sosofo) override;
   };
 
-} // ns fo
-} // ns eyestep
+} // namespace fo
+} // namespace eyestep

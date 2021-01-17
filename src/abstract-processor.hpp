@@ -52,6 +52,6 @@ public:
                                      const std::string& key) const;
 };
 
-} // ns eyestep
+} // namespace eyestep
 
 #include "abstract-processor.ipp"

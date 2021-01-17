@@ -35,4 +35,4 @@ public:
                                           const std::string& key) const = 0;
 };
 
-} // ns eyestep
+} // namespace eyestep

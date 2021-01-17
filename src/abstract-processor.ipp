@@ -102,4 +102,4 @@ T AbstractProcessor<ProcessorT>::property(const IFormattingObject* fo,
   return default_value;
 }
 
-} // ns eyestep
+} // namespace eyestep

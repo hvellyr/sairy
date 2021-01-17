@@ -32,7 +32,7 @@ struct PropertyValue
     k_int,
     k_string,
     k_nodeptr,
-    k_nodes
+    k_nodes,
   };
 
   Kind _kind;

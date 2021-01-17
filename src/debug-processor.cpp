@@ -88,7 +88,7 @@ namespace {
     }
   };
 
-} // ns anon
+} // namespace
 
 DebugProcessor::DebugProcessor(const cxxopts::ParseResult& /*args*/) {}
 
@@ -149,4 +149,4 @@ void DebugProcessor::render_fo(const IFormattingObject* fo) {
   Super::render_fo(fo);
 }
 
-} // ns eyestep
+} // namespace eyestep

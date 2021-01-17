@@ -417,9 +417,10 @@ namespace {
           maxv = sexp_quantity_normalize_to_double(ctx, max_arg) / norm_factor;
         }
         else {
-          result = sexp_user_exception(
-            ctx, self, "unit: max argument unit is not convertible to value unit",
-            max_arg);
+          result = sexp_user_exception(ctx, self,
+                                       "unit: max argument unit is not convertible to "
+                                       "value unit",
+                                       max_arg);
         }
       }
       else if (auto symbv = string_from_symbol_sexp_or_none(ctx, max_arg)) {
@@ -1317,8 +1318,9 @@ namespace {
 
         if (sexp_pairp(region_spec)) {
           if (auto region =
-                evaluate_screen_set_region_spec(ctx, self, region_spec, source))
+                evaluate_screen_set_region_spec(ctx, self, region_spec, source)) {
             regions.emplace_back(*region);
+          }
         }
         else {
           result = make_textbook_exception(ctx, self, "unexpected region specification",
@@ -1468,9 +1470,8 @@ namespace {
 
 
   bool is_address_sexp(sexp ctx, sexp self, sexp adr) {
-    return sexp_pointerp(adr) &&
-           strcmp(sexp_string_data(sexp_object_type_name(ctx, adr)), ADDRESS_TYPE_NAME) ==
-             0;
+    return sexp_pointerp(adr) && strcmp(sexp_string_data(sexp_object_type_name(ctx, adr)),
+                                        ADDRESS_TYPE_NAME) == 0;
   }
 
 
@@ -2187,7 +2188,9 @@ namespace {
       sexp_gc_preserve2(_ctx, obj1, res);
 
       obj1 = sexp_c_string(_ctx, script_file.string().c_str(), -1);
-      auto retv = check_exception_p(_ctx, res = sexp_load(_ctx, obj1, NULL));
+
+      res = sexp_load(_ctx, obj1, NULL);
+      auto retv = check_exception_p(_ctx, res);
 
       sexp_gc_release2(_ctx);
 
@@ -2245,7 +2248,6 @@ namespace {
       s_root_node = root_node;
       res =
         sexp_eval_string(_ctx, "(process-node-list (children (grove-root)))", -1, NULL);
-      // res = sexp_eval_string(_ctx, "(foo (grove-root))", -1, NULL);
 
       check_exception_p(_ctx, res);
 
@@ -2263,13 +2265,13 @@ namespace {
     }
   };
 
-} // ns anon
+} // namespace
 
 
 std::unique_ptr<ISchemeContext> create_scheme_context() {
   return estd::make_unique<SchemeContext>();
 }
 
-} // ns eyestep
+} // namespace eyestep
 
 TEXTBOOK_RESTORE_WARNINGS

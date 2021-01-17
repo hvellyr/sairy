@@ -44,4 +44,4 @@ public:
   void render_fo(const IFormattingObject* fo) override;
 };
 
-} // ns eyestep
+} // namespace eyestep

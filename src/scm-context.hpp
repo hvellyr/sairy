@@ -18,7 +18,7 @@ class Sosofo;
 class ISchemeContext
 {
 public:
-  virtual ~ISchemeContext(){};
+  virtual ~ISchemeContext() {}
 
   virtual void initialize(const std::vector<filesystem::path>& module_paths) = 0;
   virtual bool load_module_file(const filesystem::path& script_file) = 0;
@@ -34,4 +34,4 @@ public:
 
 std::unique_ptr<ISchemeContext> create_scheme_context();
 
-} // ns eyestep
+} // namespace eyestep
