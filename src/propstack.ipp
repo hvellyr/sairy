@@ -26,7 +26,13 @@ template <typename T>
 estd::optional<T> PropertiesStack::lookup(const std::string& key) const {
   for (auto i_current = begin(_stack); i_current != end(_stack); ++i_current) {
     if (const auto spec = i_current->_props.lookup_key(key)) {
-      if (const T* val = fo::get<const T>(&spec->_value)) {
+      if (const auto* expr = fo::get<const std::shared_ptr<fo::IExpr>>(&spec->_value)) {
+        auto valv = expr->get()->eval();
+        if (const T* val = fo::get<const T>(&valv)) {
+          return *val;
+        }
+      }
+      else if (const T* val = fo::get<const T>(&spec->_value)) {
         return *val;
       }
     }

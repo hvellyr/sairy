@@ -13,6 +13,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <sstream>
 #include <string>
 
 namespace eyestep {
@@ -55,6 +56,17 @@ namespace {
 
         void operator()(const fo::Address& adr) {
           std::cout << adr;
+        }
+
+        void operator()(const std::shared_ptr<fo::IExpr>& val) {
+          std::stringstream ss;
+          val->write_to_stream(ss);
+          std::cout << "<expr:" << ss.str() << ">";
+
+          std::cout << " -> [";
+          auto expr_val = val->eval();
+          fo::apply(DebugPropertySpecVisitor(), expr_val);
+          std::cout << "]";
         }
       };
 

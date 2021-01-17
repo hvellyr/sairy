@@ -9,6 +9,7 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -141,6 +142,7 @@ namespace fo {
   std::ostream& operator<<(std::ostream& os, const Color& co);
 
   class ICompoundValue;
+  class IExpr;
 
   struct None
   {
@@ -159,6 +161,7 @@ namespace fo {
       k_color,
       k_compound,
       k_address,
+      k_expr,
     };
 
     Kind _kind = k_bool;
@@ -173,6 +176,7 @@ namespace fo {
       Color _color;
       std::shared_ptr<ICompoundValue> _compound;
       Address _address;
+      std::shared_ptr<IExpr> _expr;
     };
 
     ValueType()
@@ -210,6 +214,10 @@ namespace fo {
       : _kind(k_address)
       , _address(std::move(adr)) {}
 
+    ValueType(std::shared_ptr<IExpr> expr)
+      : _kind(k_expr)
+      , _expr(std::move(expr)) {}
+
     ValueType(const ValueType& rhs) {
       *this = rhs;
     }
@@ -241,6 +249,9 @@ namespace fo {
         break;
       case k_address:
         _address.~Address();
+        break;
+      case k_expr:
+        _expr.~shared_ptr<IExpr>();
         break;
       }
       _kind = k_unspecified;
@@ -279,6 +290,9 @@ namespace fo {
         case k_address:
           new (&_address) Address(rhs._address);
           break;
+        case k_expr:
+          new (&_expr) std::shared_ptr<IExpr>(rhs._expr);
+          break;
         }
       }
 
@@ -292,6 +306,17 @@ namespace fo {
   public:
     virtual ~ICompoundValue() = default;
     virtual const char* type_id() const = 0;
+  };
+
+
+  class IExpr
+  {
+  public:
+    virtual ~IExpr() {}
+
+    virtual void write_to_stream(std::ostream& os) const = 0;
+
+    virtual ValueType eval() const = 0;
   };
 
 
@@ -403,6 +428,18 @@ namespace fo {
   };
 
 
+  template <>
+  struct ValueTrait<std::shared_ptr<IExpr>>
+  {
+    static ValueType::Kind value_type() {
+      return ValueType::k_expr;
+    }
+    static const std::shared_ptr<IExpr>* get(const ValueType* val) {
+      return &val->_expr;
+    }
+  };
+
+
   template <typename T>
   const T* get(const ValueType* val) {
     return val && ValueTrait<typename std::remove_cv<T>::type>::value_type() == val->_kind
@@ -432,6 +469,8 @@ namespace fo {
       return f(val._compound);
     case ValueType::k_address:
       return f(val._address);
+    case ValueType::k_expr:
+      return f(val._expr);
     }
 
     return R();
@@ -470,6 +509,10 @@ namespace fo {
       , _value(std::move(val)) {}
 
     PropertySpec(std::string name, Address val)
+      : _name(std::move(name))
+      , _value(std::move(val)) {}
+
+    PropertySpec(std::string name, std::shared_ptr<IExpr> val)
       : _name(std::move(name))
       , _value(std::move(val)) {}
 

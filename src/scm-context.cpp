@@ -69,9 +69,135 @@ namespace {
   const auto k_label = std::string("label");
   const auto k_zone = std::string("zone");
 
+  const double pt_ratio = 0.0003527778;
 
   estd::optional<fo::PropertySpec>
   evaluate_keyword_parameter(sexp ctx, sexp self, const std::string& key, sexp expr);
+
+  bool check_exception_p(sexp ctx, sexp res);
+  estd::optional<std::string> string_from_symbol_sexp_or_none(sexp ctx, sexp obj);
+
+  int sosofo_tag_p(sexp ctx);
+  int screen_set_model_tag_p(sexp ctx);
+  int length_spec_tag_p(sexp ctx);
+  fo::Unit to_quantity_unit(sexp ctx, sexp val);
+  bool is_convertible_to_pt_unit(fo::Unit unit);
+  int color_tag_p(sexp ctx);
+  sexp address_local(sexp adr);
+  sexp address_destination(sexp adr);
+  bool is_address_sexp(sexp ctx, sexp adr);
+
+  //----------------------------------------------------------------------------
+
+  class SchemeExpr : public fo::IExpr
+  {
+    sexp _ctx;
+    sexp _expr;
+
+  public:
+    SchemeExpr(sexp ctx, sexp expr)
+      : _ctx(ctx)
+      , _expr(expr) {
+      sexp_preserve_object(_ctx, _expr);
+    }
+
+    ~SchemeExpr() override {
+      sexp_release_object(_ctx, _expr);
+    }
+
+    void write_to_stream(std::ostream& os) const override {
+      sexp_gc_var1(tmp);
+      sexp_gc_preserve1(_ctx, tmp);
+
+      tmp = sexp_write_to_string(_ctx, _expr);
+
+      if (sexp_stringp(tmp)) {
+        os << std::string(sexp_string_data(tmp));
+      }
+
+      sexp_gc_release1(_ctx);
+    }
+
+    fo::ValueType eval() const override {
+      sexp_gc_var2(res, excep);
+      sexp_gc_preserve2(_ctx, res, excep);
+
+      fo::ValueType result;
+
+      if (sexp_procedurep(_expr)) {
+        res = sexp_apply(_ctx, _expr, sexp_context_env(_ctx));
+
+        if (check_exception_p(_ctx, res)) {
+          auto sym_value = string_from_symbol_sexp_or_none(_ctx, res);
+          if (sym_value) {
+            result = fo::ValueType(*sym_value);
+          }
+          else if (sexp_check_tag(res, sosofo_tag_p(_ctx))) {
+            const auto* sosofo = (const Sosofo*)(sexp_cpointer_value(res));
+            result = fo::ValueType(std::make_shared<Sosofo>(*sosofo));
+          }
+          else if (sexp_check_tag(res, screen_set_model_tag_p(_ctx))) {
+            const auto* screenset_model =
+              (const fo::ScreenSetModel*)(sexp_cpointer_value(res));
+            result =
+              fo::ValueType(std::make_shared<fo::ScreenSetModel>(*screenset_model));
+          }
+          else if (sexp_booleanp(res)) {
+            result = fo::ValueType(bool(sexp_unbox_boolean(res)));
+          }
+          else if (sexp_fixnump(res)) {
+            result = fo::ValueType(int(sexp_unbox_fixnum(res)));
+          }
+          else if (sexp_quantityp(res)) {
+            auto unit = to_quantity_unit(_ctx, res);
+            // the number is normalized to 'm' unit; rebase it to 'pt'
+            auto norm_factor = is_convertible_to_pt_unit(unit) ? pt_ratio : 1.0;
+            auto result_unit = is_convertible_to_pt_unit(unit) ? fo::k_pt : unit;
+            auto val = sexp_quantity_normalize_to_double(_ctx, res) / norm_factor;
+
+            result = fo::ValueType(fo::LengthSpec(fo::kDimen, val, result_unit));
+          }
+          else if (sexp_check_tag(res, length_spec_tag_p(_ctx))) {
+            const auto* ls = (const fo::LengthSpec*)(sexp_cpointer_value(res));
+            result = fo::ValueType(*ls);
+          }
+          else if (sexp_stringp(res)) {
+            result = fo::ValueType(std::string(sexp_string_data(res)));
+          }
+          else if (sexp_check_tag(res, color_tag_p(_ctx))) {
+            const auto* co = (const fo::Color*)(sexp_cpointer_value(res));
+            result = fo::ValueType(*co);
+          }
+          else if (is_address_sexp(_ctx, res)) {
+            auto adrloc = address_local(res);
+            auto adrdest = address_destination(res);
+
+            if (sexp_stringp(adrdest) && sexp_booleanp(adrloc)) {
+              result = fo::ValueType(fo::Address(bool(sexp_unbox_boolean(adrloc)),
+                                                 std::string(sexp_string_data(adrdest))));
+            }
+            else {
+              excep = sexp_user_exception(_ctx, SEXP_FALSE, "Bad address members: ", res);
+              check_exception_p(_ctx, excep);
+            }
+          }
+          else {
+            excep = sexp_user_exception(_ctx, SEXP_FALSE, "Bad property type: ", res);
+            check_exception_p(_ctx, excep);
+          }
+        }
+      }
+      else {
+        excep =
+          sexp_user_exception(_ctx, SEXP_FALSE, "Not a procedure for property: ", _expr);
+        check_exception_p(_ctx, excep);
+      }
+
+      sexp_gc_release2(_ctx);
+
+      return result;
+    }
+  };
 
 
   //----------------------------------------------------------------------------
@@ -337,9 +463,6 @@ namespace {
 
     return fo::k_pt;
   }
-
-
-  const double pt_ratio = 0.0003527778;
 
 
   bool is_convertible_to_pt_unit(fo::Unit unit) {
