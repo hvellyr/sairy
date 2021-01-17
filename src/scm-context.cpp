@@ -1581,32 +1581,34 @@ namespace {
 
   //----------------------------------------------------------------------------
 
-  bool is_style_sexp(sexp ctx, sexp self, sexp st) {
+  bool is_style_sexp(sexp ctx, sexp st) {
     return sexp_pointerp(st) &&
            strcmp(sexp_string_data(sexp_object_type_name(ctx, st)), STYLE_TYPE_NAME) == 0;
   }
 
 
   sexp style_props(sexp st) {
+    // see (define-record-type <style> ...) in fo.scm
     return sexp_slot_ref(st, 0);
   }
 
 
-  bool is_address_sexp(sexp ctx, sexp self, sexp adr) {
+  bool is_address_sexp(sexp ctx, sexp adr) {
     return sexp_pointerp(adr) && strcmp(sexp_string_data(sexp_object_type_name(ctx, adr)),
                                         ADDRESS_TYPE_NAME) == 0;
   }
 
 
   sexp address_local(sexp adr) {
+    // (define-record-type <address> ...) in fo.scm
     return sexp_slot_ref(adr, 0);
   }
 
 
   sexp address_destination(sexp adr) {
+    // (define-record-type <address> ...) in fo.scm
     return sexp_slot_ref(adr, 1);
   }
-
 
   estd::optional<fo::PropertySpec>
   evaluate_keyword_parameter(sexp ctx, sexp self, const std::string& key, sexp expr) {
@@ -1655,7 +1657,7 @@ namespace {
       const auto* co = (const fo::Color*)(sexp_cpointer_value(expr));
       result = fo::PropertySpec(key, *co);
     }
-    else if (is_address_sexp(ctx, self, expr)) {
+    else if (is_address_sexp(ctx, expr)) {
       auto adrloc = address_local(expr);
       auto adrdest = address_destination(expr);
 
@@ -1682,52 +1684,44 @@ namespace {
 
   using Ports = std::map<std::string, std::vector<sexp>>;
 
+
+  Sosofo vector_of_sexp_to_sosofo(sexp ctx, const std::vector<sexp>& sexps) {
+    auto sosofos = std::vector<Sosofo>();
+
+    for (const auto& lbl_sexp : sexps) {
+      if (sexp_check_tag(lbl_sexp, sosofo_tag_p(ctx))) {
+        if (const auto* lbl_sosofo = (const Sosofo*)(sexp_cpointer_value(lbl_sexp))) {
+          sosofos.emplace_back(*lbl_sosofo);
+        }
+      }
+    }
+
+    return Sosofo(sosofos);
+  }
+
+
   sexp make_fo(sexp ctx, sexp self, const std::string& fo_class, const std::string& label,
-               sexp fo_class_arg, const fo::PropertySpecs& props, sexp content,
-               const Ports& ports, sexp source) {
+               sexp fo_class_arg, const fo::PropertySpecs& props,
+               const std::vector<sexp>& content, const Ports& ports, sexp source) {
     sexp_gc_var1(result);
     sexp_gc_preserve1(ctx, result);
 
     result = SEXP_NULL;
 
-    auto fo = std::unique_ptr<IFormattingObject>{};
+    auto sosofo = vector_of_sexp_to_sosofo(ctx, content);
+    auto fo = fo::create_fo_by_classname(std::string("#") + fo_class, props, sosofo);
 
-    if (sexp_check_tag(content, sosofo_tag_p(ctx))) {
-      const auto* content_sosofo = (const Sosofo*)(sexp_cpointer_value(content));
-
-      fo =
-        fo::create_fo_by_classname(std::string("#") + fo_class, props, *content_sosofo);
-
-      if (!fo) {
-        result =
-          make_textbook_exception(ctx, self, "Unknown fo-class: ", fo_class_arg, source);
-      }
-      else if (!fo->accepts_fo(*content_sosofo)) {
-        result =
-          make_textbook_exception(ctx, self, "bad FO nesting", fo_class_arg, source);
-      }
+    if (!fo) {
+      result =
+        make_textbook_exception(ctx, self, "Unknown fo-class: ", fo_class_arg, source);
     }
-    else {
-      fo = fo::create_fo_by_classname(std::string("#") + fo_class, props, Sosofo{});
+    else if (!fo->accepts_fo(sosofo)) {
+      result = make_textbook_exception(ctx, self, "bad FO nesting", fo_class_arg, source);
     }
 
     if (result == SEXP_NULL) {
-      const auto fo_ports = fo->ports();
       for (const auto& p : ports) {
-        if (std::any_of(begin(fo_ports), end(fo_ports),
-                        [&](const std::string& nm) { return nm == p.first; })) {
-          auto sosofos = std::vector<Sosofo>();
-          for (const auto& lbl_sexp : p.second) {
-            if (sexp_check_tag(lbl_sexp, sosofo_tag_p(ctx))) {
-              if (const auto* lbl_sosofo =
-                    (const Sosofo*)(sexp_cpointer_value(lbl_sexp))) {
-                sosofos.emplace_back(*lbl_sosofo);
-              }
-            }
-          }
-
-          fo->set_port(p.first, Sosofo(sosofos));
-        }
+        fo->set_port(p.first, vector_of_sexp_to_sosofo(ctx, p.second));
       }
 
       result =
@@ -1755,143 +1749,157 @@ namespace {
   }
 
 
-  std::tuple<sexp /*result*/, sexp /*ls*/> evaluate_properties(sexp ctx, sexp self,
-                                                               sexp source, sexp ls,
-                                                               fo::PropertySpecs& props,
-                                                               std::string& label) {
-    sexp_gc_var4(result, nm, ty, styleprops);
-    sexp_gc_preserve4(ctx, result, nm, ty, styleprops);
+  sexp evaluate_characteristics(sexp ctx, sexp self, sexp source, sexp chars,
+                                fo::PropertySpecs& props, std::string& label) {
+    sexp_gc_var2(result, res);
+    sexp_gc_preserve2(ctx, result, res);
 
     result = SEXP_NULL;
 
-    for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
-      sexp expr = sexp_car(ls);
-      auto key = string_from_keyword_or_none(ctx, expr);
+    if (sexp_pairp(chars)) {
+      for (; sexp_pairp(chars); chars = sexp_cdr(chars)) {
+        sexp key_expr = sexp_car(chars);
+        auto key = string_from_keyword_or_none(ctx, key_expr);
 
-      if (key) {
-        if (sexp_pairp(sexp_cdr(ls))) {
-          expr = sexp_car(sexp_cdr(ls));
+        if (key) {
+          if (sexp_pairp(sexp_cdr(chars))) {
+            sexp value = sexp_car(sexp_cdr(chars));
 
-          if (*key == k_use) {
-            if (is_style_sexp(ctx, self, expr)) {
-              styleprops = sexp_apply(ctx, style_props(expr), SEXP_NULL);
-              if (sexp_exceptionp(styleprops)) {
-                result = styleprops;
+            if (*key == k_use) {
+              res = sexp_apply(ctx, value, SEXP_NULL);
+              if (sexp_exceptionp(res)) {
+                result = res;
                 break;
               }
-
-              sexp dummy;
-              std::tie(result, dummy) =
-                evaluate_properties(ctx, self, source, styleprops, props, label);
-              if (result != SEXP_NULL)
+              else {
+                if (!sexp_booleanp(res)) {
+                  if (is_style_sexp(ctx, res)) {
+                    std::string dummy_label;
+                    res = evaluate_characteristics(ctx, self, source, style_props(res),
+                                                   props, dummy_label);
+                    if (sexp_exceptionp(res)) {
+                      result = res;
+                      break;
+                    }
+                  }
+                  else {
+                    result =
+                      make_textbook_exception(ctx, self, "use: requires style argument",
+                                              value, source);
+                    break;
+                  }
+                }
+              }
+            }
+            else if (*key == k_label) {
+              res = sexp_apply(ctx, value, SEXP_NULL);
+              if (sexp_exceptionp(res)) {
+                result = res;
                 break;
+              }
+              else {
+                if (auto labelp = string_from_symbol_sexp_or_none(ctx, res)) {
+                  label = *labelp;
+                }
+                else {
+                  label = {};
+                }
+              }
             }
-            else {
-              result = make_textbook_exception(ctx, self, "use: requires style argument",
-                                               expr, source);
-              break;
-            }
-          }
-          else if (*key == k_label) {
-            if (!label.empty()) {
-              result = make_textbook_exception(ctx, self, "label: already defined", expr,
-                                               source);
-              break;
-            }
-
-            if (auto labelp = string_from_symbol_sexp_or_none(ctx, expr)) {
-              label = *labelp;
-            }
-            else {
-              result =
-                make_textbook_exception(ctx, self, "label: not a symbol", expr, source);
-              break;
+            else if (!props.has_key(*key)) {
+              if (sexp_stringp(value)) {
+                props.set(fo::PropertySpec(*key, std::string(sexp_string_data(value))));
+              }
+              else if (sexp_booleanp(value)) {
+                props.set(fo::PropertySpec(*key, bool(sexp_unbox_boolean(value))));
+              }
+              else if (sexp_fixnump(value)) {
+                props.set(fo::PropertySpec(*key, int(sexp_unbox_fixnum(value))));
+              }
+              else if (sexp_procedurep(value)) {
+                props.set(
+                  fo::PropertySpec(*key, std::make_shared<SchemeExpr>(ctx, value)));
+              }
             }
           }
           else {
-            if (auto prop = evaluate_keyword_parameter(ctx, self, *key, expr))
-              props.set(*prop);
+            result = make_textbook_exception(ctx, self, "value missing for keyword",
+                                             key_expr, source);
+            break;
           }
         }
-        else {
-          result =
-            make_textbook_exception(ctx, self, "value missing for keyword", expr, source);
+        else
           break;
-        }
-      }
-      else
-        break;
 
-      ls = sexp_cdr(ls);
+        chars = sexp_cdr(chars);
+      }
     }
 
-    sexp_gc_release4(ctx);
+    sexp_gc_release2(ctx);
 
-    return std::make_tuple(result, ls);
+    return result;
   }
 
 
-  sexp func_make_fo(sexp ctx, sexp self, sexp_sint_t n, sexp fo_class_arg, sexp args_arg,
-                    sexp source) {
-    sexp_gc_var3(result, content, ls);
-    sexp_gc_preserve3(ctx, result, content, ls);
+  sexp func_make_fo(sexp ctx, sexp self, sexp_sint_t n, sexp fo_class_arg,
+                    sexp characteristics_arg, sexp content_exprs, sexp source) {
+    sexp_gc_var2(result, res);
+    sexp_gc_preserve2(ctx, result, res);
 
     result = SEXP_NULL;
-    content = SEXP_NULL;
-
-    auto fo_class = string_from_symbol_sexp_or_none(ctx, fo_class_arg);
-    if (!fo_class) {
-      result = make_textbook_exception(ctx, self, "not a symbol", fo_class_arg, source);
-    }
 
     auto label = std::string{};
     auto ports = Ports{};
-
     auto props = fo::PropertySpecs{};
+    auto content = std::vector<sexp>{};
 
-    ls = sexp_apply(ctx, args_arg, SEXP_NULL);
-    if (sexp_exceptionp(ls)) {
-      result = ls;
+    auto fo_class = string_from_symbol_sexp_or_none(ctx, fo_class_arg);
+    if (!fo_class) {
+      result = make_textbook_exception(ctx, self, "fo-class: not a symbol", fo_class_arg,
+                                       source);
     }
-    else if (sexp_pairp(ls)) {
-      std::tie(result, ls) = evaluate_properties(ctx, self, source, ls, props, label);
 
-      if (result == SEXP_NULL) {
-        for (; sexp_pairp(ls); ls = sexp_cdr(ls)) {
-          auto expr = sexp_car(ls);
+    if (result == SEXP_NULL) {
+      result =
+        evaluate_characteristics(ctx, self, source, characteristics_arg, props, label);
+    }
 
-          auto key = string_from_keyword_or_none(ctx, expr);
-
-          if (key) {
-            result = make_textbook_exception(ctx, self, "unexpeced keyword in make body",
-                                             expr, source);
-            break;
+    if (result == SEXP_NULL && sexp_procedurep(content_exprs)) {
+      res = sexp_apply(ctx, content_exprs, sexp_context_env(ctx));
+      if (sexp_exceptionp(res)) {
+        result = res;
+      }
+      else if (sexp_pairp(res)) {
+        for (; sexp_pairp(res); res = sexp_cdr(res)) {
+          sexp sosofo = sexp_car(res);
+          if (sexp_check_tag(sosofo, sosofo_tag_p(ctx))) {
+            if (auto lbl = label_from_sosofo_sexp_or_none(ctx, sosofo)) {
+              ports[*lbl].emplace_back(sosofo);
+            }
+            else {
+              content.emplace_back(sosofo);
+            }
           }
-
-          if (auto lbl = label_from_sosofo_sexp_or_none(ctx, expr)) {
-            ports[*lbl].emplace_back(expr);
+          else {
+            // ignore values other than sosofo silently
           }
-          else
-            content = expr;
         }
       }
     }
-    else
-      result = make_textbook_exception(ctx, self, "not a list", args_arg, source);
 
     if (result == SEXP_NULL && fo_class) {
       result =
         make_fo(ctx, self, *fo_class, label, fo_class_arg, props, content, ports, source);
     }
 
-    sexp_gc_release3(ctx);
+    sexp_gc_release2(ctx);
 
     return result;
   }
 
 
   void init_make_functions(sexp ctx) {
-    sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-fo", 3, &func_make_fo);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-fo", 4, &func_make_fo);
   }
 
 

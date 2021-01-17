@@ -3,22 +3,54 @@
 
 (import (srfi 28))
 
+
 (define (make-source def)
   (cons (format "definition of '~s'" def) #f))
 
 
-(define-syntax make
+(define-syntax capture-characteristics
   (syntax-rules ()
-    ((make fo-class) (%make-fo 'fo-class (lambda () '())
-                               (make-source (%in-current-definition%))))
-    ((make fo-class args ...) (%make-fo 'fo-class (lambda () (list args ...))
-                                        (make-source (%in-current-definition%))))
+    ((_) '())
+    ((_ one two args ...) (if (keyword? 'one)
+                              (append (list 'one
+                                            (let* ((%captured-node% (current-node))
+                                                   (%captured-mode% (current-mode)))
+                                              (lambda ()
+                                                (with-mode %captured-mode%
+                                                  (%with-current-node% %captured-node% two)))))
+                                      (capture-characteristics args ...))
+                              '()))
+    ((_ expr args ...) '())
     ))
 
+(define-syntax capture-content-exprs
+  (syntax-rules ()
+    ((_) #f)
+    ((_ one two args ...) (if (keyword? 'one)
+                              (capture-content-exprs args ...)
+                              (lambda () (list one two args ...))))
+    ((_ expr args ...) (if (keyword? 'expr)
+                           (begin
+                             (display "isolated keyword!") (newline)
+                             #f)
+                           (lambda () (list expr args ...))))
+    ))
+
+(define-syntax make
+  (syntax-rules ()
+    ((make fo-class) (%make-fo 'fo-class '() (lambda () '())
+                               (make-source (%in-current-definition%)) ))
+    ((make fo-class args ...) (%make-fo 'fo-class
+                                        (capture-characteristics args ...)
+                                        (capture-content-exprs args ...)
+                                        (make-source (%in-current-definition%)) ))
+    ))
 
 (define-syntax literal
   (syntax-rules ()
-    ((literal str) (%make-fo 'literal (lambda () (list text: str))
+    ((literal str) (%make-fo 'literal
+                             (list text: str)
+                             (lambda () '())
                              (make-source (%in-current-definition%))))
     ))
 
@@ -38,7 +70,7 @@
 
 (define-syntax style
   (syntax-rules ()
-    ((style arg ...) (%make-style (lambda () (list arg ...))))
+    ((style args ...) (%make-style (capture-characteristics args ...)))
     ))
 
 

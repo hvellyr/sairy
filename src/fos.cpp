@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <iostream>
 #include <limits>
 #include <ostream>
 #include <string>
@@ -166,16 +167,6 @@ namespace fo {
   const Sosofo& ExternalGraphic::port(const std::string& /*portname*/) const {
     return k_nil_sosofo;
   }
-
-  std::string ExternalGraphic::external_path() const {
-    if (auto spec = _props.lookup_key("external-path")) {
-      if (const auto* val = fo::get<const std::string>(&spec->_value)) {
-        return *val;
-      }
-    }
-
-    return "";
-  };
 
 
   //----------------------------------------------------------------------------
@@ -598,22 +589,7 @@ namespace fo {
   ScreenSet::ScreenSet(const PropertySpecs& props, const Sosofo& sosofo)
     : Fo(props)
     , _port_names({k_main})
-    , _ports({{k_main, sosofo}}) {
-    if (auto compval =
-          props.lookup_value<std::shared_ptr<fo::ICompoundValue>>("screen-set-model")) {
-      if (auto screen_set_model =
-            std::dynamic_pointer_cast<fo::ScreenSetModel>(*compval)) {
-        for (const auto& region : screen_set_model->_regions) {
-          auto portnm = region._props.lookup_value_or("port", region._zone);
-
-          if (portnm != k_main) {
-            _ports[portnm] = Sosofo{};
-            _port_names.emplace_back(portnm);
-          }
-        }
-      }
-    }
-  }
+    , _ports({{k_main, sosofo}}) {}
 
 
   const PropertySpecs& ScreenSet::default_properties() const {
@@ -626,6 +602,7 @@ namespace fo {
 
 
   const std::vector<std::string>& ScreenSet::ports() const {
+    lookup_ports();
     return _port_names;
   }
 
@@ -633,9 +610,14 @@ namespace fo {
   const Sosofo& ScreenSet::port(const std::string& portnm) const {
     using namespace std;
 
-    auto i_port = _ports.find(portnm);
-    if (i_port != end(_ports))
-      return i_port->second;
+    lookup_ports();
+
+    if (any_of(begin(_port_names), end(_port_names),
+               [&](const auto& nm) { return portnm == nm; })) {
+      auto i_port = _ports.find(portnm);
+      if (i_port != end(_ports))
+        return i_port->second;
+    }
 
     return k_nil_sosofo;
   }
@@ -645,9 +627,47 @@ namespace fo {
     using namespace std;
 
     if (portnm != k_main) {
-      auto i_portnm = find(begin(_port_names), end(_port_names), portnm);
-      if (i_portnm != end(_port_names)) {
-        _ports[portnm] = sosofo;
+      _ports[portnm] = sosofo;
+    }
+  }
+
+
+  ScreenSetModel* ScreenSet::screen_set_model() const {
+    if (!_screen_set) {
+      if (auto prop = properties().lookup_key("screen-set-model")) {
+        ValueType valv;
+
+        if (auto* expr = fo::get<std::shared_ptr<fo::IExpr>>(&prop->_value)) {
+          valv = expr->get()->eval(nullptr);
+        }
+        else
+          valv = prop->_value;
+
+        if (auto compval = fo::get<std::shared_ptr<fo::ICompoundValue>>(&valv)) {
+          _screen_set = std::dynamic_pointer_cast<fo::ScreenSetModel>(*compval);
+        }
+      }
+    }
+    return _screen_set.get();
+  }
+
+
+  void ScreenSet::lookup_ports() const {
+    if (_port_names_read)
+      return;
+
+    if (auto ss = screen_set_model()) {
+      _port_names_read = true;
+
+      for (const auto& region : ss->_regions) {
+        auto portnm = region._props.lookup_value_or("port", region._zone);
+
+        if (portnm != k_main) {
+          _port_names.emplace_back(portnm);
+        }
+        else if (portnm.empty()) {
+          std::cout << "No port name found in props\n";
+        }
       }
     }
   }

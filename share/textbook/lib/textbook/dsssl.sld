@@ -17,6 +17,7 @@
           attributes
           current-mode
           current-node
+          %with-current-node%
           default
           display-space
           element

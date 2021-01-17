@@ -207,26 +207,26 @@
      )))
 
 
-;; Returns a singleton node-list.  This node is the one currently matched.
-;; (define current-node
-;;   (make-parameter (empty-node-list)))
-
 (define *current-node* (empty-node-list))
+
+(define (set-current-node nd)
+  (set! *current-node* nd))
 
 ;; @doc Returns a singleton node-list.  This node is the one currently matched.
 (define (current-node) *current-node*)
 
+(define-syntax %with-current-node%
+  (syntax-rules ()
+    ((with-current-node nd func) (let ((cn (current-node)))
+                                   (set! *current-node* nd)
+                                   (let ((res func))
+                                     (set! *current-node* cn)
+                                     res)))
+    ))
+
 
 (define (process-current-node node)
-  ;; (parameterize ((current-node node))
-  ;;               (process-node (current-mode)
-  ;;                             node)))
-  (let ((cn (current-node)))
-    (set! *current-node* node)
-    (let ((res (process-node (current-mode)
-                             node)))
-      (set! *current-node* cn)
-      res)))
+  (%with-current-node% node (process-node (current-mode) node)))
 
 
 ;; @doc Returns the sosofo that results from appending the sosofos that result

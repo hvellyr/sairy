@@ -65,8 +65,6 @@ namespace fo {
     }
     const PropertySpecs& default_properties() const override;
     const Sosofo& port(const std::string& portname) const override;
-
-    std::string external_path() const;
   };
 
 
@@ -348,8 +346,12 @@ namespace fo {
 
   class ScreenSet : public Fo
   {
-    std::vector<std::string> _port_names;
+    mutable bool _port_names_read = false;
+    mutable std::vector<std::string> _port_names;
     std::map<std::string, Sosofo> _ports;
+    mutable std::shared_ptr<ScreenSetModel> _screen_set;
+
+    void lookup_ports() const;
 
   public:
     ScreenSet() = default;
@@ -363,6 +365,8 @@ namespace fo {
 
     const Sosofo& port(const std::string& portname) const override;
     void set_port(const std::string& portnm, const Sosofo& sosofo) override;
+
+    ScreenSetModel* screen_set_model() const;
   };
 
 } // namespace fo

@@ -619,6 +619,10 @@ namespace fo {
                                     : PropertySpecOrNone();
     }
 
+    bool has_key(const std::string& key) const {
+      return lookup_key(key).has_value();
+    }
+
     template <typename T>
     estd::optional<T> lookup_value(const std::string& key) const {
       if (auto prop = lookup_key(key)) {
