@@ -22,28 +22,34 @@ inline void PropertiesStack::pop() {
 }
 
 
-template <typename T>
-estd::optional<T> PropertiesStack::lookup(const std::string& key) const {
+inline fo::ValueType PropertiesStack::lookup(const std::string& key) const
+{
   for (auto i_current = begin(_stack); i_current != end(_stack); ++i_current) {
     if (const auto spec = i_current->_props.lookup_key(key)) {
-      if (const auto* expr = fo::get<const std::shared_ptr<fo::IExpr>>(&spec->_value)) {
-        auto valv = expr->get()->eval();
-        if (const T* val = fo::get<const T>(&valv)) {
-          return *val;
-        }
+      if (const auto expr = fo::get<std::shared_ptr<fo::IExpr>>(spec->_value)) {
+        return expr->get()->eval(nullptr);
       }
-      else if (const T* val = fo::get<const T>(&spec->_value)) {
-        return *val;
-      }
+      return spec->_value;
     }
 
-    if (!fo::is_property_be_inherited(key)) {
+    if (!fo::is_property_be_inherited(key))
       break;
-    }
   }
 
   if (!_stack.empty()) {
-    return _stack.front()._default_props.lookup_value<T>(key);
+    if (const auto spec = _stack.front()._default_props.lookup_key(key))
+      return spec->_value;
+  }
+
+  return {};
+}
+
+
+template <typename T>
+estd::optional<T> PropertiesStack::lookup_or_none(const std::string& key) const {
+  const auto valv = lookup(key);
+  if (const T* val = fo::get<const T>(&valv)) {
+    return {*val};
   }
 
   return {};

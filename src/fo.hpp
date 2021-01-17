@@ -329,6 +329,9 @@ namespace fo {
     static const T* get(const ValueType* val) {
       return &val->_none;
     }
+    static T get(const ValueType& val) {
+      return val._none;
+    }
   };
 
 
@@ -340,6 +343,9 @@ namespace fo {
     }
     static const bool* get(const ValueType* val) {
       return &val->_bool;
+    }
+    static bool get(const ValueType& val) {
+      return val._bool;
     }
   };
 
@@ -353,6 +359,9 @@ namespace fo {
     static const int* get(const ValueType* val) {
       return &val->_int;
     }
+    static int get(const ValueType& val) {
+      return val._int;
+    }
   };
 
 
@@ -364,6 +373,9 @@ namespace fo {
     }
     static const LengthSpec* get(const ValueType* val) {
       return &val->_length;
+    }
+    static LengthSpec get(const ValueType& val) {
+      return val._length;
     }
   };
 
@@ -377,6 +389,9 @@ namespace fo {
     static const std::string* get(const ValueType* val) {
       return &val->_string;
     }
+    static std::string get(const ValueType& val) {
+      return val._string;
+    }
   };
 
 
@@ -388,6 +403,9 @@ namespace fo {
     }
     static const std::shared_ptr<Sosofo>* get(const ValueType* val) {
       return &val->_sosofo;
+    }
+    static std::shared_ptr<Sosofo> get(const ValueType& val) {
+      return val._sosofo;
     }
   };
 
@@ -401,6 +419,9 @@ namespace fo {
     static const Color* get(const ValueType* val) {
       return &val->_color;
     }
+    static Color get(const ValueType& val) {
+      return val._color;
+    }
   };
 
 
@@ -412,6 +433,9 @@ namespace fo {
     }
     static const std::shared_ptr<ICompoundValue>* get(const ValueType* val) {
       return &val->_compound;
+    }
+    static std::shared_ptr<ICompoundValue> get(const ValueType& val) {
+      return val._compound;
     }
   };
 
@@ -425,6 +449,9 @@ namespace fo {
     static const Address* get(const ValueType* val) {
       return &val->_address;
     }
+    static Address get(const ValueType& val) {
+      return val._address;
+    }
   };
 
 
@@ -437,6 +464,9 @@ namespace fo {
     static const std::shared_ptr<IExpr>* get(const ValueType* val) {
       return &val->_expr;
     }
+    static std::shared_ptr<IExpr> get(const ValueType& val) {
+      return val._expr;
+    }
   };
 
 
@@ -445,6 +475,14 @@ namespace fo {
     return val && ValueTrait<typename std::remove_cv<T>::type>::value_type() == val->_kind
              ? ValueTrait<typename std::remove_cv<T>::type>::get(val)
              : nullptr;
+  }
+
+
+  template <typename T>
+  const estd::optional<T> get(const ValueType& val) {
+    if (ValueTrait<typename std::remove_cv<T>::type>::value_type() == val._kind)
+      return ValueTrait<typename std::remove_cv<T>::type>::get(val);
+    return {};
   }
 
 

@@ -29,8 +29,10 @@ public:
   void push(const fo::PropertySpecs& props, const fo::PropertySpecs& default_props = {});
   void pop();
 
+  fo::ValueType lookup(const std::string& key) const;
+
   template <typename T>
-  estd::optional<T> lookup(const std::string& key) const;
+  estd::optional<T> lookup_or_none(const std::string& key) const;
 };
 
 } // namespace eyestep

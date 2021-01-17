@@ -68,14 +68,14 @@ template <typename ProcessorT>
 template <typename T>
 estd::optional<T>
 AbstractProcessor<ProcessorT>::property_or_none(const std::string& key) const {
-  return _props.lookup<T>(key);
+  return _props.lookup_or_none<T>(key);
 }
 
 
 template <typename ProcessorT>
 template <typename T>
 T AbstractProcessor<ProcessorT>::property(const std::string& key, T default_value) const {
-  if (auto prop = _props.lookup<T>(key))
+  if (auto prop = _props.lookup_or_none<T>(key))
     return *prop;
 
   return default_value;
