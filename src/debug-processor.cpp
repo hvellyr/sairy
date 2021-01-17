@@ -26,6 +26,9 @@ namespace {
     void render(DebugProcessor* processor, const IFormattingObject* fo) const override {
       struct DebugPropertySpecVisitor
       {
+        void operator()(const fo::None&) {
+          std::cout << "<unspecified>";
+        }
         void operator()(const fo::LengthSpec& ls) {
           std::cout << ls;
         }

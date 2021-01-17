@@ -142,11 +142,15 @@ namespace fo {
 
   class ICompoundValue;
 
+  struct None
+  {
+  };
 
   struct ValueType
   {
     enum Kind
     {
+      k_unspecified,
       k_length,
       k_bool,
       k_int,
@@ -160,6 +164,7 @@ namespace fo {
     Kind _kind = k_bool;
     union
     {
+      None _none;
       bool _bool;
       int _int;
       LengthSpec _length;
@@ -171,7 +176,7 @@ namespace fo {
     };
 
     ValueType()
-      : ValueType(false) {}
+      : _kind(k_unspecified) {}
 
     ValueType(bool val)
       : _kind(k_bool)
@@ -215,6 +220,7 @@ namespace fo {
 
     void clear() {
       switch (_kind) {
+      case k_unspecified:
       case k_bool:
       case k_int:
         break;
@@ -237,8 +243,7 @@ namespace fo {
         _address.~Address();
         break;
       }
-      _bool = false;
-      _kind = k_bool;
+      _kind = k_unspecified;
     }
 
     ValueType& operator=(const ValueType& rhs) {
@@ -250,6 +255,8 @@ namespace fo {
         switch (rhs._kind) {
         case k_length:
           new (&_length) LengthSpec(rhs._length);
+          break;
+        case k_unspecified:
           break;
         case k_bool:
           _bool = rhs._bool;
@@ -291,8 +298,12 @@ namespace fo {
   template <typename T>
   struct ValueTrait
   {
-    static ValueType::Kind value_type();
-    static const T* get(const ValueType* val);
+    static ValueType::Kind value_type() {
+      return ValueType::k_unspecified;
+    }
+    static const T* get(const ValueType* val) {
+      return &val->_none;
+    }
   };
 
 
@@ -405,6 +416,8 @@ namespace fo {
     switch (val._kind) {
     case ValueType::k_length:
       return f(val._length);
+    case ValueType::k_unspecified:
+      return f(val._none);
     case ValueType::k_bool:
       return f(val._bool);
     case ValueType::k_int:
