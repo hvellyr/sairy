@@ -45,17 +45,4 @@ fo::PropertySpecOrNone PropertiesStack::get(const std::string& key,
   return {};
 }
 
-
-fo::PropertySpecs merge_property_specs(const fo::PropertySpecs& one,
-                                       const fo::PropertySpecs& two) {
-  auto result = one;
-
-  for (const auto& spec : two) {
-    if (!result.lookup_key(spec._name))
-      result.set(spec);
-  }
-
-  return result;
-}
-
 } // ns eyestep
