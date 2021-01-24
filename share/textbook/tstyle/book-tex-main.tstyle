@@ -3,14 +3,14 @@
 
 (define page-style
   (style
-      page-width: 165mm ;; 210mm
-      page-height: 240mm ;; 297mm
-      top-margin: 20mm ;; 20mm
-      bottom-margin: 30mm ;; 30mm
-      header-margin: 12mm ;; 10mm
-      footer-margin: 20mm ;; 10mm
-      left-margin: 10mm ;; 20mm
-      right-margin: 10mm ;; 20mm
+      page-width: %page-width%
+      page-height: %page-height%
+      top-margin: %top-margin%
+      bottom-margin: %bottom-margin%
+      header-margin: %header-margin%
+      footer-margin: %footer-margin%
+      left-margin: %left-margin%
+      right-margin: %right-margin%
       ))
 
 
@@ -35,12 +35,39 @@
        start-margin: %page-left-offset%
        end-margin: 0mm
 
-       right-header: (make line-field
-                       font-size: (font-size 2)
-                       (make page-number (empty-sosofo)))
-       left-header: (make line-field
-                      font-size: (font-size 2)
-                      (process-node-list title-first))
+       right-header: (if (equal? %page-titlepgno-deko% 'scientific)
+                         (make line-field
+                           font-size: (font-size 2)
+                           (make page-number (empty-sosofo)))
+                         (empty-sosofo))
+       left-header: (if (equal? %page-titlepgno-deko% 'scientific)
+                        (make line-field
+                          font-size: (font-size 2)
+                          (process-node-list title-first))
+                        (empty-sosofo))
+
+       right-footer: (if (or (equal? %page-titlepgno-deko% 'manual)
+                             (equal? %page-titlepgno-deko% 'handout))
+                         (make line-field
+                           font-size: (font-size 2)
+                           (make page-number (empty-sosofo)))
+                         (empty-sosofo))
+       left-footer: (if (equal? %page-titlepgno-deko% 'manual)
+                        (make line-field
+                          font-size: (font-size 2)
+                          (process-node-list title-first))
+                        (empty-sosofo))
+       center-header: (if (equal? %page-titlepgno-deko% 'fancy)
+                          (make line-field
+                            font-size: (font-size 2)
+                            (process-node-list title-first))
+                          (empty-sosofo))
+       center-footer: (if (or (equal? %page-titlepgno-deko% 'novel)
+                              (equal? %page-titlepgno-deko% 'fancy))
+                          (make line-field
+                            font-size: (font-size 2)
+                            (make page-number (empty-sosofo)))
+                          (empty-sosofo))
 
        (process-node-list (children node))))
     ))
