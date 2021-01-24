@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
           }
           auto sosofo = engine.process_node(grove.root_node());
 
-          processor->render_processed_node(sosofo.get());
+          processor->render_processed_node(&engine, sosofo.get());
         }
         else {
           std::cerr << "Loading stylesheet failed" << std::endl;

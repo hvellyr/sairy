@@ -335,6 +335,8 @@ namespace fo {
     ScreenSetModel() = default;
     ScreenSetModel(const std::vector<ScreenSetRegion>& regions)
       : _regions(regions) {}
+    ScreenSetModel(const ScreenSetModel& rhs)
+      : _regions(rhs._regions) {}
 
     const char* type_id() const {
       return "screen-set-model";

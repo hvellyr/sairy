@@ -46,6 +46,9 @@ namespace {
     return s_root_node;
   }
 
+  static const fo::IProperties* s_property_lookup = nullptr;
+
+
 #define NODELIST_TAG "<node-list>"
 #define NODELIST_TAG_SIZE 11
 
@@ -118,7 +121,7 @@ namespace {
       sexp_gc_release1(_ctx);
     }
 
-    fo::ValueType eval() const override {
+    fo::ValueType eval(const fo::IProperties* props) const override {
       sexp_gc_var2(res, excep);
       sexp_gc_preserve2(_ctx, res, excep);
 
@@ -2367,6 +2370,11 @@ namespace {
       sexp_gc_release1(_ctx);
 
       return retv;
+    }
+
+
+    void set_property_lookup(const fo::IProperties* prop_lookup) override {
+      s_property_lookup = prop_lookup;
     }
 
 

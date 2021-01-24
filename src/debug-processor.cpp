@@ -27,6 +27,8 @@ namespace {
     void render(DebugProcessor* processor, const IFormattingObject* fo) const override {
       struct DebugPropertySpecVisitor
       {
+        using return_type = void;
+
         void operator()(const fo::None&) {
           std::cout << "<unspecified>";
         }
@@ -64,7 +66,7 @@ namespace {
           std::cout << "<expr:" << ss.str() << ">";
 
           std::cout << " -> [";
-          auto expr_val = val->eval();
+          auto expr_val = val->eval(nullptr);
           fo::apply(DebugPropertySpecVisitor(), expr_val);
           std::cout << "]";
         }

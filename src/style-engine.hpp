@@ -11,10 +11,13 @@
 
 namespace eyestep {
 
+class ISchemeContext;
 class Node;
 class Sosofo;
-class ISchemeContext;
 
+namespace fo {
+  class IProperties;
+}
 
 class StyleEngine
 {
@@ -27,8 +30,9 @@ public:
 
   bool load_style(const filesystem::path& path);
   void define_variables(const std::vector<std::string>& defs);
+  void set_property_lookup(const fo::IProperties* pl);
 
   std::unique_ptr<Sosofo> process_node(const Node* node);
 };
 
-} // ns eyestep
+} // namespace eyestep

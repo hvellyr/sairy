@@ -21,6 +21,7 @@ configuration_inc = include_directories('.')
 
 
 tbcore_sources = [
+  'abstract-processor.cpp',
   'casefold.cpp',
   'utils.cpp',
   'nodeclass.cpp',

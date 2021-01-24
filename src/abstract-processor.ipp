@@ -3,7 +3,9 @@
 
 #include "abstract-processor.hpp"
 #include "fo-processor.hpp"
+#include "fo.hpp"
 #include "sosofo.hpp"
+#include "style-engine.hpp"
 
 #include "fspp/filesystem.hpp"
 
@@ -15,6 +17,13 @@ namespace eyestep {
 
 namespace fs = filesystem;
 
+template <typename ProcessorT>
+AbstractProcessor<ProcessorT>::AbstractProcessor()
+  : _prop_lookup{&_props}
+{
+  _props.set_property_lookup(&_prop_lookup);
+}
+
 
 template <typename ProcessorT>
 void AbstractProcessor<ProcessorT>::set_output_file(const fs::path& output_file) {
@@ -23,10 +32,20 @@ void AbstractProcessor<ProcessorT>::set_output_file(const fs::path& output_file)
 
 
 template <typename ProcessorT>
-void AbstractProcessor<ProcessorT>::render_processed_node(const Sosofo* sosofo) {
-  before_rendering();
-  render_sosofo(sosofo);
-  after_rendering();
+void AbstractProcessor<ProcessorT>::render_processed_node(StyleEngine* engine,
+                                                          const Sosofo* sosofo) {
+  _engine = engine;
+  try {
+    before_rendering();
+    render_sosofo(sosofo);
+    after_rendering();
+  }
+  catch (...) {
+    _engine = nullptr;
+    throw;
+  }
+
+  _engine = nullptr;
 }
 
 
@@ -57,7 +76,9 @@ void AbstractProcessor<ProcessorT>::render_fo(const IFormattingObject* fo) {
   else {
     _props.push(fo);
 
+    _engine->set_property_lookup(&_prop_lookup);
     foproc->render(static_cast<ProcessorT*>(this), fo);
+    _engine->set_property_lookup(nullptr);
 
     _props.pop();
   }
@@ -79,6 +100,12 @@ T AbstractProcessor<ProcessorT>::property(const std::string& key, T default_valu
     return *prop;
 
   return default_value;
+}
+
+
+template <typename ProcessorT>
+inline StyleEngine* AbstractProcessor<ProcessorT>::engine() {
+  return _engine;
 }
 
 } // namespace eyestep

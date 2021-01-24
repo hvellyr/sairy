@@ -148,6 +148,7 @@ namespace fo {
   {
   };
 
+  
   struct ValueType
   {
     enum Kind
@@ -225,6 +226,9 @@ namespace fo {
     ~ValueType() {
       clear();
     }
+
+    bool is_set() const { return _kind != k_unspecified; }
+    explicit operator bool() const { return is_set(); }
 
     void clear() {
       switch (_kind) {
@@ -309,6 +313,8 @@ namespace fo {
   };
 
 
+  class IProperties;
+
   class IExpr
   {
   public:
@@ -316,7 +322,7 @@ namespace fo {
 
     virtual void write_to_stream(std::ostream& os) const = 0;
 
-    virtual ValueType eval() const = 0;
+    virtual ValueType eval(const IProperties* props) const = 0;
   };
 
 
@@ -486,7 +492,8 @@ namespace fo {
   }
 
 
-  template <typename F, typename R = void>
+  template <typename F,
+            typename R = typename std::remove_reference<F>::type::return_type>
   R apply(F&& f, const ValueType& val) {
     switch (val._kind) {
     case ValueType::k_length:
@@ -692,6 +699,17 @@ namespace fo {
   };
 
   bool is_property_be_inherited(const std::string& key);
+  ValueType::Kind property_default_type(const std::string& key);
+
+
+  class IProperties
+  {
+  public:
+    virtual ~IProperties() {}
+
+    virtual ValueType get(const std::string& key) const = 0;
+    virtual ValueType get_default(const std::string& key) const = 0;
+  };
 
 } // namespace fo
 

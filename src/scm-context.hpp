@@ -15,6 +15,10 @@ namespace eyestep {
 class Node;
 class Sosofo;
 
+namespace fo {
+  class IProperties;
+}
+
 class ISchemeContext
 {
 public:
@@ -28,6 +32,8 @@ public:
   virtual void define_variable(const std::string& name, bool value) = 0;
   virtual bool set_variable(const std::string& name,
                             const estd::optional<std::string>& value) = 0;
+
+  virtual void set_property_lookup(const fo::IProperties* pl) = 0;
 
   virtual std::unique_ptr<Sosofo> process_root_node(const Node* root_node) = 0;
 };

@@ -13,8 +13,10 @@
 
 namespace eyestep {
 
-class Sosofo;
 class IFormattingObject;
+class Sosofo;
+class StyleEngine;
+
 
 class IProcessor
 {
@@ -26,7 +28,7 @@ public:
   virtual void add_program_options(cxxopts::Options& options) const = 0;
 
   virtual std::string proc_id() const = 0;
-  virtual void render_processed_node(const Sosofo* sosofo) = 0;
+  virtual void render_processed_node(StyleEngine* engine, const Sosofo* sosofo) = 0;
 
   virtual void render_sosofo(const Sosofo* sosofo) = 0;
   virtual void render_fo(const IFormattingObject* fo) = 0;

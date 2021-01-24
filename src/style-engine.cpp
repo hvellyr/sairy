@@ -2,6 +2,7 @@
 // All rights reserved.
 
 #include "style-engine.hpp"
+#include "fo.hpp"
 #include "scm-context.hpp"
 #include "sosofo.hpp"
 #include "utils.hpp"
@@ -37,7 +38,7 @@ namespace {
     return ctx;
   }
 
-} // ns anon
+} // namespace
 
 
 StyleEngine::StyleEngine(const std::string& prefix_path, const std::string& backend_id,
@@ -94,4 +95,11 @@ void StyleEngine::define_variables(const std::vector<std::string>& defs) {
   }
 }
 
-} // ns eyestep
+
+void StyleEngine::set_property_lookup(const fo::IProperties* pl) {
+  if (_ctx) {
+    _ctx->set_property_lookup(pl);
+  }
+}
+
+} // namespace eyestep
