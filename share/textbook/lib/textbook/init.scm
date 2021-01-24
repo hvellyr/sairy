@@ -8,3 +8,29 @@
 (import (textbook dsssl))
 (import (textbook string-lib))
 (import (textbook type-of))
+
+
+(define builtin-add +)
+(define builtin-sub -)
+(define builtin-mul *)
+(define builtin-div /)
+
+(define (+ . args)
+  (cond
+   ((length-spec? (car args)) (length-spec-add args))
+   (else (apply builtin-add args))))
+
+(define (- . args)
+  (cond
+   ((length-spec? (car args)) (length-spec-sub args))
+   (else (apply builtin-sub args))))
+
+(define (* . args)
+  (cond
+   ((length-spec? (car args)) (length-spec-multiply args))
+   (else (apply builtin-mul args))))
+
+(define (/ . args)
+  (cond
+   ((length-spec? (car args)) (length-spec-divide args))
+   (else (apply builtin-div args))))

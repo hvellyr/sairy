@@ -566,6 +566,316 @@ namespace {
   }
 
 
+  sexp func_length_spec_add(sexp ctx, sexp self, sexp_sint_t n, sexp args) {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_VOID;
+
+    if (!sexp_pairp(args)) {
+      result = sexp_user_exception(ctx, self, "length-spec-add: not a list", args);
+    }
+    else {
+      estd::optional<fo::LengthSpec> akku;
+      double sum = 0.0;
+
+      for (sexp ls = args; sexp_pairp(ls); ls = sexp_cdr(ls)) {
+        sexp expr = sexp_car(ls);
+
+        if (sexp_fixnump(expr)) {
+          auto arg = int(sexp_unbox_fixnum(expr));
+
+          if (akku) {
+            akku = *akku + arg;
+          }
+          else {
+            sum += arg;
+          }
+        }
+        else if (sexp_flonump(expr)) {
+          auto arg = sexp_flonum_value(expr);
+
+          if (akku) {
+            akku = *akku + arg;
+          }
+          else {
+            sum += arg;
+          }
+        }
+        else if (sexp_check_tag(expr, length_spec_tag_p(ctx))) {
+          auto spec = *(const fo::LengthSpec*)(sexp_cpointer_value(expr));
+          if (akku) {
+            akku = *akku + spec;
+          }
+          else {
+            akku = spec + sum;
+          }
+        }
+        else if (sexp_quantityp(expr)) {
+          auto spec = quantity_to_lengthspec(ctx, expr);
+          if (akku) {
+            akku = *akku + spec;
+          }
+          else {
+            akku = spec + sum;
+          }
+        }
+        else {
+          result = sexp_user_exception(ctx, self, "length-spec-add: not a number", expr);
+          break;
+        }
+      }
+
+      if (result == SEXP_VOID) {
+        if (akku) {
+          result = make_length_spec(ctx, *akku);
+        }
+        else {
+          result = sexp_make_flonum(ctx, sum);
+        }
+      }
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_length_spec_sub(sexp ctx, sexp self, sexp_sint_t n, sexp args) {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_VOID;
+
+    if (!sexp_pairp(args)) {
+      result = sexp_user_exception(ctx, self, "length-spec-sub: not a list", args);
+    }
+    else {
+      estd::optional<fo::LengthSpec> akku;
+      double diff = 0.0;
+
+      for (sexp ls = args; sexp_pairp(ls); ls = sexp_cdr(ls)) {
+        sexp expr = sexp_car(ls);
+
+        if (sexp_fixnump(expr)) {
+          auto arg = int(sexp_unbox_fixnum(expr));
+
+          if (akku) {
+            akku = *akku - arg;
+          }
+          else {
+            diff -= arg;
+          }
+        }
+        else if (sexp_flonump(expr)) {
+          auto arg = sexp_flonum_value(expr);
+
+          if (akku) {
+            akku = *akku - arg;
+          }
+          else {
+            diff -= arg;
+          }
+        }
+        else if (sexp_check_tag(expr, length_spec_tag_p(ctx))) {
+          auto spec = *(const fo::LengthSpec*)(sexp_cpointer_value(expr));
+          if (akku) {
+            akku = *akku - spec;
+          }
+          else {
+            akku = diff - spec;
+          }
+        }
+        else if (sexp_quantityp(expr)) {
+          auto spec = quantity_to_lengthspec(ctx, expr);
+          if (akku) {
+            akku = *akku - spec;
+          }
+          else {
+            akku = diff - spec;
+          }
+        }
+        else {
+          result = sexp_user_exception(ctx, self, "length-spec-sub: not a number", expr);
+          break;
+        }
+      }
+
+      if (result == SEXP_VOID) {
+        if (akku) {
+          result = make_length_spec(ctx, *akku);
+        }
+        else {
+          result = sexp_make_flonum(ctx, diff);
+        }
+      }
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_length_spec_multiply(sexp ctx, sexp self, sexp_sint_t n, sexp args) {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_VOID;
+
+    if (!sexp_pairp(args)) {
+      result = sexp_user_exception(ctx, self, "length-spec-multiply: not a list", args);
+    }
+    else {
+      estd::optional<fo::LengthSpec> akku;
+
+      auto factor = 1.0;
+
+      for (sexp ls = args; sexp_pairp(ls); ls = sexp_cdr(ls)) {
+        sexp expr = sexp_car(ls);
+
+        if (sexp_fixnump(expr)) {
+          auto arg = int(sexp_unbox_fixnum(expr));
+
+          if (akku) {
+            akku = *akku * arg;
+          }
+          else {
+            factor *= arg;
+          }
+        }
+        else if (sexp_flonump(expr)) {
+          auto arg = sexp_flonum_value(expr);
+
+          if (akku) {
+            akku = *akku * arg;
+          }
+          else {
+            factor *= arg;
+          }
+        }
+        else if (sexp_check_tag(expr, length_spec_tag_p(ctx))) {
+          auto spec = *(const fo::LengthSpec*)(sexp_cpointer_value(expr));
+          if (akku) {
+            result = sexp_user_exception(ctx, self,
+                                         "length-spec-multiply: can't multiply "
+                                         "length-spec with length-spec",
+                                         expr);
+            break;
+          }
+          else {
+            akku = spec * factor;
+          }
+        }
+        else {
+          result =
+            sexp_user_exception(ctx, self, "length-spec-multiply: not a number", expr);
+          break;
+        }
+      }
+
+      if (result == SEXP_VOID) {
+        if (akku) {
+          result = make_length_spec(ctx, *akku);
+        }
+        else {
+          result = sexp_make_flonum(ctx, factor);
+        }
+      }
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
+  sexp func_length_spec_divide(sexp ctx, sexp self, sexp_sint_t n, sexp args) {
+    sexp_gc_var1(result);
+    sexp_gc_preserve1(ctx, result);
+
+    result = SEXP_VOID;
+
+    if (!sexp_pairp(args)) {
+      result = sexp_user_exception(ctx, self, "length-spec-divide: not a list", args);
+    }
+    else {
+      estd::optional<fo::LengthSpec> akku;
+
+      estd::optional<double> factor;
+
+      for (sexp ls = args; sexp_pairp(ls); ls = sexp_cdr(ls)) {
+        sexp expr = sexp_car(ls);
+
+        if (sexp_fixnump(expr)) {
+          auto arg = int(sexp_unbox_fixnum(expr));
+
+          if (akku) {
+            akku = *akku / arg;
+          }
+          else if (factor) {
+            factor = *factor / arg;
+          }
+          else {
+            factor = arg;
+          }
+        }
+        else if (sexp_flonump(expr)) {
+          auto arg = sexp_flonum_value(expr);
+
+          if (akku) {
+            akku = *akku / arg;
+          }
+          else if (factor) {
+            factor = *factor / arg;
+          }
+          else {
+            factor = arg;
+          }
+        }
+        else if (sexp_check_tag(expr, length_spec_tag_p(ctx))) {
+          auto spec = *(const fo::LengthSpec*)(sexp_cpointer_value(expr));
+          if (akku) {
+            result = sexp_user_exception(ctx, self,
+                                         "length-spec-divide: can't divide length-spec "
+                                         "with length-spec",
+                                         expr);
+            break;
+          }
+          else if (factor) {
+            akku = *factor / spec;
+          }
+          else {
+            akku = spec;
+          }
+        }
+        else {
+          result =
+            sexp_user_exception(ctx, self, "length-spec-divide: not a number", expr);
+          break;
+        }
+      }
+
+      if (result == SEXP_VOID) {
+        if (akku) {
+          result = make_length_spec(ctx, *akku);
+        }
+        else if (factor) {
+          result = sexp_make_flonum(ctx, *factor);
+        }
+        else {
+          result = sexp_make_flonum(ctx, 0.0);
+        }
+      }
+    }
+
+    sexp_gc_release1(ctx);
+
+    return result;
+  }
+
+
   void init_length_spec_functions(sexp ctx) {
     sexp_gc_var3(nm, ty, op);
     sexp_gc_preserve3(ctx, nm, ty, op);
@@ -588,6 +898,15 @@ namespace {
                         &func_displace_space_p);
     sexp_define_foreign(ctx, sexp_context_env(ctx), "inline-space?", 1,
                         &func_inline_space_p);
+
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "length-spec-add", 1,
+                        &func_length_spec_add);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "length-spec-sub", 1,
+                        &func_length_spec_sub);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "length-spec-multiply", 1,
+                        &func_length_spec_multiply);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "length-spec-divide", 1,
+                        &func_length_spec_divide);
 
     sexp_gc_release3(ctx);
   }
