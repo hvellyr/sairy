@@ -20,6 +20,7 @@
    ((sosofo? object) 'sosofo)
    ((color? object) 'color)
    ((address? object) 'address)
+   ((length-spec? object) 'length-spec)
    ((display-space? object) 'display-space)
    ((inline-space? object) 'inline-space)
   (else 'unknown)))
