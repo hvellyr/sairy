@@ -31,6 +31,7 @@ namespace fo {
     k_pt,
     k_px,
     k_in,
+    k_pc,
   };
 
 
@@ -53,18 +54,54 @@ namespace fo {
       , _priority(priority)
       , _value(value)
       , _unit(unit)
-      , _min(min ? *min : value)
-      , _max(max ? *max : value) {}
+      , _min(min)
+      , _max(max) {}
 
     LengthSpecType _spec_type = kDimen;
     bool _conditionalp = false;
     int _priority = 0;
-    double _value = 0;
+    double _value = 0.0;
     Unit _unit = k_pt;
-    double _min = 0;
-    double _max = 0;
+    estd::optional<double> _min;
+    estd::optional<double> _max;
   };
 
+  bool is_convertible_to_pt_unit(fo::Unit unit);
+  double unit_to_factor(fo::Unit unit);
+
+  inline LengthSpec operator*(LengthSpec spec, double value) {
+    spec._value *= value;
+    return spec;
+  }
+
+  inline LengthSpec operator/(LengthSpec spec, double value) {
+    spec._value /= value;
+    return spec;
+  }
+
+  inline LengthSpec operator/(double value, LengthSpec spec) {
+    spec._value = value / spec._value;
+    return spec;
+  }
+
+  inline LengthSpec operator+(LengthSpec spec, double value) {
+    spec._value += value;
+    return spec;
+  }
+
+  LengthSpec operator+(const LengthSpec& lhs, const LengthSpec& rhs);
+
+  inline LengthSpec operator-(LengthSpec spec, double value) {
+    spec._value -= value;
+    return spec;
+  }
+
+  inline LengthSpec operator-(double value, LengthSpec spec) {
+    spec._value = value - spec._value;
+    return spec;
+  }
+
+  LengthSpec operator-(const LengthSpec& lhs, const LengthSpec& rhs);
 
   std::ostream& operator<<(std::ostream& os, const LengthSpec& ls);
 

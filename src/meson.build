@@ -30,6 +30,7 @@ tbcore_sources = [
   'nodeutils.cpp',
   'textbook-parser.cpp',
   'textbook-scanner.cpp',
+  'fo.cpp',
   'fos.cpp',
   'sosofo.cpp',
   'colors.cpp',

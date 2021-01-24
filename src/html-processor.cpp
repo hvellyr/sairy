@@ -97,6 +97,7 @@ detail::HtmlRenderContext::css_property(const std::string& key) const {
 //------------------------------------------------------------------------------
 
 namespace {
+  const std::string k_pc = "pc";
   const std::string k_pt = "pt";
   const std::string k_px = "px";
   const std::string k_em = "em";
@@ -109,6 +110,8 @@ namespace {
   std::string length_spec2css(const fo::LengthSpec& dim) {
     auto unit_name = [](fo::Unit un) {
       switch (un) {
+      case fo::k_pc:
+        return k_pc;
       case fo::k_pt:
         return k_pt;
       case fo::k_px:
@@ -1232,7 +1235,7 @@ namespace {
       if (field_width && field_width->_value > 0) {
         const auto max_inf = std::numeric_limits<double>::infinity();
 
-        if (field_width->_max == max_inf)
+        if (*field_width->_max == max_inf)
           set_attr(attrs, "min-width", field_width);
         else
           set_attr(attrs, "width", field_width);

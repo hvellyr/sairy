@@ -30,6 +30,7 @@ namespace fs = filesystem;
 //------------------------------------------------------------------------------
 
 namespace {
+  const auto k_pc = std::string("pc");
   const auto k_pt = std::string("pt");
   const auto k_px = std::string("px");
   const auto k_em = std::string("em");
@@ -41,6 +42,8 @@ namespace {
 
   std::string unit_name(fo::Unit un) {
     switch (un) {
+    case fo::k_pc:
+      return k_pc;
     case fo::k_pt:
       return k_pt;
     case fo::k_px:
@@ -83,17 +86,21 @@ namespace {
     std::stringstream ss;
     ss << ls._value << unit_name(ls._unit);
 
-    if (ls._max == max_inf) {
-      if (ls._priority > 1)
-        ss << " plus 1fill";
-      else
-        ss << " plus 1fil";
+    if (ls._max) {
+      if (*ls._max == max_inf) {
+        if (ls._priority > 1)
+          ss << " plus 1fill";
+        else
+          ss << " plus 1fil";
+      }
+      else {
+        ss << " plus " << *ls._max << unit_name(ls._unit);
+      }
     }
-    else if (ls._max != ls._value)
-      ss << " plus " << ls._max << unit_name(ls._unit);
 
-    if (ls._min != ls._value)
-      ss << " minus " << ls._min << unit_name(ls._unit);
+    if (ls._min) {
+      ss << " minus " << *ls._min << unit_name(ls._unit);
+    }
 
     return ss.str();
   }
@@ -123,10 +130,15 @@ namespace {
     auto max_inf = std::numeric_limits<double>::infinity();
 
     std::stringstream ss;
-    if (ls._max == max_inf)
-      ss << "\\hfill{}";
-    else
-      ss << ls._max << unit_name(ls._unit);
+    if (ls._max) {
+      if (*ls._max == max_inf)
+        ss << "\\hfill{}";
+      else
+        ss << *ls._max << unit_name(ls._unit);
+    }
+    else {
+      ss << ls._value << unit_name(ls._unit);
+    }
     return ss.str();
   }
 
@@ -1162,7 +1174,7 @@ namespace {
       auto lastctx = po->style_ctx();
 
       if (field_width && field_width->_value > 0) {
-        if (field_width->_max != field_width->_value) {
+        if (field_width->_max) {
           po->stream() << "{";
           enc_fontsize(po);
 

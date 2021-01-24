@@ -84,11 +84,26 @@ namespace {
   int screen_set_model_tag_p(sexp ctx);
   int length_spec_tag_p(sexp ctx);
   fo::Unit to_quantity_unit(sexp ctx, sexp val);
-  bool is_convertible_to_pt_unit(fo::Unit unit);
   int color_tag_p(sexp ctx);
   sexp address_local(sexp adr);
   sexp address_destination(sexp adr);
   bool is_address_sexp(sexp ctx, sexp adr);
+
+  sexp make_color(sexp ctx, fo::Color co);
+
+
+  fo::LengthSpec quantity_to_lengthspec(sexp ctx, sexp expr) {
+    assert(sexp_quantityp(expr));
+
+    auto unit = to_quantity_unit(ctx, expr);
+    // the number is normalized to 'm' unit; rebase it to 'pt'
+    auto norm_factor = is_convertible_to_pt_unit(unit) ? pt_ratio : 1.0;
+    auto result_unit = is_convertible_to_pt_unit(unit) ? fo::k_pt : unit;
+    auto val = sexp_quantity_normalize_to_double(ctx, expr) / norm_factor;
+
+    return fo::LengthSpec(fo::kDimen, val, result_unit);
+  }
+
 
   //----------------------------------------------------------------------------
 
@@ -467,22 +482,6 @@ namespace {
     return fo::k_pt;
   }
 
-
-  bool is_convertible_to_pt_unit(fo::Unit unit) {
-    switch (unit) {
-    case fo::k_cm:
-    case fo::k_m:
-    case fo::k_mm:
-    case fo::k_pt:
-    case fo::k_in:
-      return true;
-    case fo::k_em:
-    case fo::k_px:
-      return false;
-    }
-
-    return false;
-  }
 
   sexp func_make_length_spec(sexp ctx, sexp self, sexp_sint_t n, sexp type_arg,
                              sexp val_arg, sexp min_arg, sexp max_arg,
