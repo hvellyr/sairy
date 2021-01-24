@@ -14,15 +14,15 @@
 
 
 ;; @doc Returns the index of the first occurance of a character in @prm{str} for
-;; while @prm{pred} returns #f or #f if no character matches.
+;; which @prm{pred} returns #t or #f if no character matches.
 (define (string-find str pred)
   (let ((slen (string-length str)))
     (let loop ((i 0))
       (if (>= i slen)
           #f
           (if (not (pred (string-ref str i)))
-              i
-              (loop (+ i 1)))))))
+              (loop (+ i 1))
+              i)))))
 
 (define (string-find-right str pred)
   (let loop ((i (- (string-length str) 1)))
@@ -40,7 +40,7 @@
 ;; @doc Returns a new string without all characters from the start which match
 ;; the @proc{whitespace?} predicate.
 (define (string-trim str)
-  (let ((idx (string-find str whitespace?)))
+  (let ((idx (string-find str (lambda (c) (not (whitespace? c))))))
     (if idx
         (substring str idx (string-length str))
         "")))
@@ -48,7 +48,7 @@
 ;; @doc Returns a new string without all characters from the end which match the
 ;; @proc{whitespace?} predicate.
 (define (string-trim-right str)
-  (let ((idx (string-find-right str whitespace?)))
+  (let ((idx (string-find-right str (lambda (c) (not (whitespace? c))))))
     (if idx
         (substring str 0 (+ idx 1))
         "")))
@@ -56,8 +56,8 @@
 ;; @doc Returns a new string with all characters matching the @proc{whitespace?}
 ;; predicate removed from the start and end of @prm{str}.
 (define (string-trim-both str)
-  (let ((idx-left (string-find str whitespace?))
-        (idx-right (string-find-right str whitespace?)))
+  (let ((idx-left (string-find str (lambda (c) (not (whitespace? c)))))
+        (idx-right (string-find-right str (lambda (c) (not (whitespace? c))))))
     (if (and idx-left idx-right)
         (substring str idx-left (+ idx-right 1))
         "")))
