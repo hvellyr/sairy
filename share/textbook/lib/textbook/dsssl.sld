@@ -69,9 +69,53 @@
           node-list-address
           address?
           address-local?
+
+          inherited-above?
+          inherited-asis-wrap-indent
+          inherited-background-color
+          inherited-background-tile
+          inherited-below?
+          inherited-bottom-margin
+          inherited-box-corner-radius
+          inherited-box-corner-rounded?
+          inherited-class
+          inherited-color
+          inherited-end-indent
+          inherited-end-margin
+          inherited-field-align
+          inherited-field-width
+          inherited-first-line-start-indent
+          inherited-font-caps
+          inherited-font-name
+          inherited-font-posture
+          inherited-font-size
+          inherited-font-weight
+          inherited-footer-margin
+          inherited-gutter-width
+          inherited-header-margin
+          inherited-inhibit-line-breaks?
+          inherited-language
+          inherited-last-line-end-indent
+          inherited-left-margin
+          inherited-line-number-side
+          inherited-line-spacing
+          inherited-line-thickness
+          inherited-lines
+          inherited-numbered-lines?
+          inherited-page-height
+          inherited-page-width
+          inherited-position-point-shift
+          inherited-quadding
+          inherited-right-margin
+          inherited-start-indent
+          inherited-start-margin
+          inherited-text
+          inherited-top-margin
+          inherited-whitespace-treatment
           )
   (include "nodelist.scm")
   (include "fo.scm")
+  (include "characteristics.scm")
   (include "dsssl.scm")
   (include "query.scm")
   (include "lang.scm")

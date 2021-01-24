@@ -167,13 +167,7 @@ namespace {
             result = fo::ValueType(int(sexp_unbox_fixnum(res)));
           }
           else if (sexp_quantityp(res)) {
-            auto unit = to_quantity_unit(_ctx, res);
-            // the number is normalized to 'm' unit; rebase it to 'pt'
-            auto norm_factor = is_convertible_to_pt_unit(unit) ? pt_ratio : 1.0;
-            auto result_unit = is_convertible_to_pt_unit(unit) ? fo::k_pt : unit;
-            auto val = sexp_quantity_normalize_to_double(_ctx, res) / norm_factor;
-
-            result = fo::ValueType(fo::LengthSpec(fo::kDimen, val, result_unit));
+            result = fo::ValueType(quantity_to_lengthspec(_ctx, res));
           }
           else if (sexp_check_tag(res, length_spec_tag_p(_ctx))) {
             const auto* ls = (const fo::LengthSpec*)(sexp_cpointer_value(res));
@@ -1640,13 +1634,7 @@ namespace {
       result = fo::PropertySpec(key, int(sexp_unbox_fixnum(expr)));
     }
     else if (sexp_quantityp(expr)) {
-      auto unit = to_quantity_unit(ctx, expr);
-      // the number is normalized to 'm' unit; rebase it to 'pt'
-      auto norm_factor = is_convertible_to_pt_unit(unit) ? pt_ratio : 1.0;
-      auto result_unit = is_convertible_to_pt_unit(unit) ? fo::k_pt : unit;
-      auto val = sexp_quantity_normalize_to_double(ctx, expr) / norm_factor;
-
-      result = fo::PropertySpec(key, fo::LengthSpec(fo::kDimen, val, result_unit));
+      result = fo::PropertySpec(key, quantity_to_lengthspec(ctx, expr));
     }
     else if (sexp_check_tag(expr, length_spec_tag_p(ctx))) {
       const auto* ls = (const fo::LengthSpec*)(sexp_cpointer_value(expr));
@@ -1900,8 +1888,131 @@ namespace {
   }
 
 
+  struct ValueTypeSpecVisitor
+  {
+    using return_type = sexp;
+
+    sexp _ctx;
+
+    ValueTypeSpecVisitor(sexp ctx)
+      : _ctx(ctx) {}
+
+    sexp operator()(const fo::None&) {
+      return SEXP_VOID;
+    }
+    sexp operator()(const fo::LengthSpec& ls) {
+      return make_length_spec(_ctx, ls);
+    }
+    sexp operator()(bool val) {
+      return sexp_make_boolean(val);
+    }
+    sexp operator()(int val) {
+      return sexp_make_integer(_ctx, val);
+    }
+    sexp operator()(const std::string& val) {
+      return sexp_c_string(_ctx, val.c_str(), val.size());
+    }
+    sexp operator()(const fo::Color& co) {
+      return make_color(_ctx, co);
+    }
+
+    sexp operator()(const std::shared_ptr<Sosofo>& val) {
+      return make_sosofo(_ctx, new Sosofo(*val));
+    }
+
+    sexp operator()(const std::shared_ptr<fo::ICompoundValue>& val) {
+      // std::cout << "<compound:" << val->type_id() << ">";
+      if (auto screenset_model = std::dynamic_pointer_cast<fo::ScreenSetModel>(val)) {
+        return make_screen_set_model(_ctx, new fo::ScreenSetModel(*screenset_model));
+      }
+      else {
+        return SEXP_VOID;
+      }
+    }
+
+    sexp operator()(const fo::Address& adr) {
+      // make_address();
+      return SEXP_VOID;
+    }
+
+    sexp operator()(const std::shared_ptr<fo::IExpr>& val) {
+      std::cout << "----------------------------- recursive expr?\n";
+      // std::stringstream ss;
+      // val->write_to_stream(ss);
+      // std::cout << "<expr:" << ss.str() << ">";
+
+      // std::cout << " -> [";
+      // auto expr_val = val->eval(nullptr);
+      // fo::apply(DebugPropertySpecVisitor(), expr_val);
+      // std::cout << "]";
+
+      return SEXP_VOID;
+    }
+  };
+
+  sexp func_inherited(sexp ctx, sexp self, sexp_sint_t n, sexp characteristic_arg) {
+    sexp_gc_var2(result, res);
+    sexp_gc_preserve2(ctx, result, res);
+
+    result = SEXP_VOID;
+
+    auto characteristic = string_from_symbol_sexp_or_none(ctx, characteristic_arg);
+    if (!characteristic) {
+      result = make_textbook_exception(ctx, self, "inherited: not a symbol",
+                                       characteristic_arg, SEXP_VOID);
+    }
+
+    if (result == SEXP_VOID && s_property_lookup) {
+      if (auto val = s_property_lookup->get(*characteristic)) {
+        result = fo::apply(ValueTypeSpecVisitor(ctx), val);
+      }
+      else if (auto val = s_property_lookup->get_default(*characteristic)) {
+        result = fo::apply(ValueTypeSpecVisitor(ctx), val);
+      }
+
+      if (result == SEXP_VOID) {
+        switch (fo::property_default_type(*characteristic)) {
+        case fo::ValueType::k_unspecified:
+        case fo::ValueType::k_compound:
+        case fo::ValueType::k_expr:
+        case fo::ValueType::k_address:
+          //make_address
+          break;
+        case fo::ValueType::k_length:
+          result = make_length_spec(ctx, fo::LengthSpec(fo::kDimen, 0.0, fo::k_pt));
+          break;
+        case fo::ValueType::k_bool:
+          result = SEXP_FALSE;
+          break;
+        case fo::ValueType::k_int:
+          result = sexp_make_fixnum(0);
+          break;
+        case fo::ValueType::k_string:
+          result = sexp_c_string(ctx, "", 0);
+          break;
+        case fo::ValueType::k_sosofo:
+          result = make_sosofo(ctx, new Sosofo());
+          break;
+        case fo::ValueType::k_color:
+          result = make_color(ctx, fo::make_gray_color(0.0));
+          break;
+        }
+      }
+    }
+    else {
+      result = make_textbook_exception(ctx, self, "inherited: no current sosofo",
+                                       SEXP_VOID, SEXP_VOID);
+    }
+
+    sexp_gc_release2(ctx);
+
+    return result;
+  }
+
+
   void init_make_functions(sexp ctx) {
     sexp_define_foreign(ctx, sexp_context_env(ctx), "%make-fo", 4, &func_make_fo);
+    sexp_define_foreign(ctx, sexp_context_env(ctx), "%inherited", 1, &func_inherited);
   }
 
 
