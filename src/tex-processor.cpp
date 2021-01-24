@@ -997,8 +997,8 @@ namespace {
         po->property("bottom-margin", fo::LengthSpec(fo::kDimen, 30, fo::k_mm));
       auto headermargin =
         po->property("header-margin", fo::LengthSpec(fo::kDimen, 10, fo::k_mm));
-      // auto footermargin = po->property("footer-margin",
-      //                                  fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
+      auto footermargin = po->property("footer-margin",
+                                       fo::LengthSpec(fo::kDimen, 20, fo::k_mm));
       auto startmargin =
         po->property("start-margin", fo::LengthSpec(fo::kDimen, 0, fo::k_pt));
       po->_current_start_margin = startmargin;
@@ -1035,6 +1035,9 @@ namespace {
                    << std::endl
                    << "\\addtolength{\\textheight}{-" << dimen2str(bottommargin) << "}"
                    << std::endl;
+
+      po->stream() << "\\setlength\\footskip{" << dimen2str(bottommargin) << "}"
+                   << "\\addtolength{\\footskip}{-" << dimen2str(footermargin) << "}" << std::endl;
 
       // dsssl:topmargin = \voffset + \topmargin + \headheight + \headersep
       // dsssl:headermargin = \voffset + \topmargin + \headheight
