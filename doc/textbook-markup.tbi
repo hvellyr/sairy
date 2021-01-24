@@ -24,12 +24,16 @@ stylesheet.  There's currently no way to start from a specific number.
 will be rendered typically as
 
 @display
-@enumerate
-@item Lorem ipsum,
-@item dolor sit amet, consetetur
-@item sadipscing elitr, sed diam nonumy eirmod tempor
-@end enumerate
+@img{models/example-enumerate.svg}
 @end display
+
+@c @display
+@c @enumerate
+@c @item Lorem ipsum,
+@c @item dolor sit amet, consetetur
+@c @item sadipscing elitr, sed diam nonumy eirmod tempor
+@c @end enumerate
+@c @end display
 
 
 @idx{lists, unnumbered}{con}
@@ -50,12 +54,16 @@ An @dfn{unnumbered list} (a “bullet point list”) is marked with the
 will be rendered typically as
 
 @display
-@itemize
-@item Lorem ipsum,
-@item dolor sit amet, consetetur
-@item sadipscing elitr, sed diam nonumy eirmod tempor
-@end itemize
+@img{models/example-itemize.svg}
 @end display
+
+@c @display
+@c @itemize
+@c @item Lorem ipsum,
+@c @item dolor sit amet, consetetur
+@c @item sadipscing elitr, sed diam nonumy eirmod tempor
+@c @end itemize
+@c @end display
 
 @c @tag{list}  <-- deprecated?
 
@@ -84,15 +92,19 @@ extra mark-up:
 will be rendered typically as
 
 @display
-@definitions
-@item{@em{Lorem ipsum}} dolor sit amet, consetetur nonumy eirmod
-tempor invidunt ut labore et dolore magna aliquyam erat,
-@item{@em{sadipscing}} elitr, sed diam nonumy eirmod tempor sit amet,
-consetetur sadipscing elitr, sed diam nonumy eirmod tempor
-@item{@em{takimata sit amet, consetetur sadipscing elitr}} sanctus
-est Lorem ipsum dolor sit amet, sed diam nonumy eirmod tempor.
-@end definitions
+@img{models/example-definitions.svg}
 @end display
+
+@c @display
+@c @definitions
+@c @item{@em{Lorem ipsum}} dolor sit amet, consetetur nonumy eirmod
+@c tempor invidunt ut labore et dolore magna aliquyam erat,
+@c @item{@em{sadipscing}} elitr, sed diam nonumy eirmod tempor sit amet,
+@c consetetur sadipscing elitr, sed diam nonumy eirmod tempor
+@c @item{@em{takimata sit amet, consetetur sadipscing elitr}} sanctus
+@c est Lorem ipsum dolor sit amet, sed diam nonumy eirmod tempor.
+@c @end definitions
+@c @end display
 
 It is also possible to put @tag{def} tags into a @tag{definitions} list.  This
 will typically be rendered in a similar style as a definitions list with
@@ -114,15 +126,19 @@ The user can check @@prop{_count} and @@prop{_name} for ...
 will be rendered typically as
 
 @display
-@definitions
-@def{}{int _count;}{_count} keeps the number of times the signal has happened.
-@end def
-@def{}{int _name;}{_name} keeps the name of the signal.
-@end def
-@end definitions
-
-The user can check @prop{_count} and @prop{_name} for ...
+@img{models/example-link-to-items.svg}
 @end display
+
+@c @display
+@c @definitions
+@c @def{}{int _count;}{_count} keeps the number of times the signal has happened.
+@c @end def
+@c @def{}{int _name;}{_name} keeps the name of the signal.
+@c @end def
+@c @end definitions
+
+@c The user can check @prop{_count} and @prop{_name} for ...
+@c @end display
 
 @end subsection
 
@@ -324,10 +340,14 @@ The @@fun{printf} function produces output according to @@prm{format} ...
 will typically be rendered as
 
 @display
-@deffn{@ty{int} printf(@ty{char*} @prm{format}, ...)}{printf}
-The @fun{printf} function produces output according to @prm{format} ...
-@end deffn
+@img{models/example-deffn-rendering.svg}
 @end display
+
+@c @display
+@c @deffn{@ty{int} printf(@ty{char*} @prm{format}, ...)}{printf}
+@c The @fun{printf} function produces output according to @prm{format} ...
+@c @end deffn
+@c @end display
 
 @end deftag
 
@@ -457,10 +477,14 @@ function definitions to mark optional parameters:
 will typically be rendered as
 
 @display
-@deffn{@ty{void} Logger::log(@ty{char*} @prm{msg} @?{, @ty{int} @prm{level}})}{Logger::log}
-...
-@end deffn
+@img{models/example-optional.svg}
 @end display
+
+@c @display
+@c @deffn{@ty{void} Logger::log(@ty{char*} @prm{msg} @?{, @ty{int} @prm{level}})}{Logger::log}
+@c   ...
+@c @end deffn
+@c @end display
 @end deftag
 
 @c @c pre-formatted declaration part, takes %inline
