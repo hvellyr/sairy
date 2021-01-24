@@ -28,7 +28,8 @@
     (make paragraph
       space-before: 0pt
       space-after:  0pt
-      start-indent: (example-start-indent (parent (current-node)))
+      start-indent: (+ (inherited-start-indent)
+                       (example-start-indent (parent (current-node))))
       font-name:    %monospace-font-name%
       font-size:    (font-size 2)
       line-spacing: (line-spacing 2)
@@ -59,7 +60,7 @@
      space-before: (decl-space-before 7pt 7pt)
      space-after: (decl-space-after 7pt 0pt)
      first-line-start-indent: %page-left-offset-neg%
-     start-indent: 0mm
+     start-indent: (inherited-start-indent)
      keep-with-next?: #t
      (sosofo-append
       (format-title (make sequence
@@ -133,7 +134,7 @@
          (sosofo-append
           (make paragraph
             first-line-start-indent: 0pt
-            start-indent: 0pt
+            start-indent: (inherited-start-indent)
             quadding: 'justify
 
             (with-mode decl-mode
@@ -142,14 +143,14 @@
                 (process-node-list declln))))
           (make paragraph
             first-line-start-indent: 0pt
-            start-indent: 70pt
+            start-indent: (+ (inherited-start-indent) 70pt)
             quadding: 'justify
             (process-node-list-trim (node-list-first (children (current-node)))))
           )
          (sosofo-append
           (make paragraph
             first-line-start-indent: -70pt
-            start-indent: 70pt
+            start-indent: (+ (inherited-start-indent) 70pt)
             quadding: 'justify
             (sosofo-append
              (make line-field

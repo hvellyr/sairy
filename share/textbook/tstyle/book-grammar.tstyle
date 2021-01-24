@@ -5,13 +5,13 @@
 (element grammar
   (make display-group
     first-line-start-indent:: 0pt
-    start-indent: 0pt
+    start-indent: (inherited-start-indent)
     (process-children)))
 
 (element (grammar p)
   (make paragraph
     first-line-start-indent: 0pt
-    start-indent: 0pt
+    start-indent: (inherited-start-indent)
     font-posture: 'italic
     (process-children)))
 
@@ -32,7 +32,7 @@
 (element (productions p rule)
   (make paragraph
     first-line-start-indent: -75pt
-    start-indent: 0pt
+    start-indent: (inherited-start-indent)
     (sosofo-append
      (make line-field
        field-width: 60pt

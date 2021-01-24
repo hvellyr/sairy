@@ -172,7 +172,7 @@
        font-posture: (vector-ref layout 3)
 
        keep-with-next?: #t
-       first-line-start-indent: 0mm
+       first-line-start-indent: 0pt
        start-indent: 0pt
        quadding: 'center
 

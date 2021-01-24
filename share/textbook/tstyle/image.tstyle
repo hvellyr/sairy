@@ -15,8 +15,8 @@
       space-before: (display-space 7pt conditional?: #f)
       space-after: (display-space 7pt conditional?: #t)
       quadding: 'left
-      start-indent: 0pt
-      end-indent: 0pt
+      start-indent: (inherited-start-indent)
+      end-indent: (inherited-end-indent)
 
       (sosofo-append
        (make anchor
@@ -29,8 +29,8 @@
          keep-with-previous?: #t
          space-before: (display-space 5pt conditional?: #f)
          font-posture: 'italic
-         start-indent: 0pt
-         end-indent: 0pt
+         start-indent: (inherited-start-indent)
+         end-indent: (inherited-end-indent)
          (process-node-list desc))))))
 
 (define (backend-image-extension)
@@ -48,6 +48,8 @@
 (element img
   (let* ((image-path (data (attribute "FREF" (current-node)))))
     (make external-graphic
+      space-before: 0pt
+      space-after: 0pt
       display?: #t
       external-path: (make-image-path image-path)
       width: 'max)))

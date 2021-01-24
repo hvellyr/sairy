@@ -37,25 +37,25 @@
                (else (sosofo-append sosofo (process-node-list np))))
               )))))
 
-(define (process-p nd startind endind)
-  (let ((nds (node-list-filter (lambda (snl)
-                                 (not (or (invisible-tag? snl)
-                                          (empty-text-node? snl))))
-                               (children nd))))
+(element p
+  (let* ((kids (children (current-node)))
+         (nds (node-list-filter (lambda (snl)
+                                  (not (or (invisible-tag? snl)
+                                           (empty-text-node? snl))))
+                                kids)))
     (if (node-list-empty? nds)
         (make display-group
-          (process-node-list-left-trim-idx-ws (children nd)))
+          (process-node-list-left-trim-idx-ws (children (current-node))))
         (make paragraph
           first-line-start-indent: 0pt
           quadding: "justify"
           space-before: %gap-between-paragraphs%
-          start-indent: startind
-          end-indent: endind
-          (process-node-list-left-trim-idx-ws (children nd)))
+          start-indent: (inherited-start-indent)
+          end-indent: (inherited-end-indent)
+
+          (process-node-list-left-trim-idx-ws kids))
         )))
 
-(element p
-  (process-p (current-node) 0pt 0pt))
 
 
 ;; #-----------------------------------------------------------------------------
@@ -82,25 +82,25 @@
             (sosofo-append
              (make paragraph
                first-line-start-indent: 0pt
-               start-indent: 0pt
+               start-indent: (inherited-start-indent)
                quadding: 'justify
                (process-node-list (node-list-first (children (current-node)))))
              (make paragraph
                first-line-start-indent: 0pt
-               start-indent: 70pt
+               start-indent: (+ (inherited-start-indent) 70pt)
                quadding: 'justify
                (process-node-list-trim (node-list-rest (children (current-node)))))
              )
             (make paragraph
               first-line-start-indent: -70pt
-              start-indent: 70pt
+              start-indent: (+ (inherited-start-indent) 70pt)
               quadding: 'justify
               (sosofo-append
                (process-node-list (node-list-first (children (current-node))))
                (process-node-list-trim (node-list-rest (children (current-node)))))))
         (make paragraph
           first-line-start-indent: 0pt
-          start-indent: 70pt
+          start-indent: (+ (inherited-start-indent) 70pt)
           quadding: 'justify
           (process-children-trim)
           ) ))
@@ -127,13 +127,13 @@
     (if (equal? (gi item) 'item)
         (make paragraph
           first-line-start-indent: -12pt
-          start-indent: 12pt
+          start-indent: (+ (inherited-start-indent) 12pt)
           (sosofo-append
            (process-node-list (node-list-first (children (current-node))))
            (process-node-list-trim (node-list-rest (children (current-node))))))
         (make paragraph
           first-line-start-indent: 0pt
-          start-indent: 12pt
+          start-indent: (+ (inherited-start-indent) 12pt)
           (process-children-trim)
           ) ))
   )
@@ -172,13 +172,13 @@
     (if (equal? (gi item) 'item)
         (make paragraph
           first-line-start-indent: -12pt
-          start-indent: 12pt
+          start-indent: (+ (inherited-start-indent) 12pt)
           (sosofo-append
            (process-node-list (node-list-first (children (current-node))))
            (process-node-list-trim (node-list-rest (children (current-node))))))
         (make paragraph
           first-line-start-indent: 0pt
-          start-indent: 12pt
+          start-indent: (+ (inherited-start-indent) 12pt)
           (process-children-trim)
           ) ))
   )
@@ -187,17 +187,12 @@
 ;; -----------------------------------------------------------------------------
 ;; quote
 
-(mode quote-mode
-  (element p
-    (process-p (current-node) %quote-left-indent% %quote-right-indent%))
-  )
-
 (element quote
   (make display-group
     space-before: (display-space 7pt conditional?: #t)
     space-after:  (display-space 7pt conditional?: #t)
-    end-indent: %quote-right-indent%
-    font-size:    (font-size 1)
+    font-size:   (/ (inherited-font-size) 1.2)
+    start-indent: (+ (inherited-start-indent) %quote-left-indent%)
+    end-indent: (+ (inherited-end-indent) %quote-right-indent%)
 
-    (with-mode quote-mode
-      (process-children))))
+    (process-children)))

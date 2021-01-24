@@ -315,7 +315,7 @@
       (empty-sosofo)
       (make paragraph
         first-line-start-indent: -7pt
-        start-indent: 7pt
+        start-indent: (+ (inherited-start-indent) 7pt)
         quadding: "justify"
         space-before: %gap-between-paragraphs%
 
@@ -562,7 +562,7 @@
 (element lexem
   (make paragraph
     first-line-start-indent: -7pt
-    start-indent: 7pt
+    start-indent: (+ (inherited-start-indent) 7pt)
     quadding: "justify"
     space-before: %gap-between-paragraphs%
     (with-mode lexem-mode
@@ -726,7 +726,7 @@
           (process-node-list-left-trim-idx-ws (children (current-node))))
         (make paragraph
           first-line-start-indent: -7pt
-          start-indent: 7pt
+          start-indent: (+ (inherited-start-indent) 7pt)
           quadding: "justify"
           space-before: %gap-between-paragraphs%
           (process-node-list-left-trim-idx-ws (children (current-node))))
@@ -749,7 +749,7 @@
 (element (lxdef p)
   (make paragraph
     first-line-start-indent: -7pt
-    start-indent: 7pt
+    start-indent: (+ (inherited-start-indent) 7pt)
     quadding: "justify"
     space-before: %gap-between-paragraphs%
     (process-node-list-left-trim-idx-ws (children (current-node)))))

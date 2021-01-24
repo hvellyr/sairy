@@ -24,7 +24,7 @@
       space-before: 0pt
       space-after:  0pt
       font-name:    %monospace-font-name%
-      font-size:    (font-size 2)
+      font-size:    (/ (inherited-font-size) 1.2)
       line-spacing: (line-spacing 2)
       lines:        'asis
       whitespace-treatment: 'preserve
@@ -35,7 +35,8 @@
   (element p
     (make paragraph
       use: verbatim-style
-      start-indent: (example-start-indent (parent (current-node)))
+      start-indent: (+ (inherited-start-indent)
+                       (example-start-indent (parent (current-node))))
       color: %example-text-color%
       (process-children)))
   )
@@ -82,7 +83,8 @@
   (element p
     (make paragraph
       use: verbatim-style
-      start-indent: (example-start-indent (parent (current-node)))
+      start-indent: (+ (inherited-start-indent)
+                       (example-start-indent (parent (current-node))))
       (process-children)))
   )
 
@@ -98,5 +100,6 @@
   (make display-group
     space-before: (display-space 7pt conditional?: #t)
     space-after:  (display-space 7pt conditional?: #t)
-    font-size:    (font-size 1)
+    font-size: (/ (inherited-font-size) 1.2)
+
     (process-children)))

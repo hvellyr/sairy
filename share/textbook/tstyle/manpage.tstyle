@@ -38,6 +38,7 @@
      break-after: #f
      keep-with-next?: #t
      first-line-start-indent: 0pt
+     start-indent: 0pt
      space-before: 14pt
      space-after: 7pt
      quadding: "left"
