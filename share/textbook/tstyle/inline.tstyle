@@ -109,6 +109,12 @@
 (element dfn
   (format-em (attribute "text" (current-node))))
 
+(element title
+  (format-em (attribute "value" (current-node))))
+
+(element olang
+  (format-em (attribute "text" (current-node))))
+
 
 (element result
   (literal "⇒"))

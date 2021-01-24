@@ -188,6 +188,12 @@ Marks the enclosed @prm{text} to denote a @em{keyword} in a programming
 language.
 @end deftag
 
+@deftag{@@olang@{@prm{text}@}@?{@prm{lang}}}{@@olang}
+Marks the enclosed @prm{text} to use a language which is not the main text body
+language.  The language is given with the @prm{lang} parameter.  The processor
+might use this information to highlight the text in a different style.
+@end deftag
+
 @deftag{@@prm@{@prm{text}@}}{@@prm}
 Marks the enclosed @prm{text} to denote a @em{parameter} name, as defined in or
 passed to a function.
@@ -196,6 +202,11 @@ passed to a function.
 @deftag{@@r@{@prm{text}@}}{@@r}
 Un-mark the enclosed @prm{text} to be without emphasis.  Though this named
 “roman”, it is conceptually the opposite of @tag{@@em} or @tag{@@b}.
+@end deftag
+
+@deftag{@@title@{@prm{value}@}}{@@title}
+Marks the enclosed @prm{value} to denote a title, e.g. of a book, a theatre
+play, a composition, etc.
 @end deftag
 
 @deftag{@@val@{@prm{text}@}}{@@val}
