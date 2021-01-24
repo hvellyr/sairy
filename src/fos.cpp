@@ -20,74 +20,85 @@ namespace eyestep {
 
 namespace fo {
 
-  struct PropertyInherited
+  struct PropertyDefs
   {
     const std::string _key;
+    fo::ValueType::Kind _type;
     const bool _is_inherited;
   };
 
 
-  const auto s_property_inherited = std::vector<PropertyInherited>{
-    {"above?", true},                  // Bool
-    {"asis-wrap-indent", true},        // LengthSpec
-    {"background-color", false},       // Color
-    {"background-tile", false},        // String: path to ext. graphics
-    {"below?", true},                  // Bool
-    {"bottom-margin", false},          // LengthSpec
-    {"box-corner-radius", false},      // LengthSpec
-    {"box-corner-rounded?", false},    // Bool
-    {"box-type", true},                // Keyw: border, background, both
-    {"center-footer", false},          // Sosofo
-    {"center-header", false},          // Sosofo
-    {"class", false},                  // String
-    {"color", true},                   // Color
-    {"column-number", false},          // Int
-    {"destination", false},            // Address
-    {"display?", false},               // Bool
-    {"end-indent", true},              // LengthSpec
-    {"end-margin", false},             // LengthSpec
-    {"field-align", false},            // Keyw: left, right, center
-    {"field-width", false},            // LengthSpec
-    {"first-line-start-indent", true}, // LengthSpec
-    {"font-caps", true},               // Keyw: normal, caps, smallcaps,
-    {"font-name", true},               // String
-    {"font-posture", true},            // Keyw: upright, italic, oblique
-    {"font-size", true},               // LengthSpec
-    {"font-weight", true},             // Keyw: medium, bold, semibold,
-    {"footer-margin", false},          // LengthSpec
-    {"gutter-width", false},           // LengthSpec
-    {"header-margin", false},          // LengthSpec
-    {"height", false},                 // LengthSpec
-    {"inhibit-line-breaks?", false},   // Bool
-    {"keep-with-next?", false},        // Bool
-    {"keep-with-previous?", false},    // Bool
-    {"language", true},                // String
-    {"last-line-end-indent", true},    // LengthSpec
-    {"left-footer", false},            // Sosofo
-    {"left-header", false},            // Sosofo
-    {"left-margin", false},            // LengthSpec
-    {"line-number-side", true},        // Keyw: start, end, inside, outside
-    {"line-spacing", true},            // LengthSpec
-    {"line-thickness", true},          // LengthSpec
-    {"lines", true},                   // Keyw: wrap, asis, asis-wrap, none
-    {"numbered-lines?", true},         // Bool
-    {"page-height", false},            // LengthSpec
-    {"page-width", false},             // LengthSpec
-    {"position-point-shift", false},   // LengthSpec
-    {"quadding", true},                // Keyw: left, right, center, justify
-    {"right-footer", false},           // Sosofo
-    {"right-header", false},           // Sosofo
-    {"right-margin", false},           // LengthSpec
-    {"score-type", false},             // Symbol: none, above, through, below
-    {"space-after", false},            // LengthSpec
-    {"space-before", false},           // LengthSpec
-    {"start-indent", false},           // LengthSpec
-    {"start-margin", false},           // LengthSpec
-    {"text", false},                   // String
-    {"title", false},                  // Sosofo
-    {"top-margin", false},             // LengthSpec
-    {"whitespace-treatment", true},    // Keyw: preserve, collapse, ignore
-    {"width", false},                  // LengthSpec
+  const auto s_properties = std::vector<PropertyDefs>{
+    // clang-format off
+// inherited:
+    {"above?",                  ValueType::k_bool,   true},
+    {"asis-wrap-indent",        ValueType::k_length, true},
+    {"background-color",        ValueType::k_color,  true},
+    {"background-tile",         ValueType::k_string, true}, // String: path to ext. graphics
+    {"below?",                  ValueType::k_bool,   true},
+    {"bottom-margin",           ValueType::k_length, true},
+    {"box-corner-radius",       ValueType::k_length, true},
+    {"box-corner-rounded?",     ValueType::k_bool,   true},
+    {"class",                   ValueType::k_string, true},
+    {"color",                   ValueType::k_color,  true},
+    {"end-indent",              ValueType::k_length, true},
+    {"end-margin",              ValueType::k_length, true},
+    {"field-align",             ValueType::k_string, true}, // Keyw: left, right, center
+    {"field-width",             ValueType::k_length, true},
+    {"first-line-start-indent", ValueType::k_length, true},
+    {"font-caps",               ValueType::k_string, true}, // Keyw: normal, caps, smallcaps,
+    {"font-name",               ValueType::k_string, true},
+    {"font-posture",            ValueType::k_string, true}, // Keyw: upright, italic, oblique
+    {"font-size",               ValueType::k_length, true},
+    {"font-weight",             ValueType::k_string, true}, // Keyw: medium, bold, semibold,
+    {"footer-margin",           ValueType::k_length, true},
+    {"gutter-width",            ValueType::k_length, true},
+    {"header-margin",           ValueType::k_length, true},
+    {"inhibit-line-breaks?",    ValueType::k_bool,   true},
+    {"language",                ValueType::k_string, true},
+    {"last-line-end-indent",    ValueType::k_length, true},
+    {"left-margin",             ValueType::k_length, true},
+    {"line-number-side",        ValueType::k_string, true}, // Keyw: start, end, inside, outside
+    {"line-spacing",            ValueType::k_length, true},
+    {"line-thickness",          ValueType::k_length, true},
+    {"lines",                   ValueType::k_string, true}, // Keyw: wrap, asis, asis-wrap, none
+    {"numbered-lines?",         ValueType::k_bool,   true},
+    {"page-height",             ValueType::k_length, true},
+    {"page-width",              ValueType::k_length, true},
+    {"position-point-shift",    ValueType::k_length, true},
+    {"quadding",                ValueType::k_string, true}, // Keyw: left, right, center, justify
+    {"right-margin",            ValueType::k_length, true},
+    {"start-indent",            ValueType::k_length, true},
+    {"start-margin",            ValueType::k_length, true},
+    {"text",                    ValueType::k_string, true},
+    {"top-margin",              ValueType::k_length, true},
+    {"whitespace-treatment",    ValueType::k_string, true}, // Keyw: preserve, collapse, ignore
+
+// not inherited
+    {"box-type",                ValueType::k_string, false}, // Keyw: border, background, both
+    {"break-after",             ValueType::k_bool,   false}, // false or keyw: page
+    {"break-before",            ValueType::k_bool,   false}, // false or keyw: page
+    {"center-footer",           ValueType::k_sosofo, false},
+    {"center-header",           ValueType::k_sosofo, false},
+    {"column-number",           ValueType::k_int,    false},
+    {"destination",             ValueType::k_address, false},
+    {"display?",                ValueType::k_bool,   false},
+    {"external-path",           ValueType::k_string, false},
+    {"height",                  ValueType::k_length, false},
+    {"id",                      ValueType::k_string, false},
+    {"keep-with-next?",         ValueType::k_bool,   false},
+    {"keep-with-previous?",     ValueType::k_bool,   false},
+    {"left-footer",             ValueType::k_sosofo, false},
+    {"left-header",             ValueType::k_sosofo, false},
+    {"refid",                   ValueType::k_string, false},
+    {"right-footer",            ValueType::k_sosofo, false},
+    {"right-header",            ValueType::k_sosofo, false},
+    {"score-type",              ValueType::k_string, false}, // Symbol: none, above, through, below
+    {"space-after",             ValueType::k_length, false},
+    {"space-before",            ValueType::k_length, false},
+    {"title",                   ValueType::k_sosofo, false},
+    {"width",                   ValueType::k_length, false},
+    // clang-format on
   };
 
 
@@ -157,8 +168,19 @@ namespace fo {
 
   const PropertySpecs& ExternalGraphic::default_properties() const {
     static const auto propspecs = PropertySpecs{
-      {"display?", true}, {"external-path", ""}, {"language", ""},
-      {"height", false},  {"width", false},
+      // clang-format off
+      {"display?", true},
+      {"external-path", ""},
+      {"language", ""},
+      {"height", false},
+      {"width", false},
+      {"keep-with-previous?", false},
+      {"keep-with-next?", false},
+      {"space-before", LengthSpec(kDisplay, 0, k_pt)},
+      {"space-after", LengthSpec(kDisplay, 0, k_pt)},
+      {"break-before", false},
+      {"break-after", false},
+      // clang-format off
     };
 
     return propspecs;
@@ -186,8 +208,8 @@ namespace fo {
 
     static const auto propspecs = PropertySpecs{
       // clang-format off
-      {"first-line-start-indent", LengthSpec(kInline, 0, k_em)},
-      {"last-line-end-indent", LengthSpec(kInline, 1, k_em, 1, max_inf)},
+      {"first-line-start-indent", LengthSpec(kInline, 0, k_pt)},
+      {"last-line-end-indent", LengthSpec(kInline, 10, k_pt, 1, max_inf)},
       {"line-spacing", LengthSpec(kDimen, 14, k_pt)},
       {"font-caps", "normal"},
       {"font-name", "serif"},
@@ -195,8 +217,8 @@ namespace fo {
       {"font-size", LengthSpec(kDimen, 10, k_pt)},
       {"font-weight", "medium"},
       {"language", ""},
-      {"start-indent", LengthSpec(kInline, 0, k_em)},
-      {"end-indent", LengthSpec(kInline, 0, k_em)},
+      {"start-indent", LengthSpec(kInline, 0, k_pt)},
+      {"end-indent", LengthSpec(kInline, 0, k_pt)},
       {"quadding", "justify"},
       {"space-before", LengthSpec(kDisplay, 0, k_pt)},
       {"space-after", LengthSpec(kDisplay, 0, k_pt)},
@@ -237,22 +259,26 @@ namespace fo {
   //----------------------------------------------------------------------------
 
   const PropertySpecs& DisplayGroup::default_properties() const {
-    // clang-format off
     static const auto propspecs = PropertySpecs{
+      // clang-format off
       {"space-before", LengthSpec(kDisplay, 0, k_pt)},
       {"space-after", LengthSpec(kDisplay, 0, k_pt)},
       {"break-before", false},
       {"break-after", false},
-      {"font-caps", ""},
-      {"font-name", ""},
-      {"font-posture", ""},
-      {"font-size", ""},
-      {"font-weight", ""},
-      {"lines", ""},
+      {"font-caps", "normal"},
+      {"font-name", "serif"},
+      {"font-posture", "upright"},
+      {"font-size", LengthSpec(kDimen, 10, k_pt)},
+      {"font-weight", "medium"},
+      {"lines", "wrap"},
       {"color", ""},
+      {"start-indent", LengthSpec(kInline, 0, k_pt)},
+      {"end-indent", LengthSpec(kInline, 0, k_pt)},
       {"background-color", ""},
+      {"keep-with-previous?", false},
+      {"keep-with-next?", false},
+      // clang-format on
     };
-    // clang-format on
     return propspecs;
   }
 
@@ -286,7 +312,7 @@ namespace fo {
       {"space-after", LengthSpec(kDisplay, 0, k_pt)},
       {"break-before", false},
       {"break-after", false},
-      {"line-thickness", LengthSpec(kDisplay, 1, k_pt)},
+      {"line-thickness", LengthSpec(kDimen, 1, k_pt)},
     };
     // clang-format on
     return propspecs;
@@ -311,7 +337,13 @@ namespace fo {
 
   const PropertySpecs& Sequence::default_properties() const {
     static const auto propspecs = PropertySpecs{
+      {"font-caps", "normal"},
+      {"font-name", "serif"},
+      {"font-posture", "upright"},
+      {"font-size", LengthSpec(kDimen, 10, k_pt)},
+      {"font-weight", "medium"},
       {"position-point-shift", LengthSpec(kDimen, 0, k_pt)},
+      {"color", ""},
     };
     return propspecs;
   }
@@ -341,6 +373,11 @@ namespace fo {
       {"field-align", "left"},
       {"inhibit-line-breaks?", false},
       {"position-point-shift", LengthSpec(kDimen, 0, k_pt)},
+      {"font-caps", "normal"},
+      {"font-name", "serif"},
+      {"font-posture", "upright"},
+      {"font-size", LengthSpec(kDimen, 10, k_pt)},
+      {"font-weight", "medium"},
     };
     return propspecs;
   }
@@ -679,9 +716,19 @@ namespace fo {
     using namespace std;
 
     const auto i_find =
-      find_if(begin(s_property_inherited), end(s_property_inherited),
-              [&key](const PropertyInherited& propinh) { return propinh._key == key; });
-    return i_find != end(s_property_inherited) ? i_find->_is_inherited : false;
+      find_if(begin(s_properties), end(s_properties),
+              [&key](const PropertyDefs& propinh) { return propinh._key == key; });
+    return i_find != end(s_properties) ? i_find->_is_inherited : false;
+  }
+
+
+  ValueType::Kind property_default_type(const std::string& key) {
+    using namespace std;
+
+    const auto i_find =
+      find_if(begin(s_properties), end(s_properties),
+              [&key](const PropertyDefs& propinh) { return propinh._key == key; });
+    return i_find != end(s_properties) ? i_find->_type : ValueType::k_bool;
   }
 
 
