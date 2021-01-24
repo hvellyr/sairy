@@ -22,5 +22,8 @@
 (define %page-left-offset% 0mm)
 (define %page-left-offset-neg% 0mm)
 
+(define %epigraph-left-indent% 50pt)
+(define %epigraph-right-indent% 0pt)
+
 (use 'book)
 (use 'book-tex-main)

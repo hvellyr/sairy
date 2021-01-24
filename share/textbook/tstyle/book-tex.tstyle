@@ -22,6 +22,8 @@
 (define %page-left-offset% 45mm)
 (define %page-left-offset-neg% -45mm)
 
+(define %epigraph-left-indent% 50pt)
+(define %epigraph-right-indent% 0pt)
 
 (define (enable-modern-style)
   (set! %style% 'modern)

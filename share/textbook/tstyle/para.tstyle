@@ -185,7 +185,7 @@
 
 
 ;; -----------------------------------------------------------------------------
-;; quote
+;; quote, epigraph, etc.
 
 (element quote
   (make display-group
@@ -194,5 +194,16 @@
     font-size:   (/ (inherited-font-size) 1.2)
     start-indent: (+ (inherited-start-indent) %quote-left-indent%)
     end-indent: (+ (inherited-end-indent) %quote-right-indent%)
+
+    (process-children)))
+
+
+(element epigraph
+  (make display-group
+    space-before: (display-space 30pt conditional?: #t)
+    space-after:  (display-space 14pt conditional?: #t)
+    font-size:   (/ (inherited-font-size) 1.2)
+    start-indent: (+ (inherited-start-indent) %epigraph-left-indent%)
+    end-indent: (+ (inherited-end-indent) %epigraph-right-indent%)
 
     (process-children)))
