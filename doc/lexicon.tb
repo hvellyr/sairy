@@ -1,5 +1,5 @@
 @c -*-textbook-*-
-@book
+@book{use=ling}
 
 @titlepage
 @title{Lexicon markup}

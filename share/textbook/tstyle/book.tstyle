@@ -15,6 +15,7 @@
 (use 'para)
 (use 'image)
 (use 'ref)
+(use 'lexicon)
 (use 'root)
 
 
