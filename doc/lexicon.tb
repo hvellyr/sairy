@@ -393,4 +393,61 @@ Typical fields where this is handy are @tag{.ln}, @tag{.dt}, @tag{.st}, or @tag{
 @end section
 @end chapter
 
+
+@chapter{Building a dictionary}
+
+Textbook allows to set a dictionary.
+
+@deftag{@@lexiconcollation@{@prm{lang}@}@{@prm{collation-spec}@}}
+
+Defines the collation and order of glyphs to be used in the dictionary.
+Multiple collations are allowed, each to be used for the specified @prm{lang}.
+
+The collation and order is specified with the sub-definition in
+@prm{collation-spec}.  It is a list of semicolon-separated letter entries.  Each
+letter entry has the form @code{pattern=letter}, with @code{pattern} being the
+sequence of characters to be handled as one @code{letter}.  The parser will
+transform the incoming strings by pattern into sequences of letters.  The letter
+sequence is used for grouping and sorting the dictionary entries.  Each letter
+entry can be a comma-separated list of @code{pattern=letter} pairs; all such
+pairs are considered having the same order priority.
+
+@example
+@@lexiconcollation{hv}{
+  A=a, Á=á;
+  Æ=æ; B=b; C=c; D=d;
+  E=e, É=é, Ë=ë;
+  F=f; G=g; H=h; I=i, Ï=ï; K=k; L=l;
+  Ll=ll, LL=ll;
+  M=m;
+  N=n, Ñ=ñ;
+  O=o, Ó=ó, Ô=ô;
+  P=p; R=r; S=s;
+  Ś=ś, SS=ss, Ss=ss;
+  T=t;
+  Þ=þ, DD=dd, Dd=dd;
+  U=u, Ú=ú, Ù=ù;
+  V=v; W=w; Y=y; Z=z; -; '}
+@end example
+@end deftag
+
+
+@deftag{@@lxshowlexicon@{@prm{from-lang}@}@{@prm{to-lang}@}@{@prm{letters}@}}
+
+Creates from all found lexem entry elements in the current document a classical
+dictionary with all word entries in the language @prm{from-lang} translated to
+language @prm{to-lang} and grouped into sections of letters.  @prm{letters} is a
+comma separated list of letter groups.
+
+Lexem entries which don't match any of @prm{letters}, are not included in the
+dictionary.
+
+
+@example
+@@lxshowlexicon{hv}{de}{A,Æ,B,C,D,E,F,G,H,I,K,L,LL,M,N,O,P,R,S,Ś,T,Þ,U,V,W,Y,Z}
+@end example
+@end deftag
+
+@end chapter
+
 @end book
