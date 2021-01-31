@@ -1,7 +1,7 @@
 @c -*-textbook-*-
 @textbook{1.0}
 
-@tag{book}       {}                           {ANY}
+@tag{book}       {modules?}                             {ANY}
 
   @include{info.spec}
   @include{frontmatter.spec}

@@ -70,7 +70,7 @@ namespace textbook {
         }
 
         return basepath.parent_path() /= fpath;
-        //return utils::make_relative(fs::current_path(), abspath);
+        // return utils::make_relative(fs::current_path(), abspath);
       }
 
       return {};
@@ -78,9 +78,10 @@ namespace textbook {
 
     estd::optional<fs::path>
     find_model_spec(const std::string& tag,
-                    const std::vector<fs::path>& catalog_search_path) {
+                    const std::vector<fs::path>& catalog_search_path,
+                    const fs::path& extension) {
       for (auto loc : catalog_search_path) {
-        auto path = (loc /= tag).replace_extension(".spec");
+        auto path = (loc /= tag).replace_extension(extension);
 
         if (fs::exists(path) && fs::is_regular_file(path)) {
           return path;
@@ -870,14 +871,14 @@ namespace textbook {
 
 
   void Parser::parse_tag_with_params(const std::string& tag) {
+    auto lineno_at_start = lineno();
+    auto args = parse_args();
+
     auto is_root_tag = false;
     if (!_docspec) {
       is_root_tag = true;
-      set_docspec_by_root_tag(tag);
+      set_docspec_by_root_tag(tag, args);
     }
-
-    auto lineno_at_start = lineno();
-    auto args = parse_args();
 
     auto tagspec = _docspec->lookup(tag);
     if (tagspec) {
@@ -961,27 +962,50 @@ namespace textbook {
   }
 
 
-  void Parser::set_docspec_by_root_tag(const std::string& tag) {
+  void Parser::set_docspec_by_root_tag(const std::string& tag, const Args& args) {
     if (_catalog.find(tag) != _catalog.end()) {
       _docspec = _catalog[tag].get();
       _doctype = tag;
     }
     else {
-      auto path = find_model_spec(tag, _catalog_path);
-      if (path) {
-        auto docspec = read_model(*path, _catalog_path, _verbose);
-        if (docspec.get()) {
-          _catalog[tag] = std::move(docspec);
-          _docspec = _catalog[tag].get();
-          _doctype = tag;
-        }
-        else {
-          throw ParseException("", std::string("Can't read document spec: ") +
-                                     path->string());
-        }
+      auto path = find_model_spec(tag, _catalog_path, ".spec");
+      if (!path) {
+        throw ParseException("", std::string("Unknown root tag: ") + tag);
+      }
+
+      auto docspec = read_model(*path, _catalog_path, _verbose);
+      if (docspec.get()) {
+        _catalog[tag] = std::move(docspec);
+        _docspec = _catalog[tag].get();
+        _doctype = tag;
       }
       else {
-        throw ParseException("", std::string("Unknown root tag: ") + tag);
+        throw ParseException("",
+                             std::string("Can't read document spec: ") + path->string());
+      }
+
+      for (const auto& arg : args) {
+        if (arg.find("use=") == 0) {
+          for (const auto& mod : utils::split_str(arg.substr(4), ",", true)) {
+            if (_verbose) {
+              std::cerr << "load extra module " << mod << "\n";
+            }
+
+            auto mod_path = find_model_spec(mod, _catalog_path, ".mod");
+            if (!mod_path) {
+              throw ParseException("", std::string("Unknown module: ") + mod);
+            }
+
+            auto mod_docspec = read_model(*mod_path, _catalog_path, _verbose);
+            if (mod_docspec.get()) {
+              _docspec->merge(mod_docspec.get());
+            }
+            else {
+              throw ParseException("", std::string("Can't read module spec: ") +
+                                   mod_path->string());
+            }
+          }
+        }
       }
     }
   }

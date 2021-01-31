@@ -147,7 +147,7 @@ namespace textbook {
     void parse_tag_with_params(const std::string& tag);
     void parse_tag();
 
-    void set_docspec_by_root_tag(const std::string& tag);
+    void set_docspec_by_root_tag(const std::string& tag, const Args& args);
     void check_tag_args(const Args& args, const TagSpec& tagspec);
 
     void end_tag(const std::string& endtag);

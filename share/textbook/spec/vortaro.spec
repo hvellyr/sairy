@@ -3,7 +3,7 @@
 
 @include{common.spec}
 
-@tag{vortaro}    {}                           {ANY}
+@tag{vortaro}    {modules?}                             {ANY}
 
   @include{info.spec}
   @include{frontmatter.spec}

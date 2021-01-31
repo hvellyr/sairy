@@ -2,7 +2,7 @@
 @textbook{1.0}
 
 @c the toplevel node of doclet snippets
-@tag{doc}        {}                           {#TEXT | ANY}
+@tag{doc}        {modules?}                   {#TEXT | ANY}
 
   @include{info.spec}
 

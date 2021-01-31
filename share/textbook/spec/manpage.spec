@@ -25,7 +25,7 @@
 @c
 @c @end manpage
 
-@tag{manpage}    {name, desc, section?}       {#TEXT | ANY}
+@tag{manpage}    {name, desc, section?}{modules?}       {#TEXT | ANY}
 
   @include{info.spec}
 

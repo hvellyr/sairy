@@ -128,6 +128,12 @@ namespace textbook {
       _model[tagspec.tag_name()] = tagspec;
     }
 
+    void merge(const DocSpec* other) {
+      for (const auto& tagspec : other->_model) {
+        _model[tagspec.second.tag_name()] = tagspec.second;
+      }
+    }
+
     estd::optional<TagSpec> lookup(const std::string& tagnm) {
       auto i_find = _model.find(tagnm);
       if (i_find != _model.end())
