@@ -41,7 +41,7 @@
 ;;; :            : :            : :            : :            : :            :
 ;;; |            | | title   42 | |     42     | |         42 | |     42     |
 ;;; +------------+ +------------+ +------------+ +------------+ +------------+
-(define %page-titlepgno-deko% 'top-both)
+(define %page-titlepgno-deko% 'scientific)
 
 
 (define (enable-modern-style)

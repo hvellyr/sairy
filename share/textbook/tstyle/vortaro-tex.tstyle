@@ -1,8 +1,17 @@
 ;;; Copyright (c) 2019 Gregor Klinke
 ;;; All rights reserved.
 
-(define %style% 'modern)
-(define %title-style% 'modern)
+(define %style% 'classic)
+(define %title-style% 'classic)
+
+(define %page-width% 210mm)
+(define %page-height% 297mm)
+(define %top-margin% 20mm)
+(define %bottom-margin% 30mm)
+(define %header-margin% 10mm)
+(define %footer-margin% 15mm)
+(define %left-margin% 20mm)
+(define %right-margin% 20mm)
 
 (define %monospace-font-name% "monospace")
 (define %body-font-name% "roman")
@@ -22,22 +31,54 @@
 (define %page-left-offset% 45mm)
 (define %page-left-offset-neg% -45mm)
 
+(define %epigraph-left-indent% 50pt)
+(define %epigraph-right-indent% 0pt)
+
+;;; 'scientific    'manual        'novel         'handout       'fancy
+;;; +------------+ +------------+ +------------+ +------------+ +------------+
+;;; | title   42 | |            | |            | |            | |   title    |
+;;; :            : :            : :            : :            : :            :
+;;; :            : :            : :            : :            : :            :
+;;; |            | | title   42 | |     42     | |         42 | |     42     |
+;;; +------------+ +------------+ +------------+ +------------+ +------------+
+(define %page-titlepgno-deko% 'fancy)
+
 (define (enable-modern-style)
   (set! %style% 'modern)
   (set! %title-style% 'modern)
+  (set! %page-titlepgno-deko% 'manual)
   (set! %monospace-font-name% "monospace")
   (set! %body-font-name% "roman")
   (set! %page-left-offset% 45mm)
   (set! %page-left-offset-neg% -45mm)
+
+  (set! %page-width% 165mm)
+  (set! %page-height% 240mm)
+  (set! %top-margin% 20mm)
+  (set! %bottom-margin% 30mm)
+  (set! %header-margin% 12mm)
+  (set! %footer-margin% 20mm)
+  (set! %left-margin% 10mm)
+  (set! %right-margin% 10mm)
   )
 
 (define (enable-classic-style)
   (set! %style% 'classic)
   (set! %title-style% 'classic)
+  (set! %page-titlepgno-deko% 'fancy)
   (set! %monospace-font-name% "monospace")
   (set! %body-font-name% "roman")
   (set! %page-left-offset% 0mm)
   (set! %page-left-offset-neg% 0mm)
+
+  (set! %page-width% 165mm)
+  (set! %page-height% 240mm)
+  (set! %top-margin% 20mm)
+  (set! %bottom-margin% 30mm)
+  (set! %header-margin% 12mm)
+  (set! %footer-margin% 20mm)
+  (set! %left-margin% 10mm)
+  (set! %right-margin% 10mm)
   )
 
 
