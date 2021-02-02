@@ -19,54 +19,98 @@
 ;;   )
 
 (root
-  (make simple-page-sequence
-    metadata:title: "Test"
-    metadata:author: "N.N."
-    (process-children)))
+  (process-children))
 
 (text
  (literal (node-property 'data (current-node) default: "")))
 
 
 (element book
-  (make display-group
-    (make paragraph
-      (sosofo-append (literal "book")
-                     (process-children)))))
+  (make simple-page-sequence
+    metadata:title: "Test"
+    metadata:author: "N.N."
+    left-header: (literal "LEFT")
+    center-header: (make page-number)
+    right-header: (literal "RIGHT")
+    left-footer: (sosofo-append (make page-number) (literal "-"))
+    center-footer: (sosofo-append (literal "- ") (make page-number) (literal " -"))
+    right-footer: (sosofo-append (literal "-") (make page-number))
+    (process-children)))
+
+(element info
+  (empty-sosofo))
 
 (element titlepage
   (make display-group
-    (make paragraph
-      (sosofo-append (literal "titlepage")
-                     (process-children))))
-  )
+    break-after: 'page
+    (process-children)
+
+    (process-node-list (select-elements (descendants (grove-root)) '(info author)))
+
+    (make display-group
+      space-before: (display-space 20pt max: 'inf
+                                   priority: 2)
+      space-after: (display-space 20pt)
+      (process-node-list (select-elements (descendants (grove-root)) '(info publdate)))
+      (process-node-list (select-elements (descendants (grove-root)) '(info publisher)))
+      )))
 
 (element title
-  (make display-group
-    (make paragraph
-      font-size: 48pt
-      (sosofo-append (literal "title")
-                     (process-children)))))
+  (make paragraph
+    space-before: (display-space 40pt conditional?: #f)
+    font-size: 24pt
+    font-weight: 'bold
+    quadding: 'center
+    (process-node-list (attribute "value" (current-node)))))
 
 (element subtitle
-  (make display-group
-    (make paragraph
-      (sosofo-append (literal "subtitle")
-                     (process-children)))))
+  (make paragraph
+    space-before: 20pt
+    font-posture: 'italic
+    font-size: 14pt
+    quadding: 'center
+    (process-node-list (attribute "value" (current-node)))))
 
-(element info
-  (make display-group
-    (make paragraph
-      (sosofo-append (literal "info")
-                     (process-children)))))
+(element (book info author)
+  (make paragraph
+    space-before: (display-space 50pt)
+    font-size: 12pt
+    quadding: 'center
+    (sosofo-append (literal "by ")
+                   (process-node-list (attribute "name" (current-node))))))
+
+(element (book info publdate)
+  (make paragraph
+    font-size: 14pt
+    quadding: 'center
+    (process-node-list (attribute "value" (current-node)))))
+
+(element (book info publisher)
+  (make paragraph
+    font-size: 14pt
+    quadding: 'center
+    (process-node-list (attribute "value" (current-node)))))
+
 
 (element chapter
   (make display-group
     (make paragraph
-      (sosofo-append (literal "chapter")
-                     (process-children)))))
+      space-before: (display-space 28pt conditional?: #t)
+      space-after: (display-space 14pt conditional?: #f)
+      keep-with-next?: #t
+      font-size: 14pt
+      quadding: 'center
+      (process-node-list (attribute "title" (current-node))))
+    (process-children)))
 
 (element p
-  (make display-group
-    (make paragraph
-      (process-children))))
+  (make paragraph
+    space-before: (if (absolute-first-sibling? (current-node))
+                      0pt 14pt)
+    first-line-start-indent: (if (absolute-first-sibling? (current-node))
+                                 0pt 10pt)
+    font-size: 10pt
+    quadding: 'justify
+    (sosofo-append
+     (process-children)
+     (make page-number))))
