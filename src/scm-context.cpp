@@ -105,6 +105,12 @@ namespace {
   }
 
 
+  bool dbl_equals(double a, double b)
+  {
+    return fabs(a - b) < FLT_EPSILON;
+  }
+
+
   //----------------------------------------------------------------------------
 
   class SchemeExpr : public fo::IExpr
@@ -527,13 +533,20 @@ namespace {
       // the number is normalized to 'm' unit; rebase it to 'pt'
       auto val = sexp_quantity_normalize_to_double(ctx, val_arg) / norm_factor;
       auto minv = sexp_quantity_normalize_to_double(ctx, min_arg) / norm_factor;
-      auto maxv = val;
+
+      estd::optional<double> o_minv;
+      estd::optional<double> o_maxv;
+
+      if (!dbl_equals(val, minv))
+        o_minv = {val - minv};
 
       if (sexp_quantityp(max_arg)) {
         auto max_unit = to_quantity_unit(ctx, max_arg);
 
         if (is_convertible_to_pt_unit(max_unit) == is_convertible_to_pt_unit(val_unit)) {
-          maxv = sexp_quantity_normalize_to_double(ctx, max_arg) / norm_factor;
+          auto maxv = sexp_quantity_normalize_to_double(ctx, max_arg) / norm_factor;
+          if (!dbl_equals(val, maxv))
+            o_maxv = {maxv - val};
         }
         else {
           result = sexp_user_exception(ctx, self,
@@ -544,7 +557,7 @@ namespace {
       }
       else if (auto symbv = string_from_symbol_sexp_or_none(ctx, max_arg)) {
         if (*symbv == "inf")
-          maxv = std::numeric_limits<double>::infinity();
+          o_maxv = std::numeric_limits<double>::infinity();
         else
           result = sexp_user_exception(ctx, self, "max: symbol must be 'inf", max_arg);
       }
@@ -553,8 +566,10 @@ namespace {
       }
 
       if (result == SEXP_VOID) {
+
         result =
-          make_length_spec(ctx, fo::LengthSpec(type, val, result_unit, minv, maxv,
+          make_length_spec(ctx, fo::LengthSpec(type, val, result_unit,
+                                               o_minv,o_maxv,
                                                bool(sexp_unbox_boolean(conditionalp_arg)),
                                                sexp_unbox_fixnum(priority_arg)));
       }
@@ -2295,7 +2310,7 @@ namespace {
         case fo::ValueType::k_compound:
         case fo::ValueType::k_expr:
         case fo::ValueType::k_address:
-          //make_address
+          // make_address
           break;
         case fo::ValueType::k_length:
           result = make_length_spec(ctx, fo::LengthSpec(fo::kDimen, 0.0, fo::k_pt));
