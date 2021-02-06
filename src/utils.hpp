@@ -30,6 +30,7 @@ namespace utils {
   filesystem::path make_relative(const filesystem::path& from,
                                  const filesystem::path& to);
 
+  size_t utf8_length(const std::string& src);
   std::u32string utf8_to_u32string(const std::string& str);
   std::string u32string_to_utf8(const std::u32string& str);
 

@@ -167,6 +167,52 @@ namespace utils {
 
 
 //------------------------------------------------------------------------------
+  size_t utf8_length(const std::string& src) {
+    using namespace std;
+
+    size_t count = 0;
+
+    auto i_src = begin(src);
+    auto i_end = end(src);
+
+    while (i_src != i_end) {
+      if (!(*i_src & 0x80)) {
+        ++count;
+        ++i_src;
+      }
+      else {
+        if ((*i_src & 0xe0) == 0xc0) {
+          if (distance(i_src, i_end) >= 1) {
+            ++count;
+            advance(i_src, 2);
+          }
+          else
+            throw runtime_error("incomplete utf8 character sequence");
+        }
+        else if ((*i_src & 0xF0) == 0xE0) {
+          if (distance(i_src, i_end) >= 2) {
+            ++count;
+            advance(i_src, 3);
+          }
+          else
+            throw runtime_error("incomplete utf8 character sequence");
+        }
+        else if ((*i_src & 0xF8) == 0xF0) {
+          if (distance(i_src, i_end) >= 3) {
+            ++count;
+            advance(i_src, 4);
+          }
+          else
+            throw runtime_error("incomplete utf8 character sequence");
+        }
+        else {
+          throw runtime_error("invalid utf8 character sequence");
+        }
+      }
+    }
+
+    return count;
+  }
 
   std::u32string utf8_to_u32string(const std::string& src) {
     using namespace std;
