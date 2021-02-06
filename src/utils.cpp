@@ -8,10 +8,6 @@
 
 #include "fspp/filesystem.hpp"
 
-#ifdef TEXTBOOK_HAVE_STD_CODECVT
-#include <codecvt>
-#endif
-
 #include <algorithm>
 #include <cctype>
 #include <iostream>
@@ -172,19 +168,6 @@ namespace utils {
 
 //------------------------------------------------------------------------------
 
-#ifdef TEXTBOOK_HAVE_STD_CODECVT
-  std::u32string utf8_to_u32string(const std::string& str) {
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv32;
-    return conv32.from_bytes(str);
-  }
-
-  std::string u32string_to_utf8(const std::u32string& str) {
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv32;
-    return conv32.to_bytes(str);
-  }
-
-#else
-
   std::u32string utf8_to_u32string(const std::string& src) {
     using namespace std;
 
@@ -271,7 +254,6 @@ namespace utils {
     return {begin(tmp), end(tmp)};
   }
 
-#endif
 
   std::string to_lower(const std::string& src) {
     using namespace std;

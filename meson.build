@@ -77,23 +77,6 @@ else
 endif
 
 
-if cc.compiles('''#include <codecvt>
-#include <locale>
-
-int main() {
-  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> conv16;
-  std::wstring dst = conv16.from_bytes(std::string("hello world"));
-
-  return dst.size() != 0 ? 0 : 1;
-}
-''',
-               name : 'std::codecvt available')
-  set_variable('supports_std_codecvt', true)
-else
-  set_variable('supports_std_codecvt', false)
-endif
-
-
 if cc.compiles('''#include <type_traits>
 
 template <typename T, typename U>

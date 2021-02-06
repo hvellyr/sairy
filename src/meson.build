@@ -3,10 +3,8 @@
 # All rights reserved.
 
 
-conf_data.set('TEXTBOOK_HAVE_STD_CODECVT', supports_std_codecvt)
 #conf_data.set('TEXTBOOK_HAVE_STD_OPTIONAL', supports_std_optional)
 conf_data.set('TEXTBOOK_HAVE_STD_MAKE_UNIQUE', supports_std_make_unique)
-conf_data.set('TEXTBOOK_HAVE_STD_CODECVT', supports_std_codecvt)
 conf_data.set('TEXTBOOK_HAVE_STD_ENABLE_IF_T', supports_std_enable_if_t)
 #conf_data.set('TEXTBOOK_HAVE_STD_STRINGSTREAM_COPYASSIGN', supports_stringstream_copyassign)
 #conf_data.set('TEXTBOOK_HAVE_STD_MISMATCH_WITH_PREDICATE', supports_std_mismatch_with_pred)
