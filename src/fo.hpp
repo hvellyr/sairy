@@ -264,8 +264,12 @@ namespace fo {
       clear();
     }
 
-    bool is_set() const { return _kind != k_unspecified; }
-    explicit operator bool() const { return is_set(); }
+    bool is_set() const {
+      return _kind != k_unspecified;
+    }
+    explicit operator bool() const {
+      return is_set();
+    }
 
     void clear() {
       switch (_kind) {
@@ -529,8 +533,7 @@ namespace fo {
   }
 
 
-  template <typename F,
-            typename R = typename std::remove_reference<F>::type::return_type>
+  template <typename F, typename R = typename std::remove_reference<F>::type::return_type>
   R apply(F&& f, const ValueType& val) {
     switch (val._kind) {
     case ValueType::k_length:
