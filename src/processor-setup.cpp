@@ -8,6 +8,7 @@
 
 #include "debug-processor.hpp"
 #include "html-processor.hpp"
+#include "plain-processor.hpp"
 #include "tex-processor.hpp"
 
 #include "cxxopts.hpp"
@@ -35,7 +36,8 @@ namespace {
     static auto s_processor_factory_map = ProcessorFactoryMap{
       make_processor_factory<DebugProcessor>(), //
       make_processor_factory<HtmlProcessor>(),  //
-      make_processor_factory<TexProcessor>(),
+      make_processor_factory<TexProcessor>(), //
+      make_processor_factory<PlainProcessor>(),
     };
 
     return s_processor_factory_map;

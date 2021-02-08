@@ -31,6 +31,7 @@ tbcore_sources = [
   'nodelist.cpp',
   'nodes.cpp',
   'nodeutils.cpp',
+  'plain-processor.cpp',
   'sosofo.cpp',
   'tex-processor.cpp',
   'textbook-parser.cpp',
