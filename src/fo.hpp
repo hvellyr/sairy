@@ -57,6 +57,10 @@ namespace fo {
       , _min(min)
       , _max(max) {}
 
+    bool is_null() const {
+      return _value == 0.0 && (!_min || *_min == 0.0) && (!_max || *_max == 0.0);
+    }
+
     LengthSpecType _spec_type = kDimen;
     bool _conditionalp = false;
     int _priority = 0;
@@ -185,7 +189,7 @@ namespace fo {
   {
   };
 
-  
+
   struct ValueType
   {
     enum Kind
